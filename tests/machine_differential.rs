@@ -103,7 +103,7 @@ fn every_supported_comparison_matches_at_boundaries() {
         ("greater_equal", ">="),
     ] {
         let source =
-            format!("fn main(left: i64, right: i64) -> i64 {{ return left {operator} right; }}");
+            format!("fn main(left: i64, right: i64) -> bool {{ return left {operator} right; }}");
         assert_differential(name, &source, BINARY_ARGUMENTS, false);
     }
 }
@@ -140,7 +140,7 @@ fn high_register_pressure_and_spills_match() {
                 index + 3
             ),
             1 => format!(
-                "(p{index} < p{}) + (p{} * p{})",
+                "(p{index} | p{}) + (p{} * p{})",
                 index + 1,
                 index + 2,
                 index + 3

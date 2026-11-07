@@ -3,13 +3,14 @@ use std::collections::{HashMap, HashSet};
 use std::error::Error;
 use std::fmt;
 
-/// Parses the explicitly supported i64 Rust expression subset.
+/// Parses the explicitly supported `i64` and `bool` Rust subset.
 ///
 /// Functions and parameters retain their names and source ranges in `Graph::functions`.
 /// `if` expressions and statements merge values through explicit jumps, control regions,
 /// and Phi nodes. Mutable bindings and `while` loops use loop-header Phis and back edges.
-/// Calls are checked against the declared function set. Comparisons produce zero or one
-/// and cannot be chained. Unsupported Rust is rejected with a source location.
+/// Calls are checked against declared signatures. Comparisons and logical operations produce
+/// booleans; `&&` and `||` evaluate their right operand conditionally. Unsupported Rust is
+/// rejected with a source location.
 pub fn parse(source: &str) -> Result<Graph, ParseError> {
     let tokens = Lexer::new(source).tokenize()?;
     Parser::new(tokens).parse_program()
@@ -78,6 +79,9 @@ enum TokenKind {
     Eq,
     EqEq,
     Ne,
+    Not,
+    AndAnd,
+    OrOr,
     Lt,
     Le,
     Gt,
@@ -332,7 +336,7 @@ impl<'a> Lexer<'a> {
                     self.advance();
                     TokenKind::Ne
                 } else {
-                    return Err(ParseError::new(start, "unary `!` is not supported"));
+                    TokenKind::Not
                 }
             }
             Some('<') => {
@@ -359,15 +363,19 @@ impl<'a> Lexer<'a> {
             }
             Some('&') => {
                 if self.rest().starts_with('&') {
-                    return Err(ParseError::new(start, "logical `&&` is not supported"));
+                    self.advance();
+                    TokenKind::AndAnd
+                } else {
+                    TokenKind::And
                 }
-                TokenKind::And
             }
             Some('|') => {
                 if self.rest().starts_with('|') {
-                    return Err(ParseError::new(start, "logical `||` is not supported"));
+                    self.advance();
+                    TokenKind::OrOr
+                } else {
+                    TokenKind::Or
                 }
-                TokenKind::Or
             }
             Some('^') => TokenKind::Xor,
             Some('.') => {
@@ -414,6 +422,7 @@ fn is_reserved_identifier(identifier: &str) -> bool {
             | "await"
             | "become"
             | "box"
+            | "bool"
             | "break"
             | "const"
             | "continue"
@@ -462,10 +471,32 @@ fn is_reserved_identifier(identifier: &str) -> bool {
     )
 }
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+enum ScalarType {
+    I64,
+    Bool,
+}
+
+impl fmt::Display for ScalarType {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::I64 => formatter.write_str("i64"),
+            Self::Bool => formatter.write_str("bool"),
+        }
+    }
+}
+
+#[derive(Clone)]
+struct FunctionSignature {
+    parameter_types: Vec<ScalarType>,
+    return_type: Option<ScalarType>,
+}
+
 #[derive(Clone, Copy)]
 struct Binding {
     value: NodeId,
     mutable: bool,
+    ty: ScalarType,
 }
 
 struct Parser {
@@ -473,8 +504,11 @@ struct Parser {
     position: usize,
     graph: Graph,
     functions: HashSet<String>,
+    signatures: HashMap<String, FunctionSignature>,
     variables: HashMap<String, Binding>,
+    types: HashMap<NodeId, ScalarType>,
     control: NodeId,
+    return_type: Option<ScalarType>,
 }
 
 impl Parser {
@@ -484,8 +518,11 @@ impl Parser {
             position: 0,
             graph: Graph::new(),
             functions: HashSet::new(),
+            signatures: HashMap::new(),
             variables: HashMap::new(),
+            types: HashMap::new(),
             control: NodeId(0),
+            return_type: None,
         }
     }
 
@@ -534,9 +571,9 @@ impl Parser {
                         format!("duplicate parameter `{parameter}`"),
                     ));
                 }
-                self.expect(TokenKind::Colon, "`:` and explicit `i64` parameter type")?;
-                self.parse_i64_type()?;
-                parameters.push((parameter, mutable));
+                self.expect(TokenKind::Colon, "`:` and explicit parameter type")?;
+                let ty = self.parse_type()?;
+                parameters.push((parameter, mutable, ty));
                 if !self.eat(TokenKind::Comma) {
                     break;
                 }
@@ -546,23 +583,35 @@ impl Parser {
             }
         }
         self.expect(TokenKind::RParen, "`)` after parameters")?;
-        let returns_i64 = self.eat(TokenKind::Arrow);
-        if returns_i64 {
-            self.parse_i64_type()?;
-        }
+        let return_type = if self.eat(TokenKind::Arrow) {
+            Some(self.parse_type()?)
+        } else {
+            None
+        };
+        self.return_type = return_type;
+        self.signatures.insert(
+            name.clone(),
+            FunctionSignature {
+                parameter_types: parameters.iter().map(|(_, _, ty)| *ty).collect(),
+                return_type,
+            },
+        );
 
         self.expect(TokenKind::LBrace, "`{` before function body")?;
         let start = self.graph.start();
         let mut return_node = None;
         self.control = start;
         self.variables.clear();
-        for (index, (parameter, mutable)) in parameters.iter().enumerate() {
+        self.types.clear();
+        for (index, (parameter, mutable, ty)) in parameters.iter().enumerate() {
             let node = self.graph.parameter(index);
+            self.types.insert(node, *ty);
             self.variables.insert(
                 parameter.clone(),
                 Binding {
                     value: node,
                     mutable: *mutable,
+                    ty: *ty,
                 },
             );
         }
@@ -582,19 +631,21 @@ impl Parser {
         }
         let close = self.expect(TokenKind::RBrace, "`}` after function body")?;
         if return_node.is_some()
-            && returns_i64
+            && return_type.is_some()
             && self
                 .graph
                 .iter()
                 .last()
                 .is_some_and(|(_, node)| node.kind == NodeKind::Return && node.data.is_empty())
         {
-            return Err(ParseError::new(
-                close,
-                "expected an i64 expression after `return`",
-            ));
+            if let Some(expected) = return_type {
+                return Err(ParseError::new(
+                    close,
+                    format!("expected a `{expected}` expression after `return`"),
+                ));
+            }
         }
-        if return_node.is_none() && returns_i64 {
+        if return_node.is_none() && return_type.is_some() {
             return Err(ParseError::new(
                 close,
                 format!("function `{name}` must end with `return expr;`"),
@@ -633,6 +684,9 @@ impl Parser {
                 return Ok(Some(self.graph.return_(self.control, None)));
             }
             let value = self.parse_expression()?;
+            if let Some(expected) = self.return_type {
+                self.require_type(value, expected)?;
+            }
             self.expect(TokenKind::Semicolon, "`;` after returned expression")?;
             return Ok(Some(self.graph.return_(self.control, Some(value))));
         }
@@ -654,13 +708,17 @@ impl Parser {
                 format!("duplicate binding or parameter `{name}`; shadowing is not supported"),
             ));
         }
-        if self.eat(TokenKind::Colon) {
-            self.parse_i64_type()?;
-        }
+        let annotation = if self.eat(TokenKind::Colon) {
+            Some(self.parse_type()?)
+        } else {
+            None
+        };
         self.expect(TokenKind::Eq, "`=` in let binding")?;
         let value = self.parse_expression()?;
+        let ty = annotation.unwrap_or_else(|| self.type_of(value));
+        self.require_type(value, ty)?;
         self.expect(TokenKind::Semicolon, "`;` after let binding")?;
-        self.variables.insert(name, Binding { value, mutable });
+        self.variables.insert(name, Binding { value, mutable, ty });
         Ok(())
     }
 
@@ -688,8 +746,15 @@ impl Parser {
         };
         let right = self.parse_expression()?;
         let value = match operation {
-            Some(operation) => self.graph.binary(operation, binding.value, right),
-            None => right,
+            Some(operation) => {
+                self.require_type(binding.value, ScalarType::I64)?;
+                self.require_type(right, ScalarType::I64)?;
+                self.graph.binary(operation, binding.value, right)
+            }
+            None => {
+                self.require_type(right, binding.ty)?;
+                right
+            }
         };
         self.expect(TokenKind::Semicolon, "`;` after assignment")?;
         self.variables.insert(
@@ -697,6 +762,7 @@ impl Parser {
             Binding {
                 value,
                 mutable: true,
+                ty: binding.ty,
             },
         );
         Ok(())
@@ -717,6 +783,7 @@ impl Parser {
         self.position += 1;
         let outer_variables = self.variables.clone();
         let condition = self.parse_expression()?;
+        self.require_type(condition, ScalarType::Bool)?;
         let branch = self.graph.if_(self.control, condition);
         self.expect(TokenKind::LBrace, "`{` after if condition")?;
 
@@ -752,6 +819,7 @@ impl Parser {
             .collect::<Vec<_>>();
         merged_names.sort();
         for name in merged_names {
+            let ty = self.variables[&name].ty;
             let phi = self.graph.phi(
                 controls.clone(),
                 vec![
@@ -765,11 +833,13 @@ impl Parser {
                         .value,
                 ],
             );
+            self.types.insert(phi, ty);
             self.variables.insert(
                 name,
                 Binding {
                     value: phi,
                     mutable: true,
+                    ty,
                 },
             );
         }
@@ -790,17 +860,20 @@ impl Parser {
         let mut phis = Vec::new();
         for (name, binding) in &loop_variables {
             let phi = self.graph.phi(vec![self.control], vec![binding.value]);
+            self.types.insert(phi, binding.ty);
             self.variables.insert(
                 name.clone(),
                 Binding {
                     value: phi,
                     mutable: true,
+                    ty: binding.ty,
                 },
             );
             phis.push(phi);
         }
         self.control = header;
         let condition = self.parse_expression()?;
+        self.require_type(condition, ScalarType::Bool)?;
         let branch = self.graph.if_(header, condition);
         self.expect(TokenKind::LBrace, "`{` after while condition")?;
 
@@ -811,12 +884,13 @@ impl Parser {
         let exit_projection = self.graph.projection(branch, 1);
 
         let mut exit_variables = outer_variables;
-        for ((name, _), phi) in loop_variables.iter().zip(&phis) {
+        for ((name, binding), phi) in loop_variables.iter().zip(&phis) {
             exit_variables.insert(
                 name.clone(),
                 Binding {
                     value: *phi,
                     mutable: true,
+                    ty: binding.ty,
                 },
             );
         }
@@ -837,13 +911,36 @@ impl Parser {
         Ok(())
     }
 
-    fn parse_i64_type(&mut self) -> Result<(), ParseError> {
-        if self.peek_identifier("i64") {
-            self.position += 1;
+    fn parse_type(&mut self) -> Result<ScalarType, ParseError> {
+        let ty = if self.peek_identifier("i64") {
+            ScalarType::I64
+        } else if self.peek_identifier("bool") {
+            ScalarType::Bool
+        } else {
+            return Err(self.error_here("only the `i64` and `bool` types are supported"));
+        };
+        self.position += 1;
+        Ok(ty)
+    }
+
+    fn type_of(&self, value: NodeId) -> ScalarType {
+        self.types.get(&value).copied().unwrap_or(ScalarType::I64)
+    }
+
+    fn require_type(&self, value: NodeId, expected: ScalarType) -> Result<(), ParseError> {
+        let actual = self.type_of(value);
+        if actual == expected {
             Ok(())
         } else {
-            Err(self.error_here("only the `i64` type is supported"))
+            Err(self.error_here(format!(
+                "type mismatch: expected `{expected}`, found `{actual}`"
+            )))
         }
+    }
+
+    fn mark_bool(&mut self, value: NodeId) -> NodeId {
+        self.types.insert(value, ScalarType::Bool);
+        value
     }
 
     fn parse_identifier(&mut self, description: &str) -> Result<(String, Span), ParseError> {
@@ -871,13 +968,67 @@ impl Parser {
         if self.peek_identifier("if") {
             self.parse_if_expression()
         } else {
-            self.parse_comparison()
+            self.parse_logical_or()
         }
+    }
+
+    fn parse_logical_or(&mut self) -> Result<NodeId, ParseError> {
+        let mut value = self.parse_logical_and()?;
+        while self.eat(TokenKind::OrOr) {
+            value = self.parse_short_circuit(value, false)?;
+        }
+        Ok(value)
+    }
+
+    fn parse_logical_and(&mut self) -> Result<NodeId, ParseError> {
+        let mut value = self.parse_comparison()?;
+        while self.eat(TokenKind::AndAnd) {
+            value = self.parse_short_circuit(value, true)?;
+        }
+        Ok(value)
+    }
+
+    fn parse_short_circuit(
+        &mut self,
+        left: NodeId,
+        conjunction: bool,
+    ) -> Result<NodeId, ParseError> {
+        self.require_type(left, ScalarType::Bool)?;
+        let branch = self.graph.if_(self.control, left);
+        let true_projection = self.graph.projection(branch, 0);
+        self.control = true_projection;
+        let true_value = if conjunction {
+            let value = self.parse_comparison()?;
+            self.require_type(value, ScalarType::Bool)?;
+            value
+        } else {
+            let value = self.graph.constant(1);
+            self.mark_bool(value)
+        };
+        let true_jump = self.graph.jump(self.control);
+
+        let false_projection = self.graph.projection(branch, 1);
+        self.control = false_projection;
+        let false_value = if conjunction {
+            let value = self.graph.constant(0);
+            self.mark_bool(value)
+        } else {
+            let value = self.parse_logical_and()?;
+            self.require_type(value, ScalarType::Bool)?;
+            value
+        };
+        let false_jump = self.graph.jump(self.control);
+
+        let controls = vec![true_jump, false_jump];
+        self.control = self.graph.region(controls.clone());
+        let phi = self.graph.phi(controls, vec![true_value, false_value]);
+        Ok(self.mark_bool(phi))
     }
 
     fn parse_if_expression(&mut self) -> Result<NodeId, ParseError> {
         self.position += 1;
         let condition = self.parse_expression()?;
+        self.require_type(condition, ScalarType::Bool)?;
         let branch = self.graph.if_(self.control, condition);
         self.expect(TokenKind::LBrace, "`{` after if condition")?;
 
@@ -898,10 +1049,14 @@ impl Parser {
         let false_jump = self.graph.jump(self.control);
         self.expect(TokenKind::RBrace, "`}` after else branch")?;
 
+        let ty = self.type_of(true_value);
+        self.require_type(false_value, ty)?;
         let controls = vec![true_jump, false_jump];
         let region = self.graph.region(controls.clone());
         self.control = region;
-        Ok(self.graph.phi(controls, vec![true_value, false_value]))
+        let phi = self.graph.phi(controls, vec![true_value, false_value]);
+        self.types.insert(phi, ty);
+        Ok(phi)
     }
 
     fn parse_comparison(&mut self) -> Result<NodeId, ParseError> {
@@ -923,14 +1078,28 @@ impl Parser {
         if self.is_comparison(self.peek()) {
             return Err(self.error_here("chained comparisons are not supported"));
         }
-        Ok(self.graph.compare(operation, left, right))
+        self.require_type(left, ScalarType::I64)?;
+        self.require_type(right, ScalarType::I64)?;
+        let comparison = self.graph.compare(operation, left, right);
+        Ok(self.mark_bool(comparison))
+    }
+
+    fn integer_binary(
+        &mut self,
+        operation: BinaryOp,
+        left: NodeId,
+        right: NodeId,
+    ) -> Result<NodeId, ParseError> {
+        self.require_type(left, ScalarType::I64)?;
+        self.require_type(right, ScalarType::I64)?;
+        Ok(self.graph.binary(operation, left, right))
     }
 
     fn parse_bitwise_or(&mut self) -> Result<NodeId, ParseError> {
         let mut value = self.parse_bitwise_xor()?;
         while self.eat(TokenKind::Or) {
             let right = self.parse_bitwise_xor()?;
-            value = self.graph.binary(BinaryOp::Or, value, right);
+            value = self.integer_binary(BinaryOp::Or, value, right)?;
         }
         Ok(value)
     }
@@ -939,7 +1108,7 @@ impl Parser {
         let mut value = self.parse_bitwise_and()?;
         while self.eat(TokenKind::Xor) {
             let right = self.parse_bitwise_and()?;
-            value = self.graph.binary(BinaryOp::Xor, value, right);
+            value = self.integer_binary(BinaryOp::Xor, value, right)?;
         }
         Ok(value)
     }
@@ -948,7 +1117,7 @@ impl Parser {
         let mut value = self.parse_shift()?;
         while self.eat(TokenKind::And) {
             let right = self.parse_shift()?;
-            value = self.graph.binary(BinaryOp::And, value, right);
+            value = self.integer_binary(BinaryOp::And, value, right)?;
         }
         Ok(value)
     }
@@ -963,7 +1132,7 @@ impl Parser {
             };
             self.position += 1;
             let right = self.parse_additive()?;
-            value = self.graph.binary(operation, value, right);
+            value = self.integer_binary(operation, value, right)?;
         }
     }
 
@@ -977,7 +1146,7 @@ impl Parser {
             };
             self.position += 1;
             let right = self.parse_multiplicative()?;
-            value = self.graph.binary(operation, value, right);
+            value = self.integer_binary(operation, value, right)?;
         }
     }
 
@@ -992,11 +1161,18 @@ impl Parser {
             };
             self.position += 1;
             let right = self.parse_unary()?;
-            value = self.graph.binary(operation, value, right);
+            value = self.integer_binary(operation, value, right)?;
         }
     }
 
     fn parse_unary(&mut self) -> Result<NodeId, ParseError> {
+        if self.eat(TokenKind::Not) {
+            let operand = self.parse_unary()?;
+            self.require_type(operand, ScalarType::Bool)?;
+            let zero = self.graph.constant(0);
+            let inversion = self.graph.compare(CompareOp::Eq, operand, zero);
+            return Ok(self.mark_bool(inversion));
+        }
         if !self.eat(TokenKind::Minus) {
             return self.parse_primary();
         }
@@ -1015,6 +1191,7 @@ impl Parser {
             return Ok(self.graph.constant(value));
         }
         let operand = self.parse_unary()?;
+        self.require_type(operand, ScalarType::I64)?;
         Ok(self.graph.unary(UnaryOp::Neg, operand))
     }
 
@@ -1052,23 +1229,49 @@ impl Parser {
                             format!("unknown function `{identifier}`"),
                         ));
                     }
+                    let signature = self.signatures[&identifier].clone();
+                    if arguments.len() != signature.parameter_types.len() {
+                        return Err(ParseError::new(
+                            token.span,
+                            format!(
+                                "function `{identifier}` expects {} arguments, found {}",
+                                signature.parameter_types.len(),
+                                arguments.len()
+                            ),
+                        ));
+                    }
+                    for (argument, expected) in arguments.iter().zip(signature.parameter_types) {
+                        self.require_type(*argument, expected)?;
+                    }
+                    let return_type = signature.return_type.ok_or_else(|| {
+                        ParseError::new(
+                            token.span,
+                            format!(
+                                "unit-returning function `{identifier}` cannot be used as a value"
+                            ),
+                        )
+                    })?;
                     let target = self
                         .graph
                         .functions
                         .iter()
                         .position(|function| function.name == identifier)
                         .unwrap_or(self.graph.functions.len());
-                    return Ok(self.graph.add_node(
+                    let call = self.graph.add_node(
                         crate::son::NodeKind::Call(target),
                         vec![self.control],
                         arguments,
-                    ));
+                    );
+                    self.types.insert(call, return_type);
+                    return Ok(call);
                 }
                 if identifier == "true" {
-                    return Ok(self.graph.constant(1));
+                    let value = self.graph.constant(1);
+                    return Ok(self.mark_bool(value));
                 }
                 if identifier == "false" {
-                    return Ok(self.graph.constant(0));
+                    let value = self.graph.constant(0);
+                    return Ok(self.mark_bool(value));
                 }
                 self.variables
                     .get(&identifier)
@@ -1305,24 +1508,24 @@ mod tests {
                 .contains("conditional or loop")
         );
         assert!(
-            error("fn main() { while 0 { let local = 1; } return local; }")
+            error("fn main() { while false { let local = 1; } return local; }")
                 .message
                 .contains("unknown variable")
         );
         assert!(
             error("fn main() -> i64 { return; }")
                 .message
-                .contains("expected an i64 expression")
+                .contains("expected a `i64` expression")
         );
         assert!(
             error("fn f(x: i32) -> i64 { return x; }")
                 .message
-                .contains("only the `i64` type")
+                .contains("only the `i64` and `bool` types")
         );
         assert!(
-            error("fn main() -> bool { return 1; }")
+            error("fn main() -> u32 { return 1; }")
                 .message
-                .contains("only the `i64` type")
+                .contains("only the `i64` and `bool` types")
         );
     }
 
@@ -1403,7 +1606,7 @@ mod tests {
         assert!(
             error("fn main() { return 1 && 0; }")
                 .message
-                .contains("logical `&&`")
+                .contains("type mismatch")
         );
         assert!(
             error("fn if() { return 0; }")

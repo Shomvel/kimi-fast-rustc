@@ -45,7 +45,7 @@ fn bitwise_precedence_and_comparisons_match_the_interpreter() {
         &[[3, 4], [-2, 5]],
     );
     assert_differential(
-        "fn main(a: i64, b: i64) -> i64 { return a | b == 7; }",
+        "fn main(a: i64, b: i64) -> bool { return a | b == 7; }",
         &[[3, 4], [8, 1]],
     );
 }

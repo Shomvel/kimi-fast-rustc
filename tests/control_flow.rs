@@ -33,8 +33,9 @@ fn nested_if_preserves_control_and_phi_values() {
 
 #[test]
 fn direct_objects_reject_unimplemented_control_relocations() {
-    let graph = frontend::parse("fn main(value: i64) -> i64 { return if value { 1 } else { 0 }; }")
-        .unwrap();
+    let graph =
+        frontend::parse("fn main(value: i64) -> i64 { return if value != 0 { 1 } else { 0 }; }")
+            .unwrap();
     let error = native_object::compile_graph_to_object(&graph, "main");
     assert!(error.is_err());
 }

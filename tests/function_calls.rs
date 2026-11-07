@@ -41,10 +41,10 @@ fn register_arguments_are_loaded_before_the_call() {
 
 #[test]
 fn call_arity_is_checked() {
-    let graph =
+    let error =
         frontend::parse("fn id(x: i64) -> i64 { return x; } fn main() -> i64 { return id(); }")
-            .unwrap();
-    assert!(native_program::compile_graph(&graph).is_err());
+            .unwrap_err();
+    assert!(error.message.contains("expects 1 arguments, found 0"));
 }
 
 #[test]
