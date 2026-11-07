@@ -211,6 +211,18 @@ fn execute(function: &MachineFunction, arguments: &[i64]) -> Result<Execution, M
                 let value = (machine.reg(dst) as u64).wrapping_shr(machine.reg(Reg::Rcx) as u32);
                 machine.set_reg(dst, value as i64);
             }
+            MachineInstr::ShlImm { dst, count } => {
+                let value = machine.reg(dst).wrapping_shl(count as u32);
+                machine.set_reg(dst, value);
+            }
+            MachineInstr::ShrImm { dst, count } => {
+                let value = machine.reg(dst).wrapping_shr(count as u32);
+                machine.set_reg(dst, value);
+            }
+            MachineInstr::LShrImm { dst, count } => {
+                let value = (machine.reg(dst) as u64).wrapping_shr(count as u32);
+                machine.set_reg(dst, value as i64);
+            }
             MachineInstr::Cqo => {
                 let sign = if machine.reg(Reg::Rax) < 0 { -1 } else { 0 };
                 machine.set_reg(Reg::Rdx, sign);
@@ -398,6 +410,9 @@ fn validate_instruction(
         | Shl { dst }
         | Shr { dst }
         | LShr { dst }
+        | ShlImm { dst, .. }
+        | ShrImm { dst, .. }
+        | LShrImm { dst, .. }
         | SetCc { dst, .. } => validate_reg(dst),
         Mov { dst, src } => {
             validate_reg(dst)?;

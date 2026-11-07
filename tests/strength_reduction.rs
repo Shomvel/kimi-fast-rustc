@@ -11,12 +11,10 @@ fn compile(source: &str) -> MachineFunction {
 #[test]
 fn multiplication_by_power_of_two_becomes_left_shift() {
     let function = compile("fn main(value: i64) -> i64 { return value * 8; }");
-    assert!(
-        function
-            .instructions
-            .iter()
-            .any(|instruction| matches!(instruction, MachineInstr::Shl { .. }))
-    );
+    assert!(function.instructions.iter().any(|instruction| matches!(
+        instruction,
+        MachineInstr::Shl { .. } | MachineInstr::ShlImm { .. }
+    )));
     assert!(
         !function
             .instructions
@@ -30,12 +28,10 @@ fn multiplication_by_power_of_two_becomes_left_shift() {
 #[test]
 fn power_of_two_on_the_left_also_becomes_left_shift() {
     let function = compile("fn main(value: i64) -> i64 { return 8 * value; }");
-    assert!(
-        function
-            .instructions
-            .iter()
-            .any(|instruction| matches!(instruction, MachineInstr::Shl { .. }))
-    );
+    assert!(function.instructions.iter().any(|instruction| matches!(
+        instruction,
+        MachineInstr::Shl { .. } | MachineInstr::ShlImm { .. }
+    )));
     assert!(
         !function
             .instructions
@@ -48,12 +44,10 @@ fn power_of_two_on_the_left_also_becomes_left_shift() {
 #[test]
 fn unsigned_division_by_power_of_two_becomes_logical_shift() {
     let function = compile("fn main(value: u64) -> u64 { return value / 8; }");
-    assert!(
-        function
-            .instructions
-            .iter()
-            .any(|instruction| matches!(instruction, MachineInstr::LShr { .. }))
-    );
+    assert!(function.instructions.iter().any(|instruction| matches!(
+        instruction,
+        MachineInstr::LShr { .. } | MachineInstr::LShrImm { .. }
+    )));
     assert!(
         !function
             .instructions

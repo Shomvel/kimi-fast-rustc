@@ -231,6 +231,18 @@ pub fn lower_graph(graph: &Graph) -> Result<Vec<VirtualInstr>, CompileError> {
             }
             NodeKind::Binary(operation) => {
                 let (lhs, rhs) = binary_inputs(id, &node.data, &values)?;
+                let rhs = match operation {
+                    BinaryOp::Shl | BinaryOp::Shr | BinaryOp::LShr => {
+                        if let Some(NodeKind::Const(value)) =
+                            graph.node(node.data[1]).map(|node| node.kind)
+                        {
+                            VirtualValue::Imm(value)
+                        } else {
+                            rhs
+                        }
+                    }
+                    _ => rhs,
+                };
                 match operation {
                     BinaryOp::Add => VirtualInstr::Add {
                         dst: virtual_reg(id),
@@ -1042,6 +1054,25 @@ impl Emitter<'_> {
         rhs: VirtualValue,
         kind: ShiftKind,
     ) -> Result<(), CompileError> {
+        if let VirtualValue::Imm(count) = rhs {
+            self.load_value(lhs, SCRATCH0)?;
+            let count = (count as u64 & 63) as u8;
+            self.instructions.push(match kind {
+                ShiftKind::Left => MachineInstr::ShlImm {
+                    dst: SCRATCH0,
+                    count,
+                },
+                ShiftKind::Right => MachineInstr::ShrImm {
+                    dst: SCRATCH0,
+                    count,
+                },
+                ShiftKind::Logical => MachineInstr::LShrImm {
+                    dst: SCRATCH0,
+                    count,
+                },
+            });
+            return self.store_definition(dst, SCRATCH0);
+        }
         self.load_value(lhs, SCRATCH0)?;
         self.load_value(rhs, SCRATCH1)?;
         self.instructions.push(MachineInstr::Mov {
@@ -1702,6 +1733,18 @@ mod tests {
                         Reg::Rcx,
                     )
                         as u32);
+                    registers.insert(dst, value as i64);
+                }
+                MachineInstr::ShlImm { dst, count } => {
+                    let value = read_reg(&registers, dst).wrapping_shl(count as u32);
+                    registers.insert(dst, value);
+                }
+                MachineInstr::ShrImm { dst, count } => {
+                    let value = read_reg(&registers, dst).wrapping_shr(count as u32);
+                    registers.insert(dst, value);
+                }
+                MachineInstr::LShrImm { dst, count } => {
+                    let value = (read_reg(&registers, dst) as u64).wrapping_shr(count as u32);
                     registers.insert(dst, value as i64);
                 }
                 MachineInstr::Cqo => {

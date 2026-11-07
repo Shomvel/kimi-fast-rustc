@@ -360,6 +360,9 @@ pub enum MachineInstr {
     Shl { dst: Reg },
     Shr { dst: Reg },
     LShr { dst: Reg },
+    ShlImm { dst: Reg, count: u8 },
+    ShrImm { dst: Reg, count: u8 },
+    LShrImm { dst: Reg, count: u8 },
     Cqo,
     IDiv { src: Operand },
     UDiv { src: Operand },
@@ -558,6 +561,9 @@ fn validate_instruction(
         | Shl { dst }
         | Shr { dst }
         | LShr { dst }
+        | ShlImm { dst, .. }
+        | ShrImm { dst, .. }
+        | LShrImm { dst, .. }
         | SetCc { dst, .. } => validate_reg(dst)?,
         Mov { dst, src } => {
             validate_reg(dst)?;
@@ -656,6 +662,9 @@ fn emit_instruction(
         Shl { dst } => out.push_str(&format!("\tshl {}, cl\n", dst.name())),
         Shr { dst } => out.push_str(&format!("\tsar {}, cl\n", dst.name())),
         LShr { dst } => out.push_str(&format!("\tshr {}, cl\n", dst.name())),
+        ShlImm { dst, count } => out.push_str(&format!("\tshl {}, {}\n", dst.name(), count)),
+        ShrImm { dst, count } => out.push_str(&format!("\tsar {}, {}\n", dst.name(), count)),
+        LShrImm { dst, count } => out.push_str(&format!("\tshr {}, {}\n", dst.name(), count)),
         Cqo => out.push_str("\tcqo\n"),
         IDiv { src } => {
             out.push_str("\tidiv ");

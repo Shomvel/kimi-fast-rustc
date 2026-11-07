@@ -211,6 +211,9 @@ fn validate_instruction(
         | Shl { dst }
         | Shr { dst }
         | LShr { dst }
+        | ShlImm { dst, .. }
+        | ShrImm { dst, .. }
+        | LShrImm { dst, .. }
         | SetCc { dst, .. } => validate_reg(dst)?,
         Mov { dst, src } => {
             validate_reg(dst)?;
@@ -373,6 +376,24 @@ impl Encoder<'_> {
                 self.rex(true, None, Some(dst), false);
                 self.bytes.push(0xd3);
                 self.modrm(3, Reg::Rbp, dst.low_code());
+            }
+            ShlImm { dst, count } => {
+                self.rex(true, None, Some(dst), false);
+                self.bytes.push(0xc1);
+                self.modrm(3, Reg::Rsp, dst.low_code());
+                self.bytes.push(count);
+            }
+            ShrImm { dst, count } => {
+                self.rex(true, None, Some(dst), false);
+                self.bytes.push(0xc1);
+                self.modrm(3, Reg::Rdi, dst.low_code());
+                self.bytes.push(count);
+            }
+            LShrImm { dst, count } => {
+                self.rex(true, None, Some(dst), false);
+                self.bytes.push(0xc1);
+                self.modrm(3, Reg::Rbp, dst.low_code());
+                self.bytes.push(count);
             }
             IMul { dst, src } => match src {
                 Operand::Reg(src) => {
