@@ -26,7 +26,7 @@ pub fn optimize(graph: &mut Graph) -> OptimizeStats {
             NodeKind::If | NodeKind::Projection(_) | NodeKind::Region
         )
     }) {
-        return OptimizeStats::default();
+        return optimize_control_flow(graph);
     }
 
     let mut total = OptimizeStats::default();
@@ -50,6 +50,51 @@ pub fn optimize(graph: &mut Graph) -> OptimizeStats {
             return total;
         }
     }
+}
+
+fn optimize_control_flow(graph: &mut Graph) -> OptimizeStats {
+    let mut total = OptimizeStats::default();
+    loop {
+        let before_value_numbering = graph.clone();
+        let reported_merges = value_numbering::value_numbering(graph);
+        let merges = if graphs_equal(graph, &before_value_numbering) {
+            0
+        } else {
+            reported_merges
+        };
+        let folded = fold_control_constants(graph);
+        total.value_numbering_merges += merges;
+        total.constants_folded += folded;
+        if merges == 0 && folded == 0 {
+            return total;
+        }
+    }
+}
+
+fn fold_control_constants(graph: &mut Graph) -> usize {
+    let mut folded = 0;
+    for id in graph.ids().collect::<Vec<_>>() {
+        let Some(node) = graph.node(id) else {
+            continue;
+        };
+        if !node.control.is_empty()
+            || !node.memory.is_empty()
+            || !matches!(
+                node.kind,
+                NodeKind::Unary(_) | NodeKind::Binary(_) | NodeKind::Compare(_)
+            )
+        {
+            continue;
+        }
+        let Some(value) = son_optimize::constant_value(graph, id) else {
+            continue;
+        };
+        let node = graph.node_mut(id).expect("folded node exists");
+        node.kind = NodeKind::Const(value);
+        node.data.clear();
+        folded += 1;
+    }
+    folded
 }
 
 fn graphs_equal(left: &Graph, right: &Graph) -> bool {

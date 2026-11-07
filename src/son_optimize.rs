@@ -110,7 +110,7 @@ fn const_value(graph: &Graph, id: NodeId) -> Option<i64> {
     }
 }
 
-fn constant_value(graph: &Graph, id: NodeId) -> Option<i64> {
+pub fn constant_value(graph: &Graph, id: NodeId) -> Option<i64> {
     let node = graph.node(id)?;
     match node.kind {
         NodeKind::Unary(op) if node.data.len() == 1 => {
