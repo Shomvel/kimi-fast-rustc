@@ -395,12 +395,16 @@ fn loop_headers(graph: &Graph) -> BTreeMap<NodeId, NodeId> {
     graph
         .iter()
         .filter_map(|(header, node)| {
-            if node.kind != NodeKind::Region || node.control.len() != 2 {
+            if node.kind != NodeKind::Region || node.control.len() < 2 {
                 return None;
             }
-            let back_edge = node.control[1];
-            (header < back_edge && graph.node(back_edge)?.kind == NodeKind::Jump)
-                .then_some((header, back_edge))
+            let back_edge = node.control.iter().skip(1).find(|edge| {
+                **edge > header
+                    && graph
+                        .node(**edge)
+                        .is_some_and(|node| node.kind == NodeKind::Jump)
+            })?;
+            Some((header, *back_edge))
         })
         .collect()
 }

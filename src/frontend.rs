@@ -7,7 +7,8 @@ use std::fmt;
 ///
 /// Functions and parameters retain their names and source ranges in `Graph::functions`.
 /// `if` expressions and statements merge values through explicit jumps, control regions,
-/// and Phi nodes. Mutable bindings and `while` loops use loop-header Phis and back edges.
+/// and Phi nodes. Mutable bindings and `while` loops use loop-header Phis, multiple back
+/// edges from `continue`, and exit Phis for `break` snapshots.
 /// Calls are checked against declared signatures. Comparisons and logical operations produce
 /// booleans; `&&` and `||` evaluate their right operand conditionally. Unsupported Rust is
 /// rejected with a source location.
@@ -499,6 +500,12 @@ struct Binding {
     ty: ScalarType,
 }
 
+struct LoopContext {
+    header: NodeId,
+    phis: Vec<(String, NodeId)>,
+    breaks: Vec<(NodeId, HashMap<String, Binding>)>,
+}
+
 struct Parser {
     tokens: Vec<Token>,
     position: usize,
@@ -509,6 +516,8 @@ struct Parser {
     types: HashMap<NodeId, ScalarType>,
     control: NodeId,
     return_type: Option<ScalarType>,
+    loops: Vec<LoopContext>,
+    terminated: bool,
 }
 
 impl Parser {
@@ -523,6 +532,8 @@ impl Parser {
             types: HashMap::new(),
             control: NodeId(0),
             return_type: None,
+            loops: Vec::new(),
+            terminated: false,
         }
     }
 
@@ -662,6 +673,7 @@ impl Parser {
     }
 
     fn parse_statement(&mut self, allow_return: bool) -> Result<Option<NodeId>, ParseError> {
+        self.terminated = false;
         if self.eat(TokenKind::Let) {
             self.parse_let()?;
             return Ok(None);
@@ -674,12 +686,25 @@ impl Parser {
             self.parse_while()?;
             return Ok(None);
         }
+        if self.peek_identifier("break") {
+            self.position += 1;
+            self.expect(TokenKind::Semicolon, "`;` after break")?;
+            self.parse_break()?;
+            return Ok(None);
+        }
+        if self.peek_identifier("continue") {
+            self.position += 1;
+            self.expect(TokenKind::Semicolon, "`;` after continue")?;
+            self.parse_continue()?;
+            return Ok(None);
+        }
         if self.eat(TokenKind::Return) {
             if !allow_return {
                 return Err(
                     self.error_here("`return` inside a conditional or loop is not supported")
                 );
             }
+            self.terminated = true;
             if self.eat(TokenKind::Semicolon) {
                 return Ok(Some(self.graph.return_(self.control, None)));
             }
@@ -768,15 +793,65 @@ impl Parser {
         Ok(())
     }
 
-    fn parse_statement_body(&mut self) -> Result<(), ParseError> {
+    fn parse_break(&mut self) -> Result<(), ParseError> {
+        if self.loops.is_empty() {
+            return Err(self.error_here("`break` outside a loop is not supported"));
+        }
+        let jump = self.graph.jump(self.control);
+        let variables = self.variables.clone();
+        self.loops
+            .last_mut()
+            .expect("loop context exists")
+            .breaks
+            .push((jump, variables));
+        self.terminated = true;
+        Ok(())
+    }
+
+    fn parse_continue(&mut self) -> Result<(), ParseError> {
+        if self.loops.is_empty() {
+            return Err(self.error_here("`continue` outside a loop is not supported"));
+        }
+        let jump = self.graph.jump(self.control);
+        self.append_loop_edge(jump);
+        self.terminated = true;
+        Ok(())
+    }
+
+    fn append_loop_edge(&mut self, jump: NodeId) {
+        let context = self.loops.last().expect("loop context exists");
+        let header = context.header;
+        let phis = context.phis.clone();
+        for (name, phi) in phis {
+            let value = self.variables[&name].value;
+            let node = self.graph.node_mut(phi).expect("loop phi exists");
+            node.control.push(jump);
+            node.data.push(value);
+        }
+        self.graph
+            .node_mut(header)
+            .expect("loop header exists")
+            .control
+            .push(jump);
+    }
+
+    fn parse_statement_body(&mut self) -> Result<bool, ParseError> {
+        let mut terminated = false;
         while !self.check(&TokenKind::RBrace) {
             if self.check(&TokenKind::Eof) {
                 return Err(self.error_here("unterminated statement body"));
             }
             self.parse_statement(false)?;
+            if self.terminated {
+                terminated = true;
+                break;
+            }
+        }
+        if terminated && !self.check(&TokenKind::RBrace) {
+            return Err(self.error_here("statements after `break` or `continue` are not supported"));
         }
         self.expect(TokenKind::RBrace, "`}` after statement body")?;
-        Ok(())
+        Ok(terminated)
     }
 
     fn parse_if_statement(&mut self) -> Result<(), ParseError> {
@@ -789,28 +864,50 @@ impl Parser {
 
         let true_projection = self.graph.projection(branch, 0);
         self.control = true_projection;
-        self.parse_statement_body()?;
-        let true_jump = self.graph.jump(self.control);
+        let true_terminated = self.parse_statement_body()?;
         let true_variables = self.variables.clone();
+        let true_jump = if true_terminated {
+            None
+        } else {
+            Some(self.graph.jump(self.control))
+        };
 
         self.variables = outer_variables.clone();
         let false_projection = self.graph.projection(branch, 1);
         self.control = false_projection;
-        if self.peek_identifier("else") {
+        let false_terminated = if self.peek_identifier("else") {
             self.position += 1;
             if self.peek_identifier("if") {
                 self.parse_if_statement()?;
+                self.terminated
             } else {
                 self.expect(TokenKind::LBrace, "`{` after else")?;
-                self.parse_statement_body()?;
+                self.parse_statement_body()?
             }
-        }
-        let false_jump = self.graph.jump(self.control);
+        } else {
+            self.terminated = false;
+            false
+        };
         let false_variables = self.variables.clone();
+        let false_jump = if false_terminated {
+            None
+        } else {
+            Some(self.graph.jump(self.control))
+        };
 
-        let controls = vec![true_jump, false_jump];
-        self.control = self.graph.region(controls.clone());
         self.variables = outer_variables;
+        if true_terminated && false_terminated {
+            self.terminated = true;
+            return Ok(());
+        }
+        let mut controls = Vec::new();
+        if let Some(jump) = true_jump {
+            controls.push(jump);
+        }
+        if let Some(jump) = false_jump {
+            controls.push(jump);
+        }
+        self.control = self.graph.region(controls.clone());
         let mut merged_names = self
             .variables
             .iter()
@@ -820,19 +917,14 @@ impl Parser {
         merged_names.sort();
         for name in merged_names {
             let ty = self.variables[&name].ty;
-            let phi = self.graph.phi(
-                controls.clone(),
-                vec![
-                    true_variables
-                        .get(&name)
-                        .expect("outer true-branch binding remains in scope")
-                        .value,
-                    false_variables
-                        .get(&name)
-                        .expect("outer false-branch binding remains in scope")
-                        .value,
-                ],
-            );
+            let mut values = Vec::new();
+            if true_jump.is_some() {
+                values.push(true_variables[&name].value);
+            }
+            if false_jump.is_some() {
+                values.push(false_variables[&name].value);
+            }
+            let phi = self.graph.phi(controls.clone(), values);
             self.types.insert(phi, ty);
             self.variables.insert(
                 name,
@@ -843,6 +935,7 @@ impl Parser {
                 },
             );
         }
+        self.terminated = false;
         Ok(())
     }
 
@@ -879,13 +972,26 @@ impl Parser {
 
         let body_projection = self.graph.projection(branch, 0);
         self.control = body_projection;
-        self.parse_statement_body()?;
-        let back_edge = self.graph.jump(self.control);
+        self.loops.push(LoopContext {
+            header,
+            phis: loop_variables
+                .iter()
+                .zip(&phis)
+                .map(|((name, _), phi)| (name.clone(), *phi))
+                .collect(),
+            breaks: Vec::new(),
+        });
+        let body_terminated = self.parse_statement_body()?;
+        if !body_terminated {
+            let back_edge = self.graph.jump(self.control);
+            self.append_loop_edge(back_edge);
+        }
         let exit_projection = self.graph.projection(branch, 1);
+        let context = self.loops.pop().expect("loop context exists");
 
-        let mut exit_variables = outer_variables;
+        let mut normal_variables = outer_variables.clone();
         for ((name, binding), phi) in loop_variables.iter().zip(&phis) {
-            exit_variables.insert(
+            normal_variables.insert(
                 name.clone(),
                 Binding {
                     value: *phi,
@@ -894,20 +1000,38 @@ impl Parser {
                 },
             );
         }
-        let body_variables = std::mem::replace(&mut self.variables, exit_variables);
-        for ((name, _), phi) in loop_variables.iter().zip(phis) {
-            let node = self.graph.node_mut(phi).expect("loop phi exists");
-            node.control.push(back_edge);
-            node.data.push(
-                body_variables
-                    .get(name)
-                    .expect("outer loop binding remains in scope")
-                    .value,
+        if context.breaks.is_empty() {
+            self.variables = normal_variables;
+            self.control = exit_projection;
+            self.terminated = false;
+            return Ok(());
+        }
+
+        let normal_exit = self.graph.jump(exit_projection);
+        let mut controls = vec![normal_exit];
+        controls.extend(context.breaks.iter().map(|(jump, _)| *jump));
+        self.control = self.graph.region(controls.clone());
+        self.variables = outer_variables;
+        for (name, binding) in &loop_variables {
+            let mut values = vec![normal_variables[name].value];
+            values.extend(
+                context
+                    .breaks
+                    .iter()
+                    .map(|(_, variables)| variables[name].value),
+            );
+            let phi = self.graph.phi(controls.clone(), values);
+            self.types.insert(phi, binding.ty);
+            self.variables.insert(
+                name.clone(),
+                Binding {
+                    value: phi,
+                    mutable: true,
+                    ty: binding.ty,
+                },
             );
         }
-        let node = self.graph.node_mut(header).expect("loop header exists");
-        node.control.push(back_edge);
-        self.control = exit_projection;
+        self.terminated = false;
         Ok(())
     }
 

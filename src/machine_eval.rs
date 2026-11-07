@@ -29,6 +29,7 @@ pub enum MachineEvalError {
     DivisionByZero,
     DivisionOverflow,
     UnknownLabel(u32),
+    InstructionLimitExceeded,
     UnsupportedCall(u32),
     InvalidDivisor(Reg),
     ReservedRegister(Reg),
@@ -59,6 +60,9 @@ impl fmt::Display for MachineEvalError {
                 formatter.write_str("signed division overflow (i64::MIN / -1)")
             }
             Self::UnknownLabel(label) => write!(formatter, "unknown machine label {label}"),
+            Self::InstructionLimitExceeded => {
+                formatter.write_str("machine evaluation exceeded the instruction limit")
+            }
             Self::UnsupportedCall(target) => {
                 write!(formatter, "call to {target} requires a program evaluator")
             }
@@ -129,7 +133,12 @@ fn execute(function: &MachineFunction, arguments: &[i64]) -> Result<Execution, M
         })
         .collect::<BTreeMap<_, _>>();
     let mut pc = 0usize;
+    let mut executed = 0usize;
     while pc < function.instructions.len() {
+        executed += 1;
+        if executed > 1_000_000 {
+            return Err(MachineEvalError::InstructionLimitExceeded);
+        }
         let instruction = function.instructions[pc];
         pc += 1;
         match instruction {
