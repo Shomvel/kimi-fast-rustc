@@ -16,7 +16,7 @@ fn if_else_selects_the_expected_branch() {
     assert_eq!(machine_eval::evaluate(&function, &[-9]), Ok(-7));
 
     let assembly = function.emit_gnu_assembly().unwrap();
-    assert!(assembly.contains("\tje "));
+    assert!(assembly.contains("\tjle "));
     assert!(assembly.contains("\tjmp"));
     assert!(!assembly.contains("llvm"));
 }

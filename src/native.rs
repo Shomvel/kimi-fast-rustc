@@ -187,6 +187,7 @@ pub fn lower_graph(graph: &Graph) -> Result<Vec<VirtualInstr>, CompileError> {
         })
         .collect::<BTreeMap<_, _>>();
     let loops = loop_headers(graph);
+    let direct_comparisons = direct_branch_comparisons(graph);
     let mut next_virtual_reg = graph
         .ids()
         .map(|id| id.0)
@@ -298,6 +299,7 @@ pub fn lower_graph(graph: &Graph) -> Result<Vec<VirtualInstr>, CompileError> {
                     },
                 }
             }
+            NodeKind::Compare(_) if direct_comparisons.contains_key(&id) => VirtualInstr::Nop,
             NodeKind::Compare(operation) => {
                 let (lhs, rhs) = binary_inputs(id, &node.data, &values)?;
                 VirtualInstr::Compare {
@@ -332,16 +334,25 @@ pub fn lower_graph(graph: &Graph) -> Result<Vec<VirtualInstr>, CompileError> {
                 }
             }
             NodeKind::If => {
-                let condition = value_reference(id, node.data[0], &values)?;
+                let condition_id = node.data[0];
                 let target = false_projections
                     .get(&id)
                     .ok_or_else(|| unsupported(id, UnsupportedReason::NodeKind(node.kind)))?;
-                instructions.push(VirtualInstr::Test {
-                    lhs: condition,
-                    rhs: VirtualValue::Imm(0),
-                });
+                let (condition, lhs, rhs) =
+                    if let Some(inverse) = direct_comparisons.get(&condition_id) {
+                        let compare = graph.node(condition_id).expect("direct comparison exists");
+                        let (lhs, rhs) = binary_inputs(id, &compare.data, &values)?;
+                        (*inverse, lhs, rhs)
+                    } else {
+                        (
+                            Condition::Eq,
+                            value_reference(id, condition_id, &values)?,
+                            VirtualValue::Imm(0),
+                        )
+                    };
+                instructions.push(VirtualInstr::Test { lhs, rhs });
                 VirtualInstr::Jcc {
-                    condition: Condition::Eq,
+                    condition,
                     target: target.0,
                 }
             }
@@ -584,6 +595,47 @@ fn condition(operation: CompareOp) -> Condition {
     }
 }
 
+fn direct_branch_comparisons(graph: &Graph) -> BTreeMap<NodeId, Condition> {
+    let mut candidates = BTreeMap::new();
+    let mut rejected = BTreeSet::new();
+    for (_, node) in graph.iter() {
+        for channel in [
+            crate::son::InputChannel::Control,
+            crate::son::InputChannel::Data,
+            crate::son::InputChannel::Memory,
+        ] {
+            for input in node.inputs(channel) {
+                let Some(NodeKind::Compare(operation)) = graph.node(*input).map(|node| node.kind)
+                else {
+                    continue;
+                };
+                if node.kind == NodeKind::If && node.data[0] == *input {
+                    candidates.insert(*input, invert_condition(condition(operation)));
+                } else {
+                    rejected.insert(*input);
+                }
+            }
+        }
+    }
+    candidates.retain(|id, _| !rejected.contains(id));
+    candidates
+}
+
+fn invert_condition(condition: Condition) -> Condition {
+    match condition {
+        Condition::Eq => Condition::NotEq,
+        Condition::NotEq => Condition::Eq,
+        Condition::SignedLess => Condition::SignedGreaterEq,
+        Condition::SignedLessEq => Condition::SignedGreater,
+        Condition::SignedGreater => Condition::SignedLessEq,
+        Condition::SignedGreaterEq => Condition::SignedLess,
+        Condition::UnsignedBelow => Condition::UnsignedAboveEq,
+        Condition::UnsignedBelowEq => Condition::UnsignedAbove,
+        Condition::UnsignedAbove => Condition::UnsignedBelowEq,
+        Condition::UnsignedAboveEq => Condition::UnsignedBelow,
+    }
+}
+
 fn live_intervals(instructions: &[VirtualInstr]) -> Result<Vec<LiveInterval>, CompileError> {
     let mut intervals: BTreeMap<u32, (u32, u32)> = BTreeMap::new();
 
@@ -666,6 +718,7 @@ fn defined_register(instruction: &VirtualInstr) -> Option<VirtualReg> {
         | VirtualInstr::Phi { dst, .. }
         | VirtualInstr::Call { dst, .. } => Some(dst),
         VirtualInstr::Test { .. }
+        | VirtualInstr::Nop
         | VirtualInstr::Label(_)
         | VirtualInstr::Jmp(_)
         | VirtualInstr::Jcc { .. }
@@ -710,7 +763,8 @@ fn used_registers(instruction: &VirtualInstr) -> Vec<VirtualReg> {
                 add_value(value);
             }
         }
-        VirtualInstr::Label(_)
+        VirtualInstr::Nop
+        | VirtualInstr::Label(_)
         | VirtualInstr::Jmp(_)
         | VirtualInstr::Jcc { .. }
         | VirtualInstr::Phi { .. }
@@ -872,6 +926,7 @@ impl Emitter<'_> {
                 self.instructions
                     .push(MachineInstr::Cmp { lhs: SCRATCH0, rhs });
             }
+            VirtualInstr::Nop => {}
             VirtualInstr::Label(label) => {
                 self.instructions.push(MachineInstr::Label(label));
             }

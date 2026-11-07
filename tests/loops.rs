@@ -21,7 +21,7 @@ fn mutable_accumulator_runs_zero_or_many_iterations() {
             "{assembly}"
         );
     }
-    assert!(assembly.contains("\tje "));
+    assert!(assembly.contains("\tjge "));
     assert!(assembly.contains("\tjmp .L"));
 }
 
@@ -71,8 +71,7 @@ fn calls_and_relocations_survive_loops() {
     let program = native_program::compile_graph(&graph).unwrap();
     let assembly = program.emit_gnu_assembly().unwrap();
     assert!(assembly.contains("\tcall sum_to\n"));
-    assert!(assembly.contains("\tsetle "));
-    assert!(assembly.contains("\tje "));
+    assert!(assembly.contains("\tjg "));
     let object = program.emit_object().unwrap();
     assert_eq!(&object[..4], b"\x7fELF");
     assert!(object.windows(10).any(|window| window == b".rela.text"));
