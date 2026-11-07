@@ -55,6 +55,24 @@ fn branch_with_inner_loop_jumps_to_the_outer_merge() {
 }
 
 #[test]
+fn else_if_chains_merge_every_nested_branch() {
+    let function = compile(
+        "fn main(value: i64) -> i64 { let mut result = 0; if value > 20 { result = 3; } else if value > 10 { result = 2; } else if value > 0 { result = 1; } else { result = -1; } return result; }",
+    );
+    for (value, expected) in [
+        (21, 3),
+        (20, 2),
+        (11, 2),
+        (10, 1),
+        (1, 1),
+        (0, -1),
+        (-8, -1),
+    ] {
+        assert_eq!(machine_eval::evaluate(&function, &[value]), Ok(expected));
+    }
+}
+
+#[test]
 fn branch_locals_do_not_escape_and_returns_stay_at_function_level() {
     let error =
         frontend::parse("fn main() { if 1 { let branch_local = 42; } return branch_local; }")

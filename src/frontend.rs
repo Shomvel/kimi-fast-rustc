@@ -70,6 +70,11 @@ enum TokenKind {
     Star,
     Slash,
     Percent,
+    PlusEq,
+    MinusEq,
+    StarEq,
+    SlashEq,
+    PercentEq,
     Eq,
     EqEq,
     Ne,
@@ -266,18 +271,49 @@ impl<'a> Lexer<'a> {
             Some(',') => TokenKind::Comma,
             Some(':') => TokenKind::Colon,
             Some(';') => TokenKind::Semicolon,
-            Some('+') => TokenKind::Plus,
+            Some('+') => {
+                if self.rest().starts_with('=') {
+                    self.advance();
+                    TokenKind::PlusEq
+                } else {
+                    TokenKind::Plus
+                }
+            }
             Some('-') => {
                 if self.rest().starts_with('>') {
                     self.advance();
                     TokenKind::Arrow
+                } else if self.rest().starts_with('=') {
+                    self.advance();
+                    TokenKind::MinusEq
                 } else {
                     TokenKind::Minus
                 }
             }
-            Some('*') => TokenKind::Star,
-            Some('/') => TokenKind::Slash,
-            Some('%') => TokenKind::Percent,
+            Some('*') => {
+                if self.rest().starts_with('=') {
+                    self.advance();
+                    TokenKind::StarEq
+                } else {
+                    TokenKind::Star
+                }
+            }
+            Some('/') => {
+                if self.rest().starts_with('=') {
+                    self.advance();
+                    TokenKind::SlashEq
+                } else {
+                    TokenKind::Slash
+                }
+            }
+            Some('%') => {
+                if self.rest().starts_with('=') {
+                    self.advance();
+                    TokenKind::PercentEq
+                } else {
+                    TokenKind::Percent
+                }
+            }
             Some('=') => {
                 if self.rest().starts_with('=') {
                     self.advance();
@@ -461,9 +497,12 @@ impl Parser {
         let mut parameter_names = HashSet::new();
         if !self.check(&TokenKind::RParen) {
             loop {
-                if self.peek_identifier("mut") {
-                    return Err(self.error_here("mutable parameters are not supported"));
-                }
+                let mutable = if self.peek_identifier("mut") {
+                    self.position += 1;
+                    true
+                } else {
+                    false
+                };
                 let (parameter, parameter_span) = self.parse_identifier("parameter name")?;
                 if !parameter_names.insert(parameter.clone()) {
                     return Err(ParseError::new(
@@ -473,7 +512,7 @@ impl Parser {
                 }
                 self.expect(TokenKind::Colon, "`:` and explicit `i64` parameter type")?;
                 self.parse_i64_type()?;
-                parameters.push(parameter);
+                parameters.push((parameter, mutable));
                 if !self.eat(TokenKind::Comma) {
                     break;
                 }
@@ -493,13 +532,13 @@ impl Parser {
         let mut return_node = None;
         self.control = start;
         self.variables.clear();
-        for (index, parameter) in parameters.iter().enumerate() {
+        for (index, (parameter, mutable)) in parameters.iter().enumerate() {
             let node = self.graph.parameter(index);
             self.variables.insert(
                 parameter.clone(),
                 Binding {
                     value: node,
-                    mutable: false,
+                    mutable: *mutable,
                 },
             );
         }
@@ -614,8 +653,20 @@ impl Parser {
                 format!("cannot assign to immutable binding `{name}`"),
             ));
         }
-        self.expect(TokenKind::Eq, "`=` in assignment")?;
-        let value = self.parse_expression()?;
+        let operation = match self.advance().kind {
+            TokenKind::Eq => None,
+            TokenKind::PlusEq => Some(BinaryOp::Add),
+            TokenKind::MinusEq => Some(BinaryOp::Sub),
+            TokenKind::StarEq => Some(BinaryOp::Mul),
+            TokenKind::SlashEq => Some(BinaryOp::Div),
+            TokenKind::PercentEq => Some(BinaryOp::Rem),
+            _ => return Err(self.error_here("expected an assignment operator")),
+        };
+        let right = self.parse_expression()?;
+        let value = match operation {
+            Some(operation) => self.graph.binary(operation, binding.value, right),
+            None => right,
+        };
         self.expect(TokenKind::Semicolon, "`;` after assignment")?;
         self.variables.insert(
             name,
@@ -656,8 +707,12 @@ impl Parser {
         self.control = false_projection;
         if self.peek_identifier("else") {
             self.position += 1;
-            self.expect(TokenKind::LBrace, "`{` after else")?;
-            self.parse_statement_body()?;
+            if self.peek_identifier("if") {
+                self.parse_if_statement()?;
+            } else {
+                self.expect(TokenKind::LBrace, "`{` after else")?;
+                self.parse_statement_body()?;
+            }
         }
         let false_jump = self.graph.jump(self.control);
         let false_variables = self.variables.clone();
