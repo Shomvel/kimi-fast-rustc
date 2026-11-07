@@ -188,6 +188,7 @@ pub fn lower_graph(graph: &Graph) -> Result<Vec<VirtualInstr>, CompileError> {
         .collect::<BTreeMap<_, _>>();
     let loops = loop_headers(graph);
     let direct_comparisons = direct_branch_comparisons(graph);
+    let immediate_constants = immediate_constants(graph);
     let mut next_virtual_reg = graph
         .ids()
         .map(|id| id.0)
@@ -208,6 +209,7 @@ pub fn lower_graph(graph: &Graph) -> Result<Vec<VirtualInstr>, CompileError> {
 
         let instruction = match node.kind {
             NodeKind::Start => unreachable!(),
+            NodeKind::Const(_) if immediate_constants.contains(&id) => VirtualInstr::Nop,
             NodeKind::Const(value) => VirtualInstr::Mov {
                 dst: virtual_reg(id),
                 src: VirtualValue::Imm(value),
@@ -231,17 +233,12 @@ pub fn lower_graph(graph: &Graph) -> Result<Vec<VirtualInstr>, CompileError> {
             }
             NodeKind::Binary(operation) => {
                 let (lhs, rhs) = binary_inputs(id, &node.data, &values)?;
-                let rhs = match operation {
-                    BinaryOp::Shl | BinaryOp::Shr | BinaryOp::LShr => {
-                        if let Some(NodeKind::Const(value)) =
-                            graph.node(node.data[1]).map(|node| node.kind)
-                        {
-                            VirtualValue::Imm(value)
-                        } else {
-                            rhs
-                        }
-                    }
-                    _ => rhs,
+                let rhs = if let Some(NodeKind::Const(value)) =
+                    graph.node(node.data[1]).map(|node| node.kind)
+                {
+                    VirtualValue::Imm(value)
+                } else {
+                    rhs
                 };
                 match operation {
                     BinaryOp::Add => VirtualInstr::Add {
@@ -314,6 +311,13 @@ pub fn lower_graph(graph: &Graph) -> Result<Vec<VirtualInstr>, CompileError> {
             NodeKind::Compare(_) if direct_comparisons.contains_key(&id) => VirtualInstr::Nop,
             NodeKind::Compare(operation) => {
                 let (lhs, rhs) = binary_inputs(id, &node.data, &values)?;
+                let rhs = if let Some(NodeKind::Const(value)) =
+                    graph.node(node.data[1]).map(|node| node.kind)
+                {
+                    VirtualValue::Imm(value)
+                } else {
+                    rhs
+                };
                 VirtualInstr::Compare {
                     dst: virtual_reg(id),
                     condition: condition(operation),
@@ -354,6 +358,13 @@ pub fn lower_graph(graph: &Graph) -> Result<Vec<VirtualInstr>, CompileError> {
                     if let Some(inverse) = direct_comparisons.get(&condition_id) {
                         let compare = graph.node(condition_id).expect("direct comparison exists");
                         let (lhs, rhs) = binary_inputs(id, &compare.data, &values)?;
+                        let rhs = if let Some(NodeKind::Const(value)) =
+                            graph.node(compare.data[1]).map(|node| node.kind)
+                        {
+                            VirtualValue::Imm(value)
+                        } else {
+                            rhs
+                        };
                         (*inverse, lhs, rhs)
                     } else {
                         (
@@ -630,6 +641,30 @@ fn direct_branch_comparisons(graph: &Graph) -> BTreeMap<NodeId, Condition> {
         }
     }
     candidates.retain(|id, _| !rejected.contains(id));
+    candidates
+}
+
+fn immediate_constants(graph: &Graph) -> BTreeSet<NodeId> {
+    let mut candidates = BTreeSet::new();
+    let mut rejected = BTreeSet::new();
+    for (_, node) in graph.iter() {
+        for channel in [
+            crate::son::InputChannel::Control,
+            crate::son::InputChannel::Memory,
+        ] {
+            for input in node.inputs(channel) {
+                rejected.insert(*input);
+            }
+        }
+        for (index, input) in node.data.iter().enumerate() {
+            if index == 1 && matches!(node.kind, NodeKind::Binary(_) | NodeKind::Compare(_)) {
+                candidates.insert(*input);
+            } else {
+                rejected.insert(*input);
+            }
+        }
+    }
+    candidates.retain(|id| !rejected.contains(id));
     candidates
 }
 
@@ -1097,6 +1132,13 @@ impl Emitter<'_> {
     ) -> Result<(), CompileError> {
         let work = self.definition_register(dst)?;
         let rhs = match self.operand(rhs, SCRATCH1)? {
+            Operand::Imm(value) => {
+                self.instructions.push(MachineInstr::MovImm {
+                    dst: SCRATCH1,
+                    value: value as i64,
+                });
+                Operand::Reg(SCRATCH1)
+            }
             Operand::Reg(reg @ (Reg::Rax | Reg::Rdx)) => {
                 self.instructions.push(MachineInstr::Mov {
                     dst: SCRATCH1,
@@ -1182,11 +1224,15 @@ impl Emitter<'_> {
     fn operand(&mut self, value: VirtualValue, scratch: Reg) -> Result<Operand, CompileError> {
         match value {
             VirtualValue::Imm(value) => {
-                self.instructions.push(MachineInstr::MovImm {
-                    dst: scratch,
-                    value,
-                });
-                Ok(Operand::Reg(scratch))
+                if let Ok(value) = i32::try_from(value) {
+                    Ok(Operand::Imm(value))
+                } else {
+                    self.instructions.push(MachineInstr::MovImm {
+                        dst: scratch,
+                        value,
+                    });
+                    Ok(Operand::Reg(scratch))
+                }
             }
             VirtualValue::Reg(virtual_reg) => match self.location(virtual_reg)? {
                 Location::Register(register) => Ok(Operand::Reg(general_register(register))),
@@ -1350,7 +1396,7 @@ mod tests {
             let start = graph.start();
             let mut values = Vec::new();
             for value in 1..=20 {
-                values.push(graph.constant(value));
+                values.push(graph.parameter((value - 1) as usize));
             }
             let mut sum = values[2];
             for value in values.iter().skip(3) {
@@ -1368,8 +1414,11 @@ mod tests {
                     src: Operand::Stack(_)
                 }
             )));
-            assert_eq!(run(&function, &[]), expected);
-            assert_eq!(machine_eval::evaluate(&function, &[]), Ok(expected));
+            assert_eq!(run(&function, &sequence(1, 20)), expected);
+            assert_eq!(
+                machine_eval::evaluate(&function, &sequence(1, 20)),
+                Ok(expected)
+            );
         }
     }
 
@@ -1383,7 +1432,7 @@ mod tests {
             let division = graph.binary(operation, lhs, rhs);
             let mut values = Vec::new();
             for value in 1..=20 {
-                values.push(graph.constant(value));
+                values.push(graph.parameter((value - 1) as usize));
             }
             let mut sum = values[0];
             for value in values.into_iter().skip(1) {
@@ -1402,8 +1451,11 @@ mod tests {
                 function.instructions[idiv + 2],
                 MachineInstr::Store { .. }
             ));
-            assert_eq!(run(&function, &[]), expected);
-            assert_eq!(machine_eval::evaluate(&function, &[]), Ok(expected));
+            assert_eq!(run(&function, &sequence(1, 20)), expected);
+            assert_eq!(
+                machine_eval::evaluate(&function, &sequence(1, 20)),
+                Ok(expected)
+            );
         }
     }
 
@@ -1471,7 +1523,7 @@ mod tests {
         let first = graph.parameter(0);
         let mut values = Vec::new();
         for value in 0..12 {
-            values.push(graph.constant(value));
+            values.push(graph.parameter(value as usize));
         }
         let second = graph.parameter(1);
         let mut sum = graph.binary(BinaryOp::Add, first, second);
@@ -1482,7 +1534,10 @@ mod tests {
 
         let function = compile_graph(&graph, "argument_home").unwrap();
         assert!(function.stack_slots >= 1);
-        assert_eq!(run(&function, &[20, 7]), 93);
+        let mut arguments = sequence(0, 12);
+        arguments[0] = 20;
+        arguments[1] = 7;
+        assert_eq!(run(&function, &arguments), 119);
         assert!(matches!(
             function.instructions.first(),
             Some(MachineInstr::Store { src: Reg::Rsi, .. })
@@ -1495,7 +1550,7 @@ mod tests {
         let start = graph.start();
         let mut values = Vec::new();
         for value in 1..=20 {
-            values.push(graph.constant(value));
+            values.push(graph.parameter((value - 1) as usize));
         }
         let mut sum = values[0];
         for value in values.into_iter().skip(1) {
@@ -1521,7 +1576,7 @@ mod tests {
                     }
                 )
         }));
-        assert_eq!(run(&function, &[]), 210);
+        assert_eq!(run(&function, &sequence(1, 20)), 210);
         assert!(
             function
                 .callee_saved
@@ -1561,7 +1616,7 @@ mod tests {
         let start = graph.start();
         let mut values = Vec::new();
         for value in 0..18 {
-            values.push(graph.constant(value));
+            values.push(graph.parameter(value as usize));
         }
         let comparison = graph.compare(CompareOp::Lt, values[0], values[1]);
         let mut sum = values[2];
@@ -1575,7 +1630,7 @@ mod tests {
         assert!(function.instructions.iter().any(|instruction| {
             matches!(instruction, MachineInstr::SetCc { dst: SCRATCH0, .. })
         }));
-        assert_eq!(run(&function, &[]), 153);
+        assert_eq!(run(&function, &sequence(0, 18)), 153);
     }
 
     #[test]
@@ -1584,7 +1639,7 @@ mod tests {
         let start = graph.start();
         let mut values = Vec::new();
         for value in 0..16 {
-            values.push(graph.constant(value));
+            values.push(graph.parameter(value as usize));
         }
         let difference = graph.binary(BinaryOp::Sub, values[0], values[15]);
         let mut sum = difference;
@@ -1595,7 +1650,7 @@ mod tests {
 
         let function = compile_graph(&graph, "sub_spills").unwrap();
         assert!(function.stack_slots > 0);
-        assert_eq!(run(&function, &[]), 90);
+        assert_eq!(run(&function, &sequence(0, 16)), 90);
     }
 
     #[test]
@@ -1654,6 +1709,10 @@ mod tests {
                 input: NodeId(3),
             })
         );
+    }
+
+    fn sequence(start: i64, count: usize) -> Vec<i64> {
+        (start..start + count as i64).collect()
     }
 
     fn run(function: &MachineFunction, args: &[i64]) -> i64 {
@@ -1822,6 +1881,7 @@ mod tests {
         match operand {
             Operand::Reg(register) => read_reg(registers, register),
             Operand::Stack(slot) => slots[slot.0 as usize],
+            Operand::Imm(value) => value as i64,
         }
     }
 }

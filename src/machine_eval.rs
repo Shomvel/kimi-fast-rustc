@@ -32,6 +32,7 @@ pub enum MachineEvalError {
     InstructionLimitExceeded,
     UnsupportedCall(u32),
     InvalidDivisor(Reg),
+    ImmediateDivision,
     ReservedRegister(Reg),
     ExpectedCalleeSaved(Reg),
     DuplicateCalleeSaved(Reg),
@@ -68,6 +69,9 @@ impl fmt::Display for MachineEvalError {
             }
             Self::InvalidDivisor(reg) => {
                 write!(formatter, "{reg} cannot be used as an idiv divisor")
+            }
+            Self::ImmediateDivision => {
+                formatter.write_str("x86 does not support immediate division")
             }
             Self::ReservedRegister(reg) => {
                 write!(formatter, "{reg} is reserved for frame management")
@@ -341,6 +345,7 @@ impl Machine {
         match operand {
             Operand::Reg(register) => Ok(self.reg(register)),
             Operand::Stack(slot) => self.slot(slot, stack_slots),
+            Operand::Imm(value) => Ok(value as i64),
         }
     }
 }
@@ -400,6 +405,7 @@ fn validate_instruction(
     let validate_operand = |operand| match operand {
         Operand::Reg(register) => validate_reg(register),
         Operand::Stack(slot) => validate_slot(slot, stack_slots),
+        Operand::Imm(_) => Ok(()),
     };
 
     match instruction {
@@ -429,6 +435,9 @@ fn validate_instruction(
         }
         Cqo => Ok(()),
         IDiv { src } | UDiv { src } => {
+            if matches!(src, Operand::Imm(_)) {
+                return Err(MachineEvalError::ImmediateDivision);
+            }
             validate_operand(src)?;
             if let Operand::Reg(reg @ (Reg::Rax | Reg::Rdx)) = src {
                 Err(MachineEvalError::InvalidDivisor(reg))

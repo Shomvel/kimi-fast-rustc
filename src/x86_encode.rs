@@ -17,6 +17,7 @@ pub enum EncodeError {
     ExpectedCalleeSaved(Reg),
     DuplicateCalleeSaved(Reg),
     InvalidDivisor(Reg),
+    ImmediateDivision,
     InvalidCallTarget(u32),
     StackSlotOutOfBounds { slot: StackSlot, stack_slots: u32 },
     ArgumentOffsetOverflow { index: usize },
@@ -43,6 +44,9 @@ impl fmt::Display for EncodeError {
             }
             Self::InvalidDivisor(reg) => {
                 write!(formatter, "{reg} cannot be used as an idiv divisor")
+            }
+            Self::ImmediateDivision => {
+                formatter.write_str("x86 does not support immediate division")
             }
             Self::InvalidCallTarget(target) => {
                 write!(formatter, "call target symbol index {target} is invalid")
@@ -195,6 +199,7 @@ fn validate_instruction(
         match operand {
             Operand::Reg(reg) => validate_reg(reg),
             Operand::Stack(slot) => validate_slot(slot, stack_slots),
+            Operand::Imm(_) => Ok(()),
         }
     }
 
@@ -230,6 +235,9 @@ fn validate_instruction(
         }
         Cqo => {}
         IDiv { src } | UDiv { src } => {
+            if matches!(src, Operand::Imm(_)) {
+                return Err(EncodeError::ImmediateDivision);
+            }
             validate_operand(src, stack_slots)?;
             if let Operand::Reg(reg @ (Reg::Rax | Reg::Rdx)) = src {
                 return Err(EncodeError::InvalidDivisor(reg));
@@ -406,9 +414,16 @@ impl Encoder<'_> {
                     self.bytes.extend_from_slice(&[0x0f, 0xaf]);
                     self.stack_memory(dst, spill_offset(slot)?);
                 }
+                Operand::Imm(value) => {
+                    self.rex(true, Some(dst), None, false);
+                    self.bytes.push(0x69);
+                    self.modrm(3, dst, dst.low_code());
+                    self.i32(value);
+                }
             },
             Cqo => self.bytes.extend_from_slice(&[0x48, 0x99]),
             IDiv { src } => match src {
+                Operand::Imm(_) => return Err(EncodeError::ImmediateDivision),
                 Operand::Reg(src) => {
                     self.rex(true, None, Some(src), false);
                     self.bytes.push(0xf7);
@@ -421,6 +436,7 @@ impl Encoder<'_> {
                 }
             },
             UDiv { src } => match src {
+                Operand::Imm(_) => return Err(EncodeError::ImmediateDivision),
                 Operand::Reg(src) => {
                     self.rex(true, None, Some(src), false);
                     self.bytes.push(0xf7);
@@ -512,8 +528,25 @@ impl Encoder<'_> {
         match src {
             Operand::Reg(src) => self.reg_reg(reg_opcode, dst, src),
             Operand::Stack(slot) => self.memory_reg(memory_opcode, dst, spill_offset(slot)?),
+            Operand::Imm(value) => self.group_immediate(reg_opcode, dst, value),
         }
         Ok(())
+    }
+
+    fn group_immediate(&mut self, opcode: u8, dst: Reg, value: i32) {
+        let extension = match opcode {
+            0x01 => Reg::Rax,
+            0x09 => Reg::Rcx,
+            0x21 => Reg::Rsp,
+            0x29 => Reg::Rbp,
+            0x31 => Reg::Rsi,
+            0x39 => Reg::Rdi,
+            _ => unreachable!("not a group-one arithmetic opcode"),
+        };
+        self.rex(true, None, Some(dst), false);
+        self.bytes.push(0x81);
+        self.modrm(3, extension, dst.low_code());
+        self.i32(value);
     }
 
     fn reg_reg(&mut self, opcode: u8, dst: Reg, src: Reg) {

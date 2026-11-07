@@ -81,10 +81,13 @@ fn shifts_mask_counts_and_preserve_the_sign() {
 #[test]
 fn shifts_survive_spills_and_loop_phi_values() {
     let function = compile(
-        "fn main() -> i64 { let a = 1; let b = 2; let c = 3; let d = 4; let e = 5; let f = 6; let g = 7; let h = 8; let i = 9; let j = 10; let k = 11; let l = 12; let mut value = 3; let mut count = 0; while count < 4 { value = value << 2; count = count + 1; } return (value >> 1) + a + b + c + d + e + f + g + h + i + j + k + l; }",
+        "fn main(a: i64, b: i64, c: i64, d: i64, e: i64, f: i64, g: i64, h: i64, i: i64, j: i64, k: i64, l: i64) -> i64 { let mut value = 3; let mut count = 0; while count < 4 { value = value << 2; count = count + 1; } return (value >> 1) + a + b + c + d + e + f + g + h + i + j + k + l; }",
     );
     assert!(function.stack_slots > 0);
-    assert_eq!(machine_eval::evaluate(&function, &[]), Ok(462));
+    assert_eq!(
+        machine_eval::evaluate(&function, &[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]),
+        Ok(462)
+    );
 }
 
 #[test]

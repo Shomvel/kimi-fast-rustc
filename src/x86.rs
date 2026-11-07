@@ -342,6 +342,7 @@ impl fmt::Display for Reg {
 pub enum Operand {
     Reg(Reg),
     Stack(StackSlot),
+    Imm(i32),
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -410,6 +411,7 @@ pub enum AsmError {
     ExpectedCalleeSaved(Reg),
     DuplicateCalleeSaved(Reg),
     InvalidDivisor(Reg),
+    ImmediateDivision,
     InvalidCallTarget(u32),
     StackSlotOutOfBounds { slot: StackSlot, stack_slots: u32 },
     ArgumentOffsetOverflow { index: usize },
@@ -425,6 +427,7 @@ impl fmt::Display for AsmError {
             Self::ExpectedCalleeSaved(reg) => write!(f, "{reg} is not a callee-saved register"),
             Self::DuplicateCalleeSaved(reg) => write!(f, "duplicate callee-saved register {reg}"),
             Self::InvalidDivisor(reg) => write!(f, "{reg} cannot be used as an idiv divisor"),
+            Self::ImmediateDivision => f.write_str("x86 does not support immediate division"),
             Self::InvalidCallTarget(target) => {
                 write!(f, "call target symbol index {target} is invalid")
             }
@@ -546,6 +549,7 @@ fn validate_instruction(
     let validate_operand = |operand: Operand| match operand {
         Operand::Reg(reg) => validate_reg(reg),
         Operand::Stack(slot) => validate_slot(slot, stack_slots),
+        Operand::Imm(_) => Ok(()),
     };
 
     match instruction {
@@ -580,6 +584,9 @@ fn validate_instruction(
         }
         Cqo => {}
         IDiv { src } | UDiv { src } => {
+            if matches!(src, Operand::Imm(_)) {
+                return Err(AsmError::ImmediateDivision);
+            }
             validate_operand(src)?;
             if let Operand::Reg(reg @ (Reg::Rax | Reg::Rdx)) = src {
                 return Err(AsmError::InvalidDivisor(reg));
@@ -734,6 +741,7 @@ fn emit_operand(out: &mut String, operand: Operand, stack_slots: u32) -> Result<
             validate_slot(slot, stack_slots)?;
             out.push_str(&format!("QWORD PTR [rbp{}]", spill_offset(slot)));
         }
+        Operand::Imm(value) => out.push_str(&value.to_string()),
     }
     Ok(())
 }
