@@ -664,6 +664,15 @@ impl Parser {
                     "statements after `return` are unsupported; `return` must end the body",
                 ));
             }
+            if self.is_tail_expression_candidate() {
+                let value = self.parse_expression()?;
+                if let Some(expected) = return_type {
+                    self.require_type(value, expected)?;
+                }
+                return_node = Some(self.graph.return_(self.control, Some(value)));
+                self.terminated = true;
+                break;
+            }
             if let Some(node) = self.parse_statement()? {
                 return_node = Some(node);
             }
@@ -710,6 +719,20 @@ impl Parser {
         Ok(())
     }
 
+    fn is_tail_expression_candidate(&self) -> bool {
+        if self.check(&TokenKind::Let)
+            || self.check(&TokenKind::Return)
+            || ["if", "for", "while", "loop", "break", "continue", "return"]
+                .into_iter()
+                .any(|keyword| self.peek_identifier(keyword))
+        {
+            return false;
+        }
+        !self.tokens[self.position..]
+            .iter()
+            .any(|token| token.kind == TokenKind::Semicolon)
+    }
+
     fn parse_statement(&mut self) -> Result<Option<NodeId>, ParseError> {
         self.terminated = false;
         if self.eat(TokenKind::Let) {
@@ -722,6 +745,13 @@ impl Parser {
         }
         if self.peek_identifier("for") {
             self.parse_for()?;
+            return Ok(None);
+        }
+        if self.peek_identifier("loop") {
+            self.position += 1;
+            let condition = self.graph.constant(1);
+            self.mark_bool(condition);
+            self.parse_loop(Some(condition), None, None)?;
             return Ok(None);
         }
         if self.peek_identifier("while") {
@@ -1974,9 +2004,9 @@ mod tests {
                 .contains("expected `fn`")
         );
         assert!(
-            error("fn main() { loop { } }")
+            error("fn main() { @ }")
                 .message
-                .contains("assignment target")
+                .contains("unsupported token")
         );
         assert!(
             error("fn main() { return 1 && 0; }")
