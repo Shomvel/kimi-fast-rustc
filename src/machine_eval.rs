@@ -206,6 +206,7 @@ fn execute(function: &MachineFunction, arguments: &[i64]) -> Result<Execution, M
                 let value = machine.reg(src);
                 *machine.slot_mut(slot, function.stack_slots)? = value;
             }
+            MachineInstr::StoreArg { .. } => {}
             MachineInstr::Label(_) => {}
             MachineInstr::Jmp(target) => {
                 pc = *labels
@@ -370,6 +371,7 @@ fn validate_instruction(
             validate_slot(slot, stack_slots)?;
             validate_reg(src)
         }
+        StoreArg { .. } => Ok(()),
         Label(_) | Jmp(_) | Jcc { .. } | Call { .. } => Ok(()),
         Ret => Ok(()),
     }

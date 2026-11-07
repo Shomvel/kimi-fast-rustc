@@ -92,6 +92,6 @@ The active architecture is now native-only; the LLVM experiments above are histo
 
 `if` expressions are lowered to `If`, control projections, regions, and Phi nodes, then to x86 labels and conditional jumps. Nested `if` tests pass on both the reference evaluator and real x86_64 execution. A real `if 2 > 1` executable returned 42 on `yicloud-dev`. Standard `fn main() {}` and `return;` produce exit status zero.
 
-Zero-argument function calls preserve function metadata, use separate machine functions, save caller-saved registers, and emit `R_X86_64_PLT32` relocations. A real `main -> answer` call returned 42 on `yicloud-dev`, and `readelf -W -r` verified the `answer - 4` relocation. More complex parameter ABIs are rejected explicitly.
+Function calls preserve function metadata, use separate machine functions, save caller-saved registers, and emit `R_X86_64_PLT32` relocations. Real `main -> answer` and `id(42)` calls returned 42 on `yicloud-dev`, and `readelf -W -r` verified their relocations. Calls use the first six System V argument registers and outgoing stack arguments after all source values are preserved. `sum8(1..8)` returned 36 on `yicloud-dev`; its seventh and eighth arguments were written with `[rsp]` and `[rsp+8]` before the call. Unsupported signatures and arity mismatches are rejected explicitly.
 
 The expanded test suite and Clippy pass with Rust 1.99.1. These results demonstrate a working native subset, not complete Rust language or whole-workspace support.

@@ -6,7 +6,7 @@ use crate::elf_reloc::{
     ElfRelocError, ObjectSymbol, R_X86_64_PLT32, Relocation, write_object_with_relocations,
 };
 use crate::native::{self, CompileError};
-use crate::son::{FunctionMetadata, Graph};
+use crate::son::Graph;
 use crate::x86::MachineFunction;
 use crate::x86_encode::{self, EncodeError};
 
@@ -146,7 +146,6 @@ pub fn compile_graph(graph: &Graph) -> Result<NativeProgram, ProgramError> {
     }
     let mut functions = Vec::new();
     for metadata in &graph.functions {
-        validate_signature(metadata)?;
         functions.push(native::compile_graph(
             &graph.function_graph(metadata),
             metadata.name.clone(),
@@ -161,14 +160,4 @@ pub fn compile_graph_to_assembly(graph: &Graph) -> Result<String, ProgramError> 
 
 pub fn compile_graph_to_object(graph: &Graph) -> Result<Vec<u8>, ProgramError> {
     compile_graph(graph)?.emit_object()
-}
-
-fn validate_signature(metadata: &FunctionMetadata) -> Result<(), ProgramError> {
-    if metadata.parameter_count != 0 {
-        return Err(ProgramError::UnsupportedParameters {
-            function: metadata.name.clone(),
-            count: metadata.parameter_count,
-        });
-    }
-    Ok(())
 }

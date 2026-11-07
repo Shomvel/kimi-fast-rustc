@@ -52,6 +52,11 @@ pub enum CompileError {
         reason: UnsupportedReason,
     },
     MissingReturn,
+    CallArity {
+        target: String,
+        expected: usize,
+        actual: usize,
+    },
     InvalidValueReference {
         node: NodeId,
         input: NodeId,
@@ -88,6 +93,14 @@ impl fmt::Display for CompileError {
                 }
             },
             Self::MissingReturn => formatter.write_str("graph has no return"),
+            Self::CallArity {
+                target,
+                expected,
+                actual,
+            } => write!(
+                formatter,
+                "function {target} expects {expected} arguments, but {actual} were provided"
+            ),
             Self::InvalidValueReference { node, input } => write!(
                 formatter,
                 "node {node} reads {input}, which is not a previously lowered value"
@@ -242,15 +255,27 @@ pub fn lower_graph(graph: &Graph) -> Result<Vec<VirtualInstr>, CompileError> {
                 }
             }
             NodeKind::Call(target) => {
-                let target = graph
+                let metadata = graph
                     .functions
                     .get(target)
-                    .expect("frontend validated the call target")
-                    .name
-                    .clone();
+                    .expect("frontend validated the call target");
+                if metadata.parameter_count != node.data.len() {
+                    return Err(CompileError::CallArity {
+                        target: metadata.name.clone(),
+                        expected: metadata.parameter_count,
+                        actual: node.data.len(),
+                    });
+                }
+                let target = metadata.name.clone();
+                let args = node
+                    .data
+                    .iter()
+                    .map(|input| value_reference(id, *input, &values))
+                    .collect::<Result<_, _>>()?;
                 VirtualInstr::Call {
                     dst: virtual_reg(id),
                     target,
+                    args,
                 }
             }
             NodeKind::If => {
@@ -334,14 +359,15 @@ pub fn compile_graph(
     let allocation = allocator.allocate(&intervals)?;
     let argument_homes = required_argument_homes(&virtual_instructions, &allocation);
     let spill_slot_offset = argument_homes.len() as u32;
-    let call_slots = if virtual_instructions
+    let call_slots = virtual_instructions
         .iter()
-        .any(|instruction| matches!(instruction, VirtualInstr::Call { .. }))
-    {
-        CALL_HOME_COUNT
-    } else {
-        0
-    };
+        .filter_map(|instruction| match instruction {
+            VirtualInstr::Call { args, .. } => Some(args.len()),
+            _ => None,
+        })
+        .max()
+        .map(|count| count as u32 + CALL_HOME_COUNT)
+        .unwrap_or(0);
     let stack_slots = allocation
         .spill_slot_count
         .checked_add(spill_slot_offset)
@@ -510,12 +536,12 @@ fn defined_register(instruction: &VirtualInstr) -> Option<VirtualReg> {
 
 fn used_registers(instruction: &VirtualInstr) -> Vec<VirtualReg> {
     let mut used = Vec::new();
-    let mut add_value = |value| {
-        if let VirtualValue::Reg(virtual_reg) = value {
+    let mut add_value = |value: &VirtualValue| {
+        if let VirtualValue::Reg(virtual_reg) = *value {
             used.push(virtual_reg);
         }
     };
-    match *instruction {
+    match instruction {
         VirtualInstr::Mov { src, .. } | VirtualInstr::Return(src) => add_value(src),
         VirtualInstr::Add { lhs, rhs, .. }
         | VirtualInstr::Sub { lhs, rhs, .. }
@@ -527,11 +553,15 @@ fn used_registers(instruction: &VirtualInstr) -> Vec<VirtualReg> {
             add_value(rhs);
         }
         VirtualInstr::Store { src, .. } => add_value(src),
+        VirtualInstr::Call { args, .. } => {
+            for value in args {
+                add_value(value);
+            }
+        }
         VirtualInstr::Label(_)
         | VirtualInstr::Jmp(_)
         | VirtualInstr::Jcc { .. }
         | VirtualInstr::Phi { .. }
-        | VirtualInstr::Call { .. }
         | VirtualInstr::LoadArg { .. }
         | VirtualInstr::Load { .. } => {}
     }
@@ -656,7 +686,32 @@ impl Emitter<'_> {
                     .push(MachineInstr::Jcc { condition, target });
             }
             VirtualInstr::Phi { .. } => {}
-            VirtualInstr::Call { dst, target } => {
+            VirtualInstr::Call { dst, target, args } => {
+                for (index, value) in args.iter().copied().enumerate() {
+                    self.load_value(value, SCRATCH1)?;
+                    self.instructions.push(MachineInstr::Store {
+                        slot: StackSlot(self.spill_slot_offset + CALL_HOME_COUNT + index as u32),
+                        src: SCRATCH1,
+                    });
+                }
+                for index in 0..args.len() {
+                    let slot = StackSlot(self.spill_slot_offset + CALL_HOME_COUNT + index as u32);
+                    if index < Reg::ARGUMENTS.len() {
+                        self.instructions.push(MachineInstr::Load {
+                            dst: Reg::ARGUMENTS[index],
+                            slot,
+                        });
+                    } else {
+                        self.instructions.push(MachineInstr::Load {
+                            dst: SCRATCH1,
+                            slot,
+                        });
+                        self.instructions.push(MachineInstr::StoreArg {
+                            src: SCRATCH1,
+                            index,
+                        });
+                    }
+                }
                 for (index, register) in CALL_HOME_REGISTERS.iter().copied().enumerate() {
                     self.instructions.push(MachineInstr::Store {
                         slot: StackSlot(self.spill_slot_offset + index as u32),
@@ -1376,6 +1431,9 @@ mod tests {
                 }
                 MachineInstr::Store { slot, src } => {
                     slots[slot.0 as usize] = read_reg(&registers, src);
+                }
+                MachineInstr::StoreArg { .. } => {
+                    unreachable!("the simple native test evaluator does not model calls")
                 }
                 MachineInstr::Label(_) | MachineInstr::Jmp(_) | MachineInstr::Jcc { .. } => {
                     unreachable!("the simple native test evaluator does not model control flow")

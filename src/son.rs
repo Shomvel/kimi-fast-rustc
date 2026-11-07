@@ -382,7 +382,6 @@ impl Graph {
                 }
                 NodeKind::Call(_) => {
                     expect_arity(id, node.kind, InputChannel::Control, 1, node.control.len())?;
-                    expect_arity(id, node.kind, InputChannel::Data, 0, node.data.len())?;
                 }
                 NodeKind::If => {
                     expect_arity(id, node.kind, InputChannel::Control, 1, node.control.len())?;

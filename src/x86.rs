@@ -111,6 +111,7 @@ pub enum VirtualInstr {
     Call {
         dst: VirtualReg,
         target: String,
+        args: Vec<VirtualValue>,
     },
     Return(VirtualValue),
 }
@@ -304,6 +305,7 @@ pub enum MachineInstr {
     SetCc { condition: Condition, dst: Reg },
     Load { dst: Reg, slot: StackSlot },
     Store { slot: StackSlot, src: Reg },
+    StoreArg { src: Reg, index: usize },
     Label(u32),
     Jmp(u32),
     Jcc { condition: Condition, target: u32 },
@@ -516,6 +518,13 @@ fn validate_instruction(
             validate_slot(slot, stack_slots)?;
             validate_reg(src)?;
         }
+        StoreArg { src, index } => {
+            validate_reg(src)?;
+            if index < Reg::ARGUMENTS.len() {
+                return Err(AsmError::ArgumentOffsetOverflow { index });
+            }
+            incoming_arg_offset(index)?;
+        }
         Label(_) | Jmp(_) | Jcc { .. } => {}
         Call { target } => {
             if target as usize >= symbols.len() {
@@ -584,6 +593,10 @@ fn emit_instruction(
         Store { slot, src } => {
             let offset = spill_offset(slot);
             out.push_str(&format!("\tmov QWORD PTR [rbp{offset}], {}\n", src.name()));
+        }
+        StoreArg { src, index } => {
+            let offset = (index - Reg::ARGUMENTS.len()) * 8;
+            out.push_str(&format!("\tmov QWORD PTR [rsp+{offset}], {}\n", src.name()));
         }
         Label(label) => out.push_str(&format!(".L{label}:\n")),
         Jmp(target) => out.push_str(&format!("\tjmp .L{target}\n")),

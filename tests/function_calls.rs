@@ -28,7 +28,19 @@ fn zero_argument_calls_emit_symbols_and_relocations() {
 }
 
 #[test]
-fn nonzero_parameter_signatures_are_explicitly_rejected() {
+fn register_arguments_are_loaded_before_the_call() {
+    let graph =
+        frontend::parse("fn id(x: i64) -> i64 { return x; } fn main() -> i64 { return id(42); }")
+            .unwrap();
+    let program = native_program::compile_graph(&graph).unwrap();
+    let assembly = program.emit_gnu_assembly().unwrap();
+    assert!(assembly.contains("\tmovabs rcx, 0x2a\n"));
+    assert!(assembly.contains("\tmov rdi, QWORD PTR [rbp"));
+    assert!(assembly.contains("\tcall id\n"));
+}
+
+#[test]
+fn call_arity_is_checked() {
     let graph =
         frontend::parse("fn id(x: i64) -> i64 { return x; } fn main() -> i64 { return id(); }")
             .unwrap();
@@ -38,4 +50,17 @@ fn nonzero_parameter_signatures_are_explicitly_rejected() {
 #[test]
 fn unknown_calls_are_rejected_during_parsing() {
     assert!(frontend::parse("fn main() -> i64 { return missing(); }").is_err());
+}
+
+#[test]
+fn stack_arguments_are_stored_before_the_call() {
+    let graph = frontend::parse(
+        "fn sum8(a: i64, b: i64, c: i64, d: i64, e: i64, f: i64, g: i64, h: i64) -> i64 { return a + b + c + d + e + f + g + h; } fn main() -> i64 { return sum8(1, 2, 3, 4, 5, 6, 7, 8); }",
+    )
+    .unwrap();
+    let program = native_program::compile_graph(&graph).unwrap();
+    let assembly = program.emit_gnu_assembly().unwrap();
+    assert!(assembly.contains("QWORD PTR [rsp+0]"));
+    assert!(assembly.contains("QWORD PTR [rsp+8]"));
+    assert!(assembly.contains("\tcall sum8\n"));
 }

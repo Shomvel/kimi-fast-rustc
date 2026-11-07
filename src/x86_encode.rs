@@ -225,6 +225,13 @@ fn validate_instruction(
             validate_slot(slot, stack_slots)?;
             validate_reg(src)?;
         }
+        StoreArg { src, index } => {
+            validate_reg(src)?;
+            if index < Reg::ARGUMENTS.len() {
+                return Err(EncodeError::ArgumentOffsetOverflow { index });
+            }
+            incoming_arg_offset(index)?;
+        }
         Label(_) | Jmp(_) | Jcc { .. } => return Err(EncodeError::UnsupportedControlFlow),
         Call { target } => {
             if target as usize >= symbols.len() {
@@ -349,6 +356,14 @@ impl Encoder<'_> {
             }
             Load { dst, slot } => self.memory_reg(0x8b, dst, spill_offset(slot)?),
             Store { slot, src } => self.memory_reg(0x89, src, spill_offset(slot)?),
+            StoreArg { src, index } => {
+                if index < Reg::ARGUMENTS.len() {
+                    return Err(EncodeError::ArgumentOffsetOverflow { index });
+                }
+                self.rex(true, Some(src), None, false);
+                self.bytes.push(0x89);
+                self.stack_memory_rsp(src, ((index - Reg::ARGUMENTS.len()) * 8) as i32);
+            }
             Call { target } => {
                 self.calls.push(CallRelocation {
                     offset: (self.bytes.len() + 1) as u64,
@@ -396,6 +411,11 @@ impl Encoder<'_> {
 
     fn stack_memory(&mut self, reg: Reg, offset: i32) {
         self.modrm(2, reg, Reg::Rbp.low_code());
+        self.i32(offset);
+    }
+
+    fn stack_memory_rsp(&mut self, reg: Reg, offset: i32) {
+        self.modrm(2, reg, Reg::Rsp.low_code());
         self.i32(offset);
     }
 

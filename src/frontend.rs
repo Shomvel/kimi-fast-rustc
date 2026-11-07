@@ -719,7 +719,19 @@ impl Parser {
             TokenKind::Ident(identifier) => {
                 if self.check(&TokenKind::LParen) {
                     self.position += 1;
-                    self.expect(TokenKind::RParen, "`)` after zero-argument function call")?;
+                    let mut arguments = Vec::new();
+                    if !self.check(&TokenKind::RParen) {
+                        loop {
+                            arguments.push(self.parse_expression()?);
+                            if !self.eat(TokenKind::Comma) {
+                                break;
+                            }
+                            if self.check(&TokenKind::RParen) {
+                                break;
+                            }
+                        }
+                    }
+                    self.expect(TokenKind::RParen, "`)` after function arguments")?;
                     if !self.functions.contains(&identifier) {
                         return Err(ParseError::new(
                             token.span,
@@ -735,7 +747,7 @@ impl Parser {
                     return Ok(self.graph.add_node(
                         crate::son::NodeKind::Call(target),
                         vec![self.control],
-                        Vec::new(),
+                        arguments,
                     ));
                 }
                 if identifier == "true" {
