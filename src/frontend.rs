@@ -3,7 +3,7 @@ use std::collections::{HashMap, HashSet};
 use std::error::Error;
 use std::fmt;
 
-/// Parses the explicitly supported `i64`, `u64`, and `bool` Rust subset.
+/// Parses the explicitly supported `i64`, `u64` (`usize`), and `bool` Rust subset.
 ///
 /// Functions and parameters retain their names and source ranges in `Graph::functions`.
 /// `if` expressions and statements merge values through explicit jumps, control regions,
@@ -94,6 +94,8 @@ enum TokenKind {
     Xor,
     Shl,
     Shr,
+    DotDot,
+    DotDotEq,
     Eof,
 }
 
@@ -245,14 +247,14 @@ impl<'a> Lexer<'a> {
             self.advance();
         }
         let suffix = &self.source[digits_end..self.offset];
-        if !matches!(suffix, "" | "i64" | "u64") {
+        if !matches!(suffix, "" | "i64" | "u64" | "usize") {
             return Err(ParseError::new(
                 Span {
                     end: self.offset,
                     ..start
                 },
                 format!(
-                    "unsupported integer literal suffix `{suffix}`; only decimal i64/u64 literals are supported"
+                    "unsupported integer literal suffix `{suffix}`; only decimal i64/u64/usize literals are supported"
                 ),
             ));
         }
@@ -272,7 +274,7 @@ impl<'a> Lexer<'a> {
         Ok(match suffix {
             "" => TokenKind::Integer(value),
             "i64" => TokenKind::I64Integer(value),
-            "u64" => TokenKind::U64Integer(value),
+            "u64" | "usize" => TokenKind::U64Integer(value),
             _ => unreachable!(),
         })
     }
@@ -387,10 +389,19 @@ impl<'a> Lexer<'a> {
             }
             Some('^') => TokenKind::Xor,
             Some('.') => {
-                return Err(ParseError::new(
-                    start,
-                    "floating-point literals and member access are not supported",
-                ));
+                if self.rest().starts_with(".=") {
+                    self.advance();
+                    self.advance();
+                    TokenKind::DotDotEq
+                } else if self.rest().starts_with('.') {
+                    self.advance();
+                    TokenKind::DotDot
+                } else {
+                    return Err(ParseError::new(
+                        start,
+                        "floating-point literals and member access are not supported",
+                    ));
+                }
             }
             Some('"' | '\'') => {
                 return Err(ParseError::new(
@@ -472,6 +483,7 @@ fn is_reserved_identifier(identifier: &str) -> bool {
             | "union"
             | "unsafe"
             | "unsized"
+            | "usize"
             | "use"
             | "virtual"
             | "where"
@@ -514,6 +526,7 @@ struct LoopContext {
     header: NodeId,
     phis: Vec<(String, NodeId)>,
     breaks: Vec<(NodeId, HashMap<String, Binding>)>,
+    induction: Option<(String, ScalarType)>,
 }
 
 struct Parser {
@@ -706,6 +719,10 @@ impl Parser {
             self.parse_if_statement()?;
             return Ok(None);
         }
+        if self.peek_identifier("for") {
+            self.parse_for()?;
+            return Ok(None);
+        }
         if self.peek_identifier("while") {
             self.parse_while()?;
             return Ok(None);
@@ -831,10 +848,34 @@ impl Parser {
         if self.loops.is_empty() {
             return Err(self.error_here("`continue` outside a loop is not supported"));
         }
+        self.increment_induction();
         let jump = self.graph.jump(self.control);
         self.append_loop_edge(jump);
         self.terminated = true;
         Ok(())
+    }
+
+    fn increment_induction(&mut self) {
+        let Some((name, ty)) = self
+            .loops
+            .last()
+            .and_then(|context| context.induction.clone())
+        else {
+            return;
+        };
+        let current = self.variables[&name];
+        let one = self.graph.constant(1);
+        self.types.insert(one, ty);
+        let next = self.graph.binary(BinaryOp::Add, current.value, one);
+        self.types.insert(next, ty);
+        self.variables.insert(
+            name,
+            Binding {
+                value: next,
+                mutable: true,
+                ty,
+            },
+        );
     }
 
     fn append_loop_edge(&mut self, jump: NodeId) {
@@ -960,8 +1001,59 @@ impl Parser {
         Ok(())
     }
 
+    fn parse_for(&mut self) -> Result<(), ParseError> {
+        self.position += 1;
+        let (variable, variable_span) = self.parse_identifier("range loop variable")?;
+        if self.variables.contains_key(&variable) {
+            return Err(ParseError::new(
+                variable_span,
+                format!("duplicate binding or parameter `{variable}`; shadowing is not supported"),
+            ));
+        }
+        if !self.peek_identifier("in") {
+            return Err(self.error_here("expected `in` after range loop variable"));
+        }
+        self.position += 1;
+        let start = self.parse_expression()?;
+        if self.eat(TokenKind::DotDotEq) {
+            return Err(self.error_here("inclusive ranges (`..=`) are not supported"));
+        }
+        self.expect(TokenKind::DotDot, "`..` in range loop")?;
+        let end = self.parse_expression()?;
+        let ty = self.numeric_pair(start, end)?;
+
+        let depth = self.loops.len();
+        let index_name = format!("\0for_index_{depth}");
+        let end_name = format!("\0for_end_{depth}");
+        self.variables.insert(
+            index_name.clone(),
+            Binding {
+                value: start,
+                mutable: true,
+                ty,
+            },
+        );
+        self.variables.insert(
+            end_name.clone(),
+            Binding {
+                value: end,
+                mutable: false,
+                ty,
+            },
+        );
+        self.parse_loop(None, Some((index_name, variable, ty, end)))
+    }
+
     fn parse_while(&mut self) -> Result<(), ParseError> {
         self.position += 1;
+        self.parse_loop(None, None)
+    }
+
+    fn parse_loop(
+        &mut self,
+        condition: Option<NodeId>,
+        induction: Option<(String, String, ScalarType, NodeId)>,
+    ) -> Result<(), ParseError> {
         let outer_variables = self.variables.clone();
         let mut loop_variables = outer_variables
             .iter()
@@ -986,13 +1078,39 @@ impl Parser {
             phis.push(phi);
         }
         self.control = header;
-        let condition = self.parse_expression()?;
+        let condition = match condition {
+            Some(condition) => condition,
+            None => match &induction {
+                Some((index_name, _, ty, end)) => {
+                    let current = self.variables[index_name].value;
+                    let comparison = if *ty == ScalarType::U64 {
+                        CompareOp::ULt
+                    } else {
+                        CompareOp::Lt
+                    };
+                    let condition = self.graph.compare(comparison, current, *end);
+                    self.mark_bool(condition)
+                }
+                None => self.parse_expression()?,
+            },
+        };
         self.require_type(condition, ScalarType::Bool)?;
         let branch = self.graph.if_(header, condition);
         self.expect(TokenKind::LBrace, "`{` after while condition")?;
 
         let body_projection = self.graph.projection(branch, 0);
         self.control = body_projection;
+        if let Some((index_name, variable, ty, _)) = &induction {
+            let binding = self.variables[index_name];
+            self.variables.insert(
+                variable.clone(),
+                Binding {
+                    value: binding.value,
+                    mutable: false,
+                    ty: *ty,
+                },
+            );
+        }
         self.loops.push(LoopContext {
             header,
             phis: loop_variables
@@ -1001,9 +1119,11 @@ impl Parser {
                 .map(|((name, _), phi)| (name.clone(), *phi))
                 .collect(),
             breaks: Vec::new(),
+            induction: induction.map(|(name, _, ty, _)| (name, ty)),
         });
         let body_terminated = self.parse_statement_body()?;
         if !body_terminated {
+            self.increment_induction();
             let back_edge = self.graph.jump(self.control);
             self.append_loop_edge(back_edge);
         }
@@ -1059,7 +1179,7 @@ impl Parser {
     fn parse_type(&mut self) -> Result<ScalarType, ParseError> {
         let ty = if self.peek_identifier("i64") {
             ScalarType::I64
-        } else if self.peek_identifier("u64") {
+        } else if self.peek_identifier("u64") || self.peek_identifier("usize") {
             ScalarType::U64
         } else if self.peek_identifier("bool") {
             ScalarType::Bool
