@@ -1496,7 +1496,7 @@ impl Parser {
     }
 
     fn parse_multiplicative(&mut self) -> Result<NodeId, ParseError> {
-        let mut value = self.parse_unary()?;
+        let mut value = self.parse_cast()?;
         loop {
             let operation = match self.peek().kind {
                 TokenKind::Star => BinaryOp::Mul,
@@ -1505,9 +1505,23 @@ impl Parser {
                 _ => return Ok(value),
             };
             self.position += 1;
-            let right = self.parse_unary()?;
+            let right = self.parse_cast()?;
             value = self.integer_binary(operation, value, right)?;
         }
+    }
+
+    fn parse_cast(&mut self) -> Result<NodeId, ParseError> {
+        let value = self.parse_unary()?;
+        while self.peek_identifier("as") {
+            self.position += 1;
+            let target = self.parse_type()?;
+            let source = self.type_of(value);
+            if target == ScalarType::Bool && source != ScalarType::Bool {
+                return Err(self.error_here("numeric values cannot be cast to `bool`"));
+            }
+            self.types.insert(value, target);
+        }
+        Ok(value)
     }
 
     fn parse_unary(&mut self) -> Result<NodeId, ParseError> {
