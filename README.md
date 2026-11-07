@@ -63,7 +63,7 @@ Emit an ELF relocatable object directly, without an external assembler:
 ./target/release/kfrc native examples/native_main.kfr --emit=obj=native-main.o
 ```
 
-The direct object path uses the in-tree x86_64 encoder and ELF writer. External references use explicit relocation records and remain limited to the implemented ABI subset. Set `KFRC_NATIVE_CACHE` to a dedicated directory to enable content-addressed object caching; graph, target, ABI, and backend-version changes create distinct entries. Caching is disabled by default.
+The direct object path uses the in-tree x86_64 encoder and ELF writer. Local labels and conditional/unconditional jumps are resolved into `rel32` fields during emission; external calls use explicit `R_X86_64_PLT32` relocation records and remain limited to the implemented ABI subset. Set `KFRC_NATIVE_CACHE` to a dedicated directory to enable content-addressed object caching; graph, target, ABI, and backend-version changes create distinct entries. Caching is disabled by default.
 
 Compile multiple independent inputs with bounded parallelism:
 
@@ -75,7 +75,7 @@ Compile multiple independent inputs with bounded parallelism:
 ./target/release/kfrc cache --root .kfrc-cache stats --json
 ```
 
-The CLI performs sea-of-nodes optimization, dependency placement, linear-scan allocation, and native code generation. Executables use system `as` and `gcc`, never rustc, LLVM, or Cranelift. The subset requires an explicit `return` and supports `i64` parameters, mutable and immutable `let` bindings, assignments, `while` loops, arithmetic, and comparisons. Its `fn main() -> i64` convention is intentionally a compiler test format, not a claim that standard Rust accepts this `main` signature. Direct ELF output currently rejects labels and branches explicitly; use assembly or executable output for `if` and `while`.
+The CLI performs sea-of-nodes optimization, dependency placement, linear-scan allocation, and native code generation. Executables use system `as` and `gcc`, never rustc, LLVM, or Cranelift. The subset supports explicit returns and tail expressions, mutable and immutable `let` bindings, assignments, `while` loops, arithmetic, and comparisons. Its `fn main() -> i64` convention is intentionally a compiler test format, not a claim that standard Rust accepts this `main` signature. Direct ELF output supports local labels and branches as well as external call relocations.
 
 ## Benchmark on yicloud
 

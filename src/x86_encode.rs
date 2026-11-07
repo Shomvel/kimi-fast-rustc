@@ -1,6 +1,7 @@
-//! Straight-line x86_64 machine-code emission for the native instruction IR.
+//! x86_64 machine-code emission for the native instruction IR.
 
 use crate::x86::{Condition, MachineFunction, MachineInstr, Operand, Reg, StackSlot};
+use std::collections::BTreeMap;
 use std::error::Error;
 use std::fmt;
 
@@ -21,7 +22,9 @@ pub enum EncodeError {
     ArgumentOffsetOverflow { index: usize },
     FrameSizeOverflow,
     MissingReturn,
-    UnsupportedControlFlow,
+    UnknownLabel(u32),
+    DuplicateLabel(u32),
+    RelocationOverflow(u32),
     CodeSizeOverflow,
     AllocationFailed,
 }
@@ -59,8 +62,10 @@ impl fmt::Display for EncodeError {
             Self::MissingReturn => {
                 formatter.write_str("machine function has no return instruction")
             }
-            Self::UnsupportedControlFlow => {
-                formatter.write_str("direct object emission does not support labels or jumps yet")
+            Self::UnknownLabel(label) => write!(formatter, "unknown machine label {label}"),
+            Self::DuplicateLabel(label) => write!(formatter, "duplicate machine label {label}"),
+            Self::RelocationOverflow(label) => {
+                write!(formatter, "jump to label {label} exceeds the rel32 range")
             }
             Self::CodeSizeOverflow => formatter.write_str("machine-code size overflows usize"),
             Self::AllocationFailed => {
@@ -115,6 +120,8 @@ pub fn encode_with_relocations(
         callee_saved: &function.callee_saved,
         symbols: &function.symbols,
         calls: Vec::new(),
+        labels: BTreeMap::new(),
+        fixups: Vec::new(),
     };
     encoder
         .bytes
@@ -125,6 +132,7 @@ pub fn encode_with_relocations(
     for instruction in &function.instructions {
         encoder.instruction(*instruction)?;
     }
+    encoder.resolve_labels()?;
     Ok((encoder.bytes, encoder.calls))
 }
 
@@ -243,7 +251,7 @@ fn validate_instruction(
             }
             incoming_arg_offset(index)?;
         }
-        Label(_) | Jmp(_) | Jcc { .. } => return Err(EncodeError::UnsupportedControlFlow),
+        Label(_) | Jmp(_) | Jcc { .. } => {}
         Call { target } => {
             if target as usize >= symbols.len() {
                 return Err(EncodeError::InvalidCallTarget(target));
@@ -295,6 +303,8 @@ struct Encoder<'a> {
     callee_saved: &'a [Reg],
     symbols: &'a [String],
     calls: Vec<CallRelocation>,
+    labels: BTreeMap<u32, usize>,
+    fixups: Vec<(usize, u32)>,
 }
 
 impl Encoder<'_> {
@@ -422,7 +432,23 @@ impl Encoder<'_> {
                 });
                 self.bytes.extend_from_slice(&[0xe8, 0, 0, 0, 0]);
             }
-            Label(_) | Jmp(_) | Jcc { .. } => return Err(EncodeError::UnsupportedControlFlow),
+            Label(label) => {
+                let offset = self.bytes.len();
+                if self.labels.insert(label, offset).is_some() {
+                    return Err(EncodeError::DuplicateLabel(label));
+                }
+            }
+            Jmp(target) => {
+                self.bytes.push(0xe9);
+                self.fixups.push((self.bytes.len(), target));
+                self.bytes.extend_from_slice(&[0, 0, 0, 0]);
+            }
+            Jcc { condition, target } => {
+                self.bytes
+                    .extend_from_slice(&[0x0f, 0x80 + condition_code(condition)]);
+                self.fixups.push((self.bytes.len(), target));
+                self.bytes.extend_from_slice(&[0, 0, 0, 0]);
+            }
             Ret => {
                 for (index, reg) in self.callee_saved.iter().copied().enumerate() {
                     let offset = saved_offset(self.stack_slots, index)?;
@@ -430,6 +456,21 @@ impl Encoder<'_> {
                 }
                 self.bytes.extend_from_slice(&[0xc9, 0xc3]);
             }
+        }
+        Ok(())
+    }
+
+    fn resolve_labels(&mut self) -> Result<(), EncodeError> {
+        for (offset, target) in self.fixups.iter().copied() {
+            let destination = self
+                .labels
+                .get(&target)
+                .copied()
+                .ok_or(EncodeError::UnknownLabel(target))?;
+            let displacement = destination as i128 - (offset as i128 + 4);
+            let displacement =
+                i32::try_from(displacement).map_err(|_| EncodeError::RelocationOverflow(target))?;
+            self.bytes[offset..offset + 4].copy_from_slice(&displacement.to_le_bytes());
         }
         Ok(())
     }

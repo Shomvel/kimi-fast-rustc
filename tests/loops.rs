@@ -73,12 +73,9 @@ fn calls_and_relocations_survive_loops() {
     assert!(assembly.contains("\tcall sum_to\n"));
     assert!(assembly.contains("\tsetle "));
     assert!(assembly.contains("\tje "));
-    assert!(matches!(
-        program.emit_object(),
-        Err(native_program::ProgramError::Encode(
-            kimi_fast_rustc::x86_encode::EncodeError::UnsupportedControlFlow
-        ))
-    ));
+    let object = program.emit_object().unwrap();
+    assert_eq!(&object[..4], b"\x7fELF");
+    assert!(object.windows(10).any(|window| window == b".rela.text"));
 }
 
 #[test]
