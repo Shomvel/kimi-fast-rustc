@@ -572,7 +572,7 @@ mod tests {
         assert_eq!(returned, output);
         let assembly = fs::read_to_string(output).unwrap();
         assert!(assembly.starts_with(".intel_syntax noprefix\n.text\n.globl main\n"));
-        assert!(assembly.contains("\tmovabs rcx, 0x2c\n"), "{assembly}");
+        assert!(assembly.contains("\tmov rcx, 44\n"), "{assembly}");
         assert!(!assembly.contains("\timul"), "{assembly}");
         assert!(!assembly.contains("\tadd"), "{assembly}");
         assert!(assembly.contains("\tret"), "{assembly}");
@@ -619,8 +619,8 @@ mod tests {
             assert!(
                 object
                     .windows(4)
-                    .any(|bytes| bytes == [0x48, 0xb9, 0x2c, 0]),
-                "optimized object should contain movabs rcx, 44"
+                    .any(|bytes| bytes == [0x48, 0xc7, 0xc1, 0x2c]),
+                "optimized object should contain small immediate mov rcx, 44"
             );
         }
     }
@@ -678,7 +678,7 @@ mod tests {
         assert!(
             second
                 .windows(4)
-                .any(|bytes| bytes == [0x48, 0xb9, 0x2b, 0])
+                .any(|bytes| bytes == [0x48, 0xc7, 0xc1, 0x2b])
         );
         assert_eq!(cache_entries(&cache).len(), 2);
 
@@ -807,6 +807,6 @@ mod tests {
         assert_eq!(returned, output);
         let assembly = fs::read_to_string(output).unwrap();
         assert!(assembly.contains(".globl main"));
-        assert!(assembly.contains("movabs rcx, 0x2a"));
+        assert!(assembly.contains("mov rcx, 42"));
     }
 }

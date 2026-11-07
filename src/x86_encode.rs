@@ -334,8 +334,14 @@ impl Encoder<'_> {
             }
             MovImm { dst, value } => {
                 self.rex(true, None, Some(dst), false);
-                self.bytes.push(0xb8 + dst.low_code());
-                self.bytes.extend_from_slice(&value.to_le_bytes());
+                if i32::try_from(value).is_ok() {
+                    self.bytes.push(0xc7);
+                    self.modrm(3, Reg::Rax, dst.low_code());
+                    self.i32(value as i32);
+                } else {
+                    self.bytes.push(0xb8 + dst.low_code());
+                    self.bytes.extend_from_slice(&value.to_le_bytes());
+                }
             }
             Mov { dst, src } => self.reg_reg(0x89, dst, src),
             Neg { dst } => {
@@ -782,7 +788,7 @@ mod tests {
     }
 
     #[test]
-    fn register_cmp_and_movabs_negative_immediate_have_known_encodings() {
+    fn register_cmp_and_small_negative_immediate_have_known_encodings() {
         let code = function(vec![
             MachineInstr::Cmp {
                 lhs: Reg::R11,
@@ -799,8 +805,8 @@ mod tests {
         assert_eq!(
             code,
             [
-                0x55, 0x48, 0x89, 0xe5, 0x49, 0x39, 0xdb, 0x49, 0xbf, 0xff, 0xff, 0xff, 0xff, 0xff,
-                0xff, 0xff, 0xff, 0xc9, 0xc3,
+                0x55, 0x48, 0x89, 0xe5, 0x49, 0x39, 0xdb, 0x49, 0xc7, 0xc7, 0xff, 0xff, 0xff, 0xff,
+                0xc9, 0xc3,
             ]
         );
     }

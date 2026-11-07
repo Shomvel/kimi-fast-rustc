@@ -631,7 +631,11 @@ fn emit_instruction(
             }
         }
         MovImm { dst, value } => {
-            out.push_str(&format!("\tmovabs {}, 0x{:x}\n", dst.name(), value as u64));
+            if i32::try_from(value).is_ok() {
+                out.push_str(&format!("\tmov {}, {}\n", dst.name(), value));
+            } else {
+                out.push_str(&format!("\tmovabs {}, 0x{:x}\n", dst.name(), value as u64));
+            }
         }
         Mov { dst, src } => {
             out.push_str(&format!("\tmov {}, {}\n", dst.name(), src.name()));

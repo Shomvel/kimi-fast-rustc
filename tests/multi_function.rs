@@ -23,7 +23,7 @@ fn native_answer_object_has_correct_code_symbols_and_plt32_relocation() {
     assert_eq!(read_u16(&object, 18), 62, "EM_X86_64");
 
     let expected_native_answer = [
-        0x55, 0x48, 0x89, 0xe5, 0x48, 0xb9, 42, 0, 0, 0, 0, 0, 0, 0, 0x48, 0x89, 0xc8, 0xc9, 0xc3,
+        0x55, 0x48, 0x89, 0xe5, 0x48, 0xc7, 0xc1, 42, 0, 0, 0, 0x48, 0x89, 0xc8, 0xc9, 0xc3,
     ];
     let expected_main = [0x55, 0x48, 0x89, 0xe5, 0xe8, 0, 0, 0, 0, 0xc9, 0xc3];
     let text = section_contents(&object, section(&object, 1));
@@ -186,7 +186,7 @@ fn system_elf_tools_accept_the_self_contained_object_when_available() {
         for expected in [
             "native_answer",
             "main",
-            "movabs",
+            "mov",
             "call",
             "R_X86_64_PLT32",
             "leave",

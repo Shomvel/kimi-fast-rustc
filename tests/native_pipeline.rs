@@ -58,7 +58,7 @@ fn native_cli_emits_assembly_for_optimized_constant_main() {
     assert_eq!(returned, output);
     let assembly = fs::read_to_string(output).unwrap();
     assert!(assembly.starts_with(".intel_syntax noprefix\n.text\n.globl main\n"));
-    assert!(assembly.contains("\tmovabs rcx, 0x2a\n"), "{assembly}");
+    assert!(assembly.contains("\tmov rcx, 42\n"), "{assembly}");
     assert!(assembly.contains("\tmov rax, rcx\n"), "{assembly}");
     assert!(!assembly.contains("\tadd"), "{assembly}");
     assert!(assembly.contains("\tret"), "{assembly}");
@@ -122,7 +122,7 @@ fn optimized_graph_is_placed_and_compiled_without_llvm() {
     let placed = placement::place_graph(&graph).unwrap();
     let assembly = native::compile_graph_to_assembly(&placed, "main").unwrap();
     assert!(assembly.contains("main:"));
-    assert!(assembly.contains("movabs"));
+    assert!(assembly.contains("mov rcx, 42"));
     assert!(!assembly.contains("llvm"));
 }
 

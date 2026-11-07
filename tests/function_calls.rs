@@ -34,7 +34,7 @@ fn register_arguments_are_loaded_before_the_call() {
             .unwrap();
     let program = native_program::compile_graph(&graph).unwrap();
     let assembly = program.emit_gnu_assembly().unwrap();
-    assert!(assembly.contains("\tmovabs rcx, 0x2a\n"));
+    assert!(assembly.contains("\tmov rcx, 42\n"));
     assert!(assembly.contains("\tmov rdi, QWORD PTR [rbp"));
     assert!(assembly.contains("\tcall id\n"));
 }
