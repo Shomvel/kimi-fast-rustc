@@ -1,0 +1,1241 @@
+//! Single-basic-block i64 native compilation for the sea-of-nodes graph.
+//!
+//! Lowering follows `NodeId` order. Register allocation uses the target-independent
+//! linear scanner, with `rax`/`rdx` reserved for division and returns, and `r10`/`r11`
+//! for spill scratch.
+
+use std::collections::{BTreeMap, BTreeSet};
+use std::error::Error;
+use std::fmt;
+
+use crate::regalloc::{
+    AllocationResult, LiveInterval, Location, PhysicalRegister, RegAllocError, RegisterAllocator,
+    SpillSlot, VirtualReg as AllocVirtualReg,
+};
+use crate::son::{BinaryOp, CompareOp, Graph, NodeId, NodeKind, ValidationError};
+use crate::x86::{
+    AsmError, Condition, MachineFunction, MachineInstr, Operand, Reg, StackSlot, VirtualInstr,
+    VirtualReg, VirtualValue,
+};
+
+const SCRATCH0: Reg = Reg::R10;
+const SCRATCH1: Reg = Reg::R11;
+const GENERAL_REGISTERS: [Reg; 10] = [
+    Reg::Rcx,
+    Reg::Rsi,
+    Reg::Rdi,
+    Reg::R8,
+    Reg::R9,
+    Reg::Rbx,
+    Reg::R12,
+    Reg::R13,
+    Reg::R14,
+    Reg::R15,
+];
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum UnsupportedReason {
+    NodeKind(NodeKind),
+    MultipleReturns,
+    ReturnWithoutValue,
+    CodeAfterReturn,
+    MemoryInputs,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum CompileError {
+    GraphValidation(ValidationError),
+    Unsupported {
+        node: NodeId,
+        reason: UnsupportedReason,
+    },
+    MissingReturn,
+    InvalidValueReference {
+        node: NodeId,
+        input: NodeId,
+    },
+    TooManyInstructions,
+    TooManyStackSlots,
+    MissingAllocation(VirtualReg),
+    RegisterAllocation(RegAllocError),
+    Assembly(AsmError),
+}
+
+impl fmt::Display for CompileError {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::GraphValidation(error) => write!(formatter, "invalid graph: {error}"),
+            Self::Unsupported { node, reason } => match reason {
+                UnsupportedReason::NodeKind(kind) => {
+                    write!(formatter, "unsupported node {node}: {kind:?}")
+                }
+                UnsupportedReason::MultipleReturns => {
+                    write!(formatter, "unsupported node {node}: multiple returns")
+                }
+                UnsupportedReason::ReturnWithoutValue => {
+                    write!(
+                        formatter,
+                        "unsupported node {node}: return without an i64 value"
+                    )
+                }
+                UnsupportedReason::CodeAfterReturn => {
+                    write!(formatter, "unsupported node {node}: code after return")
+                }
+                UnsupportedReason::MemoryInputs => {
+                    write!(formatter, "unsupported node {node}: memory-state inputs")
+                }
+            },
+            Self::MissingReturn => formatter.write_str("graph has no return"),
+            Self::InvalidValueReference { node, input } => write!(
+                formatter,
+                "node {node} reads {input}, which is not a previously lowered value"
+            ),
+            Self::TooManyInstructions => {
+                formatter.write_str("lowered function exceeds the instruction position space")
+            }
+            Self::TooManyStackSlots => formatter.write_str("function exceeds the stack slot space"),
+            Self::MissingAllocation(virtual_reg) => write!(
+                formatter,
+                "register allocator returned no location for virtual register {}",
+                virtual_reg.0
+            ),
+            Self::RegisterAllocation(error) => {
+                write!(formatter, "register allocation failed: {error}")
+            }
+            Self::Assembly(error) => write!(formatter, "assembly emission failed: {error}"),
+        }
+    }
+}
+
+impl Error for CompileError {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        match self {
+            Self::GraphValidation(error) => Some(error),
+            Self::RegisterAllocation(error) => Some(error),
+            Self::Assembly(error) => Some(error),
+            _ => None,
+        }
+    }
+}
+
+impl From<ValidationError> for CompileError {
+    fn from(error: ValidationError) -> Self {
+        Self::GraphValidation(error)
+    }
+}
+
+impl From<RegAllocError> for CompileError {
+    fn from(error: RegAllocError) -> Self {
+        Self::RegisterAllocation(error)
+    }
+}
+
+impl From<AsmError> for CompileError {
+    fn from(error: AsmError) -> Self {
+        Self::Assembly(error)
+    }
+}
+
+pub fn lower_graph(graph: &Graph) -> Result<Vec<VirtualInstr>, CompileError> {
+    graph.validate()?;
+
+    let mut returns = graph
+        .iter()
+        .filter(|(_, node)| node.kind == NodeKind::Return)
+        .map(|(id, _)| id);
+    if returns.next().is_none() {
+        return Err(CompileError::MissingReturn);
+    }
+    if let Some(second) = returns.next() {
+        return Err(unsupported(second, UnsupportedReason::MultipleReturns));
+    }
+
+    let mut instructions = Vec::new();
+    let mut values = BTreeSet::new();
+    let mut returned = false;
+
+    for (id, node) in graph.iter() {
+        if !node.memory.is_empty() {
+            return Err(unsupported(id, UnsupportedReason::MemoryInputs));
+        }
+        if node.kind == NodeKind::Start {
+            continue;
+        }
+        if returned {
+            return Err(unsupported(id, UnsupportedReason::CodeAfterReturn));
+        }
+
+        let instruction = match node.kind {
+            NodeKind::Start => unreachable!(),
+            NodeKind::Const(value) => VirtualInstr::Mov {
+                dst: virtual_reg(id),
+                src: VirtualValue::Imm(value),
+            },
+            NodeKind::Parameter { index } => VirtualInstr::LoadArg {
+                dst: virtual_reg(id),
+                index,
+            },
+            NodeKind::Binary(
+                operation @ (BinaryOp::Add
+                | BinaryOp::Sub
+                | BinaryOp::Mul
+                | BinaryOp::Div
+                | BinaryOp::Rem),
+            ) => {
+                let (lhs, rhs) = binary_inputs(id, &node.data, &values)?;
+                match operation {
+                    BinaryOp::Add => VirtualInstr::Add {
+                        dst: virtual_reg(id),
+                        lhs,
+                        rhs,
+                    },
+                    BinaryOp::Sub => VirtualInstr::Sub {
+                        dst: virtual_reg(id),
+                        lhs,
+                        rhs,
+                    },
+                    BinaryOp::Mul => VirtualInstr::Mul {
+                        dst: virtual_reg(id),
+                        lhs,
+                        rhs,
+                    },
+                    BinaryOp::Div => VirtualInstr::Div {
+                        dst: virtual_reg(id),
+                        lhs,
+                        rhs,
+                    },
+                    BinaryOp::Rem => VirtualInstr::Rem {
+                        dst: virtual_reg(id),
+                        lhs,
+                        rhs,
+                    },
+                    _ => unreachable!(),
+                }
+            }
+            NodeKind::Compare(operation) => {
+                let (lhs, rhs) = binary_inputs(id, &node.data, &values)?;
+                VirtualInstr::Compare {
+                    dst: virtual_reg(id),
+                    condition: condition(operation),
+                    lhs,
+                    rhs,
+                }
+            }
+            NodeKind::Return => {
+                let Some(&value) = node.data.first() else {
+                    return Err(unsupported(id, UnsupportedReason::ReturnWithoutValue));
+                };
+                returned = true;
+                VirtualInstr::Return(value_reference(id, value, &values)?)
+            }
+            kind => return Err(unsupported(id, UnsupportedReason::NodeKind(kind))),
+        };
+
+        if matches!(node.kind, NodeKind::Return) {
+            instructions.push(instruction);
+        } else {
+            values.insert(id);
+            instructions.push(instruction);
+        }
+    }
+
+    Ok(instructions)
+}
+
+pub fn compile_graph(
+    graph: &Graph,
+    name: impl Into<String>,
+) -> Result<MachineFunction, CompileError> {
+    let virtual_instructions = lower_graph(graph)?;
+    let intervals = live_intervals(&virtual_instructions)?;
+    let allocator = RegisterAllocator::new(GENERAL_REGISTERS.len() as u16);
+    let allocation = allocator.allocate(&intervals)?;
+    let argument_homes = required_argument_homes(&virtual_instructions, &allocation);
+    let spill_slot_offset = argument_homes.len() as u32;
+    let stack_slots = allocation
+        .spill_slot_count
+        .checked_add(spill_slot_offset)
+        .ok_or(CompileError::TooManyStackSlots)?;
+
+    let mut function = MachineFunction::new(name);
+    function.stack_slots = stack_slots;
+    function.callee_saved = GENERAL_REGISTERS
+        .iter()
+        .copied()
+        .filter(|register| {
+            register.is_callee_saved()
+                && allocation.iter().any(|(_, location)| {
+                    location == Location::Register(physical_register(*register))
+                })
+        })
+        .collect();
+
+    for (index, slot) in &argument_homes {
+        function.instructions.push(MachineInstr::Store {
+            slot: StackSlot(*slot),
+            src: Reg::ARGUMENTS[*index],
+        });
+    }
+
+    let mut emitter = Emitter {
+        allocation: &allocation,
+        argument_homes: &argument_homes,
+        spill_slot_offset,
+        instructions: Vec::with_capacity(virtual_instructions.len()),
+    };
+    for instruction in &virtual_instructions {
+        emitter.emit(instruction.clone())?;
+    }
+    function.instructions.extend(emitter.instructions);
+    Ok(function)
+}
+
+pub fn compile_graph_to_assembly(
+    graph: &Graph,
+    name: impl Into<String>,
+) -> Result<String, CompileError> {
+    Ok(compile_graph(graph, name)?.emit_gnu_assembly()?)
+}
+
+fn unsupported(node: NodeId, reason: UnsupportedReason) -> CompileError {
+    CompileError::Unsupported { node, reason }
+}
+
+fn virtual_reg(node: NodeId) -> VirtualReg {
+    VirtualReg(node.0)
+}
+
+fn alloc_virtual_reg(virtual_reg: VirtualReg) -> AllocVirtualReg {
+    AllocVirtualReg(virtual_reg.0)
+}
+
+fn physical_register(register: Reg) -> PhysicalRegister {
+    let index = GENERAL_REGISTERS
+        .iter()
+        .position(|candidate| *candidate == register)
+        .expect("register is in the general allocation set");
+    PhysicalRegister(index as u16)
+}
+
+fn general_register(register: PhysicalRegister) -> Reg {
+    GENERAL_REGISTERS[register.index()]
+}
+
+fn value_reference(
+    node: NodeId,
+    input: NodeId,
+    values: &BTreeSet<NodeId>,
+) -> Result<VirtualValue, CompileError> {
+    if values.contains(&input) {
+        Ok(VirtualValue::Reg(virtual_reg(input)))
+    } else {
+        Err(CompileError::InvalidValueReference { node, input })
+    }
+}
+
+fn binary_inputs(
+    node: NodeId,
+    inputs: &[NodeId],
+    values: &BTreeSet<NodeId>,
+) -> Result<(VirtualValue, VirtualValue), CompileError> {
+    debug_assert_eq!(inputs.len(), 2, "graph validation checked binary arity");
+    Ok((
+        value_reference(node, inputs[0], values)?,
+        value_reference(node, inputs[1], values)?,
+    ))
+}
+
+fn condition(operation: CompareOp) -> Condition {
+    match operation {
+        CompareOp::Eq => Condition::Eq,
+        CompareOp::Ne => Condition::NotEq,
+        CompareOp::Lt => Condition::SignedLess,
+        CompareOp::Le => Condition::SignedLessEq,
+        CompareOp::Gt => Condition::SignedGreater,
+        CompareOp::Ge => Condition::SignedGreaterEq,
+    }
+}
+
+fn live_intervals(instructions: &[VirtualInstr]) -> Result<Vec<LiveInterval>, CompileError> {
+    let mut intervals: BTreeMap<u32, (u32, u32)> = BTreeMap::new();
+
+    for (index, instruction) in instructions.iter().enumerate() {
+        let position = u32::try_from(index).map_err(|_| CompileError::TooManyInstructions)?;
+        let end = position
+            .checked_add(1)
+            .ok_or(CompileError::TooManyInstructions)?;
+
+        if let Some(definition) = defined_register(instruction) {
+            intervals.insert(definition.0, (position, end));
+        }
+        for used in used_registers(instruction) {
+            if let Some((_, interval_end)) = intervals.get_mut(&used.0) {
+                *interval_end = end;
+            }
+        }
+    }
+
+    Ok(intervals
+        .into_iter()
+        .map(|(virtual_reg, (start, end))| {
+            LiveInterval::new(AllocVirtualReg(virtual_reg), start, end)
+        })
+        .collect())
+}
+
+fn defined_register(instruction: &VirtualInstr) -> Option<VirtualReg> {
+    match *instruction {
+        VirtualInstr::LoadArg { dst, .. }
+        | VirtualInstr::Mov { dst, .. }
+        | VirtualInstr::Add { dst, .. }
+        | VirtualInstr::Sub { dst, .. }
+        | VirtualInstr::Mul { dst, .. }
+        | VirtualInstr::Div { dst, .. }
+        | VirtualInstr::Rem { dst, .. }
+        | VirtualInstr::Compare { dst, .. }
+        | VirtualInstr::Load { dst, .. } => Some(dst),
+        VirtualInstr::Store { .. } | VirtualInstr::Return(_) => None,
+    }
+}
+
+fn used_registers(instruction: &VirtualInstr) -> Vec<VirtualReg> {
+    let mut used = Vec::new();
+    let mut add_value = |value| {
+        if let VirtualValue::Reg(virtual_reg) = value {
+            used.push(virtual_reg);
+        }
+    };
+    match *instruction {
+        VirtualInstr::Mov { src, .. } | VirtualInstr::Return(src) => add_value(src),
+        VirtualInstr::Add { lhs, rhs, .. }
+        | VirtualInstr::Sub { lhs, rhs, .. }
+        | VirtualInstr::Mul { lhs, rhs, .. }
+        | VirtualInstr::Div { lhs, rhs, .. }
+        | VirtualInstr::Rem { lhs, rhs, .. }
+        | VirtualInstr::Compare { lhs, rhs, .. } => {
+            add_value(lhs);
+            add_value(rhs);
+        }
+        VirtualInstr::Store { src, .. } => add_value(src),
+        VirtualInstr::LoadArg { .. } | VirtualInstr::Load { .. } => {}
+    }
+    used
+}
+
+fn required_argument_homes(
+    instructions: &[VirtualInstr],
+    allocation: &AllocationResult,
+) -> BTreeMap<usize, u32> {
+    let mut clobbered = [false; Reg::ARGUMENTS.len()];
+    let mut required = BTreeSet::new();
+
+    for instruction in instructions {
+        if let VirtualInstr::LoadArg { index, .. } = *instruction {
+            if index < Reg::ARGUMENTS.len() && clobbered[index] {
+                required.insert(index);
+            }
+        }
+        if matches!(
+            instruction,
+            VirtualInstr::Div { .. } | VirtualInstr::Rem { .. }
+        ) {
+            let index = Reg::ARGUMENTS
+                .iter()
+                .position(|argument| *argument == Reg::Rdx)
+                .expect("rdx is an argument register");
+            clobbered[index] = true;
+        }
+        let Some(definition) = defined_register(instruction) else {
+            continue;
+        };
+        let Some(Location::Register(register)) =
+            allocation.allocation(alloc_virtual_reg(definition))
+        else {
+            continue;
+        };
+        let register = general_register(register);
+        if let Some(index) = Reg::ARGUMENTS
+            .iter()
+            .position(|argument| *argument == register)
+        {
+            clobbered[index] = true;
+        }
+    }
+
+    required
+        .into_iter()
+        .enumerate()
+        .map(|(slot, index)| (index, slot as u32))
+        .collect()
+}
+
+struct Emitter<'a> {
+    allocation: &'a AllocationResult,
+    argument_homes: &'a BTreeMap<usize, u32>,
+    spill_slot_offset: u32,
+    instructions: Vec<MachineInstr>,
+}
+
+impl Emitter<'_> {
+    fn emit(&mut self, instruction: VirtualInstr) -> Result<(), CompileError> {
+        match instruction {
+            VirtualInstr::LoadArg { dst, index } => {
+                let work = self.definition_register(dst)?;
+                if let Some(slot) = self.argument_homes.get(&index) {
+                    self.instructions.push(MachineInstr::Load {
+                        dst: work,
+                        slot: StackSlot(*slot),
+                    });
+                } else {
+                    self.instructions
+                        .push(MachineInstr::LoadArg { dst: work, index });
+                }
+                self.store_definition(dst, work)?;
+            }
+            VirtualInstr::Mov { dst, src } => {
+                let work = self.definition_register(dst)?;
+                self.load_value(src, work)?;
+                self.store_definition(dst, work)?;
+            }
+            VirtualInstr::Add { dst, lhs, rhs } => {
+                self.emit_binary(dst, lhs, rhs, BinaryKind::Add)?;
+            }
+            VirtualInstr::Sub { dst, lhs, rhs } => {
+                self.emit_binary(dst, lhs, rhs, BinaryKind::Sub)?;
+            }
+            VirtualInstr::Mul { dst, lhs, rhs } => {
+                self.emit_binary(dst, lhs, rhs, BinaryKind::Mul)?;
+            }
+            VirtualInstr::Div { dst, lhs, rhs } => {
+                self.emit_division(dst, lhs, rhs, DivisionResult::Quotient)?;
+            }
+            VirtualInstr::Rem { dst, lhs, rhs } => {
+                self.emit_division(dst, lhs, rhs, DivisionResult::Remainder)?;
+            }
+            VirtualInstr::Compare {
+                dst,
+                condition,
+                lhs,
+                rhs,
+            } => {
+                let work = self.definition_register(dst)?;
+                self.load_value(lhs, work)?;
+                let rhs = self.operand(rhs, SCRATCH1)?;
+                self.instructions.push(MachineInstr::Cmp { lhs: work, rhs });
+                self.instructions.push(MachineInstr::SetCc {
+                    condition,
+                    dst: work,
+                });
+                self.store_definition(dst, work)?;
+            }
+            VirtualInstr::Return(value) => {
+                self.load_value(value, Reg::RETURN)?;
+                self.instructions.push(MachineInstr::Ret);
+            }
+            VirtualInstr::Load { .. } | VirtualInstr::Store { .. } => {
+                unreachable!("spill instructions are inserted after register allocation")
+            }
+        }
+        Ok(())
+    }
+
+    fn emit_binary(
+        &mut self,
+        dst: VirtualReg,
+        lhs: VirtualValue,
+        rhs: VirtualValue,
+        kind: BinaryKind,
+    ) -> Result<(), CompileError> {
+        let work = self.definition_register(dst)?;
+        self.load_value(lhs, work)?;
+        let rhs = self.operand(rhs, SCRATCH1)?;
+        self.instructions.push(match kind {
+            BinaryKind::Add => MachineInstr::Add {
+                dst: work,
+                src: rhs,
+            },
+            BinaryKind::Sub => MachineInstr::Sub {
+                dst: work,
+                src: rhs,
+            },
+            BinaryKind::Mul => MachineInstr::IMul {
+                dst: work,
+                src: rhs,
+            },
+        });
+        self.store_definition(dst, work)
+    }
+
+    fn emit_division(
+        &mut self,
+        dst: VirtualReg,
+        lhs: VirtualValue,
+        rhs: VirtualValue,
+        result: DivisionResult,
+    ) -> Result<(), CompileError> {
+        let work = self.definition_register(dst)?;
+        let rhs = match self.operand(rhs, SCRATCH1)? {
+            Operand::Reg(reg @ (Reg::Rax | Reg::Rdx)) => {
+                self.instructions.push(MachineInstr::Mov {
+                    dst: SCRATCH1,
+                    src: reg,
+                });
+                Operand::Reg(SCRATCH1)
+            }
+            operand => operand,
+        };
+        self.load_value(lhs, Reg::Rax)?;
+        self.instructions.push(MachineInstr::Cqo);
+        self.instructions.push(MachineInstr::IDiv { src: rhs });
+        self.instructions.push(MachineInstr::Mov {
+            dst: work,
+            src: match result {
+                DivisionResult::Quotient => Reg::Rax,
+                DivisionResult::Remainder => Reg::Rdx,
+            },
+        });
+        self.store_definition(dst, work)
+    }
+
+    fn definition_register(&mut self, dst: VirtualReg) -> Result<Reg, CompileError> {
+        match self.location(dst)? {
+            Location::Register(register) => Ok(general_register(register)),
+            Location::Spill(_) => Ok(SCRATCH0),
+        }
+    }
+
+    fn store_definition(&mut self, dst: VirtualReg, source: Reg) -> Result<(), CompileError> {
+        if let Location::Spill(slot) = self.location(dst)? {
+            self.instructions.push(MachineInstr::Store {
+                slot: self.stack_slot(slot)?,
+                src: source,
+            });
+        }
+        Ok(())
+    }
+
+    fn load_value(&mut self, value: VirtualValue, dst: Reg) -> Result<(), CompileError> {
+        match value {
+            VirtualValue::Imm(value) => {
+                self.instructions.push(MachineInstr::MovImm { dst, value });
+            }
+            VirtualValue::Reg(virtual_reg) => match self.location(virtual_reg)? {
+                Location::Register(source) => {
+                    self.instructions.push(MachineInstr::Mov {
+                        dst,
+                        src: general_register(source),
+                    });
+                }
+                Location::Spill(slot) => {
+                    self.instructions.push(MachineInstr::Load {
+                        dst,
+                        slot: self.stack_slot(slot)?,
+                    });
+                }
+            },
+        }
+        Ok(())
+    }
+
+    fn operand(&mut self, value: VirtualValue, scratch: Reg) -> Result<Operand, CompileError> {
+        match value {
+            VirtualValue::Imm(value) => {
+                self.instructions.push(MachineInstr::MovImm {
+                    dst: scratch,
+                    value,
+                });
+                Ok(Operand::Reg(scratch))
+            }
+            VirtualValue::Reg(virtual_reg) => match self.location(virtual_reg)? {
+                Location::Register(register) => Ok(Operand::Reg(general_register(register))),
+                Location::Spill(slot) => Ok(Operand::Stack(self.stack_slot(slot)?)),
+            },
+        }
+    }
+
+    fn location(&self, virtual_reg: VirtualReg) -> Result<Location, CompileError> {
+        self.allocation
+            .allocation(alloc_virtual_reg(virtual_reg))
+            .ok_or(CompileError::MissingAllocation(virtual_reg))
+    }
+
+    fn stack_slot(&self, slot: SpillSlot) -> Result<StackSlot, CompileError> {
+        slot.0
+            .checked_add(self.spill_slot_offset)
+            .map(StackSlot)
+            .ok_or(CompileError::TooManyStackSlots)
+    }
+}
+
+#[derive(Clone, Copy)]
+enum BinaryKind {
+    Add,
+    Sub,
+    Mul,
+}
+
+#[derive(Clone, Copy)]
+enum DivisionResult {
+    Quotient,
+    Remainder,
+}
+
+#[cfg(test)]
+mod tests {
+    use std::collections::HashMap;
+
+    use super::*;
+    use crate::machine_eval::{self, MachineEvalError};
+    use crate::son::{Node, UnaryOp};
+
+    fn graph_with_return(value: NodeId, start: NodeId, graph: &mut Graph) {
+        graph.return_(start, Some(value));
+    }
+
+    #[test]
+    fn compiles_constants_arithmetic_and_gnu_assembly() {
+        let mut graph = Graph::new();
+        let start = graph.start();
+        let seven = graph.constant(7);
+        let three = graph.constant(3);
+        let difference = graph.binary(BinaryOp::Sub, seven, three);
+        let two = graph.constant(2);
+        let product = graph.binary(BinaryOp::Mul, difference, two);
+        let five = graph.constant(5);
+        let sum = graph.binary(BinaryOp::Add, product, five);
+        graph_with_return(sum, start, &mut graph);
+
+        let function = compile_graph(&graph, "arithmetic").unwrap();
+        assert_eq!(run(&function, &[]), 13);
+        assert_eq!(function.stack_slots, 0);
+        assert!(function.callee_saved.is_empty());
+
+        let assembly = compile_graph_to_assembly(&graph, "arithmetic").unwrap();
+        assert!(assembly.starts_with(".intel_syntax noprefix\n.text\n.globl arithmetic\n"));
+        assert!(assembly.contains("\timul"));
+        assert!(assembly.ends_with(
+            ".size arithmetic, .-arithmetic\n.section .note.GNU-stack,\"\",@progbits\n"
+        ));
+    }
+
+    #[test]
+    fn signed_division_and_remainder_use_rax_rdx_in_lowering_order() {
+        assert!(!GENERAL_REGISTERS.contains(&Reg::Rax));
+        assert!(!GENERAL_REGISTERS.contains(&Reg::Rdx));
+
+        for (operation, lhs, rhs, expected, result_register) in [
+            (BinaryOp::Div, -42, 4, -10, Reg::Rax),
+            (BinaryOp::Rem, -42, 4, -2, Reg::Rdx),
+            (BinaryOp::Div, 42, -4, -10, Reg::Rax),
+            (BinaryOp::Rem, 42, -4, 2, Reg::Rdx),
+            (BinaryOp::Div, i64::MIN, 1, i64::MIN, Reg::Rax),
+            (BinaryOp::Rem, i64::MIN, 1, 0, Reg::Rdx),
+        ] {
+            let mut graph = Graph::new();
+            let start = graph.start();
+            let lhs_node = graph.parameter(0);
+            let rhs_node = graph.parameter(1);
+            let result = graph.binary(operation, lhs_node, rhs_node);
+            graph_with_return(result, start, &mut graph);
+
+            let function = compile_graph(&graph, "signed_division").unwrap();
+            assert_eq!(run(&function, &[lhs, rhs]), expected);
+            assert_eq!(machine_eval::evaluate(&function, &[lhs, rhs]), Ok(expected));
+            let idiv = function
+                .instructions
+                .iter()
+                .position(|instruction| matches!(instruction, MachineInstr::IDiv { .. }))
+                .unwrap();
+            assert_eq!(function.instructions[idiv - 1], MachineInstr::Cqo);
+            match function.instructions[idiv] {
+                MachineInstr::IDiv {
+                    src: Operand::Reg(divisor),
+                } => assert!(!matches!(divisor, Reg::Rax | Reg::Rdx)),
+                MachineInstr::IDiv {
+                    src: Operand::Stack(_),
+                } => {}
+                _ => unreachable!(),
+            }
+            assert!(matches!(
+                function.instructions[idiv + 1],
+                MachineInstr::Mov { src, .. } if src == result_register
+            ));
+
+            let assembly = function.emit_gnu_assembly().unwrap();
+            assert!(assembly.contains("\tcqo\n\tidiv "), "{assembly}");
+        }
+    }
+
+    #[test]
+    fn division_preserves_later_rdx_arguments_and_reads_stack_arguments() {
+        for (operation, expected) in [(BinaryOp::Div, 11), (BinaryOp::Rem, 18)] {
+            let mut graph = Graph::new();
+            let start = graph.start();
+            let lhs = graph.parameter(0);
+            let rhs = graph.parameter(1);
+            let division = graph.binary(operation, lhs, rhs);
+            let third = graph.parameter(2);
+            let seventh = graph.parameter(6);
+            let product = graph.binary(BinaryOp::Mul, third, seventh);
+            let result = graph.binary(BinaryOp::Add, division, product);
+            graph_with_return(result, start, &mut graph);
+
+            let arguments = [-43, 4, 7, 0, 0, 0, 3];
+            let function = compile_graph(&graph, "division_arguments").unwrap();
+            assert!(matches!(
+                function.instructions.first(),
+                Some(MachineInstr::Store { src: Reg::Rdx, .. })
+            ));
+            assert_eq!(run(&function, &arguments), expected);
+            assert_eq!(machine_eval::evaluate(&function, &arguments), Ok(expected));
+        }
+    }
+
+    #[test]
+    fn division_and_remainder_accept_spilled_divisors() {
+        for (operation, expected) in [(BinaryOp::Div, 207), (BinaryOp::Rem, 208)] {
+            let mut graph = Graph::new();
+            let start = graph.start();
+            let mut values = Vec::new();
+            for value in 1..=20 {
+                values.push(graph.constant(value));
+            }
+            let mut sum = values[2];
+            for value in values.iter().skip(3) {
+                sum = graph.binary(BinaryOp::Add, sum, *value);
+            }
+            let division = graph.binary(operation, values[0], values[1]);
+            let result = graph.binary(BinaryOp::Add, sum, division);
+            graph_with_return(result, start, &mut graph);
+
+            let function = compile_graph(&graph, "spilled_divisor").unwrap();
+            assert!(function.stack_slots > 0);
+            assert!(function.instructions.iter().any(|instruction| matches!(
+                instruction,
+                MachineInstr::IDiv {
+                    src: Operand::Stack(_)
+                }
+            )));
+            assert_eq!(run(&function, &[]), expected);
+            assert_eq!(machine_eval::evaluate(&function, &[]), Ok(expected));
+        }
+    }
+
+    #[test]
+    fn division_and_remainder_spill_results_without_losing_them() {
+        for (operation, expected) in [(BinaryOp::Div, 200), (BinaryOp::Rem, 207)] {
+            let mut graph = Graph::new();
+            let start = graph.start();
+            let lhs = graph.constant(-43);
+            let rhs = graph.constant(4);
+            let division = graph.binary(operation, lhs, rhs);
+            let mut values = Vec::new();
+            for value in 1..=20 {
+                values.push(graph.constant(value));
+            }
+            let mut sum = values[0];
+            for value in values.into_iter().skip(1) {
+                sum = graph.binary(BinaryOp::Add, sum, value);
+            }
+            let result = graph.binary(BinaryOp::Add, sum, division);
+            graph_with_return(result, start, &mut graph);
+
+            let function = compile_graph(&graph, "spilled_division_result").unwrap();
+            let idiv = function
+                .instructions
+                .iter()
+                .position(|instruction| matches!(instruction, MachineInstr::IDiv { .. }))
+                .unwrap();
+            assert!(matches!(
+                function.instructions[idiv + 2],
+                MachineInstr::Store { .. }
+            ));
+            assert_eq!(run(&function, &[]), expected);
+            assert_eq!(machine_eval::evaluate(&function, &[]), Ok(expected));
+        }
+    }
+
+    #[test]
+    fn unused_trapping_division_and_remainder_are_not_discarded() {
+        for (operation, lhs, rhs, expected) in [
+            (BinaryOp::Div, 1, 0, MachineEvalError::DivisionByZero),
+            (BinaryOp::Rem, 1, 0, MachineEvalError::DivisionByZero),
+            (
+                BinaryOp::Div,
+                i64::MIN,
+                -1,
+                MachineEvalError::DivisionOverflow,
+            ),
+            (
+                BinaryOp::Rem,
+                i64::MIN,
+                -1,
+                MachineEvalError::DivisionOverflow,
+            ),
+        ] {
+            let mut graph = Graph::new();
+            let start = graph.start();
+            let lhs = graph.constant(lhs);
+            let rhs = graph.constant(rhs);
+            graph.binary(operation, lhs, rhs);
+            let one = graph.constant(1);
+            graph_with_return(one, start, &mut graph);
+
+            let function = compile_graph(&graph, "trapping_division").unwrap();
+            assert!(
+                function
+                    .instructions
+                    .iter()
+                    .any(|instruction| matches!(instruction, MachineInstr::IDiv { .. }))
+            );
+            assert_eq!(machine_eval::evaluate(&function, &[]), Err(expected));
+        }
+    }
+
+    #[test]
+    fn supports_register_stack_and_repeated_parameters() {
+        let mut graph = Graph::new();
+        let start = graph.start();
+        let first = graph.parameter(0);
+        let second = graph.parameter(1);
+        let seventh = graph.parameter(6);
+        let sum = graph.binary(BinaryOp::Add, first, second);
+        let product = graph.binary(BinaryOp::Mul, sum, seventh);
+        let repeated = graph.parameter(0);
+        let result = graph.binary(BinaryOp::Add, product, repeated);
+        graph_with_return(result, start, &mut graph);
+
+        let args = [9, 4, 0, 0, 0, 0, 3];
+        assert_eq!(run(&compile_graph(&graph, "params").unwrap(), &args), 48);
+
+        let assembly = compile_graph_to_assembly(&graph, "params").unwrap();
+        assert!(assembly.contains("QWORD PTR [rbp+16]"), "{assembly}");
+    }
+
+    #[test]
+    fn parameter_homes_preserve_clobbered_incoming_registers() {
+        let mut graph = Graph::new();
+        let start = graph.start();
+        let first = graph.parameter(0);
+        let mut values = Vec::new();
+        for value in 0..12 {
+            values.push(graph.constant(value));
+        }
+        let second = graph.parameter(1);
+        let mut sum = graph.binary(BinaryOp::Add, first, second);
+        for value in values {
+            sum = graph.binary(BinaryOp::Add, sum, value);
+        }
+        graph_with_return(sum, start, &mut graph);
+
+        let function = compile_graph(&graph, "argument_home").unwrap();
+        assert!(function.stack_slots >= 1);
+        assert_eq!(run(&function, &[20, 7]), 93);
+        assert!(matches!(
+            function.instructions.first(),
+            Some(MachineInstr::Store { src: Reg::Rsi, .. })
+        ));
+    }
+
+    #[test]
+    fn high_pressure_spills_definitions_and_uses() {
+        let mut graph = Graph::new();
+        let start = graph.start();
+        let mut values = Vec::new();
+        for value in 1..=20 {
+            values.push(graph.constant(value));
+        }
+        let mut sum = values[0];
+        for value in values.into_iter().skip(1) {
+            sum = graph.binary(BinaryOp::Add, sum, value);
+        }
+        graph_with_return(sum, start, &mut graph);
+
+        let function = compile_graph(&graph, "pressure").unwrap();
+        assert!(function.stack_slots > 0);
+        assert!(
+            function
+                .instructions
+                .iter()
+                .any(|instruction| matches!(instruction, MachineInstr::Store { .. }))
+        );
+        assert!(function.instructions.iter().any(|instruction| {
+            matches!(instruction, MachineInstr::Load { .. })
+                || matches!(
+                    instruction,
+                    MachineInstr::Add {
+                        src: Operand::Stack(_),
+                        ..
+                    }
+                )
+        }));
+        assert_eq!(run(&function, &[]), 210);
+        assert!(
+            function
+                .callee_saved
+                .iter()
+                .all(|register| register.is_callee_saved())
+        );
+    }
+
+    #[test]
+    fn every_signed_comparison_returns_zero_or_one() {
+        let cases = [
+            (CompareOp::Eq, [0, 1, 0]),
+            (CompareOp::Ne, [1, 0, 1]),
+            (CompareOp::Lt, [1, 0, 0]),
+            (CompareOp::Le, [1, 1, 0]),
+            (CompareOp::Gt, [0, 0, 1]),
+            (CompareOp::Ge, [0, 1, 1]),
+        ];
+
+        for (operation, expected) in cases {
+            let mut graph = Graph::new();
+            let start = graph.start();
+            let lhs = graph.parameter(0);
+            let rhs = graph.parameter(1);
+            let comparison = graph.compare(operation, lhs, rhs);
+            graph_with_return(comparison, start, &mut graph);
+            let function = compile_graph(&graph, "compare").unwrap();
+            for ((lhs, rhs), expected) in [(4, 5), (5, 5), (6, 5)].into_iter().zip(expected) {
+                assert_eq!(run(&function, &[lhs, rhs]), expected, "{operation:?}");
+            }
+        }
+    }
+
+    #[test]
+    fn spilled_compare_uses_scratch_and_stores_boolean() {
+        let mut graph = Graph::new();
+        let start = graph.start();
+        let mut values = Vec::new();
+        for value in 0..18 {
+            values.push(graph.constant(value));
+        }
+        let comparison = graph.compare(CompareOp::Lt, values[0], values[1]);
+        let mut sum = values[2];
+        for value in values.into_iter().skip(3) {
+            sum = graph.binary(BinaryOp::Add, sum, value);
+        }
+        let result = graph.binary(BinaryOp::Add, sum, comparison);
+        graph_with_return(result, start, &mut graph);
+
+        let function = compile_graph(&graph, "spilled_compare").unwrap();
+        assert!(function.instructions.iter().any(|instruction| {
+            matches!(instruction, MachineInstr::SetCc { dst: SCRATCH0, .. })
+        }));
+        assert_eq!(run(&function, &[]), 153);
+    }
+
+    #[test]
+    fn subtraction_keeps_lhs_and_rhs_order_even_with_spills() {
+        let mut graph = Graph::new();
+        let start = graph.start();
+        let mut values = Vec::new();
+        for value in 0..16 {
+            values.push(graph.constant(value));
+        }
+        let difference = graph.binary(BinaryOp::Sub, values[0], values[15]);
+        let mut sum = difference;
+        for value in values.into_iter().skip(1).take(14) {
+            sum = graph.binary(BinaryOp::Add, sum, value);
+        }
+        graph_with_return(sum, start, &mut graph);
+
+        let function = compile_graph(&graph, "sub_spills").unwrap();
+        assert!(function.stack_slots > 0);
+        assert_eq!(run(&function, &[]), 90);
+    }
+
+    #[test]
+    fn rejects_unsupported_operations_and_multiple_returns() {
+        for operation in [
+            BinaryOp::And,
+            BinaryOp::Or,
+            BinaryOp::Xor,
+            BinaryOp::Shl,
+            BinaryOp::Shr,
+        ] {
+            let mut graph = Graph::new();
+            let start = graph.start();
+            let one = graph.constant(1);
+            let two = graph.constant(2);
+            let unsupported_binary = graph.binary(operation, one, two);
+            graph.return_(start, Some(unsupported_binary));
+            assert!(matches!(
+                compile_graph(&graph, "unsupported_binary"),
+                Err(CompileError::Unsupported {
+                    reason: UnsupportedReason::NodeKind(NodeKind::Binary(actual)),
+                    ..
+                }) if actual == operation
+            ));
+        }
+
+        let mut graph = Graph::new();
+        let start = graph.start();
+        let one = graph.constant(1);
+        graph.return_(start, Some(one));
+        let second = graph.return_(start, Some(one));
+        assert_eq!(
+            compile_graph(&graph, "returns"),
+            Err(unsupported(second, UnsupportedReason::MultipleReturns))
+        );
+
+        let mut graph = Graph::new();
+        let start = graph.start();
+        let one = graph.constant(1);
+        let negation = graph.unary(UnaryOp::Neg, one);
+        graph.return_(start, Some(negation));
+        assert!(matches!(
+            lower_graph(&graph),
+            Err(CompileError::Unsupported {
+                reason: UnsupportedReason::NodeKind(NodeKind::Unary(UnaryOp::Neg)),
+                ..
+            })
+        ));
+
+        let mut graph = Graph::new();
+        let start = graph.start();
+        let one = graph.constant(1);
+        let phi = graph.phi(vec![start], vec![one]);
+        graph.return_(start, Some(phi));
+        assert!(matches!(
+            lower_graph(&graph),
+            Err(CompileError::Unsupported {
+                reason: UnsupportedReason::NodeKind(NodeKind::Phi),
+                ..
+            })
+        ));
+    }
+
+    #[test]
+    fn rejects_missing_empty_and_early_references() {
+        let mut graph = Graph::new();
+        graph.constant(1);
+        assert_eq!(lower_graph(&graph), Err(CompileError::MissingReturn));
+
+        let mut graph = Graph::new();
+        let start = graph.start();
+        let empty = graph.return_(start, None);
+        assert_eq!(
+            lower_graph(&graph),
+            Err(unsupported(empty, UnsupportedReason::ReturnWithoutValue))
+        );
+
+        let mut graph = Graph::new();
+        let start = graph.start();
+        let addition = graph.push(Node::with_inputs(
+            NodeKind::Binary(BinaryOp::Add),
+            Vec::new(),
+            vec![NodeId(3), NodeId(3)],
+        ));
+        graph.constant(1);
+        graph.return_(start, Some(addition));
+        assert_eq!(
+            lower_graph(&graph),
+            Err(CompileError::InvalidValueReference {
+                node: addition,
+                input: NodeId(3),
+            })
+        );
+    }
+
+    fn run(function: &MachineFunction, args: &[i64]) -> i64 {
+        let mut registers = HashMap::new();
+        for (index, register) in Reg::ARGUMENTS.into_iter().enumerate() {
+            registers.insert(register, args.get(index).copied().unwrap_or(0));
+        }
+        let mut slots = vec![0; function.stack_slots as usize];
+        let mut comparison = None;
+
+        for instruction in &function.instructions {
+            match *instruction {
+                MachineInstr::LoadArg { dst, index } => {
+                    let value = if index < Reg::ARGUMENTS.len() {
+                        registers.get(&Reg::ARGUMENTS[index]).copied().unwrap_or(0)
+                    } else {
+                        args[index]
+                    };
+                    registers.insert(dst, value);
+                }
+                MachineInstr::MovImm { dst, value } => {
+                    registers.insert(dst, value);
+                }
+                MachineInstr::Mov { dst, src } => {
+                    registers.insert(dst, read_reg(&registers, src));
+                }
+                MachineInstr::Add { dst, src } => {
+                    let value = read_reg(&registers, dst)
+                        .wrapping_add(read_operand(&registers, &slots, src));
+                    registers.insert(dst, value);
+                }
+                MachineInstr::Sub { dst, src } => {
+                    let value = read_reg(&registers, dst)
+                        .wrapping_sub(read_operand(&registers, &slots, src));
+                    registers.insert(dst, value);
+                }
+                MachineInstr::IMul { dst, src } => {
+                    let value = read_reg(&registers, dst)
+                        .wrapping_mul(read_operand(&registers, &slots, src));
+                    registers.insert(dst, value);
+                }
+                MachineInstr::Cqo => {
+                    let sign = if read_reg(&registers, Reg::Rax) < 0 {
+                        -1
+                    } else {
+                        0
+                    };
+                    registers.insert(Reg::Rdx, sign);
+                }
+                MachineInstr::IDiv { src } => {
+                    let lhs = read_reg(&registers, Reg::Rax);
+                    let rhs = read_operand(&registers, &slots, src);
+                    let quotient = lhs.checked_div(rhs).expect("division must not trap");
+                    let remainder = lhs.checked_rem(rhs).expect("remainder must not trap");
+                    registers.insert(Reg::Rax, quotient);
+                    registers.insert(Reg::Rdx, remainder);
+                }
+                MachineInstr::Cmp { lhs, rhs } => {
+                    comparison = Some((
+                        read_reg(&registers, lhs),
+                        read_operand(&registers, &slots, rhs),
+                    ));
+                }
+                MachineInstr::SetCc { condition, dst } => {
+                    let (lhs, rhs) = comparison.expect("compare before setcc");
+                    let value = match condition {
+                        Condition::Eq => lhs == rhs,
+                        Condition::NotEq => lhs != rhs,
+                        Condition::SignedLess => lhs < rhs,
+                        Condition::SignedLessEq => lhs <= rhs,
+                        Condition::SignedGreater => lhs > rhs,
+                        Condition::SignedGreaterEq => lhs >= rhs,
+                        Condition::UnsignedBelow => (lhs as u64) < rhs as u64,
+                        Condition::UnsignedBelowEq => (lhs as u64) <= rhs as u64,
+                        Condition::UnsignedAbove => (lhs as u64) > rhs as u64,
+                        Condition::UnsignedAboveEq => (lhs as u64) >= rhs as u64,
+                    };
+                    registers.insert(dst, i64::from(value));
+                }
+                MachineInstr::Load { dst, slot } => {
+                    registers.insert(dst, slots[slot.0 as usize]);
+                }
+                MachineInstr::Store { slot, src } => {
+                    slots[slot.0 as usize] = read_reg(&registers, src);
+                }
+                MachineInstr::Ret => return read_reg(&registers, Reg::RETURN),
+            }
+        }
+        panic!("machine function did not return")
+    }
+
+    fn read_reg(registers: &HashMap<Reg, i64>, register: Reg) -> i64 {
+        registers.get(&register).copied().unwrap_or(0)
+    }
+
+    fn read_operand(registers: &HashMap<Reg, i64>, slots: &[i64], operand: Operand) -> i64 {
+        match operand {
+            Operand::Reg(register) => read_reg(registers, register),
+            Operand::Stack(slot) => slots[slot.0 as usize],
+        }
+    }
+}

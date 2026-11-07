@@ -1,0 +1,23 @@
+[package]
+name = "kimi-fast-rustc"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+description = "A parallel Rust compiler with an LLVM reference track and a sea-of-nodes native backend"
+repository = "https://github.com/Shomvel/kimi-fast-rustc"
+license = "MIT OR Apache-2.0"
+
+[lib]
+name = "kimi_fast_rustc"
+path = "src/lib.rs"
+
+[[bin]]
+name = "kfrc"
+path = "src/main.rs"
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+panic = "abort"
+strip = "symbols"
