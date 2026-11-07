@@ -172,21 +172,23 @@ pub fn lower_graph(graph: &Graph) -> Result<Vec<VirtualInstr>, CompileError> {
             _ => None,
         })
         .collect::<BTreeMap<_, _>>();
-    let regions = graph
+    let jump_targets = graph
         .iter()
         .filter(|(_, node)| node.kind == NodeKind::Region)
-        .map(|(id, node)| (node.control.clone(), id))
+        .flat_map(|(region, node)| {
+            node.control
+                .iter()
+                .enumerate()
+                .filter(|(_, input)| {
+                    graph
+                        .node(**input)
+                        .is_some_and(|node| node.kind == NodeKind::Jump)
+                })
+                .map(move |(index, input)| (*input, (region, index)))
+                .collect::<Vec<_>>()
+        })
         .collect::<BTreeMap<_, _>>();
-    let phis = graph
-        .iter()
-        .filter(|(_, node)| node.kind == NodeKind::Phi)
-        .map(|(id, node)| (id, node.control.clone(), node.data.clone()))
-        .collect::<Vec<_>>();
     let loops = loop_headers(graph);
-    let back_edges = loops
-        .iter()
-        .map(|(header, body)| (*body, *header))
-        .collect::<BTreeMap<_, _>>();
     let mut next_virtual_reg = graph
         .ids()
         .map(|id| id.0)
@@ -305,37 +307,21 @@ pub fn lower_graph(graph: &Graph) -> Result<Vec<VirtualInstr>, CompileError> {
                     target: target.0,
                 }
             }
-            NodeKind::Jump if back_edges.contains_key(&id) => {
-                let header = back_edges[&id];
+            NodeKind::Jump => {
+                let (region, input_index) = jump_targets
+                    .get(&id)
+                    .copied()
+                    .ok_or_else(|| unsupported(id, UnsupportedReason::NodeKind(node.kind)))?;
                 emit_phi_edge(
                     &mut instructions,
                     id,
                     graph,
-                    header,
-                    1,
+                    region,
+                    input_index,
                     &values,
                     &mut next_virtual_reg,
                 )?;
-                VirtualInstr::Jmp(header.0)
-            }
-            NodeKind::Projection(1) => {
-                let mut region_target = None;
-                for (phi, controls, data) in &phis {
-                    if controls.get(1) == Some(&id) {
-                        let region = regions.get(controls).ok_or_else(|| {
-                            unsupported(id, UnsupportedReason::NodeKind(node.kind))
-                        })?;
-                        instructions.push(VirtualInstr::Mov {
-                            dst: virtual_reg(*phi),
-                            src: value_reference(id, data[0], &values)?,
-                        });
-                        region_target = Some(region.0);
-                    }
-                }
-                if let Some(target) = region_target {
-                    instructions.push(VirtualInstr::Jmp(target));
-                }
-                VirtualInstr::Label(id.0)
+                VirtualInstr::Jmp(region.0)
             }
             NodeKind::Projection(_) => VirtualInstr::Label(id.0),
             NodeKind::Region if loops.contains_key(&id) => {
@@ -350,17 +336,7 @@ pub fn lower_graph(graph: &Graph) -> Result<Vec<VirtualInstr>, CompileError> {
                 )?;
                 VirtualInstr::Label(id.0)
             }
-            NodeKind::Region => {
-                for (phi, controls, data) in &phis {
-                    if controls == &node.control {
-                        instructions.push(VirtualInstr::Mov {
-                            dst: virtual_reg(*phi),
-                            src: value_reference(id, data[1], &values)?,
-                        });
-                    }
-                }
-                VirtualInstr::Label(id.0)
-            }
+            NodeKind::Region => VirtualInstr::Label(id.0),
             NodeKind::Phi => VirtualInstr::Phi {
                 dst: virtual_reg(id),
             },
@@ -393,7 +369,8 @@ fn loop_headers(graph: &Graph) -> BTreeMap<NodeId, NodeId> {
                 return None;
             }
             let back_edge = node.control[1];
-            (graph.node(back_edge)?.kind == NodeKind::Jump).then_some((header, back_edge))
+            (header < back_edge && graph.node(back_edge)?.kind == NodeKind::Jump)
+                .then_some((header, back_edge))
         })
         .collect()
 }

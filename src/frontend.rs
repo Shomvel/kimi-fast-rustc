@@ -6,10 +6,10 @@ use std::fmt;
 /// Parses the explicitly supported i64 Rust expression subset.
 ///
 /// Functions and parameters retain their names and source ranges in `Graph::functions`.
-/// `if` expressions merge values through control regions and Phi nodes. Mutable bindings
-/// and `while` loops use loop-header Phis and explicit back edges. Calls are represented
-/// explicitly and checked against the declared function set. Comparisons produce zero or
-/// one and cannot be chained. Unsupported Rust is rejected with a source location.
+/// `if` expressions and statements merge values through explicit jumps, control regions,
+/// and Phi nodes. Mutable bindings and `while` loops use loop-header Phis and back edges.
+/// Calls are checked against the declared function set. Comparisons produce zero or one
+/// and cannot be chained. Unsupported Rust is rejected with a source location.
 pub fn parse(source: &str) -> Result<Graph, ParseError> {
     let tokens = Lexer::new(source).tokenize()?;
     Parser::new(tokens).parse_program()
@@ -552,13 +552,19 @@ impl Parser {
             self.parse_let()?;
             return Ok(None);
         }
+        if self.peek_identifier("if") {
+            self.parse_if_statement()?;
+            return Ok(None);
+        }
         if self.peek_identifier("while") {
             self.parse_while()?;
             return Ok(None);
         }
         if self.eat(TokenKind::Return) {
             if !allow_return {
-                return Err(self.error_here("`return` inside a loop is not supported"));
+                return Err(
+                    self.error_here("`return` inside a conditional or loop is not supported")
+                );
             }
             if self.eat(TokenKind::Semicolon) {
                 return Ok(Some(self.graph.return_(self.control, None)));
@@ -621,6 +627,76 @@ impl Parser {
         Ok(())
     }
 
+    fn parse_statement_body(&mut self) -> Result<(), ParseError> {
+        while !self.check(&TokenKind::RBrace) {
+            if self.check(&TokenKind::Eof) {
+                return Err(self.error_here("unterminated statement body"));
+            }
+            self.parse_statement(false)?;
+        }
+        self.expect(TokenKind::RBrace, "`}` after statement body")?;
+        Ok(())
+    }
+
+    fn parse_if_statement(&mut self) -> Result<(), ParseError> {
+        self.position += 1;
+        let outer_variables = self.variables.clone();
+        let condition = self.parse_expression()?;
+        let branch = self.graph.if_(self.control, condition);
+        self.expect(TokenKind::LBrace, "`{` after if condition")?;
+
+        let true_projection = self.graph.projection(branch, 0);
+        self.control = true_projection;
+        self.parse_statement_body()?;
+        let true_jump = self.graph.jump(self.control);
+        let true_variables = self.variables.clone();
+
+        self.variables = outer_variables.clone();
+        let false_projection = self.graph.projection(branch, 1);
+        self.control = false_projection;
+        if self.peek_identifier("else") {
+            self.position += 1;
+            self.expect(TokenKind::LBrace, "`{` after else")?;
+            self.parse_statement_body()?;
+        }
+        let false_jump = self.graph.jump(self.control);
+        let false_variables = self.variables.clone();
+
+        let controls = vec![true_jump, false_jump];
+        self.control = self.graph.region(controls.clone());
+        self.variables = outer_variables;
+        let mut merged_names = self
+            .variables
+            .iter()
+            .filter(|(_, binding)| binding.mutable)
+            .map(|(name, _)| name.clone())
+            .collect::<Vec<_>>();
+        merged_names.sort();
+        for name in merged_names {
+            let phi = self.graph.phi(
+                controls.clone(),
+                vec![
+                    true_variables
+                        .get(&name)
+                        .expect("outer true-branch binding remains in scope")
+                        .value,
+                    false_variables
+                        .get(&name)
+                        .expect("outer false-branch binding remains in scope")
+                        .value,
+                ],
+            );
+            self.variables.insert(
+                name,
+                Binding {
+                    value: phi,
+                    mutable: true,
+                },
+            );
+        }
+        Ok(())
+    }
+
     fn parse_while(&mut self) -> Result<(), ParseError> {
         self.position += 1;
         let outer_variables = self.variables.clone();
@@ -651,13 +727,7 @@ impl Parser {
 
         let body_projection = self.graph.projection(branch, 0);
         self.control = body_projection;
-        while !self.check(&TokenKind::RBrace) {
-            if self.check(&TokenKind::Eof) {
-                return Err(self.error_here("unterminated while body"));
-            }
-            self.parse_statement(false)?;
-        }
-        self.expect(TokenKind::RBrace, "`}` after while body")?;
+        self.parse_statement_body()?;
         let back_edge = self.graph.jump(self.control);
         let exit_projection = self.graph.projection(branch, 1);
 
@@ -735,7 +805,7 @@ impl Parser {
         let true_projection = self.graph.projection(branch, 0);
         self.control = true_projection;
         let true_value = self.parse_expression()?;
-        let true_control = self.control;
+        let true_jump = self.graph.jump(self.control);
         self.expect(TokenKind::RBrace, "`}` after if branch")?;
 
         if !self.peek_identifier("else") {
@@ -746,15 +816,13 @@ impl Parser {
         let false_projection = self.graph.projection(branch, 1);
         self.control = false_projection;
         let false_value = self.parse_expression()?;
-        let false_control = self.control;
+        let false_jump = self.graph.jump(self.control);
         self.expect(TokenKind::RBrace, "`}` after else branch")?;
 
-        let region = self.graph.region(vec![true_control, false_control]);
+        let controls = vec![true_jump, false_jump];
+        let region = self.graph.region(controls.clone());
         self.control = region;
-        Ok(self.graph.phi(
-            vec![true_control, false_control],
-            vec![true_value, false_value],
-        ))
+        Ok(self.graph.phi(controls, vec![true_value, false_value]))
     }
 
     fn parse_comparison(&mut self) -> Result<NodeId, ParseError> {
@@ -1114,7 +1182,7 @@ mod tests {
         assert!(
             error("fn main() { let mut x = 0; while x < 2 { return; } }")
                 .message
-                .contains("inside a loop")
+                .contains("conditional or loop")
         );
         assert!(
             error("fn main() { while 0 { let local = 1; } return local; }")
@@ -1208,7 +1276,7 @@ mod tests {
                 .contains("expected `fn`")
         );
         assert!(
-            error("fn main() { if 1 { return 2; } }")
+            error("fn main() { loop { } }")
                 .message
                 .contains("assignment target")
         );
