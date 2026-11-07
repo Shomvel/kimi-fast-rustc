@@ -73,12 +73,16 @@ fn else_if_chains_merge_every_nested_branch() {
 }
 
 #[test]
-fn branch_locals_do_not_escape_and_returns_stay_at_function_level() {
+fn branch_locals_do_not_escape_and_terminal_statements_end_bodies() {
     let error =
         frontend::parse("fn main() { if true { let branch_local = 42; } return branch_local; }")
             .unwrap_err();
     assert!(error.message.contains("unknown variable"));
 
-    let error = frontend::parse("fn main() { if true { return; } }").unwrap_err();
-    assert!(error.message.contains("conditional or loop"));
+    let error = frontend::parse("fn main() { if true { return; let value = 1; } }").unwrap_err();
+    assert!(
+        error
+            .message
+            .contains("after `break`, `continue`, or `return`")
+    );
 }

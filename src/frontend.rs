@@ -612,6 +612,8 @@ impl Parser {
         let start = self.graph.start();
         let mut return_node = None;
         self.control = start;
+        self.terminated = false;
+        self.loops.clear();
         self.variables.clear();
         self.types.clear();
         for (index, (parameter, mutable, ty)) in parameters.iter().enumerate() {
@@ -631,12 +633,12 @@ impl Parser {
             if self.check(&TokenKind::Eof) {
                 return Err(self.error_here(format!("unterminated body of function `{name}`")));
             }
-            if return_node.is_some() {
+            if return_node.is_some() || self.terminated {
                 return Err(self.error_here(
                     "statements after `return` are unsupported; `return` must end the body",
                 ));
             }
-            if let Some(node) = self.parse_statement(true)? {
+            if let Some(node) = self.parse_statement()? {
                 return_node = Some(node);
             }
         }
@@ -656,13 +658,23 @@ impl Parser {
                 ));
             }
         }
-        if return_node.is_none() && return_type.is_some() {
+        if return_node.is_none() && return_type.is_some() && !self.terminated {
             return Err(ParseError::new(
                 close,
                 format!("function `{name}` must end with `return expr;`"),
             ));
         }
-        let return_node = return_node.unwrap_or_else(|| self.graph.return_(self.control, None));
+        let return_node = match return_node {
+            Some(node) => node,
+            None if self.terminated => self
+                .graph
+                .iter()
+                .filter(|(_, node)| node.kind == NodeKind::Return)
+                .map(|(id, _)| id)
+                .last()
+                .expect("terminated function contains a return"),
+            None => self.graph.return_(self.control, None),
+        };
         self.graph.functions.push(FunctionMetadata {
             name,
             start,
@@ -672,7 +684,7 @@ impl Parser {
         Ok(())
     }
 
-    fn parse_statement(&mut self, allow_return: bool) -> Result<Option<NodeId>, ParseError> {
+    fn parse_statement(&mut self) -> Result<Option<NodeId>, ParseError> {
         self.terminated = false;
         if self.eat(TokenKind::Let) {
             self.parse_let()?;
@@ -699,13 +711,12 @@ impl Parser {
             return Ok(None);
         }
         if self.eat(TokenKind::Return) {
-            if !allow_return {
-                return Err(
-                    self.error_here("`return` inside a conditional or loop is not supported")
-                );
-            }
             self.terminated = true;
             if self.eat(TokenKind::Semicolon) {
+                if let Some(expected) = self.return_type {
+                    return Err(self
+                        .error_here(format!("expected a `{expected}` expression after `return`")));
+                }
                 return Ok(Some(self.graph.return_(self.control, None)));
             }
             let value = self.parse_expression()?;
@@ -841,14 +852,16 @@ impl Parser {
             if self.check(&TokenKind::Eof) {
                 return Err(self.error_here("unterminated statement body"));
             }
-            self.parse_statement(false)?;
+            self.parse_statement()?;
             if self.terminated {
                 terminated = true;
                 break;
             }
         }
         if terminated && !self.check(&TokenKind::RBrace) {
-            return Err(self.error_here("statements after `break` or `continue` are not supported"));
+            return Err(self.error_here(
+                "statements after `break`, `continue`, or `return` are not supported",
+            ));
         }
         self.expect(TokenKind::RBrace, "`}` after statement body")?;
         Ok(terminated)
@@ -1627,9 +1640,9 @@ mod tests {
                 .contains("unknown variable")
         );
         assert!(
-            error("fn main() { let mut x = 0; while x < 2 { return; } }")
+            error("fn main() { while true { return; let x = 1; } }")
                 .message
-                .contains("conditional or loop")
+                .contains("after `break`, `continue`, or `return`")
         );
         assert!(
             error("fn main() { while false { let local = 1; } return local; }")

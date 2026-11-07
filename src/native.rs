@@ -38,9 +38,7 @@ const GENERAL_REGISTERS: [Reg; 10] = [
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum UnsupportedReason {
     NodeKind(NodeKind),
-    MultipleReturns,
-    ReturnWithoutValue,
-    CodeAfterReturn,
+    MultipleStarts,
     MemoryInputs,
 }
 
@@ -76,17 +74,11 @@ impl fmt::Display for CompileError {
                 UnsupportedReason::NodeKind(kind) => {
                     write!(formatter, "unsupported node {node}: {kind:?}")
                 }
-                UnsupportedReason::MultipleReturns => {
-                    write!(formatter, "unsupported node {node}: multiple returns")
-                }
-                UnsupportedReason::ReturnWithoutValue => {
+                UnsupportedReason::MultipleStarts => {
                     write!(
                         formatter,
-                        "unsupported node {node}: return without an i64 value"
+                        "unsupported node {node}: multiple function starts"
                     )
-                }
-                UnsupportedReason::CodeAfterReturn => {
-                    write!(formatter, "unsupported node {node}: code after return")
                 }
                 UnsupportedReason::MemoryInputs => {
                     write!(formatter, "unsupported node {node}: memory-state inputs")
@@ -154,15 +146,21 @@ impl From<AsmError> for CompileError {
 pub fn lower_graph(graph: &Graph) -> Result<Vec<VirtualInstr>, CompileError> {
     graph.validate()?;
 
+    if let Some(second) = graph
+        .iter()
+        .filter(|(_, node)| node.kind == NodeKind::Start)
+        .map(|(id, _)| id)
+        .nth(1)
+    {
+        return Err(unsupported(second, UnsupportedReason::MultipleStarts));
+    }
+
     let mut returns = graph
         .iter()
         .filter(|(_, node)| node.kind == NodeKind::Return)
         .map(|(id, _)| id);
     if returns.next().is_none() {
         return Err(CompileError::MissingReturn);
-    }
-    if let Some(second) = returns.next() {
-        return Err(unsupported(second, UnsupportedReason::MultipleReturns));
     }
 
     let false_projections = graph
@@ -198,7 +196,6 @@ pub fn lower_graph(graph: &Graph) -> Result<Vec<VirtualInstr>, CompileError> {
 
     let mut instructions = Vec::new();
     let mut values = BTreeSet::new();
-    let mut returned = false;
 
     for (id, node) in graph.iter() {
         if !node.memory.is_empty() {
@@ -206,9 +203,6 @@ pub fn lower_graph(graph: &Graph) -> Result<Vec<VirtualInstr>, CompileError> {
         }
         if node.kind == NodeKind::Start {
             continue;
-        }
-        if returned {
-            return Err(unsupported(id, UnsupportedReason::CodeAfterReturn));
         }
 
         let instruction = match node.kind {
@@ -371,13 +365,10 @@ pub fn lower_graph(graph: &Graph) -> Result<Vec<VirtualInstr>, CompileError> {
             NodeKind::Phi => VirtualInstr::Phi {
                 dst: virtual_reg(id),
             },
-            NodeKind::Return => {
-                returned = true;
-                match node.data.first() {
-                    Some(&value) => VirtualInstr::Return(value_reference(id, value, &values)?),
-                    None => VirtualInstr::Return(VirtualValue::Imm(0)),
-                }
-            }
+            NodeKind::Return => match node.data.first() {
+                Some(&value) => VirtualInstr::Return(value_reference(id, value, &values)?),
+                None => VirtualInstr::Return(VirtualValue::Imm(0)),
+            },
         };
 
         if matches!(node.kind, NodeKind::Return) {
@@ -1467,15 +1458,21 @@ mod tests {
     }
 
     #[test]
-    fn rejects_multiple_returns() {
+    fn supports_multiple_returns() {
         let mut graph = Graph::new();
         let start = graph.start();
         let one = graph.constant(1);
         graph.return_(start, Some(one));
-        let second = graph.return_(start, Some(one));
+        graph.return_(start, Some(one));
+        let function = compile_graph(&graph, "returns").unwrap();
+        assert_eq!(run(&function, &[]), 1);
         assert_eq!(
-            compile_graph(&graph, "returns"),
-            Err(unsupported(second, UnsupportedReason::MultipleReturns))
+            function
+                .instructions
+                .iter()
+                .filter(|instruction| matches!(instruction, MachineInstr::Ret))
+                .count(),
+            2
         );
 
         let mut graph = Graph::new();
