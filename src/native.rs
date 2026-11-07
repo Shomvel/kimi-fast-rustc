@@ -1070,10 +1070,11 @@ impl Emitter<'_> {
             }
             VirtualValue::Reg(virtual_reg) => match self.location(virtual_reg)? {
                 Location::Register(source) => {
-                    self.instructions.push(MachineInstr::Mov {
-                        dst,
-                        src: general_register(source),
-                    });
+                    let source = general_register(source);
+                    if source != dst {
+                        self.instructions
+                            .push(MachineInstr::Mov { dst, src: source });
+                    }
                 }
                 Location::Spill(slot) => {
                     self.instructions.push(MachineInstr::Load {

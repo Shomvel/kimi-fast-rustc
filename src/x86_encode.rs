@@ -514,6 +514,7 @@ impl Encoder<'_> {
 
     fn stack_memory_rsp(&mut self, reg: Reg, offset: i32) {
         self.modrm(2, reg, Reg::Rsp.low_code());
+        self.bytes.push(0x24);
         self.i32(offset);
     }
 
