@@ -1693,10 +1693,19 @@ impl Parser {
     fn parse_unary(&mut self) -> Result<NodeId, ParseError> {
         if self.eat(TokenKind::Not) {
             let operand = self.parse_unary()?;
-            self.require_type(operand, ScalarType::Bool)?;
-            let zero = self.graph.constant(0);
-            let inversion = self.graph.compare(CompareOp::Eq, operand, zero);
-            return Ok(self.mark_bool(inversion));
+            let ty = self.type_of(operand);
+            if ty == ScalarType::Unit {
+                return Err(self.error_here("operator `!` does not support unit values"));
+            }
+            self.require_type(operand, ty)?;
+            if ty == ScalarType::Bool {
+                let zero = self.graph.constant(0);
+                let inversion = self.graph.compare(CompareOp::Eq, operand, zero);
+                return Ok(self.mark_bool(inversion));
+            }
+            let inversion = self.graph.unary(UnaryOp::Not, operand);
+            self.types.insert(inversion, ty);
+            return Ok(inversion);
         }
         if !self.eat(TokenKind::Minus) {
             return self.parse_primary();
