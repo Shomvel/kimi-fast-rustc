@@ -236,6 +236,7 @@ fn hash_node_kind(hasher: &mut Sha256, kind: NodeKind) {
         NodeKind::If => hasher.update(&[9]),
         NodeKind::Projection(index) => hasher.update(&[10, index]),
         NodeKind::Region => hasher.update(&[11]),
+        NodeKind::Jump => hasher.update(&[13]),
     }
 }
 

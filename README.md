@@ -2,7 +2,7 @@
 
 `kfrc` is an experimental, native-only Rust compiler. It uses a sea-of-nodes IR, graph rewrites, explicit control regions, linear-scan register allocation, and x86_64 System V code generation. It does not use LLVM or Cranelift and does not perform static ILP instruction scheduling; dynamic scheduling is left to CPU out-of-order execution.
 
-The frontend currently supports a documented `i64` Rust subset: immutable bindings, arithmetic and comparisons, `if` expressions, standard `fn main`, and function calls with register and stack arguments. Unsupported Rust is rejected explicitly rather than falling back to another backend. Whole-workspace support for large projects such as ripgrep and cargo is not yet implemented; native measurements are limited to the workloads documented in `docs/VALIDATION.md`.
+The frontend currently supports a documented `i64` Rust subset: mutable and immutable bindings, assignments, arithmetic and comparisons, `if` expressions, `while` loops, standard `fn main`, and function calls with register and stack arguments. Unsupported Rust is rejected explicitly rather than falling back to another backend. Whole-workspace support for large projects such as ripgrep and cargo is not yet implemented; native measurements are limited to the workloads documented in `docs/VALIDATION.md`.
 
 Legacy LLVM modules and benchmark data are retained only as historical evidence. They are not the current compiler architecture or a supported fallback.
 
@@ -14,7 +14,9 @@ cargo test
 cargo clippy --all-targets -- -D warnings
 ```
 
-## Use the LLVM reference track
+## Historical LLVM reference track
+
+These commands are retained only to reproduce the archived comparison above; they are not the native compiler path or a fallback.
 
 Direct compilation:
 
@@ -73,7 +75,7 @@ Compile multiple independent inputs with bounded parallelism:
 ./target/release/kfrc cache --root .kfrc-cache stats --json
 ```
 
-The CLI performs sea-of-nodes optimization, dependency placement, linear-scan allocation, and native code generation. Executables use system `as` and `gcc`, never rustc, LLVM, or Cranelift. The subset requires an explicit `return` and supports `i64` parameters, immutable `let` bindings, arithmetic, and comparisons. Its `fn main() -> i64` convention is intentionally a compiler test format, not a claim that standard Rust accepts this `main` signature.
+The CLI performs sea-of-nodes optimization, dependency placement, linear-scan allocation, and native code generation. Executables use system `as` and `gcc`, never rustc, LLVM, or Cranelift. The subset requires an explicit `return` and supports `i64` parameters, mutable and immutable `let` bindings, assignments, `while` loops, arithmetic, and comparisons. Its `fn main() -> i64` convention is intentionally a compiler test format, not a claim that standard Rust accepts this `main` signature. Direct ELF output currently rejects labels and branches explicitly; use assembly or executable output for `if` and `while`.
 
 ## Benchmark on yicloud
 

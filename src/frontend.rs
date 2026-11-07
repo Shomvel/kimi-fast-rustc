@@ -1,4 +1,4 @@
-use crate::son::{BinaryOp, CompareOp, FunctionMetadata, Graph, NodeId, UnaryOp};
+use crate::son::{BinaryOp, CompareOp, FunctionMetadata, Graph, NodeId, NodeKind, UnaryOp};
 use std::collections::{HashMap, HashSet};
 use std::error::Error;
 use std::fmt;
@@ -6,10 +6,10 @@ use std::fmt;
 /// Parses the explicitly supported i64 Rust expression subset.
 ///
 /// Functions and parameters retain their names and source ranges in `Graph::functions`.
-/// `if` expressions merge values through control regions and Phi nodes. Zero-argument
-/// calls are represented explicitly and checked against the declared function set.
-/// Comparisons produce the integer values zero or one and cannot be chained.
-/// Unsupported Rust syntax and semantics are rejected with a source location.
+/// `if` expressions merge values through control regions and Phi nodes. Mutable bindings
+/// and `while` loops use loop-header Phis and explicit back edges. Calls are represented
+/// explicitly and checked against the declared function set. Comparisons produce zero or
+/// one and cannot be chained. Unsupported Rust is rejected with a source location.
 pub fn parse(source: &str) -> Result<Graph, ParseError> {
     let tokens = Lexer::new(source).tokenize()?;
     Parser::new(tokens).parse_program()
@@ -402,12 +402,18 @@ fn is_reserved_identifier(identifier: &str) -> bool {
     )
 }
 
+#[derive(Clone, Copy)]
+struct Binding {
+    value: NodeId,
+    mutable: bool,
+}
+
 struct Parser {
     tokens: Vec<Token>,
     position: usize,
     graph: Graph,
     functions: HashSet<String>,
-    variables: HashMap<String, NodeId>,
+    variables: HashMap<String, Binding>,
     control: NodeId,
 }
 
@@ -489,62 +495,89 @@ impl Parser {
         self.variables.clear();
         for (index, parameter) in parameters.iter().enumerate() {
             let node = self.graph.parameter(index);
-            self.variables.insert(parameter.clone(), node);
+            self.variables.insert(
+                parameter.clone(),
+                Binding {
+                    value: node,
+                    mutable: false,
+                },
+            );
         }
 
-        let mut returned = false;
         while !self.check(&TokenKind::RBrace) {
             if self.check(&TokenKind::Eof) {
                 return Err(self.error_here(format!("unterminated body of function `{name}`")));
             }
-            if returned {
+            if return_node.is_some() {
                 return Err(self.error_here(
                     "statements after `return` are unsupported; `return` must end the body",
                 ));
             }
-            if self.eat(TokenKind::Let) {
-                self.parse_let()?;
-            } else if self.eat(TokenKind::Return) {
-                if self.eat(TokenKind::Semicolon) {
-                    if returns_i64 {
-                        return Err(self.error_here("expected an i64 expression after `return`"));
-                    }
-                    return_node = Some(self.graph.return_(self.control, None));
-                } else {
-                    let value = self.parse_expression()?;
-                    self.expect(TokenKind::Semicolon, "`;` after returned expression")?;
-                    return_node = Some(self.graph.return_(self.control, Some(value)));
-                }
-                returned = true;
-            } else {
-                return Err(
-                    self.error_here("only `let` bindings and a final `return expr;` are supported")
-                );
+            if let Some(node) = self.parse_statement(true)? {
+                return_node = Some(node);
             }
         }
         let close = self.expect(TokenKind::RBrace, "`}` after function body")?;
-        if !returned && returns_i64 {
+        if return_node.is_some()
+            && returns_i64
+            && self
+                .graph
+                .iter()
+                .last()
+                .is_some_and(|(_, node)| node.kind == NodeKind::Return && node.data.is_empty())
+        {
+            return Err(ParseError::new(
+                close,
+                "expected an i64 expression after `return`",
+            ));
+        }
+        if return_node.is_none() && returns_i64 {
             return Err(ParseError::new(
                 close,
                 format!("function `{name}` must end with `return expr;`"),
             ));
         }
-        if !returned {
-            return_node = Some(self.graph.return_(self.control, None));
-        }
+        let return_node = return_node.unwrap_or_else(|| self.graph.return_(self.control, None));
         self.graph.functions.push(FunctionMetadata {
             name,
             start,
-            return_node: return_node.expect("every function has a return node"),
+            return_node,
             parameter_count: parameters.len(),
         });
         Ok(())
     }
 
-    fn parse_let(&mut self) -> Result<(), ParseError> {
-        if self.peek_identifier("mut") {
-            return Err(self.error_here("mutable bindings are not supported"));
+    fn parse_statement(&mut self, allow_return: bool) -> Result<Option<NodeId>, ParseError> {
+        if self.eat(TokenKind::Let) {
+            self.parse_let()?;
+            return Ok(None);
         }
+        if self.peek_identifier("while") {
+            self.parse_while()?;
+            return Ok(None);
+        }
+        if self.eat(TokenKind::Return) {
+            if !allow_return {
+                return Err(self.error_here("`return` inside a loop is not supported"));
+            }
+            if self.eat(TokenKind::Semicolon) {
+                return Ok(Some(self.graph.return_(self.control, None)));
+            }
+            let value = self.parse_expression()?;
+            self.expect(TokenKind::Semicolon, "`;` after returned expression")?;
+            return Ok(Some(self.graph.return_(self.control, Some(value))));
+        }
+        self.parse_assignment()?;
+        Ok(None)
+    }
+
+    fn parse_let(&mut self) -> Result<(), ParseError> {
+        let mutable = if self.peek_identifier("mut") {
+            self.position += 1;
+            true
+        } else {
+            false
+        };
         let (name, name_span) = self.parse_identifier("binding name")?;
         if self.variables.contains_key(&name) {
             return Err(ParseError::new(
@@ -558,7 +591,100 @@ impl Parser {
         self.expect(TokenKind::Eq, "`=` in let binding")?;
         let value = self.parse_expression()?;
         self.expect(TokenKind::Semicolon, "`;` after let binding")?;
-        self.variables.insert(name, value);
+        self.variables.insert(name, Binding { value, mutable });
+        Ok(())
+    }
+
+    fn parse_assignment(&mut self) -> Result<(), ParseError> {
+        let (name, name_span) = self.parse_identifier("assignment target")?;
+        let binding = self
+            .variables
+            .get(&name)
+            .copied()
+            .ok_or_else(|| ParseError::new(name_span, format!("unknown variable `{name}`")))?;
+        if !binding.mutable {
+            return Err(ParseError::new(
+                name_span,
+                format!("cannot assign to immutable binding `{name}`"),
+            ));
+        }
+        self.expect(TokenKind::Eq, "`=` in assignment")?;
+        let value = self.parse_expression()?;
+        self.expect(TokenKind::Semicolon, "`;` after assignment")?;
+        self.variables.insert(
+            name,
+            Binding {
+                value,
+                mutable: true,
+            },
+        );
+        Ok(())
+    }
+
+    fn parse_while(&mut self) -> Result<(), ParseError> {
+        self.position += 1;
+        let outer_variables = self.variables.clone();
+        let mut loop_variables = outer_variables
+            .iter()
+            .filter(|(_, binding)| binding.mutable)
+            .map(|(name, binding)| (name.clone(), *binding))
+            .collect::<Vec<_>>();
+        loop_variables.sort_by(|left, right| left.0.cmp(&right.0));
+
+        let header = self.graph.region(vec![self.control]);
+        let mut phis = Vec::new();
+        for (name, binding) in &loop_variables {
+            let phi = self.graph.phi(vec![self.control], vec![binding.value]);
+            self.variables.insert(
+                name.clone(),
+                Binding {
+                    value: phi,
+                    mutable: true,
+                },
+            );
+            phis.push(phi);
+        }
+        self.control = header;
+        let condition = self.parse_expression()?;
+        let branch = self.graph.if_(header, condition);
+        self.expect(TokenKind::LBrace, "`{` after while condition")?;
+
+        let body_projection = self.graph.projection(branch, 0);
+        self.control = body_projection;
+        while !self.check(&TokenKind::RBrace) {
+            if self.check(&TokenKind::Eof) {
+                return Err(self.error_here("unterminated while body"));
+            }
+            self.parse_statement(false)?;
+        }
+        self.expect(TokenKind::RBrace, "`}` after while body")?;
+        let back_edge = self.graph.jump(self.control);
+        let exit_projection = self.graph.projection(branch, 1);
+
+        let mut exit_variables = outer_variables;
+        for ((name, _), phi) in loop_variables.iter().zip(&phis) {
+            exit_variables.insert(
+                name.clone(),
+                Binding {
+                    value: *phi,
+                    mutable: true,
+                },
+            );
+        }
+        let body_variables = std::mem::replace(&mut self.variables, exit_variables);
+        for ((name, _), phi) in loop_variables.iter().zip(phis) {
+            let node = self.graph.node_mut(phi).expect("loop phi exists");
+            node.control.push(back_edge);
+            node.data.push(
+                body_variables
+                    .get(name)
+                    .expect("outer loop binding remains in scope")
+                    .value,
+            );
+        }
+        let node = self.graph.node_mut(header).expect("loop header exists");
+        node.control.push(back_edge);
+        self.control = exit_projection;
         Ok(())
     }
 
@@ -756,14 +882,17 @@ impl Parser {
                 if identifier == "false" {
                     return Ok(self.graph.constant(0));
                 }
-                self.variables.get(&identifier).copied().ok_or_else(|| {
-                    ParseError::new(
-                        token.span,
-                        format!(
-                            "unknown variable `{identifier}`; variables must be declared before use"
-                        ),
-                    )
-                })
+                self.variables
+                    .get(&identifier)
+                    .map(|binding| binding.value)
+                    .ok_or_else(|| {
+                        ParseError::new(
+                            token.span,
+                            format!(
+                                "unknown variable `{identifier}`; variables must be declared before use"
+                            ),
+                        )
+                    })
             }
             TokenKind::LParen => {
                 let value = self.parse_expression()?;
@@ -952,11 +1081,50 @@ mod tests {
     }
 
     #[test]
-    fn rejects_mutation_and_non_i64_types() {
+    fn parses_mutation_and_loop_phis() {
+        let parsed = graph(
+            "fn main() -> i64 { let mut sum = 0; let mut i = 0; while i < 10 { sum = sum + i; i = i + 1; } return sum; }",
+        );
+        let header = parsed
+            .iter()
+            .find(|(_, node)| node.kind == NodeKind::Region && node.control.len() == 2)
+            .expect("loop header");
+        assert_eq!(
+            parsed
+                .iter()
+                .filter(|(_, node)| node.kind == NodeKind::Phi && node.control == header.1.control)
+                .count(),
+            2
+        );
+        graph("fn main() { let mut x = 0; while x < 2 { let y = x + 1; x = y; } return; }");
+    }
+
+    #[test]
+    fn rejects_invalid_mutation_and_non_i64_types() {
         assert!(
-            error("fn main() { let mut x = 1; return x; }")
+            error("fn main() { let x = 1; x = 2; return x; }")
                 .message
-                .contains("mutable")
+                .contains("immutable")
+        );
+        assert!(
+            error("fn main() { missing = 2; }")
+                .message
+                .contains("unknown variable")
+        );
+        assert!(
+            error("fn main() { let mut x = 0; while x < 2 { return; } }")
+                .message
+                .contains("inside a loop")
+        );
+        assert!(
+            error("fn main() { while 0 { let local = 1; } return local; }")
+                .message
+                .contains("unknown variable")
+        );
+        assert!(
+            error("fn main() -> i64 { return; }")
+                .message
+                .contains("expected an i64 expression")
         );
         assert!(
             error("fn f(x: i32) -> i64 { return x; }")
@@ -985,7 +1153,7 @@ mod tests {
         assert!(
             error("fn main() { 1 + 2; }")
                 .message
-                .contains("only `let` bindings")
+                .contains("assignment target")
         );
     }
 
@@ -1042,7 +1210,7 @@ mod tests {
         assert!(
             error("fn main() { if 1 { return 2; } }")
                 .message
-                .contains("only `let` bindings")
+                .contains("assignment target")
         );
         assert!(
             error("fn main() { return 1 && 0; }")

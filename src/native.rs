@@ -1,8 +1,8 @@
-//! Single-basic-block i64 native compilation for the sea-of-nodes graph.
+//! i64 native compilation for the sea-of-nodes graph.
 //!
-//! Lowering follows `NodeId` order. Register allocation uses the target-independent
-//! linear scanner, with `rax`/`rdx` reserved for division and returns, and `r10`/`r11`
-//! for spill scratch.
+//! Lowering follows `NodeId` order, including explicit labels, branches, and loop back
+//! edges. Register allocation uses the target-independent linear scanner, with `rax`/`rdx`
+//! reserved for division and returns, and `r10`/`r11` for spill scratch.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::error::Error;
@@ -182,6 +182,17 @@ pub fn lower_graph(graph: &Graph) -> Result<Vec<VirtualInstr>, CompileError> {
         .filter(|(_, node)| node.kind == NodeKind::Phi)
         .map(|(id, node)| (id, node.control.clone(), node.data.clone()))
         .collect::<Vec<_>>();
+    let loops = loop_headers(graph);
+    let back_edges = loops
+        .iter()
+        .map(|(header, body)| (*body, *header))
+        .collect::<BTreeMap<_, _>>();
+    let mut next_virtual_reg = graph
+        .ids()
+        .map(|id| id.0)
+        .max()
+        .and_then(|id| id.checked_add(1))
+        .unwrap_or(0);
 
     let mut instructions = Vec::new();
     let mut values = BTreeSet::new();
@@ -294,6 +305,19 @@ pub fn lower_graph(graph: &Graph) -> Result<Vec<VirtualInstr>, CompileError> {
                     target: target.0,
                 }
             }
+            NodeKind::Jump if back_edges.contains_key(&id) => {
+                let header = back_edges[&id];
+                emit_phi_edge(
+                    &mut instructions,
+                    id,
+                    graph,
+                    header,
+                    1,
+                    &values,
+                    &mut next_virtual_reg,
+                )?;
+                VirtualInstr::Jmp(header.0)
+            }
             NodeKind::Projection(1) => {
                 let mut region_target = None;
                 for (phi, controls, data) in &phis {
@@ -314,6 +338,18 @@ pub fn lower_graph(graph: &Graph) -> Result<Vec<VirtualInstr>, CompileError> {
                 VirtualInstr::Label(id.0)
             }
             NodeKind::Projection(_) => VirtualInstr::Label(id.0),
+            NodeKind::Region if loops.contains_key(&id) => {
+                emit_phi_edge(
+                    &mut instructions,
+                    id,
+                    graph,
+                    id,
+                    0,
+                    &values,
+                    &mut next_virtual_reg,
+                )?;
+                VirtualInstr::Label(id.0)
+            }
             NodeKind::Region => {
                 for (phi, controls, data) in &phis {
                     if controls == &node.control {
@@ -347,6 +383,52 @@ pub fn lower_graph(graph: &Graph) -> Result<Vec<VirtualInstr>, CompileError> {
     }
 
     Ok(instructions)
+}
+
+fn loop_headers(graph: &Graph) -> BTreeMap<NodeId, NodeId> {
+    graph
+        .iter()
+        .filter_map(|(header, node)| {
+            if node.kind != NodeKind::Region || node.control.len() != 2 {
+                return None;
+            }
+            let back_edge = node.control[1];
+            (graph.node(back_edge)?.kind == NodeKind::Jump).then_some((header, back_edge))
+        })
+        .collect()
+}
+
+fn emit_phi_edge(
+    instructions: &mut Vec<VirtualInstr>,
+    node: NodeId,
+    graph: &Graph,
+    header: NodeId,
+    input_index: usize,
+    values: &BTreeSet<NodeId>,
+    next_virtual_reg: &mut u32,
+) -> Result<(), CompileError> {
+    let controls = &graph.node(header).expect("loop header exists").control;
+    let mut temporaries = Vec::new();
+    for (phi, phi_node) in graph.iter().filter(|(_, node)| node.kind == NodeKind::Phi) {
+        if phi_node.control == *controls {
+            let temporary = VirtualReg(*next_virtual_reg);
+            *next_virtual_reg = next_virtual_reg
+                .checked_add(1)
+                .ok_or(CompileError::TooManyInstructions)?;
+            instructions.push(VirtualInstr::Mov {
+                dst: temporary,
+                src: value_reference(node, phi_node.data[input_index], values)?,
+            });
+            temporaries.push((phi, temporary));
+        }
+    }
+    for (phi, temporary) in temporaries {
+        instructions.push(VirtualInstr::Mov {
+            dst: virtual_reg(phi),
+            src: VirtualValue::Reg(temporary),
+        });
+    }
+    Ok(())
 }
 
 pub fn compile_graph(
@@ -501,6 +583,34 @@ fn live_intervals(instructions: &[VirtualInstr]) -> Result<Vec<LiveInterval>, Co
         for used in used_registers(instruction) {
             if let Some((_, interval_end)) = intervals.get_mut(&used.0) {
                 *interval_end = end;
+            }
+        }
+    }
+
+    let labels = instructions
+        .iter()
+        .enumerate()
+        .filter_map(|(index, instruction)| match instruction {
+            VirtualInstr::Label(label) => Some((*label, index)),
+            _ => None,
+        })
+        .collect::<BTreeMap<_, _>>();
+    let loop_ranges = instructions
+        .iter()
+        .enumerate()
+        .filter_map(|(back, instruction)| match instruction {
+            VirtualInstr::Jmp(target) => labels
+                .get(target)
+                .filter(|header| **header < back)
+                .map(|header| (*header, back)),
+            _ => None,
+        })
+        .map(|(header, back)| (header as u32, back as u32))
+        .collect::<Vec<_>>();
+    for (start, end) in intervals.values_mut() {
+        for (header, back) in &loop_ranges {
+            if *start < *header && *end > *header && *end <= *back {
+                *end = *back + 1;
             }
         }
     }

@@ -69,6 +69,7 @@ pub enum NodeKind {
     If,
     Projection(u8),
     Region,
+    Jump,
     Phi,
     Return,
 }
@@ -317,6 +318,10 @@ impl Graph {
         self.add_node(NodeKind::Region, control, Vec::new())
     }
 
+    pub fn jump(&mut self, control: NodeId) -> NodeId {
+        self.add_node(NodeKind::Jump, vec![control], Vec::new())
+    }
+
     pub fn phi(&mut self, control: Vec<NodeId>, data: Vec<NodeId>) -> NodeId {
         self.add_node(NodeKind::Phi, control, data)
     }
@@ -387,7 +392,7 @@ impl Graph {
                     expect_arity(id, node.kind, InputChannel::Control, 1, node.control.len())?;
                     expect_arity(id, node.kind, InputChannel::Data, 1, node.data.len())?;
                 }
-                NodeKind::Projection(_) => {
+                NodeKind::Projection(_) | NodeKind::Jump => {
                     expect_arity(id, node.kind, InputChannel::Control, 1, node.control.len())?;
                     expect_arity(id, node.kind, InputChannel::Data, 0, node.data.len())?;
                 }

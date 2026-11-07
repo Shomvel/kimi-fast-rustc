@@ -1,4 +1,4 @@
-//! Reference evaluation for the single-block machine functions emitted by `x86`.
+//! Reference evaluation for the machine functions emitted by `x86`.
 //!
 //! This models the instruction subset used by the native backend for differential
 //! testing. It does not execute machine code and is not a complete x86 or System V
