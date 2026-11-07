@@ -7,12 +7,13 @@ use std::path::PathBuf;
 use std::string::FromUtf8Error;
 
 use crate::frontend::{self, ParseError};
-use crate::native::{self, CompileError};
+use crate::native::CompileError;
 use crate::native_cache::{self, CachedObject, NativeCache, NativeCacheError};
 use crate::native_driver::{
     NativeDriver, NativeDriverError, NativeOutputKind, NativeOutputOptions,
 };
 use crate::native_object::{self, NativeObjectError};
+use crate::native_program::{self, ProgramError};
 use crate::optimizer_pipeline;
 use crate::placement::{self, PlacementError};
 use crate::son::Graph;
@@ -38,6 +39,7 @@ pub enum NativeCliError {
     Placement(PlacementError),
     Compile(CompileError),
     Object(NativeObjectError),
+    Program(ProgramError),
     Cache(NativeCacheError),
     Driver(NativeDriverError),
 }
@@ -64,6 +66,7 @@ impl fmt::Display for NativeCliError {
             Self::Placement(source) => write!(formatter, "native graph placement failed: {source}"),
             Self::Compile(source) => write!(formatter, "native compilation failed: {source}"),
             Self::Object(source) => source.fmt(formatter),
+            Self::Program(source) => source.fmt(formatter),
             Self::Cache(source) => source.fmt(formatter),
             Self::Driver(source) => source.fmt(formatter),
         }
@@ -80,6 +83,7 @@ impl Error for NativeCliError {
             Self::Placement(source) => Some(source),
             Self::Compile(source) => Some(source),
             Self::Object(source) => Some(source),
+            Self::Program(source) => Some(source),
             Self::Cache(source) => Some(source),
             Self::Driver(source) => Some(source),
         }
@@ -101,6 +105,12 @@ impl From<CompileError> for NativeCliError {
 impl From<NativeObjectError> for NativeCliError {
     fn from(source: NativeObjectError) -> Self {
         Self::Object(source)
+    }
+}
+
+impl From<ProgramError> for NativeCliError {
+    fn from(source: ProgramError) -> Self {
+        Self::Program(source)
     }
 }
 
@@ -175,7 +185,7 @@ fn run_with_driver_and_cache(
         source,
     })?;
     optimizer_pipeline::optimize(&mut graph);
-    let graph = placement::place_graph(&graph)?;
+    let graph = placement::place_for_native(&graph)?;
     if options.emit == NativeEmitKind::Object {
         let object = compile_object(&graph, cache_directory)?;
         fs::write(&options.output, object.bytes).map_err(|source| NativeObjectError::Write {
@@ -185,7 +195,7 @@ fn run_with_driver_and_cache(
         return Ok(options.output.clone());
     }
 
-    let assembly = native::compile_graph_to_assembly(&graph, "main")?;
+    let assembly = native_program::compile_graph_to_assembly(&graph)?;
     let kind = if options.emit == NativeEmitKind::Assembly {
         NativeOutputKind::Assembly
     } else {
@@ -202,6 +212,12 @@ fn compile_object(
     graph: &Graph,
     cache_directory: Option<&std::path::Path>,
 ) -> Result<CachedObject, NativeCliError> {
+    if !graph.functions.is_empty() {
+        return Ok(CachedObject {
+            bytes: native_program::compile_graph_to_object(graph)?,
+            cache_hit: false,
+        });
+    }
     if let Some(directory) = cache_directory {
         return Ok(NativeCache::new(directory).get_or_compile(
             graph,

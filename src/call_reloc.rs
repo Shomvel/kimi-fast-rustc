@@ -237,6 +237,7 @@ pub fn emit_call_function(function: &CallFunction) -> Result<EncodedCallFunction
         instructions: vec![MachineInstr::Ret],
         stack_slots: 0,
         callee_saved: Vec::new(),
+        symbols: Vec::new(),
     })?;
     let prologue_size = skeleton
         .len()

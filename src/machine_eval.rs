@@ -4,6 +4,7 @@
 //! testing. It does not execute machine code and is not a complete x86 or System V
 //! ABI simulator.
 
+use std::collections::BTreeMap;
 use std::error::Error;
 use std::fmt;
 
@@ -27,6 +28,8 @@ pub enum MachineEvalError {
     SetCcWithoutCmp,
     DivisionByZero,
     DivisionOverflow,
+    UnknownLabel(u32),
+    UnsupportedCall(u32),
     InvalidDivisor(Reg),
     ReservedRegister(Reg),
     ExpectedCalleeSaved(Reg),
@@ -54,6 +57,10 @@ impl fmt::Display for MachineEvalError {
             Self::DivisionByZero => formatter.write_str("signed division by zero"),
             Self::DivisionOverflow => {
                 formatter.write_str("signed division overflow (i64::MIN / -1)")
+            }
+            Self::UnknownLabel(label) => write!(formatter, "unknown machine label {label}"),
+            Self::UnsupportedCall(target) => {
+                write!(formatter, "call to {target} requires a program evaluator")
             }
             Self::InvalidDivisor(reg) => {
                 write!(formatter, "{reg} cannot be used as an idiv divisor")
@@ -112,8 +119,20 @@ fn execute(function: &MachineFunction, arguments: &[i64]) -> Result<Execution, M
         saved,
     };
 
-    for instruction in &function.instructions {
-        match *instruction {
+    let labels = function
+        .instructions
+        .iter()
+        .enumerate()
+        .filter_map(|(index, instruction)| match instruction {
+            MachineInstr::Label(label) => Some((*label, index)),
+            _ => None,
+        })
+        .collect::<BTreeMap<_, _>>();
+    let mut pc = 0usize;
+    while pc < function.instructions.len() {
+        let instruction = function.instructions[pc];
+        pc += 1;
+        match instruction {
             MachineInstr::LoadArg { dst, index } => {
                 let argument = arguments
                     .get(index)
@@ -186,6 +205,25 @@ fn execute(function: &MachineFunction, arguments: &[i64]) -> Result<Execution, M
             MachineInstr::Store { slot, src } => {
                 let value = machine.reg(src);
                 *machine.slot_mut(slot, function.stack_slots)? = value;
+            }
+            MachineInstr::Label(_) => {}
+            MachineInstr::Jmp(target) => {
+                pc = *labels
+                    .get(&target)
+                    .ok_or(MachineEvalError::UnknownLabel(target))?;
+            }
+            MachineInstr::Jcc { condition, target } => {
+                let (lhs, rhs) = machine
+                    .comparison
+                    .ok_or(MachineEvalError::SetCcWithoutCmp)?;
+                if evaluate_condition(condition, lhs, rhs) {
+                    pc = *labels
+                        .get(&target)
+                        .ok_or(MachineEvalError::UnknownLabel(target))?;
+                }
+            }
+            MachineInstr::Call { target } => {
+                return Err(MachineEvalError::UnsupportedCall(target));
             }
             MachineInstr::Ret => {
                 for index in 0..machine.saved.len() {
@@ -332,6 +370,7 @@ fn validate_instruction(
             validate_slot(slot, stack_slots)?;
             validate_reg(src)
         }
+        Label(_) | Jmp(_) | Jcc { .. } | Call { .. } => Ok(()),
         Ret => Ok(()),
     }
 }
@@ -379,6 +418,7 @@ mod tests {
             instructions,
             stack_slots: 0,
             callee_saved: Vec::new(),
+            symbols: Vec::new(),
         }
     }
 

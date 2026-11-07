@@ -1,0 +1,41 @@
+use kimi_fast_rustc::{frontend, native_program, placement};
+
+const SOURCE: &str = "fn answer() -> i64 { return 42; }\nfn main() -> i64 { return answer(); }";
+
+#[test]
+fn zero_argument_calls_emit_symbols_and_relocations() {
+    let graph = frontend::parse(SOURCE).unwrap();
+    assert_eq!(graph.functions.len(), 2);
+    let graph = placement::place_for_native(&graph).unwrap();
+    let program = native_program::compile_graph(&graph).unwrap();
+    let assembly = program.emit_gnu_assembly().unwrap();
+    assert!(assembly.contains("\tcall answer\n"));
+    assert!(assembly.contains("\tmov rcx, rax\n"));
+    assert!(!assembly.contains("llvm"));
+
+    let object = program.emit_object().unwrap();
+    assert_eq!(&object[..4], b"\x7fELF");
+    assert!(
+        object
+            .windows(b"answer".len())
+            .any(|window| window == b"answer")
+    );
+    assert!(
+        object
+            .windows(b".rela.text".len())
+            .any(|window| window == b".rela.text")
+    );
+}
+
+#[test]
+fn nonzero_parameter_signatures_are_explicitly_rejected() {
+    let graph =
+        frontend::parse("fn id(x: i64) -> i64 { return x; } fn main() -> i64 { return id(); }")
+            .unwrap();
+    assert!(native_program::compile_graph(&graph).is_err());
+}
+
+#[test]
+fn unknown_calls_are_rejected_during_parsing() {
+    assert!(frontend::parse("fn main() -> i64 { return missing(); }").is_err());
+}

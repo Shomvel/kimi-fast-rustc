@@ -1,11 +1,10 @@
 # kimi-fast-rustc
 
-`kfrc` is an experimental Rust compiler with two strictly separated tracks:
+`kfrc` is an experimental, native-only Rust compiler. It uses a sea-of-nodes IR, graph rewrites, explicit control regions, linear-scan register allocation, and x86_64 System V code generation. It does not use LLVM or Cranelift and does not perform static ILP instruction scheduling; dynamic scheduling is left to CPU out-of-order execution.
 
-- **LLVM reference track:** a Cargo-compatible `RUSTC_WRAPPER` using rustc and LLVM. It supports controlled pass-through, reproducible optimization profiles, PGO command modeling, artifact analysis, and benchmarks.
-- **Native track:** a sea-of-nodes IR, graph rewrites, single-block lowering, linear-scan register allocation, and x86_64 System V assembly emission. This track does not use LLVM or Cranelift and does not perform static ILP instruction scheduling. It relies on CPU out-of-order execution after semantics-preserving lowering.
+The frontend currently supports a documented `i64` Rust subset: immutable bindings, arithmetic and comparisons, `if` expressions, standard `fn main`, and zero-argument function calls. Unsupported Rust is rejected explicitly rather than falling back to another backend. Whole-workspace support for large projects such as ripgrep and cargo is not yet implemented; native measurements are limited to the workloads documented in `docs/VALIDATION.md`.
 
-The native frontend currently accepts only a documented, single-basic-block `i64` Rust expression subset. Unsupported Rust is rejected; it never silently falls back to LLVM. Full Cargo projects such as ripgrep and cargo currently require the LLVM reference track. No native whole-project performance or parity claim is made; synthetic native measurements are limited to the workloads documented in `docs/VALIDATION.md`.
+Legacy LLVM modules and benchmark data are retained only as historical evidence. They are not the current compiler architecture or a supported fallback.
 
 ## Build
 
@@ -38,7 +37,7 @@ Profiles:
 - `speed`: opt-level 3 and the optimized reference configuration.
 - `size`: optimize for size with ThinLTO and symbol stripping.
 
-Set `KFRC_TARGET_CPU=native` for a host-specific build. Such results must be reported separately from portable builds. `KFRC_BACKEND=native` rejects full Cargo compilation rather than silently selecting LLVM.
+Set `KFRC_TARGET_CPU=native` for a host-specific build. Such results must be reported separately from portable builds. `KFRC_CODEGEN_UNITS=N` overrides the code-generation unit count, and `KFRC_LTO=thin|fat` selects the LTO mode while proc-macro crates remain filtered for compatibility. `KFRC_BACKEND=native` rejects full Cargo compilation rather than silently selecting LLVM.
 
 ## Use the native backend
 

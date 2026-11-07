@@ -99,6 +99,19 @@ pub enum VirtualInstr {
         slot: StackSlot,
         src: VirtualValue,
     },
+    Label(u32),
+    Jmp(u32),
+    Jcc {
+        condition: Condition,
+        target: u32,
+    },
+    Phi {
+        dst: VirtualReg,
+    },
+    Call {
+        dst: VirtualReg,
+        target: String,
+    },
     Return(VirtualValue),
 }
 
@@ -291,6 +304,10 @@ pub enum MachineInstr {
     SetCc { condition: Condition, dst: Reg },
     Load { dst: Reg, slot: StackSlot },
     Store { slot: StackSlot, src: Reg },
+    Label(u32),
+    Jmp(u32),
+    Jcc { condition: Condition, target: u32 },
+    Call { target: u32 },
     Ret,
 }
 
@@ -300,6 +317,7 @@ pub struct MachineFunction {
     pub instructions: Vec<MachineInstr>,
     pub stack_slots: u32,
     pub callee_saved: Vec<Reg>,
+    pub symbols: Vec<String>,
 }
 
 impl MachineFunction {
@@ -309,6 +327,7 @@ impl MachineFunction {
             instructions: Vec::new(),
             stack_slots: 0,
             callee_saved: Vec::new(),
+            symbols: Vec::new(),
         }
     }
 
@@ -324,6 +343,7 @@ pub enum AsmError {
     ExpectedCalleeSaved(Reg),
     DuplicateCalleeSaved(Reg),
     InvalidDivisor(Reg),
+    InvalidCallTarget(u32),
     StackSlotOutOfBounds { slot: StackSlot, stack_slots: u32 },
     ArgumentOffsetOverflow { index: usize },
     FrameSizeOverflow,
@@ -338,6 +358,9 @@ impl fmt::Display for AsmError {
             Self::ExpectedCalleeSaved(reg) => write!(f, "{reg} is not a callee-saved register"),
             Self::DuplicateCalleeSaved(reg) => write!(f, "duplicate callee-saved register {reg}"),
             Self::InvalidDivisor(reg) => write!(f, "{reg} cannot be used as an idiv divisor"),
+            Self::InvalidCallTarget(target) => {
+                write!(f, "call target symbol index {target} is invalid")
+            }
             Self::StackSlotOutOfBounds { slot, stack_slots } => write!(
                 f,
                 "stack slot {} is outside the allocated {} slots",
@@ -394,6 +417,7 @@ pub fn emit_gnu_assembly(function: &MachineFunction) -> Result<String, AsmError>
             *instruction,
             function.stack_slots,
             &function.callee_saved,
+            &function.symbols,
         )?;
     }
 
@@ -424,7 +448,7 @@ fn validate_function(function: &MachineFunction) -> Result<(), AsmError> {
         return Err(AsmError::MissingReturn);
     }
     for instruction in &function.instructions {
-        validate_instruction(*instruction, function.stack_slots)?;
+        validate_instruction(*instruction, function.stack_slots, &function.symbols)?;
     }
     Ok(())
 }
@@ -438,7 +462,11 @@ fn valid_symbol(name: &str) -> bool {
         && bytes.all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'_' | b'.' | b'$'))
 }
 
-fn validate_instruction(instruction: MachineInstr, stack_slots: u32) -> Result<(), AsmError> {
+fn validate_instruction(
+    instruction: MachineInstr,
+    stack_slots: u32,
+    symbols: &[String],
+) -> Result<(), AsmError> {
     use MachineInstr::*;
 
     let validate_reg = |reg: Reg| {
@@ -488,6 +516,12 @@ fn validate_instruction(instruction: MachineInstr, stack_slots: u32) -> Result<(
             validate_slot(slot, stack_slots)?;
             validate_reg(src)?;
         }
+        Label(_) | Jmp(_) | Jcc { .. } => {}
+        Call { target } => {
+            if target as usize >= symbols.len() {
+                return Err(AsmError::InvalidCallTarget(target));
+            }
+        }
         Ret => {}
     }
     Ok(())
@@ -506,6 +540,7 @@ fn emit_instruction(
     instruction: MachineInstr,
     stack_slots: u32,
     callee_saved: &[Reg],
+    symbols: &[String],
 ) -> Result<(), AsmError> {
     use MachineInstr::*;
 
@@ -550,6 +585,12 @@ fn emit_instruction(
             let offset = spill_offset(slot);
             out.push_str(&format!("\tmov QWORD PTR [rbp{offset}], {}\n", src.name()));
         }
+        Label(label) => out.push_str(&format!(".L{label}:\n")),
+        Jmp(target) => out.push_str(&format!("\tjmp .L{target}\n")),
+        Jcc { condition, target } => {
+            out.push_str(&format!("\tj{} .L{target}\n", condition.mnemonic()))
+        }
+        Call { target } => out.push_str(&format!("\tcall {}\n", symbols[target as usize])),
         Ret => {
             for (index, reg) in callee_saved.iter().enumerate() {
                 let offset = saved_offset(stack_slots, index)?;
@@ -616,6 +657,7 @@ mod tests {
             instructions,
             stack_slots: 0,
             callee_saved: Vec::new(),
+            symbols: Vec::new(),
         }
     }
 
@@ -761,6 +803,7 @@ mod tests {
             ],
             stack_slots: 1,
             callee_saved: vec![Reg::Rbx, Reg::R12],
+            symbols: Vec::new(),
         }
         .emit_gnu_assembly()
         .unwrap();

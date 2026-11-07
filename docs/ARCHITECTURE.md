@@ -1,10 +1,6 @@
 # Architecture
 
-`kfrc` has two independent compiler tracks: an LLVM reference track and a native track that does not link to or invoke LLVM. Neither track uses Cranelift.
-
-## LLVM reference track
-
-Cargo invokes `kfrc` as a rustc wrapper. The driver preserves rustc's wrapper protocol, forwards diagnostics, and selects LLVM optimization settings. Work is pipelined through Cargo's crate graph and a bounded local task scheduler. Reproducible benchmarks compare stock rustc/LLVM with kfrc on the same host and toolchain. This track supplies the compatibility and performance baseline; it is not part of the native backend implementation.
+`kfrc` is a native-only compiler and never links to or invokes LLVM. It does not use Cranelift. Legacy LLVM modules and benchmark records are archival evidence only, not an active compiler path or fallback.
 
 ## Native backend path (no LLVM)
 

@@ -80,6 +80,7 @@ fn unsupported_abis_and_undefined_targets_are_rejected() {
         ],
         stack_slots: 0,
         callee_saved: Vec::new(),
+        symbols: Vec::new(),
     };
     assert_eq!(
         write_multi_function_object(&[with_argument], &[]),

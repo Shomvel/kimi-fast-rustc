@@ -249,7 +249,7 @@ fn compile_pipeline(
             max_parallelism,
             |(name, mut graph): (String, Graph)| {
                 son_optimize::optimize(&mut graph);
-                placement::place_graph(&graph)
+                placement::place_for_native(&graph)
                     .map(|graph| (name, graph))
                     .map_err(StageError::Placement)
             },

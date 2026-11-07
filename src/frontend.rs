@@ -1,13 +1,13 @@
-use crate::son::{BinaryOp, CompareOp, Graph, NodeId, UnaryOp};
+use crate::son::{BinaryOp, CompareOp, FunctionMetadata, Graph, NodeId, UnaryOp};
 use std::collections::{HashMap, HashSet};
 use std::error::Error;
 use std::fmt;
 
-/// Parses the explicitly supported, single-basic-block i64 Rust subset.
+/// Parses the explicitly supported i64 Rust expression subset.
 ///
-/// Functions may omit `-> i64`, but must contain a final `return expr;`.
-/// Each function is emitted as a `Start`/`Return` component in source order;
-/// the current `Graph` has no function-name or parameter-name metadata.
+/// Functions and parameters retain their names and source ranges in `Graph::functions`.
+/// `if` expressions merge values through control regions and Phi nodes. Zero-argument
+/// calls are represented explicitly and checked against the declared function set.
 /// Comparisons produce the integer values zero or one and cannot be chained.
 /// Unsupported Rust syntax and semantics are rejected with a source location.
 pub fn parse(source: &str) -> Result<Graph, ParseError> {
@@ -408,6 +408,7 @@ struct Parser {
     graph: Graph,
     functions: HashSet<String>,
     variables: HashMap<String, NodeId>,
+    control: NodeId,
 }
 
 impl Parser {
@@ -418,6 +419,7 @@ impl Parser {
             graph: Graph::new(),
             functions: HashSet::new(),
             variables: HashMap::new(),
+            control: NodeId(0),
         }
     }
 
@@ -475,12 +477,15 @@ impl Parser {
             }
         }
         self.expect(TokenKind::RParen, "`)` after parameters")?;
-        if self.eat(TokenKind::Arrow) {
+        let returns_i64 = self.eat(TokenKind::Arrow);
+        if returns_i64 {
             self.parse_i64_type()?;
         }
 
         self.expect(TokenKind::LBrace, "`{` before function body")?;
         let start = self.graph.start();
+        let mut return_node = None;
+        self.control = start;
         self.variables.clear();
         for (index, parameter) in parameters.iter().enumerate() {
             let node = self.graph.parameter(index);
@@ -500,9 +505,16 @@ impl Parser {
             if self.eat(TokenKind::Let) {
                 self.parse_let()?;
             } else if self.eat(TokenKind::Return) {
-                let value = self.parse_expression()?;
-                self.expect(TokenKind::Semicolon, "`;` after returned expression")?;
-                self.graph.return_(start, Some(value));
+                if self.eat(TokenKind::Semicolon) {
+                    if returns_i64 {
+                        return Err(self.error_here("expected an i64 expression after `return`"));
+                    }
+                    return_node = Some(self.graph.return_(self.control, None));
+                } else {
+                    let value = self.parse_expression()?;
+                    self.expect(TokenKind::Semicolon, "`;` after returned expression")?;
+                    return_node = Some(self.graph.return_(self.control, Some(value)));
+                }
                 returned = true;
             } else {
                 return Err(
@@ -511,12 +523,21 @@ impl Parser {
             }
         }
         let close = self.expect(TokenKind::RBrace, "`}` after function body")?;
-        if !returned {
+        if !returned && returns_i64 {
             return Err(ParseError::new(
                 close,
                 format!("function `{name}` must end with `return expr;`"),
             ));
         }
+        if !returned {
+            return_node = Some(self.graph.return_(self.control, None));
+        }
+        self.graph.functions.push(FunctionMetadata {
+            name,
+            start,
+            return_node: return_node.expect("every function has a return node"),
+            parameter_count: parameters.len(),
+        });
         Ok(())
     }
 
@@ -572,7 +593,42 @@ impl Parser {
     }
 
     fn parse_expression(&mut self) -> Result<NodeId, ParseError> {
-        self.parse_comparison()
+        if self.peek_identifier("if") {
+            self.parse_if_expression()
+        } else {
+            self.parse_comparison()
+        }
+    }
+
+    fn parse_if_expression(&mut self) -> Result<NodeId, ParseError> {
+        self.position += 1;
+        let condition = self.parse_expression()?;
+        let branch = self.graph.if_(self.control, condition);
+        self.expect(TokenKind::LBrace, "`{` after if condition")?;
+
+        let true_projection = self.graph.projection(branch, 0);
+        self.control = true_projection;
+        let true_value = self.parse_expression()?;
+        let true_control = self.control;
+        self.expect(TokenKind::RBrace, "`}` after if branch")?;
+
+        if !self.peek_identifier("else") {
+            return Err(self.error_here("expected `else` after if branch"));
+        }
+        self.position += 1;
+        self.expect(TokenKind::LBrace, "`{` after else")?;
+        let false_projection = self.graph.projection(branch, 1);
+        self.control = false_projection;
+        let false_value = self.parse_expression()?;
+        let false_control = self.control;
+        self.expect(TokenKind::RBrace, "`}` after else branch")?;
+
+        let region = self.graph.region(vec![true_control, false_control]);
+        self.control = region;
+        Ok(self.graph.phi(
+            vec![true_control, false_control],
+            vec![true_value, false_value],
+        ))
     }
 
     fn parse_comparison(&mut self) -> Result<NodeId, ParseError> {
@@ -662,16 +718,31 @@ impl Parser {
             }
             TokenKind::Ident(identifier) => {
                 if self.check(&TokenKind::LParen) {
-                    return Err(ParseError::new(
-                        token.span,
-                        format!("function call `{identifier}(...)` is not supported"),
+                    self.position += 1;
+                    self.expect(TokenKind::RParen, "`)` after zero-argument function call")?;
+                    if !self.functions.contains(&identifier) {
+                        return Err(ParseError::new(
+                            token.span,
+                            format!("unknown function `{identifier}`"),
+                        ));
+                    }
+                    let target = self
+                        .graph
+                        .functions
+                        .iter()
+                        .position(|function| function.name == identifier)
+                        .unwrap_or(self.graph.functions.len());
+                    return Ok(self.graph.add_node(
+                        crate::son::NodeKind::Call(target),
+                        vec![self.control],
+                        Vec::new(),
                     ));
                 }
-                if identifier == "true" || identifier == "false" {
-                    return Err(ParseError::new(
-                        token.span,
-                        "Boolean literals are not supported",
-                    ));
+                if identifier == "true" {
+                    return Ok(self.graph.constant(1));
+                }
+                if identifier == "false" {
+                    return Ok(self.graph.constant(0));
                 }
                 self.variables.get(&identifier).copied().ok_or_else(|| {
                     ParseError::new(
@@ -843,9 +914,9 @@ mod tests {
                 .contains("unknown variable")
         );
         assert!(
-            error("fn id(x: i64) -> i64 { return x; } fn main() { return id(1); }")
+            error("fn main() { return missing(); }")
                 .message
-                .contains("not supported")
+                .contains("unknown function")
         );
     }
 
@@ -890,7 +961,7 @@ mod tests {
     #[test]
     fn rejects_missing_return_and_unreachable_statements() {
         assert!(
-            error("fn main() { let x = 1; }")
+            error("fn main() -> i64 { let x = 1; }")
                 .message
                 .contains("must end with `return")
         );
@@ -934,9 +1005,9 @@ mod tests {
                 .contains("floating-point")
         );
         assert!(
-            error("fn main() { return true; }")
+            error("fn main() { return 0b10; }")
                 .message
-                .contains("Boolean")
+                .contains("literal")
         );
     }
 

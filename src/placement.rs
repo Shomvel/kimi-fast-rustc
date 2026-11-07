@@ -100,6 +100,24 @@ impl From<ValidationError> for PlacementError {
 ///
 /// Ready nodes retain their original `NodeId` order. Memory dependencies are
 /// accepted only when they form disjoint, non-branching chains.
+pub fn place_for_native(graph: &Graph) -> Result<Graph, PlacementError> {
+    if graph.functions.len() > 1 {
+        graph.validate()?;
+        return Ok(graph.clone());
+    }
+    if graph.iter().any(|(_, node)| {
+        matches!(
+            node.kind,
+            NodeKind::If | NodeKind::Projection(_) | NodeKind::Region
+        )
+    }) {
+        graph.validate()?;
+        Ok(graph.clone())
+    } else {
+        place_graph(graph)
+    }
+}
+
 pub fn place_graph(graph: &Graph) -> Result<Graph, PlacementError> {
     graph.validate()?;
 

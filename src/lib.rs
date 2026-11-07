@@ -22,6 +22,7 @@ pub mod native_cache;
 pub mod native_cli;
 pub mod native_driver;
 pub mod native_object;
+pub mod native_program;
 pub mod optimizer_pipeline;
 pub mod parallel_native;
 pub mod pgo;

@@ -140,7 +140,7 @@ where
         },
         |(name, mut graph): (String, Graph)| {
             optimizer_pipeline::optimize(&mut graph);
-            placement::place_graph(&graph)
+            placement::place_for_native(&graph)
                 .map(|graph| (name, graph))
                 .map_err(StageError::Placement)
         },
@@ -393,7 +393,7 @@ mod tests {
         .unwrap_err();
         assert!(matches!(
             &placement_error,
-            PipelinedNativeError::Placement { index: 1, .. }
+            PipelinedNativeError::Compile { index: 1, .. }
         ));
         assert!(placement_error.to_string().contains("input 1"));
     }

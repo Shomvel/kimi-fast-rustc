@@ -3,7 +3,7 @@ name = "kimi-fast-rustc"
 version = "0.1.0"
 edition = "2024"
 rust-version = "1.85"
-description = "A parallel Rust compiler with an LLVM reference track and a sea-of-nodes native backend"
+description = "A parallel Rust compiler with a sea-of-nodes IR and no LLVM backend"
 repository = "https://github.com/Shomvel/kimi-fast-rustc"
 license = "MIT OR Apache-2.0"
 

@@ -20,6 +20,8 @@ use crate::x86::{
 
 const SCRATCH0: Reg = Reg::R10;
 const SCRATCH1: Reg = Reg::R11;
+const CALL_HOME_REGISTERS: [Reg; 5] = [Reg::Rcx, Reg::Rsi, Reg::Rdi, Reg::R8, Reg::R9];
+const CALL_HOME_COUNT: u32 = CALL_HOME_REGISTERS.len() as u32;
 const GENERAL_REGISTERS: [Reg; 10] = [
     Reg::Rcx,
     Reg::Rsi,
@@ -150,6 +152,24 @@ pub fn lower_graph(graph: &Graph) -> Result<Vec<VirtualInstr>, CompileError> {
         return Err(unsupported(second, UnsupportedReason::MultipleReturns));
     }
 
+    let false_projections = graph
+        .iter()
+        .filter_map(|(id, node)| match node.kind {
+            NodeKind::Projection(1) => Some((node.control[0], id)),
+            _ => None,
+        })
+        .collect::<BTreeMap<_, _>>();
+    let regions = graph
+        .iter()
+        .filter(|(_, node)| node.kind == NodeKind::Region)
+        .map(|(id, node)| (node.control.clone(), id))
+        .collect::<BTreeMap<_, _>>();
+    let phis = graph
+        .iter()
+        .filter(|(_, node)| node.kind == NodeKind::Phi)
+        .map(|(id, node)| (id, node.control.clone(), node.data.clone()))
+        .collect::<Vec<_>>();
+
     let mut instructions = Vec::new();
     let mut values = BTreeSet::new();
     let mut returned = false;
@@ -221,12 +241,74 @@ pub fn lower_graph(graph: &Graph) -> Result<Vec<VirtualInstr>, CompileError> {
                     rhs,
                 }
             }
+            NodeKind::Call(target) => {
+                let target = graph
+                    .functions
+                    .get(target)
+                    .expect("frontend validated the call target")
+                    .name
+                    .clone();
+                VirtualInstr::Call {
+                    dst: virtual_reg(id),
+                    target,
+                }
+            }
+            NodeKind::If => {
+                let condition = value_reference(id, node.data[0], &values)?;
+                let target = false_projections
+                    .get(&id)
+                    .ok_or_else(|| unsupported(id, UnsupportedReason::NodeKind(node.kind)))?;
+                instructions.push(VirtualInstr::Compare {
+                    dst: virtual_reg(id),
+                    condition: Condition::Eq,
+                    lhs: condition,
+                    rhs: VirtualValue::Imm(0),
+                });
+                VirtualInstr::Jcc {
+                    condition: Condition::Eq,
+                    target: target.0,
+                }
+            }
+            NodeKind::Projection(1) => {
+                let mut region_target = None;
+                for (phi, controls, data) in &phis {
+                    if controls.get(1) == Some(&id) {
+                        let region = regions.get(controls).ok_or_else(|| {
+                            unsupported(id, UnsupportedReason::NodeKind(node.kind))
+                        })?;
+                        instructions.push(VirtualInstr::Mov {
+                            dst: virtual_reg(*phi),
+                            src: value_reference(id, data[0], &values)?,
+                        });
+                        region_target = Some(region.0);
+                    }
+                }
+                if let Some(target) = region_target {
+                    instructions.push(VirtualInstr::Jmp(target));
+                }
+                VirtualInstr::Label(id.0)
+            }
+            NodeKind::Projection(_) => VirtualInstr::Label(id.0),
+            NodeKind::Region => {
+                for (phi, controls, data) in &phis {
+                    if controls == &node.control {
+                        instructions.push(VirtualInstr::Mov {
+                            dst: virtual_reg(*phi),
+                            src: value_reference(id, data[1], &values)?,
+                        });
+                    }
+                }
+                VirtualInstr::Label(id.0)
+            }
+            NodeKind::Phi => VirtualInstr::Phi {
+                dst: virtual_reg(id),
+            },
             NodeKind::Return => {
-                let Some(&value) = node.data.first() else {
-                    return Err(unsupported(id, UnsupportedReason::ReturnWithoutValue));
-                };
                 returned = true;
-                VirtualInstr::Return(value_reference(id, value, &values)?)
+                match node.data.first() {
+                    Some(&value) => VirtualInstr::Return(value_reference(id, value, &values)?),
+                    None => VirtualInstr::Return(VirtualValue::Imm(0)),
+                }
             }
             kind => return Err(unsupported(id, UnsupportedReason::NodeKind(kind))),
         };
@@ -252,9 +334,18 @@ pub fn compile_graph(
     let allocation = allocator.allocate(&intervals)?;
     let argument_homes = required_argument_homes(&virtual_instructions, &allocation);
     let spill_slot_offset = argument_homes.len() as u32;
+    let call_slots = if virtual_instructions
+        .iter()
+        .any(|instruction| matches!(instruction, VirtualInstr::Call { .. }))
+    {
+        CALL_HOME_COUNT
+    } else {
+        0
+    };
     let stack_slots = allocation
         .spill_slot_count
         .checked_add(spill_slot_offset)
+        .and_then(|slots| slots.checked_add(call_slots))
         .ok_or(CompileError::TooManyStackSlots)?;
 
     let mut function = MachineFunction::new(name);
@@ -276,11 +367,21 @@ pub fn compile_graph(
             src: Reg::ARGUMENTS[*index],
         });
     }
+    function.symbols = virtual_instructions
+        .iter()
+        .filter_map(|instruction| match instruction {
+            VirtualInstr::Call { target, .. } => Some(target.clone()),
+            _ => None,
+        })
+        .collect::<BTreeSet<_>>()
+        .into_iter()
+        .collect();
 
     let mut emitter = Emitter {
         allocation: &allocation,
         argument_homes: &argument_homes,
         spill_slot_offset,
+        symbols: &function.symbols,
         instructions: Vec::with_capacity(virtual_instructions.len()),
     };
     for instruction in &virtual_instructions {
@@ -366,7 +467,10 @@ fn live_intervals(instructions: &[VirtualInstr]) -> Result<Vec<LiveInterval>, Co
             .ok_or(CompileError::TooManyInstructions)?;
 
         if let Some(definition) = defined_register(instruction) {
-            intervals.insert(definition.0, (position, end));
+            intervals
+                .entry(definition.0)
+                .and_modify(|(_, interval_end)| *interval_end = end)
+                .or_insert((position, end));
         }
         for used in used_registers(instruction) {
             if let Some((_, interval_end)) = intervals.get_mut(&used.0) {
@@ -393,8 +497,14 @@ fn defined_register(instruction: &VirtualInstr) -> Option<VirtualReg> {
         | VirtualInstr::Div { dst, .. }
         | VirtualInstr::Rem { dst, .. }
         | VirtualInstr::Compare { dst, .. }
-        | VirtualInstr::Load { dst, .. } => Some(dst),
-        VirtualInstr::Store { .. } | VirtualInstr::Return(_) => None,
+        | VirtualInstr::Load { dst, .. }
+        | VirtualInstr::Phi { dst, .. }
+        | VirtualInstr::Call { dst, .. } => Some(dst),
+        VirtualInstr::Label(_)
+        | VirtualInstr::Jmp(_)
+        | VirtualInstr::Jcc { .. }
+        | VirtualInstr::Store { .. }
+        | VirtualInstr::Return(_) => None,
     }
 }
 
@@ -417,7 +527,13 @@ fn used_registers(instruction: &VirtualInstr) -> Vec<VirtualReg> {
             add_value(rhs);
         }
         VirtualInstr::Store { src, .. } => add_value(src),
-        VirtualInstr::LoadArg { .. } | VirtualInstr::Load { .. } => {}
+        VirtualInstr::Label(_)
+        | VirtualInstr::Jmp(_)
+        | VirtualInstr::Jcc { .. }
+        | VirtualInstr::Phi { .. }
+        | VirtualInstr::Call { .. }
+        | VirtualInstr::LoadArg { .. }
+        | VirtualInstr::Load { .. } => {}
     }
     used
 }
@@ -473,6 +589,7 @@ struct Emitter<'a> {
     allocation: &'a AllocationResult,
     argument_homes: &'a BTreeMap<usize, u32>,
     spill_slot_offset: u32,
+    symbols: &'a [String],
     instructions: Vec<MachineInstr>,
 }
 
@@ -527,6 +644,39 @@ impl Emitter<'_> {
                     dst: work,
                 });
                 self.store_definition(dst, work)?;
+            }
+            VirtualInstr::Label(label) => {
+                self.instructions.push(MachineInstr::Label(label));
+            }
+            VirtualInstr::Jmp(target) => {
+                self.instructions.push(MachineInstr::Jmp(target));
+            }
+            VirtualInstr::Jcc { condition, target } => {
+                self.instructions
+                    .push(MachineInstr::Jcc { condition, target });
+            }
+            VirtualInstr::Phi { .. } => {}
+            VirtualInstr::Call { dst, target } => {
+                for (index, register) in CALL_HOME_REGISTERS.iter().copied().enumerate() {
+                    self.instructions.push(MachineInstr::Store {
+                        slot: StackSlot(self.spill_slot_offset + index as u32),
+                        src: register,
+                    });
+                }
+                let target = self
+                    .symbols
+                    .iter()
+                    .position(|symbol| symbol == &target)
+                    .expect("call symbols are collected before emission")
+                    as u32;
+                self.instructions.push(MachineInstr::Call { target });
+                for (index, register) in CALL_HOME_REGISTERS.iter().copied().enumerate() {
+                    self.instructions.push(MachineInstr::Load {
+                        dst: register,
+                        slot: StackSlot(self.spill_slot_offset + index as u32),
+                    });
+                }
+                self.store_definition(dst, Reg::Rax)?;
             }
             VirtualInstr::Return(value) => {
                 self.load_value(value, Reg::RETURN)?;
@@ -605,11 +755,22 @@ impl Emitter<'_> {
     }
 
     fn store_definition(&mut self, dst: VirtualReg, source: Reg) -> Result<(), CompileError> {
-        if let Location::Spill(slot) = self.location(dst)? {
-            self.instructions.push(MachineInstr::Store {
-                slot: self.stack_slot(slot)?,
-                src: source,
-            });
+        match self.location(dst)? {
+            Location::Register(register) => {
+                let register = general_register(register);
+                if register != source {
+                    self.instructions.push(MachineInstr::Mov {
+                        dst: register,
+                        src: source,
+                    });
+                }
+            }
+            Location::Spill(slot) => {
+                self.instructions.push(MachineInstr::Store {
+                    slot: self.stack_slot(slot)?,
+                    src: source,
+                });
+            }
         }
         Ok(())
     }
@@ -1098,13 +1259,7 @@ mod tests {
         let one = graph.constant(1);
         let phi = graph.phi(vec![start], vec![one]);
         graph.return_(start, Some(phi));
-        assert!(matches!(
-            lower_graph(&graph),
-            Err(CompileError::Unsupported {
-                reason: UnsupportedReason::NodeKind(NodeKind::Phi),
-                ..
-            })
-        ));
+        assert!(lower_graph(&graph).is_ok());
     }
 
     #[test]
@@ -1115,10 +1270,10 @@ mod tests {
 
         let mut graph = Graph::new();
         let start = graph.start();
-        let empty = graph.return_(start, None);
+        graph.return_(start, None);
         assert_eq!(
-            lower_graph(&graph),
-            Err(unsupported(empty, UnsupportedReason::ReturnWithoutValue))
+            lower_graph(&graph).unwrap().as_slice(),
+            &[VirtualInstr::Return(VirtualValue::Imm(0))]
         );
 
         let mut graph = Graph::new();
@@ -1221,6 +1376,12 @@ mod tests {
                 }
                 MachineInstr::Store { slot, src } => {
                     slots[slot.0 as usize] = read_reg(&registers, src);
+                }
+                MachineInstr::Label(_) | MachineInstr::Jmp(_) | MachineInstr::Jcc { .. } => {
+                    unreachable!("the simple native test evaluator does not model control flow")
+                }
+                MachineInstr::Call { .. } => {
+                    unreachable!("the simple native test evaluator does not model calls")
                 }
                 MachineInstr::Ret => return read_reg(&registers, Reg::RETURN),
             }

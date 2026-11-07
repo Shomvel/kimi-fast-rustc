@@ -65,6 +65,10 @@ pub enum NodeKind {
     Unary(UnaryOp),
     Binary(BinaryOp),
     Compare(CompareOp),
+    Call(usize),
+    If,
+    Projection(u8),
+    Region,
     Phi,
     Return,
 }
@@ -186,10 +190,19 @@ impl fmt::Display for ValidationError {
 
 impl Error for ValidationError {}
 
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct FunctionMetadata {
+    pub name: String,
+    pub start: NodeId,
+    pub return_node: NodeId,
+    pub parameter_count: usize,
+}
+
 #[derive(Clone, Debug, Default)]
 pub struct Graph {
     nodes: Vec<Option<Node>>,
     live_nodes: usize,
+    pub functions: Vec<FunctionMetadata>,
 }
 
 impl Graph {
@@ -256,6 +269,18 @@ impl Graph {
             .filter_map(|(index, node)| node.as_ref().map(|node| (NodeId(index as u32), node)))
     }
 
+    pub fn function_graph(&self, function: &FunctionMetadata) -> Graph {
+        let mut graph = self.clone();
+        let outside = graph
+            .ids()
+            .filter(|id| id.0 < function.start.0 || id.0 > function.return_node.0)
+            .collect::<Vec<_>>();
+        for id in outside {
+            graph.remove(id);
+        }
+        graph
+    }
+
     pub fn start(&mut self) -> NodeId {
         self.add_node(NodeKind::Start, Vec::new(), Vec::new())
     }
@@ -278,6 +303,18 @@ impl Graph {
 
     pub fn compare(&mut self, op: CompareOp, left: NodeId, right: NodeId) -> NodeId {
         self.add_node(NodeKind::Compare(op), Vec::new(), vec![left, right])
+    }
+
+    pub fn if_(&mut self, control: NodeId, condition: NodeId) -> NodeId {
+        self.add_node(NodeKind::If, vec![control], vec![condition])
+    }
+
+    pub fn projection(&mut self, control: NodeId, index: u8) -> NodeId {
+        self.add_node(NodeKind::Projection(index), vec![control], Vec::new())
+    }
+
+    pub fn region(&mut self, control: Vec<NodeId>) -> NodeId {
+        self.add_node(NodeKind::Region, control, Vec::new())
     }
 
     pub fn phi(&mut self, control: Vec<NodeId>, data: Vec<NodeId>) -> NodeId {
@@ -342,6 +379,30 @@ impl Graph {
                 NodeKind::Binary(_) | NodeKind::Compare(_) => {
                     expect_arity(id, node.kind, InputChannel::Control, 0, node.control.len())?;
                     expect_arity(id, node.kind, InputChannel::Data, 2, node.data.len())?;
+                }
+                NodeKind::Call(_) => {
+                    expect_arity(id, node.kind, InputChannel::Control, 1, node.control.len())?;
+                    expect_arity(id, node.kind, InputChannel::Data, 0, node.data.len())?;
+                }
+                NodeKind::If => {
+                    expect_arity(id, node.kind, InputChannel::Control, 1, node.control.len())?;
+                    expect_arity(id, node.kind, InputChannel::Data, 1, node.data.len())?;
+                }
+                NodeKind::Projection(_) => {
+                    expect_arity(id, node.kind, InputChannel::Control, 1, node.control.len())?;
+                    expect_arity(id, node.kind, InputChannel::Data, 0, node.data.len())?;
+                }
+                NodeKind::Region => {
+                    if node.control.is_empty() {
+                        return Err(ValidationError::WrongArity {
+                            node: id,
+                            kind: node.kind,
+                            channel: InputChannel::Control,
+                            expected: "at least 1",
+                            actual: 0,
+                        });
+                    }
+                    expect_arity(id, node.kind, InputChannel::Data, 0, node.data.len())?;
                 }
                 NodeKind::Phi => {
                     if node.control.is_empty() {

@@ -5,15 +5,23 @@ use std::error::Error;
 use std::fmt;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
+pub struct CallRelocation {
+    pub offset: u64,
+    pub target: String,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub enum EncodeError {
     ReservedRegister(Reg),
     ExpectedCalleeSaved(Reg),
     DuplicateCalleeSaved(Reg),
     InvalidDivisor(Reg),
+    InvalidCallTarget(u32),
     StackSlotOutOfBounds { slot: StackSlot, stack_slots: u32 },
     ArgumentOffsetOverflow { index: usize },
     FrameSizeOverflow,
     MissingReturn,
+    UnsupportedControlFlow,
     CodeSizeOverflow,
     AllocationFailed,
 }
@@ -33,6 +41,9 @@ impl fmt::Display for EncodeError {
             Self::InvalidDivisor(reg) => {
                 write!(formatter, "{reg} cannot be used as an idiv divisor")
             }
+            Self::InvalidCallTarget(target) => {
+                write!(formatter, "call target symbol index {target} is invalid")
+            }
             Self::StackSlotOutOfBounds { slot, stack_slots } => write!(
                 formatter,
                 "stack slot {} is outside the allocated {} slots",
@@ -47,6 +58,9 @@ impl fmt::Display for EncodeError {
             Self::FrameSizeOverflow => formatter.write_str("stack frame cannot be encoded"),
             Self::MissingReturn => {
                 formatter.write_str("machine function has no return instruction")
+            }
+            Self::UnsupportedControlFlow => {
+                formatter.write_str("direct object emission does not support labels or jumps yet")
             }
             Self::CodeSizeOverflow => formatter.write_str("machine-code size overflows usize"),
             Self::AllocationFailed => {
@@ -67,6 +81,12 @@ impl MachineFunction {
 /// Encodes one function as position-independent bytes suitable for ELF `.text`.
 /// Instructions, including every return sequence, retain their original order.
 pub fn emit_machine_code(function: &MachineFunction) -> Result<Vec<u8>, EncodeError> {
+    encode_with_relocations(function).map(|(code, _)| code)
+}
+
+pub fn encode_with_relocations(
+    function: &MachineFunction,
+) -> Result<(Vec<u8>, Vec<CallRelocation>), EncodeError> {
     let frame_size = validate_function(function)?;
     let return_count = function
         .instructions
@@ -93,6 +113,8 @@ pub fn emit_machine_code(function: &MachineFunction) -> Result<Vec<u8>, EncodeEr
         bytes: Vec::new(),
         stack_slots: function.stack_slots,
         callee_saved: &function.callee_saved,
+        symbols: &function.symbols,
+        calls: Vec::new(),
     };
     encoder
         .bytes
@@ -103,7 +125,7 @@ pub fn emit_machine_code(function: &MachineFunction) -> Result<Vec<u8>, EncodeEr
     for instruction in &function.instructions {
         encoder.instruction(*instruction)?;
     }
-    Ok(encoder.bytes)
+    Ok((encoder.bytes, encoder.calls))
 }
 
 fn validate_function(function: &MachineFunction) -> Result<u32, EncodeError> {
@@ -141,12 +163,16 @@ fn validate_function(function: &MachineFunction) -> Result<u32, EncodeError> {
     }
 
     for instruction in &function.instructions {
-        validate_instruction(*instruction, function.stack_slots)?;
+        validate_instruction(*instruction, function.stack_slots, &function.symbols)?;
     }
     Ok(frame_size)
 }
 
-fn validate_instruction(instruction: MachineInstr, stack_slots: u32) -> Result<(), EncodeError> {
+fn validate_instruction(
+    instruction: MachineInstr,
+    stack_slots: u32,
+    symbols: &[String],
+) -> Result<(), EncodeError> {
     use MachineInstr::*;
 
     fn validate_reg(reg: Reg) -> Result<(), EncodeError> {
@@ -199,6 +225,12 @@ fn validate_instruction(instruction: MachineInstr, stack_slots: u32) -> Result<(
             validate_slot(slot, stack_slots)?;
             validate_reg(src)?;
         }
+        Label(_) | Jmp(_) | Jcc { .. } => return Err(EncodeError::UnsupportedControlFlow),
+        Call { target } => {
+            if target as usize >= symbols.len() {
+                return Err(EncodeError::InvalidCallTarget(target));
+            }
+        }
         Ret => {}
     }
     Ok(())
@@ -243,6 +275,8 @@ struct Encoder<'a> {
     bytes: Vec<u8>,
     stack_slots: u32,
     callee_saved: &'a [Reg],
+    symbols: &'a [String],
+    calls: Vec<CallRelocation>,
 }
 
 impl Encoder<'_> {
@@ -315,6 +349,14 @@ impl Encoder<'_> {
             }
             Load { dst, slot } => self.memory_reg(0x8b, dst, spill_offset(slot)?),
             Store { slot, src } => self.memory_reg(0x89, src, spill_offset(slot)?),
+            Call { target } => {
+                self.calls.push(CallRelocation {
+                    offset: (self.bytes.len() + 1) as u64,
+                    target: self.symbols[target as usize].clone(),
+                });
+                self.bytes.extend_from_slice(&[0xe8, 0, 0, 0, 0]);
+            }
+            Label(_) | Jmp(_) | Jcc { .. } => return Err(EncodeError::UnsupportedControlFlow),
             Ret => {
                 for (index, reg) in self.callee_saved.iter().copied().enumerate() {
                     let offset = saved_offset(self.stack_slots, index)?;
@@ -441,6 +483,7 @@ mod tests {
             instructions,
             stack_slots: 0,
             callee_saved: Vec::new(),
+            symbols: Vec::new(),
         }
     }
 
@@ -524,6 +567,7 @@ mod tests {
             ],
             stack_slots: 2,
             callee_saved: vec![Reg::Rbx, Reg::R12],
+            symbols: Vec::new(),
         };
         let code = function.emit_machine_code().unwrap();
         let expected = [
@@ -760,6 +804,7 @@ mod tests {
             ],
             stack_slots: 1,
             callee_saved: Vec::new(),
+            symbols: Vec::new(),
         };
         let code = function.emit_machine_code().unwrap();
         let object = write_object(

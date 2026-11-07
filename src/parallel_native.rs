@@ -130,7 +130,7 @@ impl CompilationFailure {
 fn compile_one(mut graph: Graph, name: String) -> Result<MachineFunction, CompilationFailure> {
     panic::catch_unwind(AssertUnwindSafe(move || {
         son_optimize::optimize(&mut graph);
-        let graph = placement::place_graph(&graph).map_err(CompilationFailure::Placement)?;
+        let graph = placement::place_for_native(&graph).map_err(CompilationFailure::Placement)?;
         native::compile_graph(&graph, name).map_err(CompilationFailure::Compile)
     }))
     .unwrap_or_else(|payload| Err(CompilationFailure::Panicked(panic_message(payload))))
@@ -189,10 +189,9 @@ fn panic_message(payload: Box<dyn Any + Send + 'static>) -> String {
 #[cfg(test)]
 mod tests {
     use super::{ParallelCompileError, compile_graphs, compile_one, run_compilation};
-    use crate::native::{CompileError, UnsupportedReason};
     use crate::placement::PlacementError;
     use crate::scheduler::SchedulerError;
-    use crate::son::{BinaryOp, Graph, NodeId};
+    use crate::son::{BinaryOp, Graph};
     use std::sync::atomic::{AtomicUsize, Ordering};
     use std::sync::{Arc, Barrier};
 
@@ -310,18 +309,22 @@ mod tests {
     fn native_errors_include_name_and_index() {
         let mut graph = Graph::new();
         let start = graph.start();
-        graph.return_(start, None::<NodeId>);
+        graph.return_(start, Some(crate::son::NodeId(99)));
 
-        let error = compile_graphs(vec![("void_return".to_owned(), graph)], 2).unwrap_err();
+        let error = compile_graphs(vec![("invalid_reference".to_owned(), graph)], 2).unwrap_err();
         assert_eq!(
             error,
-            ParallelCompileError::Compile {
+            ParallelCompileError::Placement {
                 index: 0,
-                name: "void_return".to_owned(),
-                source: CompileError::Unsupported {
-                    node: NodeId(1),
-                    reason: UnsupportedReason::ReturnWithoutValue,
-                },
+                name: "invalid_reference".to_owned(),
+                source: PlacementError::GraphValidation(
+                    crate::son::ValidationError::MissingInput {
+                        node: crate::son::NodeId(1),
+                        channel: crate::son::InputChannel::Data,
+                        index: 0,
+                        input: crate::son::NodeId(99),
+                    },
+                ),
             }
         );
     }

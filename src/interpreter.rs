@@ -162,7 +162,13 @@ pub fn interpret(graph: &Graph, arguments: &[i64]) -> Result<i64, InterpretError
                     CompareOp::Ge => left >= right,
                 })
             }
-            NodeKind::Phi => unreachable!("unsupported Phi nodes are rejected before evaluation"),
+            NodeKind::Phi
+            | NodeKind::Call(_)
+            | NodeKind::If
+            | NodeKind::Projection(_)
+            | NodeKind::Region => {
+                unreachable!("unsupported control-flow nodes are rejected before evaluation")
+            }
             NodeKind::Return => return value_of(id, node.data[0], &values),
         };
         values.insert(id, value);
@@ -201,8 +207,12 @@ fn validate_supported(graph: &Graph) -> Result<(), InterpretError> {
             return Err(unsupported(id, UnsupportedReason::CodeAfterReturn));
         }
         match node.kind {
-            NodeKind::Phi => {
-                return Err(unsupported(id, UnsupportedReason::NodeKind(NodeKind::Phi)));
+            NodeKind::Phi
+            | NodeKind::Call(_)
+            | NodeKind::If
+            | NodeKind::Projection(_)
+            | NodeKind::Region => {
+                return Err(unsupported(id, UnsupportedReason::NodeKind(node.kind)));
             }
             NodeKind::Return => {
                 if node.data.is_empty() {

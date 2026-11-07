@@ -1,4 +1,4 @@
-use crate::son::Graph;
+use crate::son::{Graph, NodeKind};
 use crate::{son_optimize, value_numbering};
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
@@ -20,6 +20,15 @@ impl OptimizeStats {
 }
 
 pub fn optimize(graph: &mut Graph) -> OptimizeStats {
+    if graph.iter().any(|(_, node)| {
+        matches!(
+            node.kind,
+            NodeKind::If | NodeKind::Projection(_) | NodeKind::Region
+        )
+    }) {
+        return OptimizeStats::default();
+    }
+
     let mut total = OptimizeStats::default();
 
     loop {

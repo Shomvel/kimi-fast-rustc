@@ -100,6 +100,13 @@ impl NativeCache {
         hash_field(&mut hasher, backend_version.as_bytes());
         hash_field(&mut hasher, symbol.as_bytes());
         put_u64_hash(&mut hasher, graph.len() as u64);
+        put_u64_hash(&mut hasher, graph.functions.len() as u64);
+        for function in &graph.functions {
+            hash_field(&mut hasher, function.name.as_bytes());
+            put_u32_hash(&mut hasher, function.start.0);
+            put_u32_hash(&mut hasher, function.return_node.0);
+            put_u64_hash(&mut hasher, function.parameter_count as u64);
+        }
 
         let slot_count = u64::from(graph.clone().start().0);
         put_u64_hash(&mut hasher, slot_count);
@@ -222,6 +229,13 @@ fn hash_node_kind(hasher: &mut Sha256, kind: NodeKind) {
         }
         NodeKind::Phi => hasher.update(&[7]),
         NodeKind::Return => hasher.update(&[8]),
+        NodeKind::Call(target) => {
+            hasher.update(&[12]);
+            put_u64_hash(hasher, target as u64);
+        }
+        NodeKind::If => hasher.update(&[9]),
+        NodeKind::Projection(index) => hasher.update(&[10, index]),
+        NodeKind::Region => hasher.update(&[11]),
     }
 }
 

@@ -67,3 +67,31 @@ The complete three-arm run finished successfully in `/root/kimi-fast-rustc-bench
 Both candidate size and median runtime ratios are at or below 1.0 for both projects. The ripgrep candidate is about 87.42% smaller with a 6.87% shorter median runtime; the cargo candidate is about 41.68% smaller with a 1.17% shorter median runtime. The candidate's ThinLTO builds are slower than stock builds, while controlled compile time is effectively unchanged. The ripgrep controlled runtime ratio of 1.007 is short-process sampling variation, not a code-generation difference.
 
 These results satisfy the requested artifact-size and runtime parity criterion for the LLVM reference track on the recorded host and workloads. They do not imply that the experimental native backend can compile complete ripgrep or cargo workspaces.
+
+## Follow-up optimization evidence
+
+A separate locked cold-build sweep compared one, two, and four Cargo jobs. Ripgrep took 54.210/28.785/15.353 seconds, while cargo took 497.406/280.870/142.251 seconds. Four jobs gave 3.53x and 3.50x speedups over one job with identical output hashes; maximum single-process RSS increased about 0.9% for ripgrep and 12.3% for cargo. Controlled-wrapper overhead was approximately 0.8–1.0% in this comparison.
+
+ELF analysis found that most ripgrep size reduction came from removing DWARF and static symbols, while cargo's remaining file content was 77.76% `.text`. Ripgrep's remaining file content was 61.64% `.text`. Candidate load-segment alignment left only tens to hundreds of unused bytes, so further alignment tuning is not a meaningful optimization target. Code generation and LTO experiments are the useful next step.
+
+A CGU sweep produced the following cold-build data; runtime sampling is still pending and these partial data must not be used to claim parity:
+
+| Project | CGU | Compile wall | Binary bytes |
+|---|---:|---:|---:|
+| ripgrep | 1 | 28.117 s | 3,845,896 |
+| ripgrep | 4 | 23.494 s | 4,211,216 |
+| ripgrep | 8 | 24.032 s | 4,122,992 |
+
+CGU4 reduced compile time by about 16.4% but increased binary size by about 9.5%; CGU8 reduced compile time by about 14.5% and increased size by about 7.2%.
+
+Cargo showed a larger compile-time tradeoff: CGU1 took 327.366 seconds and produced 23,515,320 bytes; CGU4 took 200.736 seconds and produced 25,071,256 bytes; CGU8 took 234.017 seconds and produced 25,810,488 bytes. Thus CGU4 reduced compile time by 38.7% with 6.6% larger output, while CGU8 reduced compile time by 28.5% with 9.8% larger output. Maximum single-process RSS was 2,211,808/3,287,892/2,496,428 KiB respectively. Runtime sampling is still pending.
+
+## Native-only control flow and calls
+
+The active architecture is now native-only; the LLVM experiments above are historical evidence and are not a supported fallback.
+
+`if` expressions are lowered to `If`, control projections, regions, and Phi nodes, then to x86 labels and conditional jumps. Nested `if` tests pass on both the reference evaluator and real x86_64 execution. A real `if 2 > 1` executable returned 42 on `yicloud-dev`. Standard `fn main() {}` and `return;` produce exit status zero.
+
+Zero-argument function calls preserve function metadata, use separate machine functions, save caller-saved registers, and emit `R_X86_64_PLT32` relocations. A real `main -> answer` call returned 42 on `yicloud-dev`, and `readelf -W -r` verified the `answer - 4` relocation. More complex parameter ABIs are rejected explicitly.
+
+The expanded test suite and Clippy pass with Rust 1.99.1. These results demonstrate a working native subset, not complete Rust language or whole-workspace support.
