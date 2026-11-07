@@ -319,7 +319,7 @@ impl AuditLog {
     }
 }
 
-fn append_json_line(path: &Path, line: &[u8]) -> io::Result<()> {
+pub(crate) fn append_json_line(path: &Path, line: &[u8]) -> io::Result<()> {
     let mut options = OpenOptions::new();
     options.create(true).append(true);
     #[cfg(unix)]

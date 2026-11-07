@@ -2,12 +2,12 @@ use std::env;
 use std::error::Error as StdError;
 use std::ffi::OsString;
 use std::fmt;
-use std::fs::{self, OpenOptions};
-use std::io::{self, Write};
+use std::fs;
+use std::io;
 use std::path::{Path, PathBuf};
 use std::process::{Command, ExitStatus, Stdio};
 
-use crate::audit::AuditRecord;
+use crate::audit::{AuditLog, AuditRecord, append_json_line};
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Emit {
@@ -172,36 +172,23 @@ impl RustcInvocation {
     }
 
     fn append_audit(&self, path: &Path, backend: &str, profile: &str) -> io::Result<()> {
+        let record = AuditRecord::new(&self.rustc, &self.args, backend, profile);
+        if path
+            .extension()
+            .is_none_or(|extension| extension != "jsonl")
+        {
+            return AuditLog::new(path).append(&record).map(|_| ());
+        }
+
         if let Some(parent) = path
             .parent()
             .filter(|parent| !parent.as_os_str().is_empty())
         {
             fs::create_dir_all(parent)?;
         }
-        let record = AuditRecord::new(&self.rustc, &self.args, backend, profile);
         let mut line = record.to_json_line();
         line.push('\n');
-        let mut options = OpenOptions::new();
-        options.create(true).append(true);
-        #[cfg(unix)]
-        {
-            use std::os::unix::fs::OpenOptionsExt;
-            options.mode(0o600);
-        }
-        let mut file = options.open(path)?;
-        loop {
-            match file.write(line.as_bytes()) {
-                Ok(written) if written == line.len() => return Ok(()),
-                Ok(_) => {
-                    return Err(io::Error::new(
-                        io::ErrorKind::WriteZero,
-                        "partial audit append; refusing a second write that could interleave records",
-                    ));
-                }
-                Err(error) if error.kind() == io::ErrorKind::Interrupted => continue,
-                Err(error) => return Err(error),
-            }
-        }
+        append_json_line(path, line.as_bytes())
     }
 }
 

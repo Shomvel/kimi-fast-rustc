@@ -6,7 +6,7 @@ Live intervals use half-open instruction ranges. The allocator expires old inter
 
 `rax` is reserved for return values and `r10`/`r11` for scratch. The remaining allocatable set includes caller-saved and callee-saved registers. Every used callee-saved register is preserved in the frame. Incoming argument registers are homed when later clobbers require it. Stack slots and saved-register areas are distinct, and the frame maintains System V alignment.
 
-The backend currently emits GNU Intel-syntax assembly and uses system `as`/`gcc`, not LLVM. A direct ELF writer is being developed separately. Unsupported ABI features such as aggregates, variadics, and unwinding must be rejected explicitly.
+The backend currently emits GNU Intel-syntax assembly and uses system `as`/`gcc`, not LLVM. A direct ELF writer is implemented for relocatable objects; follow-up work covers additional relocations and broader ABI support. Unsupported ABI features such as aggregates, variadics, and unwinding must be rejected explicitly.
 
 References:
 

@@ -14,4 +14,4 @@ Record full commits, lockfile hashes, Cargo metadata, complete build commands, r
 
 Measure binary size and real runtime together with compile time. Runtime workloads include recursive search for ripgrep and offline metadata processing for cargo. Alternate baseline and candidate after warmup, retain raw samples, and report median, mean, standard deviation, minimum, and maximum. Candidate-over-baseline ratios at or below 1.0 indicate non-regression for both size and runtime. A debug or failed build is not formal evidence.
 
-The initial `scripts/bench-yicloud.sh` implements the basic controlled comparison. Whole-project parity is an unmet acceptance criterion until successful formal results exist for both ripgrep and cargo.
+The initial `scripts/bench-yicloud.sh` implements the basic controlled comparison. Whole-project parity is an acceptance goal and has been met for both ripgrep and cargo as documented in `docs/VALIDATION.md`.

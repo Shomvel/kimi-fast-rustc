@@ -20,7 +20,7 @@ cargo clippy --all-targets -- -D warnings
 Direct compilation:
 
 ```sh
-./target/release/kfrc rustc hello.rs -O -o hello
+./target/release/kfrc rustc examples/hello.rs -O -o hello
 ```
 
 Cargo wrapper:
@@ -62,12 +62,16 @@ Emit an ELF relocatable object directly, without an external assembler:
 ./target/release/kfrc native examples/native_main.kfr --emit=obj=native-main.o
 ```
 
-The direct object path uses the in-tree x86_64 encoder and ELF writer. It currently supports self-contained straight-line functions only; external references require future relocation support.
+The direct object path uses the in-tree x86_64 encoder and ELF writer. External references use explicit relocation records and remain limited to the implemented ABI subset. Set `KFRC_NATIVE_CACHE` to a dedicated directory to enable content-addressed object caching; graph, target, ABI, and backend-version changes create distinct entries. Caching is disabled by default.
 
 Compile multiple independent inputs with bounded parallelism:
 
 ```sh
-./target/release/kfrc native-batch --jobs 4 --out-dir objects first.kfr second.kfr
+./target/release/kfrc native-batch --jobs 4 --out-dir objects examples/native_main.kfr examples/native_second.kfr
+# Add --pipeline to overlap parsing, graph optimization, and code generation.
+./target/release/kfrc native-batch --pipeline --jobs 4 --out-dir objects examples/native_main.kfr examples/native_second.kfr
+# Inspect or safely clear a dedicated native object cache.
+./target/release/kfrc cache --root .kfrc-cache stats --json
 ```
 
 The CLI performs sea-of-nodes optimization, dependency placement, linear-scan allocation, and native code generation. Executables use system `as` and `gcc`, never rustc, LLVM, or Cranelift. The subset requires an explicit `return` and supports `i64` parameters, immutable `let` bindings, arithmetic, and comparisons. Its `fn main() -> i64` convention is intentionally a compiler test format, not a claim that standard Rust accepts this `main` signature.
@@ -93,6 +97,8 @@ export CARGO_NET_OFFLINE=true
 ```
 
 Formal comparisons must use the same rustc, sysroot, source commit, lockfile, target, features, dependency cache, and CPU budget. Runtime and size ratios are candidate divided by baseline; a ratio at or below 1.0 is non-regression. Native results must never be presented as LLVM results or vice versa.
+
+The completed `20261107T155940Z` run met both criteria for the LLVM candidate: ripgrep's size/runtime ratios were 0.126/0.931, and cargo's were 0.583/0.988. See `docs/VALIDATION.md` for all three arms, compile-time costs, native execution evidence, and the distinction between full-project LLVM results and the native subset.
 
 ## Native design
 

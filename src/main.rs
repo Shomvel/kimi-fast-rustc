@@ -1,9 +1,19 @@
 use std::env;
 use std::ffi::OsString;
+use std::fs;
 use std::path::{Path, PathBuf};
 
+use kimi_fast_rustc::cache_admin::{CacheAdmin, OutputFormat};
 use kimi_fast_rustc::llvm::{LlvmConfig, OptLevel, TargetCpu};
+use kimi_fast_rustc::native_batch::BatchMode;
 use kimi_fast_rustc::rustc::{self, RustcInvocation};
+use kimi_fast_rustc::tuning_runner::{self, TuningRunner};
+
+const CACHE_USAGE: &str =
+    "usage: kfrc cache --root DIR stats [--json]\n       kfrc cache --root DIR clear [--json]";
+const TUNE_USAGE: &str = "usage: kfrc tune <crate-dir|Cargo.toml> --out-dir DIR [--candidates N] [--runs N] [--workload PROGRAM [ARG...]]";
+const NATIVE_BATCH_USAGE: &str =
+    "usage: kfrc native-batch --jobs N --out-dir DIR [--pipeline] <input.kfr>...";
 
 fn main() {
     match run() {
@@ -28,9 +38,15 @@ fn run() -> Result<i32, String> {
     }
     if first == "--help" || first == "-h" {
         println!(
-            "usage: kfrc <rustc-path> [rustc arguments]\n       kfrc rustc [rustc arguments]\n       kfrc native <input.rs> -o <output> [--emit=asm | --emit=obj | -S]\n       kfrc native <input.rs> [--emit=asm=<path> | --emit=obj=<path>]\n       kfrc native-batch --jobs N --out-dir DIR <input.kfr>...\n       kfrc fingerprint"
+            "usage: kfrc <rustc-path> [rustc arguments]\n       kfrc rustc [rustc arguments]\n       kfrc native <input.rs> -o <output> [--emit=asm | --emit=obj | -S]\n       kfrc native <input.rs> [--emit=asm=<path> | --emit=obj=<path>]\n       kfrc native-batch --jobs N --out-dir DIR [--pipeline] <input.kfr>...\n       kfrc tune <crate-dir|Cargo.toml> --out-dir DIR [--candidates N] [--runs N] [--workload PROGRAM [ARG...]]\n       kfrc cache --root DIR stats [--json]\n       kfrc cache --root DIR clear [--json]\n       kfrc fingerprint"
         );
         return Ok(0);
+    }
+    if first == "tune" {
+        return run_tune(args);
+    }
+    if first == "cache" {
+        return run_cache(args);
     }
     if first == "native" {
         kimi_fast_rustc::native_cli::run_with_args(args).map_err(|error| error.to_string())?;
@@ -73,11 +89,365 @@ fn run() -> Result<i32, String> {
     run_llvm_invocation(invocation, &WrapperOptions::from_env())
 }
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+enum CacheOperation {
+    Stats,
+    Clear,
+}
+
+#[derive(Debug)]
+struct CacheOptions {
+    root: PathBuf,
+    operation: CacheOperation,
+    format: OutputFormat,
+}
+
+fn run_cache<I, S>(args: I) -> Result<i32, String>
+where
+    I: IntoIterator<Item = S>,
+    S: Into<OsString>,
+{
+    let args = args.into_iter().map(Into::into).collect::<Vec<OsString>>();
+    if args.len() == 1 && (args[0] == "--help" || args[0] == "-h") {
+        println!("{CACHE_USAGE}");
+        return Ok(0);
+    }
+    let options = parse_cache_args(args)?;
+    println!("{}", execute_cache(&options)?);
+    Ok(0)
+}
+
+fn parse_cache_args<I, S>(args: I) -> Result<CacheOptions, String>
+where
+    I: IntoIterator<Item = S>,
+    S: Into<OsString>,
+{
+    let mut args = args.into_iter().map(Into::into);
+    let mut root = None;
+    let mut operation = None;
+    let mut json = false;
+
+    while let Some(argument) = args.next() {
+        if argument == "--root" {
+            if root.is_some() {
+                return Err("--root was provided more than once".to_owned());
+            }
+            let path = args
+                .next()
+                .ok_or_else(|| "missing path after --root".to_owned())?;
+            if path.is_empty() {
+                return Err("cache root after --root must not be empty".to_owned());
+            }
+            root = Some(PathBuf::from(path));
+        } else if argument == "--json" {
+            if json {
+                return Err("--json was provided more than once".to_owned());
+            }
+            json = true;
+        } else if argument == "stats" || argument == "clear" {
+            if operation.is_some() {
+                return Err("cache accepts exactly one operation: stats or clear".to_owned());
+            }
+            operation = Some(if argument == "stats" {
+                CacheOperation::Stats
+            } else {
+                CacheOperation::Clear
+            });
+        } else if argument.to_string_lossy().starts_with('-') {
+            return Err(format!("unknown cache option {argument:?}"));
+        } else {
+            return Err(format!(
+                "unknown cache operation {argument:?}; expected stats or clear"
+            ));
+        }
+    }
+
+    Ok(CacheOptions {
+        root: root.ok_or_else(|| "missing --root DIR".to_owned())?,
+        operation: operation
+            .ok_or_else(|| "cache requires an operation: stats or clear".to_owned())?,
+        format: if json {
+            OutputFormat::Json
+        } else {
+            OutputFormat::Human
+        },
+    })
+}
+
+fn execute_cache(options: &CacheOptions) -> Result<String, String> {
+    let cache = CacheAdmin::new(&options.root);
+    let (operation, result) = match options.operation {
+        CacheOperation::Stats => (
+            "stats",
+            cache.stats().map(|stats| stats.format(options.format)),
+        ),
+        CacheOperation::Clear => (
+            "clear",
+            cache.clear().map(|report| report.format(options.format)),
+        ),
+    };
+    result.map_err(|error| {
+        format!(
+            "cache {operation} failed for {}: {error}",
+            options.root.display()
+        )
+    })
+}
+
+#[derive(Debug)]
+struct TuneOptions {
+    input: PathBuf,
+    candidates: usize,
+    runs: usize,
+    output_directory: PathBuf,
+    workload_program: Option<PathBuf>,
+    workload_args: Vec<String>,
+}
+
+fn run_tune<I, S>(args: I) -> Result<i32, String>
+where
+    I: IntoIterator<Item = S>,
+    S: Into<OsString>,
+{
+    let args = args.into_iter().map(Into::into).collect::<Vec<OsString>>();
+    if args.len() == 1 && (args[0] == "--help" || args[0] == "-h") {
+        println!("{TUNE_USAGE}");
+        println!(
+            "defaults: --candidates {} --runs {}; --workload must be the final tune option",
+            tuning_runner::DEFAULT_MAX_CANDIDATES,
+            tuning_runner::MIN_RUNTIME_SAMPLES
+        );
+        println!(
+            "the workload defaults to the built binary; {{artifact}} in workload arguments expands to each binary"
+        );
+        return Ok(0);
+    }
+    let options = parse_tune_args(args)?;
+    execute_tune(&options)
+}
+
+fn parse_tune_args<I, S>(args: I) -> Result<TuneOptions, String>
+where
+    I: IntoIterator<Item = S>,
+    S: Into<OsString>,
+{
+    let mut args = args.into_iter().map(Into::into);
+    let mut input = None;
+    let mut candidates = None;
+    let mut runs = None;
+    let mut output_directory = None;
+    let mut workload_program = None;
+    let mut workload_args = Vec::new();
+
+    while let Some(argument) = args.next() {
+        if argument == "--candidates" {
+            if candidates.is_some() {
+                return Err("--candidates was provided more than once".to_owned());
+            }
+            let value = args
+                .next()
+                .ok_or_else(|| "missing value after --candidates".to_owned())?;
+            let value = value
+                .to_str()
+                .and_then(|value| value.parse::<usize>().ok())
+                .filter(|value| *value > 0)
+                .ok_or_else(|| {
+                    format!("invalid --candidates value {value:?}; expected a positive integer")
+                })?;
+            candidates = Some(value);
+        } else if argument == "--runs" {
+            if runs.is_some() {
+                return Err("--runs was provided more than once".to_owned());
+            }
+            let value = args
+                .next()
+                .ok_or_else(|| "missing value after --runs".to_owned())?;
+            let value = value
+                .to_str()
+                .and_then(|value| value.parse::<usize>().ok())
+                .ok_or_else(|| format!("invalid --runs value {value:?}; expected an integer"))?;
+            if value < tuning_runner::MIN_RUNTIME_SAMPLES {
+                return Err(format!(
+                    "--runs must be at least {}",
+                    tuning_runner::MIN_RUNTIME_SAMPLES
+                ));
+            }
+            runs = Some(value);
+        } else if argument == "--out-dir" {
+            if output_directory.is_some() {
+                return Err("--out-dir was provided more than once".to_owned());
+            }
+            let path = args
+                .next()
+                .ok_or_else(|| "missing path after --out-dir".to_owned())?;
+            if path.is_empty() {
+                return Err("output directory after --out-dir must not be empty".to_owned());
+            }
+            output_directory = Some(PathBuf::from(path));
+        } else if argument == "--workload" {
+            let mut workload = args.collect::<Vec<_>>();
+            if workload.is_empty() {
+                return Err(
+                    "--workload requires a program and may be followed by arguments".to_owned(),
+                );
+            }
+            let program = workload.remove(0);
+            if program.is_empty() {
+                return Err("workload program must not be empty".to_owned());
+            }
+            if program.to_str().is_none() {
+                return Err("workload program path must be valid UTF-8".to_owned());
+            }
+            workload_args = workload
+                .into_iter()
+                .map(|argument| {
+                    argument.into_string().map_err(|argument| {
+                        format!("workload argument must be valid UTF-8: {argument:?}")
+                    })
+                })
+                .collect::<Result<Vec<_>, _>>()?;
+            workload_program = Some(PathBuf::from(program));
+            break;
+        } else if argument.to_string_lossy().starts_with('-') {
+            return Err(format!("unknown tune option {argument:?}"));
+        } else {
+            if argument.is_empty() {
+                return Err("crate input path must not be empty".to_owned());
+            }
+            if input.is_some() {
+                return Err("tune accepts exactly one crate input".to_owned());
+            }
+            input = Some(PathBuf::from(argument));
+        }
+    }
+
+    Ok(TuneOptions {
+        input: input.ok_or_else(|| "tune requires a crate directory or Cargo.toml".to_owned())?,
+        candidates: candidates.unwrap_or(tuning_runner::DEFAULT_MAX_CANDIDATES),
+        runs: runs.unwrap_or(tuning_runner::MIN_RUNTIME_SAMPLES),
+        output_directory: output_directory.ok_or_else(|| "missing --out-dir DIR".to_owned())?,
+        workload_program,
+        workload_args,
+    })
+}
+
+fn execute_tune(options: &TuneOptions) -> Result<i32, String> {
+    let (manifest_path, artifact_relative_path) = resolve_tune_input(&options.input)?;
+    let mut runner = TuningRunner::new(
+        manifest_path,
+        &options.output_directory,
+        artifact_relative_path,
+    );
+    runner.max_candidates = options.candidates;
+    runner.runs = options.runs;
+    runner.workload_program = options.workload_program.clone();
+    runner.benchmark_args = options.workload_args.clone();
+
+    let report = runner.run_default().map_err(|error| error.to_string())?;
+    let json = report.to_json();
+    let report_path = report.run_dir.join("report.json");
+    fs::write(&report_path, format!("{json}\n")).map_err(|error| {
+        format!(
+            "could not write tuning report {}: {error}",
+            report_path.display()
+        )
+    })?;
+    println!("{json}");
+
+    if report.has_measurement_failures() {
+        eprintln!(
+            "kfrc: one or more tuning measurements failed; evidence: {}",
+            report_path.display()
+        );
+        Ok(1)
+    } else {
+        Ok(0)
+    }
+}
+
+fn resolve_tune_input(input: &Path) -> Result<(PathBuf, PathBuf), String> {
+    let manifest_path = if input.is_dir() {
+        input.join("Cargo.toml")
+    } else {
+        input.to_path_buf()
+    };
+    if manifest_path
+        .file_name()
+        .is_none_or(|name| name != "Cargo.toml")
+    {
+        return Err(format!(
+            "tune input must be a crate directory or Cargo.toml: {}",
+            input.display()
+        ));
+    }
+    let manifest = fs::read_to_string(&manifest_path).map_err(|error| {
+        format!(
+            "could not read crate manifest {}: {error}",
+            manifest_path.display()
+        )
+    })?;
+    let binary_name = manifest_binary_name(&manifest).ok_or_else(|| {
+        format!(
+            "could not determine a binary name from [package] or [[bin]] in {}",
+            manifest_path.display()
+        )
+    })?;
+    if binary_name == "." || binary_name == ".." || binary_name.contains(['/', '\\']) {
+        return Err("crate binary name must not contain path components".to_owned());
+    }
+    let artifact_name = format!("{binary_name}{}", env::consts::EXE_SUFFIX);
+    Ok((manifest_path, PathBuf::from("release").join(artifact_name)))
+}
+
+fn manifest_binary_name(manifest: &str) -> Option<String> {
+    let mut section = "";
+    let mut package_name = None;
+    let mut binary_name = None;
+
+    for line in manifest.lines() {
+        let line = line.split('#').next().unwrap_or_default().trim();
+        if line.starts_with("[[") && line.ends_with("]]") {
+            section = line[2..line.len() - 2].trim();
+            continue;
+        }
+        if line.starts_with('[') && line.ends_with(']') {
+            section = line[1..line.len() - 1].trim();
+            continue;
+        }
+        let Some((key, value)) = line.split_once('=') else {
+            continue;
+        };
+        if key.trim() != "name" {
+            continue;
+        }
+        let value = value.trim();
+        let name = if value.len() >= 2
+            && ((value.starts_with('"') && value.ends_with('"'))
+                || (value.starts_with('\'') && value.ends_with('\'')))
+        {
+            &value[1..value.len() - 1]
+        } else {
+            continue;
+        };
+        if name.is_empty() {
+            continue;
+        }
+        match section {
+            "package" if package_name.is_none() => package_name = Some(name.to_owned()),
+            "bin" if binary_name.is_none() => binary_name = Some(name.to_owned()),
+            _ => {}
+        }
+    }
+
+    binary_name.or(package_name)
+}
+
 #[derive(Debug)]
 struct NativeBatchOptions {
     jobs: usize,
     output_directory: PathBuf,
     inputs: Vec<PathBuf>,
+    mode: BatchMode,
 }
 
 fn run_native_batch<I, S>(args: I) -> Result<Vec<PathBuf>, String>
@@ -85,11 +455,17 @@ where
     I: IntoIterator<Item = S>,
     S: Into<OsString>,
 {
+    let args = args.into_iter().map(Into::into).collect::<Vec<OsString>>();
+    if args.len() == 1 && (args[0] == "--help" || args[0] == "-h") {
+        println!("{NATIVE_BATCH_USAGE}");
+        return Ok(Vec::new());
+    }
     let options = parse_native_batch_args(args)?;
-    kimi_fast_rustc::native_batch::compile_batch(
+    kimi_fast_rustc::native_batch::compile_batch_with_mode(
         &options.inputs,
         &options.output_directory,
         options.jobs,
+        options.mode,
     )
     .map_err(|error| error.to_string())
 }
@@ -102,6 +478,7 @@ where
     let mut args = args.into_iter().map(Into::into);
     let mut jobs = None;
     let mut output_directory = None;
+    let mut pipeline = false;
     let mut inputs = Vec::new();
 
     while let Some(argument) = args.next() {
@@ -133,6 +510,11 @@ where
                 return Err("output directory after --out-dir must not be empty".to_owned());
             }
             output_directory = Some(PathBuf::from(path));
+        } else if argument == "--pipeline" {
+            if pipeline {
+                return Err("--pipeline was provided more than once".to_owned());
+            }
+            pipeline = true;
         } else if argument.to_string_lossy().starts_with('-') {
             return Err(format!("unknown native-batch option {argument:?}"));
         } else {
@@ -152,6 +534,11 @@ where
         jobs,
         output_directory,
         inputs,
+        mode: if pipeline {
+            BatchMode::Pipeline
+        } else {
+            BatchMode::Dag
+        },
     })
 }
 
@@ -364,6 +751,216 @@ mod tests {
     }
 
     #[test]
+    fn parses_cache_operations_and_output_formats() {
+        let stats = parse_cache_args(["--root", "cache", "stats"]).unwrap();
+        assert_eq!(stats.root, PathBuf::from("cache"));
+        assert_eq!(stats.operation, CacheOperation::Stats);
+        assert_eq!(stats.format, OutputFormat::Human);
+
+        let clear = parse_cache_args(["--root", "cache", "clear", "--json"]).unwrap();
+        assert_eq!(clear.operation, CacheOperation::Clear);
+        assert_eq!(clear.format, OutputFormat::Json);
+
+        assert!(CACHE_USAGE.contains("cache --root DIR stats [--json]"));
+        assert!(CACHE_USAGE.contains("cache --root DIR clear [--json]"));
+    }
+
+    #[test]
+    fn rejects_invalid_cache_arguments() {
+        let cases = [
+            (vec![], "missing --root"),
+            (vec!["stats"], "missing --root"),
+            (vec!["--root", "cache"], "requires an operation"),
+            (vec!["--root"], "missing path"),
+            (vec!["--root", "", "stats"], "must not be empty"),
+            (
+                vec!["--root", "first", "--root", "second", "stats"],
+                "more than once",
+            ),
+            (
+                vec!["--root", "cache", "stats", "clear"],
+                "exactly one operation",
+            ),
+            (
+                vec!["--root", "cache", "stats", "--json", "--json"],
+                "more than once",
+            ),
+            (
+                vec!["--root", "cache", "stats", "--unknown"],
+                "unknown cache option",
+            ),
+            (
+                vec!["--root", "cache", "unknown"],
+                "unknown cache operation",
+            ),
+        ];
+
+        for (args, expected) in cases {
+            let error = parse_cache_args(args).unwrap_err();
+            assert!(error.contains(expected), "{error}");
+        }
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn cache_commands_print_reports_and_clear_preserves_the_root() {
+        let temp = TestDirectory::new();
+        let root = temp.path.join("cache");
+        let prefix = root.join("aa");
+        fs::create_dir_all(&prefix).unwrap();
+        fs::write(prefix.join("corrupt.o"), b"corrupt").unwrap();
+
+        let stats = CacheOptions {
+            root: root.clone(),
+            operation: CacheOperation::Stats,
+            format: OutputFormat::Human,
+        };
+        let report = execute_cache(&stats).unwrap();
+        assert!(report.contains("Entries: 1"));
+        assert!(report.contains("Total size: 7 B (7 bytes)"));
+        assert!(report.contains("Corrupt entries: 1"));
+
+        let stats = CacheOptions {
+            format: OutputFormat::Json,
+            ..stats
+        };
+        assert_eq!(
+            execute_cache(&stats).unwrap(),
+            "{\"entries\":1,\"total_bytes\":7,\"corrupt_entries\":1}"
+        );
+
+        let clear = CacheOptions {
+            root: root.clone(),
+            operation: CacheOperation::Clear,
+            format: OutputFormat::Json,
+        };
+        assert_eq!(
+            execute_cache(&clear).unwrap(),
+            "{\"removed_files\":1,\"removed_directories\":1,\"removed_bytes\":7}"
+        );
+        assert!(root.is_dir());
+        assert_eq!(fs::read_dir(root).unwrap().count(), 0);
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn cache_commands_reject_dangerous_roots() {
+        let clear_root = CacheOptions {
+            root: PathBuf::from("/"),
+            operation: CacheOperation::Clear,
+            format: OutputFormat::Json,
+        };
+        let error = execute_cache(&clear_root).unwrap_err();
+        assert!(
+            error.contains("refusing to use a filesystem root"),
+            "{error}"
+        );
+
+        let temp = TestDirectory::new();
+        let file = temp.path.join("not-a-directory");
+        fs::write(&file, b"keep").unwrap();
+        let stats_file = CacheOptions {
+            root: file.clone(),
+            operation: CacheOperation::Stats,
+            format: OutputFormat::Human,
+        };
+        let error = execute_cache(&stats_file).unwrap_err();
+        assert!(error.contains("must be a directory"), "{error}");
+        assert_eq!(fs::read(file).unwrap(), b"keep");
+    }
+
+    #[test]
+    fn parses_tune_defaults_and_workload_command() {
+        let defaults = parse_tune_args(["small-crate", "--out-dir", "tuned"]).unwrap();
+        assert_eq!(defaults.input, PathBuf::from("small-crate"));
+        assert_eq!(defaults.output_directory, PathBuf::from("tuned"));
+        assert_eq!(defaults.candidates, tuning_runner::DEFAULT_MAX_CANDIDATES);
+        assert_eq!(defaults.runs, tuning_runner::MIN_RUNTIME_SAMPLES);
+        assert_eq!(defaults.workload_program, None);
+        assert!(defaults.workload_args.is_empty());
+
+        let options = parse_tune_args([
+            "--runs",
+            "4",
+            "--candidates",
+            "2",
+            "--out-dir",
+            "tuned",
+            "small-crate",
+            "--workload",
+            "/bin/sh",
+            "-c",
+            "exit 0",
+        ])
+        .unwrap();
+        assert_eq!(options.candidates, 2);
+        assert_eq!(options.runs, 4);
+        assert_eq!(options.workload_program, Some(PathBuf::from("/bin/sh")));
+        assert_eq!(options.workload_args, ["-c", "exit 0"]);
+    }
+
+    #[test]
+    fn rejects_missing_or_unsafe_tune_arguments() {
+        let cases = [
+            (vec![], "requires a crate"),
+            (vec!["small-crate"], "missing --out-dir"),
+            (vec!["--out-dir", "tuned"], "requires a crate"),
+            (
+                vec!["small-crate", "--out-dir", "tuned", "--runs", "2"],
+                "at least 3",
+            ),
+            (
+                vec!["small-crate", "--out-dir", "tuned", "--candidates", "0"],
+                "positive integer",
+            ),
+            (
+                vec!["small-crate", "--out-dir", "tuned", "--runs", "many"],
+                "expected an integer",
+            ),
+            (
+                vec!["small-crate", "--out-dir", "tuned", "--out-dir", "other"],
+                "more than once",
+            ),
+            (
+                vec!["small-crate", "--out-dir", "tuned", "--rustflags"],
+                "unknown tune option",
+            ),
+            (
+                vec!["first", "second", "--out-dir", "tuned"],
+                "exactly one crate input",
+            ),
+            (
+                vec!["small-crate", "--out-dir", "tuned", "--workload"],
+                "requires a program",
+            ),
+            (vec!["small-crate", "--out-dir", ""], "must not be empty"),
+        ];
+
+        for (args, expected) in cases {
+            let error = parse_tune_args(args).unwrap_err();
+            assert!(error.contains(expected), "{error}");
+        }
+    }
+
+    #[test]
+    fn determines_small_crate_binary_names_from_manifests() {
+        assert_eq!(
+            manifest_binary_name(
+                "[package]\nname = \"tiny-demo\" # comment\nversion = \"0.1.0\"\n"
+            ),
+            Some("tiny-demo".to_owned())
+        );
+        assert_eq!(
+            manifest_binary_name(
+                "[package]\nname = 'package-name'\n\n[[bin]]\nname = \"actual-demo\"\n"
+            ),
+            Some("actual-demo".to_owned())
+        );
+        assert_eq!(manifest_binary_name("[package]\nname = \"\"\n"), None);
+        assert_eq!(manifest_binary_name("[package]\nname = 42\n"), None);
+    }
+
+    #[test]
     fn parses_native_batch_options_and_preserves_input_order() {
         let options = parse_native_batch_args([
             "first.kfr",
@@ -377,10 +974,42 @@ mod tests {
 
         assert_eq!(options.jobs, 3);
         assert_eq!(options.output_directory, PathBuf::from("objects"));
+        assert_eq!(options.mode, BatchMode::Dag);
         assert_eq!(
             options.inputs,
             [PathBuf::from("first.kfr"), PathBuf::from("second.kfr")]
         );
+
+        let options = parse_native_batch_args([
+            "--pipeline",
+            "first.kfr",
+            "--out-dir",
+            "objects",
+            "second.kfr",
+            "--jobs",
+            "3",
+        ])
+        .unwrap();
+        assert_eq!(options.mode, BatchMode::Pipeline);
+        assert_eq!(
+            options.inputs,
+            [PathBuf::from("first.kfr"), PathBuf::from("second.kfr")]
+        );
+    }
+
+    #[test]
+    fn native_batch_help_succeeds_only_as_a_standalone_argument() {
+        for help in ["--help", "-h"] {
+            assert_eq!(run_native_batch([help]), Ok(Vec::new()));
+
+            let error = run_native_batch([help, "input.kfr"]).unwrap_err();
+            assert_eq!(error, format!("unknown native-batch option {help:?}"));
+        }
+
+        assert!(NATIVE_BATCH_USAGE.contains("--jobs N"));
+        assert!(NATIVE_BATCH_USAGE.contains("--out-dir DIR"));
+        assert!(NATIVE_BATCH_USAGE.contains("[--pipeline]"));
+        assert!(NATIVE_BATCH_USAGE.contains("<input.kfr>..."));
     }
 
     #[test]
@@ -415,6 +1044,18 @@ mod tests {
                     "input.kfr",
                 ],
                 "more than once",
+            ),
+            (
+                vec![
+                    "--pipeline",
+                    "--jobs",
+                    "2",
+                    "--pipeline",
+                    "--out-dir",
+                    "objects",
+                    "input.kfr",
+                ],
+                "--pipeline was provided more than once",
             ),
             (
                 vec!["--jobs", "2", "--out-dir", "objects", "--unknown"],
@@ -559,6 +1200,59 @@ mod tests {
 
     #[cfg(unix)]
     #[test]
+    fn wrapper_audit_directory_separates_crates_in_warn_and_strict_modes() {
+        let rustc = FakeRustc::new(0);
+        let audit = rustc.directory.path.join("audit-directory");
+        fs::create_dir(&audit).unwrap();
+
+        for (crate_name, strict) in [("warn_crate", false), ("strict_crate", true)] {
+            let args = vec![
+                OsString::from(format!("--crate-name={crate_name}")),
+                OsString::from("input.rs"),
+            ];
+            assert_eq!(
+                rustc.run(args.clone(), "controlled", Some(audit.clone()), strict),
+                Ok(0)
+            );
+            assert_eq!(rustc.args(), args);
+            assert_audit(
+                &audit.join(format!("crate-{crate_name}.jsonl")),
+                &rustc.rustc,
+                &args,
+                "controlled",
+            );
+        }
+
+        assert_eq!(fs::read_dir(audit).unwrap().count(), 2);
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn wrapper_audit_directory_preserves_non_utf8_crate_names_and_arguments() {
+        let rustc = FakeRustc::new(0);
+        let args = vec![
+            OsString::from("--crate-name"),
+            OsString::from_vec(vec![b'n', b'o', b'n', b'_', b'u', b't', b'f', b'8', 0xff]),
+            OsString::from_vec(vec![b'a', b'r', b'g', 0x80, 0xff]),
+        ];
+        let audit = rustc.directory.path.join("non-utf8-directory");
+        fs::create_dir(&audit).unwrap();
+
+        assert_eq!(
+            rustc.run(args.clone(), "controlled", Some(audit.clone()), true),
+            Ok(0)
+        );
+
+        assert_eq!(rustc.args(), args);
+        let audit = audit.join("crate-non_utf8_ff.jsonl");
+        assert_audit(&audit, &rustc.rustc, &args, "controlled");
+        let json = fs::read_to_string(audit).unwrap();
+        assert!(json.contains("{\"encoding\":\"hex\",\"value\":\"6e6f6e5f75746638ff\"}"));
+        assert!(json.contains("{\"encoding\":\"hex\",\"value\":\"61726780ff\"}"));
+    }
+
+    #[cfg(unix)]
+    #[test]
     fn wrapper_audit_preserves_non_utf8_arguments() {
         let rustc = FakeRustc::new(0);
         let args = vec![
@@ -583,7 +1277,7 @@ mod tests {
     fn audit_failure_warns_but_preserves_rustc_exit_status_and_arguments() {
         let rustc = FakeRustc::new(37);
         let args = strings(&["--crate-name=warning", "input.rs"]);
-        let audit = rustc.directory.path.join("audit-is-a-directory");
+        let audit = rustc.directory.path.join("audit-is-a-directory.jsonl");
         fs::create_dir(&audit).unwrap();
 
         assert_eq!(
@@ -597,7 +1291,7 @@ mod tests {
     #[test]
     fn strict_audit_failure_is_explicit_and_does_not_start_rustc() {
         let rustc = FakeRustc::new(0);
-        let audit = rustc.directory.path.join("audit-is-a-directory");
+        let audit = rustc.directory.path.join("audit-is-a-directory.jsonl");
         fs::create_dir(&audit).unwrap();
 
         let error = rustc

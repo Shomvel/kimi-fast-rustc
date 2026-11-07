@@ -135,6 +135,11 @@ where
     I: IntoIterator<Item = S>,
     S: Into<OsString>,
 {
+    let args = args.into_iter().map(Into::into).collect::<Vec<_>>();
+    if args.len() == 1 && (args[0] == "--help" || args[0] == "-h") {
+        println!("{USAGE}");
+        return Ok(PathBuf::new());
+    }
     let options = parse_args(args)?;
     run_with_driver(&options, &NativeDriver::new())
 }
@@ -444,6 +449,26 @@ mod tests {
             let options = parse_args(arguments).unwrap();
             assert_eq!(options.output, Path::new("program.o"));
             assert_eq!(options.emit, NativeEmitKind::Object);
+        }
+    }
+
+    #[test]
+    fn help_succeeds_only_without_additional_arguments() {
+        assert_eq!(
+            USAGE,
+            "usage: kfrc native <input> -o <output> [--emit=asm | --emit=obj | -S]\n       kfrc native <input> [--emit=asm=<path> | --emit=obj=<path>]"
+        );
+
+        for help in ["--help", "-h"] {
+            assert_eq!(run_with_args(strings(&[help])).unwrap(), PathBuf::new());
+
+            for arguments in [strings(&[help, "input.rs"]), strings(&["input.rs", help])] {
+                let error = run_with_args(arguments).unwrap_err();
+                assert!(
+                    error.to_string().contains("unknown native option"),
+                    "unexpected error: {error}"
+                );
+            }
         }
     }
 

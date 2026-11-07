@@ -6,11 +6,23 @@ Formal validation uses `yicloud-dev`, Linux x86_64, four available CPUs, and the
 
 ## Confirmed native correctness
 
-On `yicloud-dev`, the project test suite and Clippy passed: 235 tests, zero failures. The native executable path compiled `examples/native_main.kfr` through sea-of-nodes optimization, linear-scan allocation, GNU assembly, and system `as`/`gcc`; the resulting x86_64 executable returned 42.
+On `yicloud-dev`, the project test suite and Clippy passed: 322 tests, zero failures. The expanded final source passed 381 tests and Clippy with Rust 1.99.1. A separate fresh GitHub clone of the initial `56ae36c31a13513e82fa1209b88cf71d488b4b19` checkpoint also passed all 322 tests and Clippy with Rust 1.99.1. The native executable path compiled `examples/native_main.kfr` through sea-of-nodes optimization, linear-scan allocation, GNU assembly, and system `as`/`gcc`; the resulting x86_64 executable returned 42.
 
 The direct object path generated an ELF64 little-endian x86_64 relocatable object without an assembler. `readelf` confirmed a global `main` function symbol. A restricted-PATH run had no `as` available and still produced the object. Linking that object with GCC produced an executable that returned 42.
 
+A separate multi-function object used an `E8 rel32` call and an `R_X86_64_PLT32` relocation with addend `-4` from `main` to `native_answer`. `readelf -W -r` verified the relocation, and the linked x86_64 executable returned 42 on `yicloud-dev`.
+
 SoN/reference differential tests cover arithmetic, comparisons, wrapping boundaries, register and stack parameters, high register pressure, and spills. These tests do not replace the real x86_64 execution above.
+
+## Parallelism and caching evidence
+
+A 64-function, 512-operation-per-function workload on the 12-core Apple M3 Pro compared DAG and three-stage pipeline compilation over 12 interleaved samples. Median DAG times were 104.861 ms at one job and 47.969 ms at four jobs; pipeline times were 48.392 ms and 27.556 ms. Every one of the 3,328 objects, including warmups, was byte-identical across modes. These figures are specific to that synthetic workload and host.
+
+A separate 385-binding object-compilation measurement gave medians of 4.380 ms without cache, 9.275 ms for a cold cache, and 4.189 ms for a hot cache. All outputs were byte-identical. Cold-cache hashing currently costs more than it saves on this small input; hot-cache reuse is only modestly faster and must not be oversold.
+
+The audit directory path was independently rechecked with a real proc-macro and a dependent binary. Separate JSONL records showed no `lto` for the proc-macro and `lto=thin` plus `embed-bitcode=yes` for the final binary. Explicit single-file audit output also worked without `Is a directory` errors.
+
+The real PGO probe completed instrumentation, two training runs, nonempty profile merging, profile-use compilation, and final execution on both macOS and `yicloud-dev`, using matching `llvm-profdata` from Rust 1.99.1.
 
 ## Whole-project build prechecks
 
@@ -37,4 +49,21 @@ Baseline and controlled binaries have the same SHA-256, confirming exact control
 
 A larger 30-sample search over the Cargo source tree gave median runtimes of 11.157 ms baseline, 11.158 ms controlled, and 11.203 ms candidate. The controlled ratio was 1.00007 and the candidate ratio 1.00415. This larger workload is approximately at parity but does not meet the strict `candidate / baseline <= 1.0` rule, so it is not presented as a confirmed runtime win.
 
-These are valid partial LLVM reference-track results, not a completed two-project formal run. Full three-arm Cargo results and a final combined run remain pending. Native whole-project support is not implied by these results.
+The earlier measurements are valid partial LLVM reference-track results; the larger workload did not establish a runtime win.
+
+## Completed formal benchmark
+
+The complete three-arm run finished successfully in `/root/kimi-fast-rustc-benchmarks/results/20261107T155940Z`, using Rust 1.99.1, four build jobs, offline dependencies, and 15 alternating runtime samples per arm:
+
+| Project | Arm | Binary bytes | Median runtime | Compile wall | Size ratio | Runtime ratio |
+|---|---|---:|---:|---:|---:|---:|
+| ripgrep | baseline | 30,571,200 | 4.640 ms | 15.23 s | 1.000 | 1.000 |
+| ripgrep | controlled | 30,571,200 | 4.673 ms | 15.28 s | 1.000 | 1.007 |
+| ripgrep | candidate | 3,845,896 | 4.322 ms | 28.63 s | 0.126 | 0.931 |
+| cargo | baseline | 40,321,488 | 48.198 ms | 140.91 s | 1.000 | 1.000 |
+| cargo | controlled | 40,321,488 | 48.073 ms | 140.81 s | 1.000 | 0.997 |
+| cargo | candidate | 23,515,320 | 47.634 ms | 323.36 s | 0.583 | 0.988 |
+
+Both candidate size and median runtime ratios are at or below 1.0 for both projects. The ripgrep candidate is about 87.42% smaller with a 6.87% shorter median runtime; the cargo candidate is about 41.68% smaller with a 1.17% shorter median runtime. The candidate's ThinLTO builds are slower than stock builds, while controlled compile time is effectively unchanged. The ripgrep controlled runtime ratio of 1.007 is short-process sampling variation, not a code-generation difference.
+
+These results satisfy the requested artifact-size and runtime parity criterion for the LLVM reference track on the recorded host and workloads. They do not imply that the experimental native backend can compile complete ripgrep or cargo workspaces.
