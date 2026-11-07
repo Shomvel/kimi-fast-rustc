@@ -204,6 +204,26 @@ fn algebraic_rewrite(graph: &Graph, id: NodeId) -> Option<Rewrite> {
     }
 }
 
+pub fn simplify_node_in_place(graph: &mut Graph, id: NodeId) -> bool {
+    let Some(rewrite) = algebraic_rewrite(graph, id) else {
+        return false;
+    };
+    match rewrite {
+        Rewrite::Node(replacement) => {
+            if replacement == id {
+                return false;
+            }
+            return graph.replace_uses(id, replacement) != 0;
+        }
+        Rewrite::Constant(value) => {
+            let node = graph.node_mut(id).expect("simplified node exists");
+            node.kind = NodeKind::Const(value);
+            node.data.clear();
+        }
+    }
+    true
+}
+
 fn simplify_binary(graph: &Graph, op: BinaryOp, left: NodeId, right: NodeId) -> Option<Rewrite> {
     let left_const = const_value(graph, left);
     let right_const = const_value(graph, right);

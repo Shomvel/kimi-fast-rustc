@@ -63,9 +63,13 @@ fn optimize_control_flow(graph: &mut Graph) -> OptimizeStats {
             reported_merges
         };
         let folded = fold_control_constants(graph);
+        let simplified = simplify_control_graph(graph);
+        let removed = eliminate_control_dead_nodes(graph);
         total.value_numbering_merges += merges;
         total.constants_folded += folded;
-        if merges == 0 && folded == 0 {
+        total.algebraic_simplifications += simplified;
+        total.dead_nodes_removed += removed;
+        if merges == 0 && folded == 0 && simplified == 0 && removed == 0 {
             return total;
         }
     }
@@ -95,6 +99,52 @@ fn fold_control_constants(graph: &mut Graph) -> usize {
         folded += 1;
     }
     folded
+}
+
+fn eliminate_control_dead_nodes(graph: &mut Graph) -> usize {
+    let roots = graph
+        .iter()
+        .filter_map(|(id, node)| {
+            matches!(
+                node.kind,
+                NodeKind::Start
+                    | NodeKind::If
+                    | NodeKind::Projection(_)
+                    | NodeKind::Region
+                    | NodeKind::Jump
+                    | NodeKind::Call(_)
+                    | NodeKind::Return
+                    | NodeKind::Binary(
+                        crate::son::BinaryOp::Div
+                            | crate::son::BinaryOp::Rem
+                            | crate::son::BinaryOp::UDiv
+                            | crate::son::BinaryOp::URem
+                    )
+            )
+            .then_some(id)
+        })
+        .collect::<Vec<_>>();
+    son_optimize::eliminate_dead_nodes_with_roots(graph, &roots)
+}
+
+fn simplify_control_graph(graph: &mut Graph) -> usize {
+    let mut simplified = 0;
+    for id in graph.ids().collect::<Vec<_>>() {
+        let Some(node) = graph.node(id) else {
+            continue;
+        };
+        if !node.control.is_empty()
+            || !node.memory.is_empty()
+            || !matches!(
+                node.kind,
+                NodeKind::Unary(_) | NodeKind::Binary(_) | NodeKind::Compare(_)
+            )
+        {
+            continue;
+        }
+        simplified += usize::from(son_optimize::simplify_node_in_place(graph, id));
+    }
+    simplified
 }
 
 fn graphs_equal(left: &Graph, right: &Graph) -> bool {
