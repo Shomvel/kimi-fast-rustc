@@ -9,7 +9,8 @@ use std::fmt;
 /// `if` expressions and statements merge values through explicit jumps, control regions,
 /// and Phi nodes. Mutable bindings and `while` loops use loop-header Phis, multiple back
 /// edges from `continue`, and exit Phis for `break` snapshots.
-/// Calls are checked against declared signatures. Comparisons and logical operations produce
+/// A signature pre-scan supports forward and recursive calls with checked argument and return
+/// types. Comparisons and logical operations produce
 /// booleans; `&&` and `||` evaluate their right operand conditionally. Unsupported Rust is
 /// rejected with a source location.
 pub fn parse(source: &str) -> Result<Graph, ParseError> {
@@ -562,6 +563,13 @@ struct FunctionSignature {
     return_type: Option<ScalarType>,
 }
 
+struct FunctionHeader {
+    name: String,
+    name_span: Span,
+    parameters: Vec<(String, bool, ScalarType)>,
+    return_type: Option<ScalarType>,
+}
+
 #[derive(Clone, Copy)]
 struct Binding {
     value: NodeId,
@@ -582,6 +590,7 @@ struct Parser {
     position: usize,
     graph: Graph,
     functions: HashSet<String>,
+    function_indices: HashMap<String, usize>,
     signatures: HashMap<String, FunctionSignature>,
     variables: HashMap<String, Binding>,
     types: HashMap<NodeId, ScalarType>,
@@ -599,6 +608,7 @@ impl Parser {
             position: 0,
             graph: Graph::new(),
             functions: HashSet::new(),
+            function_indices: HashMap::new(),
             signatures: HashMap::new(),
             variables: HashMap::new(),
             types: HashMap::new(),
@@ -618,6 +628,40 @@ impl Parser {
             if !self.check(&TokenKind::Fn) {
                 return Err(self.error_here("expected `fn`; this item is not supported"));
             }
+            let header = self.parse_function_header()?;
+            self.expect(TokenKind::LBrace, "`{` before function body")?;
+            let mut depth = 1usize;
+            while depth != 0 {
+                match self.advance().kind {
+                    TokenKind::LBrace => depth += 1,
+                    TokenKind::RBrace => depth -= 1,
+                    TokenKind::Eof => {
+                        return Err(self.error_here(format!(
+                            "unterminated body of function `{}`",
+                            header.name
+                        )));
+                    }
+                    _ => {}
+                }
+            }
+            if !self.functions.insert(header.name.clone()) {
+                return Err(ParseError::new(
+                    header.name_span,
+                    format!("duplicate function `{}`", header.name),
+                ));
+            }
+            let index = self.function_indices.len();
+            self.function_indices.insert(header.name.clone(), index);
+            self.signatures.insert(
+                header.name,
+                FunctionSignature {
+                    parameter_types: header.parameters.iter().map(|(_, _, ty)| *ty).collect(),
+                    return_type: header.return_type,
+                },
+            );
+        }
+        self.position = 0;
+        while !self.check(&TokenKind::Eof) {
             self.parse_function()?;
         }
         debug_assert!(
@@ -627,16 +671,9 @@ impl Parser {
         Ok(self.graph)
     }
 
-    fn parse_function(&mut self) -> Result<(), ParseError> {
+    fn parse_function_header(&mut self) -> Result<FunctionHeader, ParseError> {
         self.expect(TokenKind::Fn, "`fn`")?;
         let (name, name_span) = self.parse_identifier("function name")?;
-        if !self.functions.insert(name.clone()) {
-            return Err(ParseError::new(
-                name_span,
-                format!("duplicate function `{name}`"),
-            ));
-        }
-
         self.expect(TokenKind::LParen, "`(` after function name")?;
         let mut parameters = Vec::new();
         let mut parameter_names = HashSet::new();
@@ -672,15 +709,22 @@ impl Parser {
         } else {
             None
         };
-        self.return_type = return_type;
-        self.signatures.insert(
-            name.clone(),
-            FunctionSignature {
-                parameter_types: parameters.iter().map(|(_, _, ty)| *ty).collect(),
-                return_type,
-            },
-        );
+        Ok(FunctionHeader {
+            name,
+            name_span,
+            parameters,
+            return_type,
+        })
+    }
 
+    fn parse_function(&mut self) -> Result<(), ParseError> {
+        let FunctionHeader {
+            name,
+            parameters,
+            return_type,
+            ..
+        } = self.parse_function_header()?;
+        self.return_type = return_type;
         self.expect(TokenKind::LBrace, "`{` before function body")?;
         let start = self.graph.start();
         let mut return_node = None;
@@ -1715,12 +1759,7 @@ impl Parser {
                             ),
                         )
                     })?;
-                    let target = self
-                        .graph
-                        .functions
-                        .iter()
-                        .position(|function| function.name == identifier)
-                        .unwrap_or(self.graph.functions.len());
+                    let target = self.function_indices[&identifier];
                     let call = self.graph.add_node(
                         crate::son::NodeKind::Call(target),
                         vec![self.control],
