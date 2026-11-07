@@ -29,6 +29,12 @@ fn value_numbering_pass(graph: &mut Graph, merged_ids: &mut BTreeSet<NodeId>) ->
     let mut merged = 0;
 
     for id in ids {
+        if graph
+            .node(id)
+            .is_some_and(|node| node.kind == NodeKind::Start)
+        {
+            expressions.clear();
+        }
         if merged_ids.contains(&id) {
             continue;
         }

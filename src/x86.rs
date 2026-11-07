@@ -139,6 +139,10 @@ pub enum VirtualInstr {
         lhs: VirtualValue,
         rhs: VirtualValue,
     },
+    Test {
+        lhs: VirtualValue,
+        rhs: VirtualValue,
+    },
     Load {
         dst: VirtualReg,
         slot: StackSlot,

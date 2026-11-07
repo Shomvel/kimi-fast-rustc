@@ -1,6 +1,8 @@
 use kimi_fast_rustc::son::{Graph, NodeKind};
 use kimi_fast_rustc::x86::MachineFunction;
-use kimi_fast_rustc::{frontend, machine_eval, native, optimizer_pipeline, placement};
+use kimi_fast_rustc::{
+    frontend, machine_eval, native, native_program, optimizer_pipeline, placement,
+};
 
 fn optimize(source: &str) -> (Graph, MachineFunction, optimizer_pipeline::OptimizeStats) {
     let mut graph = frontend::parse(source).unwrap();
@@ -69,4 +71,15 @@ fn trapping_division_is_not_folded_or_removed() {
         Err(machine_eval::MachineEvalError::DivisionByZero)
     );
     assert_eq!(machine_eval::evaluate(&function, &[0]), Ok(2));
+}
+
+#[test]
+fn value_numbering_never_crosses_function_boundaries() {
+    let mut graph = frontend::parse(
+        "fn is_positive(value: i64) -> bool { return value > 0; } fn main() -> i64 { let positive = is_positive(42); let valid = positive && !false; return if valid { 42 } else { 0 }; }",
+    )
+    .unwrap();
+    optimizer_pipeline::optimize(&mut graph);
+    graph.validate().unwrap();
+    native_program::compile_graph(&graph).unwrap();
 }

@@ -336,9 +336,7 @@ pub fn lower_graph(graph: &Graph) -> Result<Vec<VirtualInstr>, CompileError> {
                 let target = false_projections
                     .get(&id)
                     .ok_or_else(|| unsupported(id, UnsupportedReason::NodeKind(node.kind)))?;
-                instructions.push(VirtualInstr::Compare {
-                    dst: virtual_reg(id),
-                    condition: Condition::Eq,
+                instructions.push(VirtualInstr::Test {
                     lhs: condition,
                     rhs: VirtualValue::Imm(0),
                 });
@@ -667,7 +665,8 @@ fn defined_register(instruction: &VirtualInstr) -> Option<VirtualReg> {
         | VirtualInstr::Load { dst, .. }
         | VirtualInstr::Phi { dst, .. }
         | VirtualInstr::Call { dst, .. } => Some(dst),
-        VirtualInstr::Label(_)
+        VirtualInstr::Test { .. }
+        | VirtualInstr::Label(_)
         | VirtualInstr::Jmp(_)
         | VirtualInstr::Jcc { .. }
         | VirtualInstr::Store { .. }
@@ -700,7 +699,8 @@ fn used_registers(instruction: &VirtualInstr) -> Vec<VirtualReg> {
         | VirtualInstr::Rem { lhs, rhs, .. }
         | VirtualInstr::UDiv { lhs, rhs, .. }
         | VirtualInstr::URem { lhs, rhs, .. }
-        | VirtualInstr::Compare { lhs, rhs, .. } => {
+        | VirtualInstr::Compare { lhs, rhs, .. }
+        | VirtualInstr::Test { lhs, rhs } => {
             add_value(lhs);
             add_value(rhs);
         }
@@ -865,6 +865,12 @@ impl Emitter<'_> {
                     dst: work,
                 });
                 self.store_definition(dst, work)?;
+            }
+            VirtualInstr::Test { lhs, rhs } => {
+                self.load_value(lhs, SCRATCH0)?;
+                let rhs = self.operand(rhs, SCRATCH1)?;
+                self.instructions
+                    .push(MachineInstr::Cmp { lhs: SCRATCH0, rhs });
             }
             VirtualInstr::Label(label) => {
                 self.instructions.push(MachineInstr::Label(label));
