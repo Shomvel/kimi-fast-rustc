@@ -476,19 +476,44 @@ fn emit_phi_edge(
     next_virtual_reg: &mut u32,
 ) -> Result<(), CompileError> {
     let controls = &graph.node(header).expect("loop header exists").control;
-    let mut temporaries = Vec::new();
+    let mut moves = Vec::new();
     for (phi, phi_node) in graph.iter().filter(|(_, node)| node.kind == NodeKind::Phi) {
         if phi_node.control == *controls {
-            let temporary = VirtualReg(*next_virtual_reg);
-            *next_virtual_reg = next_virtual_reg
-                .checked_add(1)
-                .ok_or(CompileError::TooManyInstructions)?;
-            instructions.push(VirtualInstr::Mov {
-                dst: temporary,
-                src: value_reference(node, phi_node.data[input_index], values)?,
-            });
-            temporaries.push((phi, temporary));
+            let src = value_reference(node, phi_node.data[input_index], values)?;
+            if VirtualValue::Reg(virtual_reg(phi)) != src {
+                moves.push((phi, src));
+            }
         }
+    }
+    let destinations = moves
+        .iter()
+        .map(|(phi, _)| virtual_reg(*phi))
+        .collect::<Vec<_>>();
+    let has_cycle = moves.iter().any(|(_, src)| match src {
+        VirtualValue::Reg(src) => destinations.contains(src),
+        VirtualValue::Imm(_) => false,
+    });
+    if !has_cycle {
+        for (phi, src) in moves {
+            instructions.push(VirtualInstr::Mov {
+                dst: virtual_reg(phi),
+                src,
+            });
+        }
+        return Ok(());
+    }
+
+    let mut temporaries = Vec::new();
+    for (phi, src) in moves {
+        let temporary = VirtualReg(*next_virtual_reg);
+        *next_virtual_reg = next_virtual_reg
+            .checked_add(1)
+            .ok_or(CompileError::TooManyInstructions)?;
+        instructions.push(VirtualInstr::Mov {
+            dst: temporary,
+            src,
+        });
+        temporaries.push((phi, temporary));
     }
     for (phi, temporary) in temporaries {
         instructions.push(VirtualInstr::Mov {
