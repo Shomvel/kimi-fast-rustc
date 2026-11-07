@@ -121,6 +121,9 @@ fn binary_code(op: BinaryOp) -> u8 {
         BinaryOp::Xor => 7,
         BinaryOp::Shl => 8,
         BinaryOp::Shr => 9,
+        BinaryOp::UDiv => 10,
+        BinaryOp::URem => 11,
+        BinaryOp::LShr => 12,
     }
 }
 
@@ -132,6 +135,10 @@ fn compare_code(op: CompareOp) -> u8 {
         CompareOp::Le => 3,
         CompareOp::Gt => 4,
         CompareOp::Ge => 5,
+        CompareOp::ULt => 6,
+        CompareOp::ULe => 7,
+        CompareOp::UGt => 8,
+        CompareOp::UGe => 9,
     }
 }
 

@@ -202,6 +202,7 @@ fn validate_instruction(
         | Not { dst }
         | Shl { dst }
         | Shr { dst }
+        | LShr { dst }
         | SetCc { dst, .. } => validate_reg(dst)?,
         Mov { dst, src } => {
             validate_reg(dst)?;
@@ -217,7 +218,7 @@ fn validate_instruction(
             validate_operand(src, stack_slots)?;
         }
         Cqo => {}
-        IDiv { src } => {
+        IDiv { src } | UDiv { src } => {
             validate_operand(src, stack_slots)?;
             if let Operand::Reg(reg @ (Reg::Rax | Reg::Rdx)) = src {
                 return Err(EncodeError::InvalidDivisor(reg));
@@ -352,6 +353,11 @@ impl Encoder<'_> {
                 self.bytes.push(0xd3);
                 self.modrm(3, Reg::Rdi, dst.low_code());
             }
+            LShr { dst } => {
+                self.rex(true, None, Some(dst), false);
+                self.bytes.push(0xd3);
+                self.modrm(3, Reg::Rbp, dst.low_code());
+            }
             IMul { dst, src } => match src {
                 Operand::Reg(src) => {
                     self.rex(true, Some(dst), Some(src), false);
@@ -375,6 +381,18 @@ impl Encoder<'_> {
                     self.bytes.push(0x48);
                     self.bytes.push(0xf7);
                     self.stack_memory(Reg::Rdi, spill_offset(slot)?);
+                }
+            },
+            UDiv { src } => match src {
+                Operand::Reg(src) => {
+                    self.rex(true, None, Some(src), false);
+                    self.bytes.push(0xf7);
+                    self.modrm(3, Reg::Rsi, src.low_code());
+                }
+                Operand::Stack(slot) => {
+                    self.bytes.push(0x48);
+                    self.bytes.push(0xf7);
+                    self.stack_memory(Reg::Rsi, spill_offset(slot)?);
                 }
             },
             Cmp { lhs, rhs } => self.binary(0x39, 0x3b, lhs, rhs)?,

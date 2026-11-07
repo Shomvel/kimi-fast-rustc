@@ -30,8 +30,9 @@ pub enum UnaryOp {
     Not,
 }
 
-/// Arithmetic wraps, except `Div` and `Rem`, which trap on zero divisors and
-/// `i64::MIN / -1`. Shifts mask the count to six bits; `Shr` is arithmetic.
+/// Arithmetic wraps, except division and remainder, which trap on zero divisors.
+/// Signed `Div` and `Rem` also trap on `i64::MIN / -1`. Shifts mask the count to
+/// six bits; `Shr` is arithmetic and `LShr` is logical.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum BinaryOp {
     Add,
@@ -39,14 +40,17 @@ pub enum BinaryOp {
     Mul,
     Div,
     Rem,
+    UDiv,
+    URem,
     And,
     Or,
     Xor,
     Shl,
     Shr,
+    LShr,
 }
 
-/// Signed comparisons produce an `i64` zero or one.
+/// Comparisons produce a boolean zero or one, with signed or unsigned ordering.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum CompareOp {
     Eq,
@@ -55,6 +59,10 @@ pub enum CompareOp {
     Le,
     Gt,
     Ge,
+    ULt,
+    ULe,
+    UGt,
+    UGe,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]

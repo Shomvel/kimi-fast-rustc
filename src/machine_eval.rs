@@ -207,6 +207,10 @@ fn execute(function: &MachineFunction, arguments: &[i64]) -> Result<Execution, M
                 let value = machine.reg(dst).wrapping_shr(machine.reg(Reg::Rcx) as u32);
                 machine.set_reg(dst, value);
             }
+            MachineInstr::LShr { dst } => {
+                let value = (machine.reg(dst) as u64).wrapping_shr(machine.reg(Reg::Rcx) as u32);
+                machine.set_reg(dst, value as i64);
+            }
             MachineInstr::Cqo => {
                 let sign = if machine.reg(Reg::Rax) < 0 { -1 } else { 0 };
                 machine.set_reg(Reg::Rdx, sign);
@@ -222,6 +226,15 @@ fn execute(function: &MachineFunction, arguments: &[i64]) -> Result<Execution, M
                 }
                 machine.set_reg(Reg::Rax, lhs / rhs);
                 machine.set_reg(Reg::Rdx, lhs % rhs);
+            }
+            MachineInstr::UDiv { src } => {
+                let lhs = machine.reg(Reg::Rax) as u64;
+                let rhs = machine.operand(src, function.stack_slots)? as u64;
+                if rhs == 0 {
+                    return Err(MachineEvalError::DivisionByZero);
+                }
+                machine.set_reg(Reg::Rax, (lhs / rhs) as i64);
+                machine.set_reg(Reg::Rdx, (lhs % rhs) as i64);
             }
             MachineInstr::Cmp { lhs, rhs } => {
                 machine.comparison = Some((
@@ -384,6 +397,7 @@ fn validate_instruction(
         | Not { dst }
         | Shl { dst }
         | Shr { dst }
+        | LShr { dst }
         | SetCc { dst, .. } => validate_reg(dst),
         Mov { dst, src } => {
             validate_reg(dst)?;
@@ -399,7 +413,7 @@ fn validate_instruction(
             validate_operand(src)
         }
         Cqo => Ok(()),
-        IDiv { src } => {
+        IDiv { src } | UDiv { src } => {
             validate_operand(src)?;
             if let Operand::Reg(reg @ (Reg::Rax | Reg::Rdx)) = src {
                 Err(MachineEvalError::InvalidDivisor(reg))

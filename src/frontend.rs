@@ -3,7 +3,7 @@ use std::collections::{HashMap, HashSet};
 use std::error::Error;
 use std::fmt;
 
-/// Parses the explicitly supported `i64` and `bool` Rust subset.
+/// Parses the explicitly supported `i64`, `u64`, and `bool` Rust subset.
 ///
 /// Functions and parameters retain their names and source ranges in `Graph::functions`.
 /// `if` expressions and statements merge values through explicit jumps, control regions,
@@ -59,6 +59,8 @@ enum TokenKind {
     Return,
     Ident(String),
     Integer(u64),
+    I64Integer(u64),
+    U64Integer(u64),
     LParen,
     RParen,
     LBrace,
@@ -243,14 +245,14 @@ impl<'a> Lexer<'a> {
             self.advance();
         }
         let suffix = &self.source[digits_end..self.offset];
-        if !suffix.is_empty() && suffix != "i64" {
+        if !matches!(suffix, "" | "i64" | "u64") {
             return Err(ParseError::new(
                 Span {
                     end: self.offset,
                     ..start
                 },
                 format!(
-                    "unsupported integer literal suffix `{suffix}`; only decimal i64 literals are supported"
+                    "unsupported integer literal suffix `{suffix}`; only decimal i64/u64 literals are supported"
                 ),
             ));
         }
@@ -264,10 +266,15 @@ impl<'a> Lexer<'a> {
                     end: self.offset,
                     ..start
                 },
-                "integer literal does not fit in the supported i64 magnitude range",
+                "integer literal does not fit in the supported 64-bit magnitude range",
             )
         })?;
-        Ok(TokenKind::Integer(value))
+        Ok(match suffix {
+            "" => TokenKind::Integer(value),
+            "i64" => TokenKind::I64Integer(value),
+            "u64" => TokenKind::U64Integer(value),
+            _ => unreachable!(),
+        })
     }
 
     fn lex_punctuation(&mut self) -> Result<TokenKind, ParseError> {
@@ -461,6 +468,7 @@ fn is_reserved_identifier(identifier: &str) -> bool {
             | "try"
             | "type"
             | "typeof"
+            | "u64"
             | "union"
             | "unsafe"
             | "unsized"
@@ -475,6 +483,7 @@ fn is_reserved_identifier(identifier: &str) -> bool {
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 enum ScalarType {
     I64,
+    U64,
     Bool,
 }
 
@@ -482,6 +491,7 @@ impl fmt::Display for ScalarType {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::I64 => formatter.write_str("i64"),
+            Self::U64 => formatter.write_str("u64"),
             Self::Bool => formatter.write_str("bool"),
         }
     }
@@ -514,6 +524,7 @@ struct Parser {
     signatures: HashMap<String, FunctionSignature>,
     variables: HashMap<String, Binding>,
     types: HashMap<NodeId, ScalarType>,
+    unsuffixed_literals: HashSet<NodeId>,
     control: NodeId,
     return_type: Option<ScalarType>,
     loops: Vec<LoopContext>,
@@ -530,6 +541,7 @@ impl Parser {
             signatures: HashMap::new(),
             variables: HashMap::new(),
             types: HashMap::new(),
+            unsuffixed_literals: HashSet::new(),
             control: NodeId(0),
             return_type: None,
             loops: Vec::new(),
@@ -782,11 +794,7 @@ impl Parser {
         };
         let right = self.parse_expression()?;
         let value = match operation {
-            Some(operation) => {
-                self.require_type(binding.value, ScalarType::I64)?;
-                self.require_type(right, ScalarType::I64)?;
-                self.graph.binary(operation, binding.value, right)
-            }
+            Some(operation) => self.integer_binary(operation, binding.value, right)?,
             None => {
                 self.require_type(right, binding.ty)?;
                 right
@@ -1051,10 +1059,12 @@ impl Parser {
     fn parse_type(&mut self) -> Result<ScalarType, ParseError> {
         let ty = if self.peek_identifier("i64") {
             ScalarType::I64
+        } else if self.peek_identifier("u64") {
+            ScalarType::U64
         } else if self.peek_identifier("bool") {
             ScalarType::Bool
         } else {
-            return Err(self.error_here("only the `i64` and `bool` types are supported"));
+            return Err(self.error_here("only the `i64`, `u64`, and `bool` types are supported"));
         };
         self.position += 1;
         Ok(ty)
@@ -1064,15 +1074,21 @@ impl Parser {
         self.types.get(&value).copied().unwrap_or(ScalarType::I64)
     }
 
-    fn require_type(&self, value: NodeId, expected: ScalarType) -> Result<(), ParseError> {
+    fn require_type(&mut self, value: NodeId, expected: ScalarType) -> Result<(), ParseError> {
         let actual = self.type_of(value);
         if actual == expected {
-            Ok(())
-        } else {
-            Err(self.error_here(format!(
-                "type mismatch: expected `{expected}`, found `{actual}`"
-            )))
+            return Ok(());
         }
+        if actual == ScalarType::I64
+            && expected == ScalarType::U64
+            && self.unsuffixed_literals.contains(&value)
+        {
+            self.types.insert(value, ScalarType::U64);
+            return Ok(());
+        }
+        Err(self.error_here(format!(
+            "type mismatch: expected `{expected}`, found `{actual}`"
+        )))
     }
 
     fn mark_bool(&mut self, value: NodeId) -> NodeId {
@@ -1186,7 +1202,13 @@ impl Parser {
         let false_jump = self.graph.jump(self.control);
         self.expect(TokenKind::RBrace, "`}` after else branch")?;
 
-        let ty = self.type_of(true_value);
+        let mut ty = self.type_of(true_value);
+        if self.unsuffixed_literals.contains(&true_value)
+            && self.type_of(false_value) == ScalarType::U64
+        {
+            self.require_type(true_value, ScalarType::U64)?;
+            ty = ScalarType::U64;
+        }
         self.require_type(false_value, ty)?;
         let controls = vec![true_jump, false_jump];
         let region = self.graph.region(controls.clone());
@@ -1215,10 +1237,31 @@ impl Parser {
         if self.is_comparison(self.peek()) {
             return Err(self.error_here("chained comparisons are not supported"));
         }
-        self.require_type(left, ScalarType::I64)?;
-        self.require_type(right, ScalarType::I64)?;
+        let ty = self.numeric_pair(left, right)?;
+        let operation = match (operation, ty) {
+            (CompareOp::Lt, ScalarType::U64) => CompareOp::ULt,
+            (CompareOp::Le, ScalarType::U64) => CompareOp::ULe,
+            (CompareOp::Gt, ScalarType::U64) => CompareOp::UGt,
+            (CompareOp::Ge, ScalarType::U64) => CompareOp::UGe,
+            (operation, _) => operation,
+        };
         let comparison = self.graph.compare(operation, left, right);
         Ok(self.mark_bool(comparison))
+    }
+
+    fn numeric_pair(&mut self, left: NodeId, right: NodeId) -> Result<ScalarType, ParseError> {
+        if self.unsuffixed_literals.contains(&left) && self.type_of(right) == ScalarType::U64 {
+            self.require_type(left, ScalarType::U64)?;
+        }
+        if self.unsuffixed_literals.contains(&right) && self.type_of(left) == ScalarType::U64 {
+            self.require_type(right, ScalarType::U64)?;
+        }
+        let ty = self.type_of(left);
+        if ty == ScalarType::Bool {
+            return Err(self.error_here("expected integer operands, found `bool`"));
+        }
+        self.require_type(right, ty)?;
+        Ok(ty)
     }
 
     fn integer_binary(
@@ -1227,9 +1270,16 @@ impl Parser {
         left: NodeId,
         right: NodeId,
     ) -> Result<NodeId, ParseError> {
-        self.require_type(left, ScalarType::I64)?;
-        self.require_type(right, ScalarType::I64)?;
-        Ok(self.graph.binary(operation, left, right))
+        let ty = self.numeric_pair(left, right)?;
+        let operation = match (operation, ty) {
+            (BinaryOp::Div, ScalarType::U64) => BinaryOp::UDiv,
+            (BinaryOp::Rem, ScalarType::U64) => BinaryOp::URem,
+            (BinaryOp::Shr, ScalarType::U64) => BinaryOp::LShr,
+            (operation, _) => operation,
+        };
+        let value = self.graph.binary(operation, left, right);
+        self.types.insert(value, ty);
+        Ok(value)
     }
 
     fn parse_bitwise_or(&mut self) -> Result<NodeId, ParseError> {
@@ -1313,7 +1363,7 @@ impl Parser {
         if !self.eat(TokenKind::Minus) {
             return self.parse_primary();
         }
-        if let TokenKind::Integer(magnitude) = self.peek().kind {
+        if let TokenKind::Integer(magnitude) | TokenKind::I64Integer(magnitude) = self.peek().kind {
             let token = self.advance();
             let value = if magnitude == (i64::MAX as u64) + 1 {
                 i64::MIN
@@ -1342,7 +1392,23 @@ impl Parser {
                         "integer literal is outside the positive i64 range",
                     ));
                 }
+                let node = self.graph.constant(value as i64);
+                self.unsuffixed_literals.insert(node);
+                Ok(node)
+            }
+            TokenKind::I64Integer(value) => {
+                if value > i64::MAX as u64 {
+                    return Err(ParseError::new(
+                        token.span,
+                        "integer literal is outside the positive i64 range",
+                    ));
+                }
                 Ok(self.graph.constant(value as i64))
+            }
+            TokenKind::U64Integer(value) => {
+                let node = self.graph.constant(value as i64);
+                self.types.insert(node, ScalarType::U64);
+                Ok(node)
             }
             TokenKind::Ident(identifier) => {
                 if self.check(&TokenKind::LParen) {
@@ -1657,12 +1723,12 @@ mod tests {
         assert!(
             error("fn f(x: i32) -> i64 { return x; }")
                 .message
-                .contains("only the `i64` and `bool` types")
+                .contains("only the `i64`, `u64`, and `bool` types")
         );
         assert!(
             error("fn main() -> u32 { return 1; }")
                 .message
-                .contains("only the `i64` and `bool` types")
+                .contains("only the `i64`, `u64`, and `bool` types")
         );
     }
 

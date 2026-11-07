@@ -256,6 +256,16 @@ pub fn lower_graph(graph: &Graph) -> Result<Vec<VirtualInstr>, CompileError> {
                         lhs,
                         rhs,
                     },
+                    BinaryOp::UDiv => VirtualInstr::UDiv {
+                        dst: virtual_reg(id),
+                        lhs,
+                        rhs,
+                    },
+                    BinaryOp::URem => VirtualInstr::URem {
+                        dst: virtual_reg(id),
+                        lhs,
+                        rhs,
+                    },
                     BinaryOp::And => VirtualInstr::And {
                         dst: virtual_reg(id),
                         lhs,
@@ -277,6 +287,11 @@ pub fn lower_graph(graph: &Graph) -> Result<Vec<VirtualInstr>, CompileError> {
                         rhs,
                     },
                     BinaryOp::Shr => VirtualInstr::Shr {
+                        dst: virtual_reg(id),
+                        lhs,
+                        rhs,
+                    },
+                    BinaryOp::LShr => VirtualInstr::LShr {
                         dst: virtual_reg(id),
                         lhs,
                         rhs,
@@ -564,6 +579,10 @@ fn condition(operation: CompareOp) -> Condition {
         CompareOp::Le => Condition::SignedLessEq,
         CompareOp::Gt => Condition::SignedGreater,
         CompareOp::Ge => Condition::SignedGreaterEq,
+        CompareOp::ULt => Condition::UnsignedBelow,
+        CompareOp::ULe => Condition::UnsignedBelowEq,
+        CompareOp::UGt => Condition::UnsignedAbove,
+        CompareOp::UGe => Condition::UnsignedAboveEq,
     }
 }
 
@@ -639,8 +658,11 @@ fn defined_register(instruction: &VirtualInstr) -> Option<VirtualReg> {
         | VirtualInstr::Xor { dst, .. }
         | VirtualInstr::Shl { dst, .. }
         | VirtualInstr::Shr { dst, .. }
+        | VirtualInstr::LShr { dst, .. }
         | VirtualInstr::Div { dst, .. }
         | VirtualInstr::Rem { dst, .. }
+        | VirtualInstr::UDiv { dst, .. }
+        | VirtualInstr::URem { dst, .. }
         | VirtualInstr::Compare { dst, .. }
         | VirtualInstr::Load { dst, .. }
         | VirtualInstr::Phi { dst, .. }
@@ -673,8 +695,11 @@ fn used_registers(instruction: &VirtualInstr) -> Vec<VirtualReg> {
         | VirtualInstr::Xor { lhs, rhs, .. }
         | VirtualInstr::Shl { lhs, rhs, .. }
         | VirtualInstr::Shr { lhs, rhs, .. }
+        | VirtualInstr::LShr { lhs, rhs, .. }
         | VirtualInstr::Div { lhs, rhs, .. }
         | VirtualInstr::Rem { lhs, rhs, .. }
+        | VirtualInstr::UDiv { lhs, rhs, .. }
+        | VirtualInstr::URem { lhs, rhs, .. }
         | VirtualInstr::Compare { lhs, rhs, .. } => {
             add_value(lhs);
             add_value(rhs);
@@ -710,7 +735,10 @@ fn required_argument_homes(
         }
         if matches!(
             instruction,
-            VirtualInstr::Div { .. } | VirtualInstr::Rem { .. }
+            VirtualInstr::Div { .. }
+                | VirtualInstr::Rem { .. }
+                | VirtualInstr::UDiv { .. }
+                | VirtualInstr::URem { .. }
         ) {
             let index = Reg::ARGUMENTS
                 .iter()
@@ -807,11 +835,20 @@ impl Emitter<'_> {
             VirtualInstr::Shr { dst, lhs, rhs } => {
                 self.emit_shift(dst, lhs, rhs, ShiftKind::Right)?;
             }
+            VirtualInstr::LShr { dst, lhs, rhs } => {
+                self.emit_shift(dst, lhs, rhs, ShiftKind::Logical)?;
+            }
             VirtualInstr::Div { dst, lhs, rhs } => {
-                self.emit_division(dst, lhs, rhs, DivisionResult::Quotient)?;
+                self.emit_division(dst, lhs, rhs, DivisionResult::Quotient, true)?;
             }
             VirtualInstr::Rem { dst, lhs, rhs } => {
-                self.emit_division(dst, lhs, rhs, DivisionResult::Remainder)?;
+                self.emit_division(dst, lhs, rhs, DivisionResult::Remainder, true)?;
+            }
+            VirtualInstr::UDiv { dst, lhs, rhs } => {
+                self.emit_division(dst, lhs, rhs, DivisionResult::Quotient, false)?;
+            }
+            VirtualInstr::URem { dst, lhs, rhs } => {
+                self.emit_division(dst, lhs, rhs, DivisionResult::Remainder, false)?;
             }
             VirtualInstr::Compare {
                 dst,
@@ -953,6 +990,7 @@ impl Emitter<'_> {
         self.instructions.push(match kind {
             ShiftKind::Left => MachineInstr::Shl { dst: SCRATCH0 },
             ShiftKind::Right => MachineInstr::Shr { dst: SCRATCH0 },
+            ShiftKind::Logical => MachineInstr::LShr { dst: SCRATCH0 },
         });
         self.store_definition(dst, SCRATCH0)
     }
@@ -963,6 +1001,7 @@ impl Emitter<'_> {
         lhs: VirtualValue,
         rhs: VirtualValue,
         result: DivisionResult,
+        signed: bool,
     ) -> Result<(), CompileError> {
         let work = self.definition_register(dst)?;
         let rhs = match self.operand(rhs, SCRATCH1)? {
@@ -976,8 +1015,16 @@ impl Emitter<'_> {
             operand => operand,
         };
         self.load_value(lhs, Reg::Rax)?;
-        self.instructions.push(MachineInstr::Cqo);
-        self.instructions.push(MachineInstr::IDiv { src: rhs });
+        if signed {
+            self.instructions.push(MachineInstr::Cqo);
+            self.instructions.push(MachineInstr::IDiv { src: rhs });
+        } else {
+            self.instructions.push(MachineInstr::Xor {
+                dst: Reg::Rdx,
+                src: Operand::Reg(Reg::Rdx),
+            });
+            self.instructions.push(MachineInstr::UDiv { src: rhs });
+        }
         self.instructions.push(MachineInstr::Mov {
             dst: work,
             src: match result {
@@ -1083,6 +1130,7 @@ enum BinaryKind {
 enum ShiftKind {
     Left,
     Right,
+    Logical,
 }
 
 #[derive(Clone, Copy)]
@@ -1586,6 +1634,14 @@ mod tests {
                             .wrapping_shr(read_reg(&registers, Reg::Rcx) as u32);
                     registers.insert(dst, value);
                 }
+                MachineInstr::LShr { dst } => {
+                    let value = (read_reg(&registers, dst) as u64).wrapping_shr(read_reg(
+                        &registers,
+                        Reg::Rcx,
+                    )
+                        as u32);
+                    registers.insert(dst, value as i64);
+                }
                 MachineInstr::Cqo => {
                     let sign = if read_reg(&registers, Reg::Rax) < 0 {
                         -1
@@ -1601,6 +1657,14 @@ mod tests {
                     let remainder = lhs.checked_rem(rhs).expect("remainder must not trap");
                     registers.insert(Reg::Rax, quotient);
                     registers.insert(Reg::Rdx, remainder);
+                }
+                MachineInstr::UDiv { src } => {
+                    let lhs = read_reg(&registers, Reg::Rax) as u64;
+                    let rhs = read_operand(&registers, &slots, src) as u64;
+                    let quotient = lhs.checked_div(rhs).expect("division must not trap");
+                    let remainder = lhs.checked_rem(rhs).expect("remainder must not trap");
+                    registers.insert(Reg::Rax, quotient as i64);
+                    registers.insert(Reg::Rdx, remainder as i64);
                 }
                 MachineInstr::Cmp { lhs, rhs } => {
                     comparison = Some((

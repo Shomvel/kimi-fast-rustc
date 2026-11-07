@@ -214,6 +214,9 @@ fn hash_node_kind(hasher: &mut Sha256, kind: NodeKind) {
                 BinaryOp::Xor => 8,
                 BinaryOp::Shl => 9,
                 BinaryOp::Shr => 10,
+                BinaryOp::UDiv => 11,
+                BinaryOp::URem => 12,
+                BinaryOp::LShr => 13,
             }]);
         }
         NodeKind::Compare(operation) => {
@@ -225,6 +228,10 @@ fn hash_node_kind(hasher: &mut Sha256, kind: NodeKind) {
                 CompareOp::Le => 4,
                 CompareOp::Gt => 5,
                 CompareOp::Ge => 6,
+                CompareOp::ULt => 7,
+                CompareOp::ULe => 8,
+                CompareOp::UGt => 9,
+                CompareOp::UGe => 10,
             }]);
         }
         NodeKind::Phi => hasher.update(&[7]),

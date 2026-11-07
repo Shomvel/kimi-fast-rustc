@@ -108,12 +108,27 @@ pub enum VirtualInstr {
         lhs: VirtualValue,
         rhs: VirtualValue,
     },
+    LShr {
+        dst: VirtualReg,
+        lhs: VirtualValue,
+        rhs: VirtualValue,
+    },
     Div {
         dst: VirtualReg,
         lhs: VirtualValue,
         rhs: VirtualValue,
     },
     Rem {
+        dst: VirtualReg,
+        lhs: VirtualValue,
+        rhs: VirtualValue,
+    },
+    UDiv {
+        dst: VirtualReg,
+        lhs: VirtualValue,
+        rhs: VirtualValue,
+    },
+    URem {
         dst: VirtualReg,
         lhs: VirtualValue,
         rhs: VirtualValue,
@@ -339,8 +354,10 @@ pub enum MachineInstr {
     Xor { dst: Reg, src: Operand },
     Shl { dst: Reg },
     Shr { dst: Reg },
+    LShr { dst: Reg },
     Cqo,
     IDiv { src: Operand },
+    UDiv { src: Operand },
     Cmp { lhs: Reg, rhs: Operand },
     SetCc { condition: Condition, dst: Reg },
     Load { dst: Reg, slot: StackSlot },
@@ -535,6 +552,7 @@ fn validate_instruction(
         | Not { dst }
         | Shl { dst }
         | Shr { dst }
+        | LShr { dst }
         | SetCc { dst, .. } => validate_reg(dst)?,
         Mov { dst, src } => {
             validate_reg(dst)?;
@@ -550,7 +568,7 @@ fn validate_instruction(
             validate_operand(src)?;
         }
         Cqo => {}
-        IDiv { src } => {
+        IDiv { src } | UDiv { src } => {
             validate_operand(src)?;
             if let Operand::Reg(reg @ (Reg::Rax | Reg::Rdx)) = src {
                 return Err(AsmError::InvalidDivisor(reg));
@@ -628,9 +646,15 @@ fn emit_instruction(
         Xor { dst, src } => emit_binary(out, "xor", dst, src, stack_slots)?,
         Shl { dst } => out.push_str(&format!("\tshl {}, cl\n", dst.name())),
         Shr { dst } => out.push_str(&format!("\tsar {}, cl\n", dst.name())),
+        LShr { dst } => out.push_str(&format!("\tshr {}, cl\n", dst.name())),
         Cqo => out.push_str("\tcqo\n"),
         IDiv { src } => {
             out.push_str("\tidiv ");
+            emit_operand(out, src, stack_slots)?;
+            out.push('\n');
+        }
+        UDiv { src } => {
+            out.push_str("\tdiv ");
             emit_operand(out, src, stack_slots)?;
             out.push('\n');
         }

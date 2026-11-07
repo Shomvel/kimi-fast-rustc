@@ -94,7 +94,9 @@ fn mixed_types_and_non_bool_conditions_are_rejected() {
     ] {
         let error = frontend::parse(source).unwrap_err();
         assert!(
-            error.message.contains("type mismatch") || error.message.contains("unit-returning"),
+            error.message.contains("type mismatch")
+                || error.message.contains("expected integer operands")
+                || error.message.contains("unit-returning"),
             "source: {source}; error: {error}"
         );
     }

@@ -135,6 +135,10 @@ fn constant_value(graph: &Graph, id: NodeId) -> Option<i64> {
                 CompareOp::Le => left <= right,
                 CompareOp::Gt => left > right,
                 CompareOp::Ge => left >= right,
+                CompareOp::ULt => (left as u64) < right as u64,
+                CompareOp::ULe => (left as u64) <= right as u64,
+                CompareOp::UGt => (left as u64) > right as u64,
+                CompareOp::UGe => (left as u64) >= right as u64,
             }))
         }
         _ => None,
@@ -148,11 +152,18 @@ fn fold_binary(op: BinaryOp, left: i64, right: i64) -> Option<i64> {
         BinaryOp::Mul => Some(left.wrapping_mul(right)),
         BinaryOp::Div => left.checked_div(right),
         BinaryOp::Rem => left.checked_rem(right),
+        BinaryOp::UDiv => (left as u64)
+            .checked_div(right as u64)
+            .map(|value| value as i64),
+        BinaryOp::URem => (left as u64)
+            .checked_rem(right as u64)
+            .map(|value| value as i64),
         BinaryOp::And => Some(left & right),
         BinaryOp::Or => Some(left | right),
         BinaryOp::Xor => Some(left ^ right),
         BinaryOp::Shl => Some(left.wrapping_shl(right as u32)),
         BinaryOp::Shr => Some(left.wrapping_shr(right as u32)),
+        BinaryOp::LShr => Some((left as u64).wrapping_shr(right as u32) as i64),
     }
 }
 
@@ -173,8 +184,12 @@ fn algebraic_rewrite(graph: &Graph, id: NodeId) -> Option<Rewrite> {
         }
         NodeKind::Compare(op) if node.data.len() == 2 && node.data[0] == node.data[1] => {
             let value = match op {
-                CompareOp::Eq | CompareOp::Le | CompareOp::Ge => 1,
-                CompareOp::Ne | CompareOp::Lt | CompareOp::Gt => 0,
+                CompareOp::Eq | CompareOp::Le | CompareOp::Ge | CompareOp::ULe | CompareOp::UGe => {
+                    1
+                }
+                CompareOp::Ne | CompareOp::Lt | CompareOp::Gt | CompareOp::ULt | CompareOp::UGt => {
+                    0
+                }
             };
             Some(Rewrite::Constant(value))
         }
@@ -222,8 +237,8 @@ fn simplify_binary(graph: &Graph, op: BinaryOp, left: NodeId, right: NodeId) -> 
                 None
             }
         }
-        BinaryOp::Div => (right_const == Some(1)).then_some(Rewrite::Node(left)),
-        BinaryOp::Rem => (right_const == Some(1)).then_some(Rewrite::Constant(0)),
+        BinaryOp::Div | BinaryOp::UDiv => (right_const == Some(1)).then_some(Rewrite::Node(left)),
+        BinaryOp::Rem | BinaryOp::URem => (right_const == Some(1)).then_some(Rewrite::Constant(0)),
         BinaryOp::And => {
             if left_const == Some(0) || right_const == Some(0) {
                 Some(Rewrite::Constant(0))
@@ -257,7 +272,7 @@ fn simplify_binary(graph: &Graph, op: BinaryOp, left: NodeId, right: NodeId) -> 
                 None
             }
         }
-        BinaryOp::Shl | BinaryOp::Shr => {
+        BinaryOp::Shl | BinaryOp::Shr | BinaryOp::LShr => {
             if left_const == Some(0) {
                 Some(Rewrite::Constant(0))
             } else if right_const == Some(0) {
@@ -272,7 +287,9 @@ fn simplify_binary(graph: &Graph, op: BinaryOp, left: NodeId, right: NodeId) -> 
 fn is_root(graph: &Graph, _id: NodeId, node: &Node) -> bool {
     match node.kind {
         NodeKind::Return => true,
-        NodeKind::Binary(BinaryOp::Div | BinaryOp::Rem) => division_may_trap(graph, node),
+        NodeKind::Binary(BinaryOp::Div | BinaryOp::Rem | BinaryOp::UDiv | BinaryOp::URem) => {
+            division_may_trap(graph, node)
+        }
         _ => false,
     }
 }
@@ -287,7 +304,10 @@ fn division_may_trap(graph: &Graph, node: &Node) -> bool {
     let Some(right) = const_value(graph, node.data[1]) else {
         return true;
     };
-    right == 0 || (left == i64::MIN && right == -1)
+    right == 0
+        || (matches!(node.kind, NodeKind::Binary(BinaryOp::Div | BinaryOp::Rem))
+            && left == i64::MIN
+            && right == -1)
 }
 
 fn bool_value(value: bool) -> i64 {

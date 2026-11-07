@@ -160,6 +160,10 @@ pub fn interpret(graph: &Graph, arguments: &[i64]) -> Result<i64, InterpretError
                     CompareOp::Le => left <= right,
                     CompareOp::Gt => left > right,
                     CompareOp::Ge => left >= right,
+                    CompareOp::ULt => (left as u64) < right as u64,
+                    CompareOp::ULe => (left as u64) <= right as u64,
+                    CompareOp::UGt => (left as u64) > right as u64,
+                    CompareOp::UGe => (left as u64) >= right as u64,
                 })
             }
             NodeKind::Phi
@@ -260,11 +264,24 @@ fn evaluate_binary(
             }
             left % right
         }
+        BinaryOp::UDiv => {
+            if right == 0 {
+                return Err(trap(node, TrapKind::DivisionByZero));
+            }
+            ((left as u64) / (right as u64)) as i64
+        }
+        BinaryOp::URem => {
+            if right == 0 {
+                return Err(trap(node, TrapKind::RemainderByZero));
+            }
+            ((left as u64) % (right as u64)) as i64
+        }
         BinaryOp::And => left & right,
         BinaryOp::Or => left | right,
         BinaryOp::Xor => left ^ right,
         BinaryOp::Shl => left.wrapping_shl(right as u32),
         BinaryOp::Shr => left.wrapping_shr(right as u32),
+        BinaryOp::LShr => (left as u64).wrapping_shr(right as u32) as i64,
     };
     Ok(value)
 }
