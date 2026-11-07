@@ -527,6 +527,7 @@ struct LoopContext {
     phis: Vec<(String, NodeId)>,
     breaks: Vec<(NodeId, HashMap<String, Binding>)>,
     induction: Option<(String, ScalarType)>,
+    inclusive_end: Option<String>,
 }
 
 struct Parser {
@@ -848,11 +849,41 @@ impl Parser {
         if self.loops.is_empty() {
             return Err(self.error_here("`continue` outside a loop is not supported"));
         }
-        self.increment_induction();
+        self.finish_iteration();
         let jump = self.graph.jump(self.control);
         self.append_loop_edge(jump);
         self.terminated = true;
         Ok(())
+    }
+
+    fn finish_iteration(&mut self) {
+        let Some(end_name) = self
+            .loops
+            .last()
+            .and_then(|context| context.inclusive_end.clone())
+        else {
+            self.increment_induction();
+            return;
+        };
+        let (index_name, _) = self
+            .loops
+            .last()
+            .and_then(|context| context.induction.clone())
+            .expect("inclusive range has an induction variable");
+        let current = self.variables[&index_name];
+        let end = self.variables[&end_name];
+        let condition = self.graph.compare(CompareOp::Eq, current.value, end.value);
+        self.types.insert(condition, ScalarType::Bool);
+        let branch = self.graph.if_(self.control, condition);
+
+        let last_iteration = self.graph.projection(branch, 0);
+        self.control = last_iteration;
+        self.parse_break()
+            .expect("inclusive range is inside a loop");
+
+        let next_iteration = self.graph.projection(branch, 1);
+        self.control = next_iteration;
+        self.increment_induction();
     }
 
     fn increment_induction(&mut self) {
@@ -1015,10 +1046,10 @@ impl Parser {
         }
         self.position += 1;
         let start = self.parse_expression()?;
-        if self.eat(TokenKind::DotDotEq) {
-            return Err(self.error_here("inclusive ranges (`..=`) are not supported"));
+        let inclusive = self.eat(TokenKind::DotDotEq);
+        if !inclusive {
+            self.expect(TokenKind::DotDot, "`..` in range loop")?;
         }
-        self.expect(TokenKind::DotDot, "`..` in range loop")?;
         let end = self.parse_expression()?;
         let ty = self.numeric_pair(start, end)?;
 
@@ -1041,18 +1072,23 @@ impl Parser {
                 ty,
             },
         );
-        self.parse_loop(None, Some((index_name, variable, ty, end)))
+        self.parse_loop(
+            None,
+            Some((index_name, variable, ty, end)),
+            inclusive.then_some(end_name),
+        )
     }
 
     fn parse_while(&mut self) -> Result<(), ParseError> {
         self.position += 1;
-        self.parse_loop(None, None)
+        self.parse_loop(None, None, None)
     }
 
     fn parse_loop(
         &mut self,
         condition: Option<NodeId>,
         induction: Option<(String, String, ScalarType, NodeId)>,
+        inclusive_end: Option<String>,
     ) -> Result<(), ParseError> {
         let outer_variables = self.variables.clone();
         let mut loop_variables = outer_variables
@@ -1083,10 +1119,11 @@ impl Parser {
             None => match &induction {
                 Some((index_name, _, ty, end)) => {
                     let current = self.variables[index_name].value;
-                    let comparison = if *ty == ScalarType::U64 {
-                        CompareOp::ULt
-                    } else {
-                        CompareOp::Lt
+                    let comparison = match (*ty, inclusive_end.is_some()) {
+                        (ScalarType::U64, true) => CompareOp::ULe,
+                        (ScalarType::U64, false) => CompareOp::ULt,
+                        (_, true) => CompareOp::Le,
+                        (_, false) => CompareOp::Lt,
                     };
                     let condition = self.graph.compare(comparison, current, *end);
                     self.mark_bool(condition)
@@ -1120,10 +1157,11 @@ impl Parser {
                 .collect(),
             breaks: Vec::new(),
             induction: induction.map(|(name, _, ty, _)| (name, ty)),
+            inclusive_end,
         });
         let body_terminated = self.parse_statement_body()?;
         if !body_terminated {
-            self.increment_induction();
+            self.finish_iteration();
             let back_edge = self.graph.jump(self.control);
             self.append_loop_edge(back_edge);
         }

@@ -66,7 +66,6 @@ fn range_calls_and_invalid_syntax_are_checked() {
     assert!(assembly.contains("\tcall end\n"));
 
     for (source, expected) in [
-        ("fn main() { for i in 0..=3 { } }", "inclusive ranges"),
         ("fn main() { for i in 0..3 { i += 1; } }", "immutable"),
         (
             "fn main() { for i in 0..3 { } return i; }",
