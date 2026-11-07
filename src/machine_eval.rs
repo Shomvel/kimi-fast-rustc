@@ -152,6 +152,14 @@ fn execute(function: &MachineFunction, arguments: &[i64]) -> Result<Execution, M
                 let value = machine.reg(src);
                 machine.set_reg(dst, value);
             }
+            MachineInstr::Neg { dst } => {
+                let value = machine.reg(dst).wrapping_neg();
+                machine.set_reg(dst, value);
+            }
+            MachineInstr::Not { dst } => {
+                let value = !machine.reg(dst);
+                machine.set_reg(dst, value);
+            }
             MachineInstr::Add { dst, src } => {
                 let value = machine
                     .reg(dst)
@@ -168,6 +176,26 @@ fn execute(function: &MachineFunction, arguments: &[i64]) -> Result<Execution, M
                 let value = machine
                     .reg(dst)
                     .wrapping_mul(machine.operand(src, function.stack_slots)?);
+                machine.set_reg(dst, value);
+            }
+            MachineInstr::And { dst, src } => {
+                let value = machine.reg(dst) & machine.operand(src, function.stack_slots)?;
+                machine.set_reg(dst, value);
+            }
+            MachineInstr::Or { dst, src } => {
+                let value = machine.reg(dst) | machine.operand(src, function.stack_slots)?;
+                machine.set_reg(dst, value);
+            }
+            MachineInstr::Xor { dst, src } => {
+                let value = machine.reg(dst) ^ machine.operand(src, function.stack_slots)?;
+                machine.set_reg(dst, value);
+            }
+            MachineInstr::Shl { dst } => {
+                let value = machine.reg(dst).wrapping_shl(machine.reg(Reg::Rcx) as u32);
+                machine.set_reg(dst, value);
+            }
+            MachineInstr::Shr { dst } => {
+                let value = machine.reg(dst).wrapping_shr(machine.reg(Reg::Rcx) as u32);
                 machine.set_reg(dst, value);
             }
             MachineInstr::Cqo => {
@@ -341,12 +369,23 @@ fn validate_instruction(
     };
 
     match instruction {
-        LoadArg { dst, .. } | MovImm { dst, .. } | SetCc { dst, .. } => validate_reg(dst),
+        LoadArg { dst, .. }
+        | MovImm { dst, .. }
+        | Neg { dst }
+        | Not { dst }
+        | Shl { dst }
+        | Shr { dst }
+        | SetCc { dst, .. } => validate_reg(dst),
         Mov { dst, src } => {
             validate_reg(dst)?;
             validate_reg(src)
         }
-        Add { dst, src } | Sub { dst, src } | IMul { dst, src } => {
+        Add { dst, src }
+        | Sub { dst, src }
+        | IMul { dst, src }
+        | And { dst, src }
+        | Or { dst, src }
+        | Xor { dst, src } => {
             validate_reg(dst)?;
             validate_operand(src)
         }

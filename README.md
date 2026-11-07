@@ -2,7 +2,7 @@
 
 `kfrc` is an experimental, native-only Rust compiler. It uses a sea-of-nodes IR, graph rewrites, explicit control regions, linear-scan register allocation, and x86_64 System V code generation. It does not use LLVM or Cranelift and does not perform static ILP instruction scheduling; dynamic scheduling is left to CPU out-of-order execution.
 
-The frontend currently supports a documented `i64` Rust subset: mutable and immutable bindings and parameters, ordinary and compound assignments, arithmetic and comparisons, `if` expressions and statements with `else if`, `while` loops, standard `fn main`, and function calls with register and stack arguments. Unsupported Rust is rejected explicitly rather than falling back to another backend. Whole-workspace support for large projects such as ripgrep and cargo is not yet implemented; native measurements are limited to the workloads documented in `docs/VALIDATION.md`.
+The frontend currently supports a documented `i64` Rust subset: mutable and immutable bindings and parameters, ordinary and compound assignments, arithmetic including wrapping negation, comparisons, bitwise operators, and shifts, `if` expressions and statements with `else if`, `while` loops, standard `fn main`, and function calls with register and stack arguments. Unsupported Rust is rejected explicitly rather than falling back to another backend. Whole-workspace support for large projects such as ripgrep and cargo is not yet implemented; native measurements are limited to the workloads documented in `docs/VALIDATION.md`.
 
 Legacy LLVM modules and benchmark data are retained only as historical evidence. They are not the current compiler architecture or a supported fallback.
 

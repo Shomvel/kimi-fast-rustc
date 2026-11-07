@@ -197,12 +197,22 @@ fn validate_instruction(
                 incoming_arg_offset(index)?;
             }
         }
-        MovImm { dst, .. } | SetCc { dst, .. } => validate_reg(dst)?,
+        MovImm { dst, .. }
+        | Neg { dst }
+        | Not { dst }
+        | Shl { dst }
+        | Shr { dst }
+        | SetCc { dst, .. } => validate_reg(dst)?,
         Mov { dst, src } => {
             validate_reg(dst)?;
             validate_reg(src)?;
         }
-        Add { dst, src } | Sub { dst, src } | IMul { dst, src } => {
+        Add { dst, src }
+        | Sub { dst, src }
+        | IMul { dst, src }
+        | And { dst, src }
+        | Or { dst, src }
+        | Xor { dst, src } => {
             validate_reg(dst)?;
             validate_operand(src, stack_slots)?;
         }
@@ -317,8 +327,31 @@ impl Encoder<'_> {
                 self.bytes.extend_from_slice(&value.to_le_bytes());
             }
             Mov { dst, src } => self.reg_reg(0x89, dst, src),
+            Neg { dst } => {
+                self.rex(true, None, Some(dst), false);
+                self.bytes.push(0xf7);
+                self.modrm(3, Reg::Rbx, dst.low_code());
+            }
+            Not { dst } => {
+                self.rex(true, None, Some(dst), false);
+                self.bytes.push(0xf7);
+                self.modrm(3, Reg::Rdx, dst.low_code());
+            }
             Add { dst, src } => self.binary(0x01, 0x03, dst, src)?,
             Sub { dst, src } => self.binary(0x29, 0x2b, dst, src)?,
+            And { dst, src } => self.binary(0x21, 0x23, dst, src)?,
+            Or { dst, src } => self.binary(0x09, 0x0b, dst, src)?,
+            Xor { dst, src } => self.binary(0x31, 0x33, dst, src)?,
+            Shl { dst } => {
+                self.rex(true, None, Some(dst), false);
+                self.bytes.push(0xd3);
+                self.modrm(3, Reg::Rsp, dst.low_code());
+            }
+            Shr { dst } => {
+                self.rex(true, None, Some(dst), false);
+                self.bytes.push(0xd3);
+                self.modrm(3, Reg::Rdi, dst.low_code());
+            }
             IMul { dst, src } => match src {
                 Operand::Reg(src) => {
                     self.rex(true, Some(dst), Some(src), false);

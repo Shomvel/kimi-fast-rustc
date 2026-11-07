@@ -221,13 +221,20 @@ pub fn lower_graph(graph: &Graph) -> Result<Vec<VirtualInstr>, CompileError> {
                 dst: virtual_reg(id),
                 index,
             },
-            NodeKind::Binary(
-                operation @ (BinaryOp::Add
-                | BinaryOp::Sub
-                | BinaryOp::Mul
-                | BinaryOp::Div
-                | BinaryOp::Rem),
-            ) => {
+            NodeKind::Unary(operation) => {
+                let src = value_reference(id, node.data[0], &values)?;
+                match operation {
+                    crate::son::UnaryOp::Neg => VirtualInstr::Neg {
+                        dst: virtual_reg(id),
+                        src,
+                    },
+                    crate::son::UnaryOp::Not => VirtualInstr::Not {
+                        dst: virtual_reg(id),
+                        src,
+                    },
+                }
+            }
+            NodeKind::Binary(operation) => {
                 let (lhs, rhs) = binary_inputs(id, &node.data, &values)?;
                 match operation {
                     BinaryOp::Add => VirtualInstr::Add {
@@ -255,7 +262,31 @@ pub fn lower_graph(graph: &Graph) -> Result<Vec<VirtualInstr>, CompileError> {
                         lhs,
                         rhs,
                     },
-                    _ => unreachable!(),
+                    BinaryOp::And => VirtualInstr::And {
+                        dst: virtual_reg(id),
+                        lhs,
+                        rhs,
+                    },
+                    BinaryOp::Or => VirtualInstr::Or {
+                        dst: virtual_reg(id),
+                        lhs,
+                        rhs,
+                    },
+                    BinaryOp::Xor => VirtualInstr::Xor {
+                        dst: virtual_reg(id),
+                        lhs,
+                        rhs,
+                    },
+                    BinaryOp::Shl => VirtualInstr::Shl {
+                        dst: virtual_reg(id),
+                        lhs,
+                        rhs,
+                    },
+                    BinaryOp::Shr => VirtualInstr::Shr {
+                        dst: virtual_reg(id),
+                        lhs,
+                        rhs,
+                    },
                 }
             }
             NodeKind::Compare(operation) => {
@@ -347,7 +378,6 @@ pub fn lower_graph(graph: &Graph) -> Result<Vec<VirtualInstr>, CompileError> {
                     None => VirtualInstr::Return(VirtualValue::Imm(0)),
                 }
             }
-            kind => return Err(unsupported(id, UnsupportedReason::NodeKind(kind))),
         };
 
         if matches!(node.kind, NodeKind::Return) {
@@ -604,9 +634,16 @@ fn defined_register(instruction: &VirtualInstr) -> Option<VirtualReg> {
     match *instruction {
         VirtualInstr::LoadArg { dst, .. }
         | VirtualInstr::Mov { dst, .. }
+        | VirtualInstr::Neg { dst, .. }
+        | VirtualInstr::Not { dst, .. }
         | VirtualInstr::Add { dst, .. }
         | VirtualInstr::Sub { dst, .. }
         | VirtualInstr::Mul { dst, .. }
+        | VirtualInstr::And { dst, .. }
+        | VirtualInstr::Or { dst, .. }
+        | VirtualInstr::Xor { dst, .. }
+        | VirtualInstr::Shl { dst, .. }
+        | VirtualInstr::Shr { dst, .. }
         | VirtualInstr::Div { dst, .. }
         | VirtualInstr::Rem { dst, .. }
         | VirtualInstr::Compare { dst, .. }
@@ -629,10 +666,18 @@ fn used_registers(instruction: &VirtualInstr) -> Vec<VirtualReg> {
         }
     };
     match instruction {
-        VirtualInstr::Mov { src, .. } | VirtualInstr::Return(src) => add_value(src),
+        VirtualInstr::Mov { src, .. }
+        | VirtualInstr::Neg { src, .. }
+        | VirtualInstr::Not { src, .. }
+        | VirtualInstr::Return(src) => add_value(src),
         VirtualInstr::Add { lhs, rhs, .. }
         | VirtualInstr::Sub { lhs, rhs, .. }
         | VirtualInstr::Mul { lhs, rhs, .. }
+        | VirtualInstr::And { lhs, rhs, .. }
+        | VirtualInstr::Or { lhs, rhs, .. }
+        | VirtualInstr::Xor { lhs, rhs, .. }
+        | VirtualInstr::Shl { lhs, rhs, .. }
+        | VirtualInstr::Shr { lhs, rhs, .. }
         | VirtualInstr::Div { lhs, rhs, .. }
         | VirtualInstr::Rem { lhs, rhs, .. }
         | VirtualInstr::Compare { lhs, rhs, .. } => {
@@ -731,6 +776,18 @@ impl Emitter<'_> {
                 self.load_value(src, work)?;
                 self.store_definition(dst, work)?;
             }
+            VirtualInstr::Neg { dst, src } => {
+                let work = self.definition_register(dst)?;
+                self.load_value(src, work)?;
+                self.instructions.push(MachineInstr::Neg { dst: work });
+                self.store_definition(dst, work)?;
+            }
+            VirtualInstr::Not { dst, src } => {
+                let work = self.definition_register(dst)?;
+                self.load_value(src, work)?;
+                self.instructions.push(MachineInstr::Not { dst: work });
+                self.store_definition(dst, work)?;
+            }
             VirtualInstr::Add { dst, lhs, rhs } => {
                 self.emit_binary(dst, lhs, rhs, BinaryKind::Add)?;
             }
@@ -739,6 +796,21 @@ impl Emitter<'_> {
             }
             VirtualInstr::Mul { dst, lhs, rhs } => {
                 self.emit_binary(dst, lhs, rhs, BinaryKind::Mul)?;
+            }
+            VirtualInstr::And { dst, lhs, rhs } => {
+                self.emit_binary(dst, lhs, rhs, BinaryKind::And)?;
+            }
+            VirtualInstr::Or { dst, lhs, rhs } => {
+                self.emit_binary(dst, lhs, rhs, BinaryKind::Or)?;
+            }
+            VirtualInstr::Xor { dst, lhs, rhs } => {
+                self.emit_binary(dst, lhs, rhs, BinaryKind::Xor)?;
+            }
+            VirtualInstr::Shl { dst, lhs, rhs } => {
+                self.emit_shift(dst, lhs, rhs, ShiftKind::Left)?;
+            }
+            VirtualInstr::Shr { dst, lhs, rhs } => {
+                self.emit_shift(dst, lhs, rhs, ShiftKind::Right)?;
             }
             VirtualInstr::Div { dst, lhs, rhs } => {
                 self.emit_division(dst, lhs, rhs, DivisionResult::Quotient)?;
@@ -854,8 +926,40 @@ impl Emitter<'_> {
                 dst: work,
                 src: rhs,
             },
+            BinaryKind::And => MachineInstr::And {
+                dst: work,
+                src: rhs,
+            },
+            BinaryKind::Or => MachineInstr::Or {
+                dst: work,
+                src: rhs,
+            },
+            BinaryKind::Xor => MachineInstr::Xor {
+                dst: work,
+                src: rhs,
+            },
         });
         self.store_definition(dst, work)
+    }
+
+    fn emit_shift(
+        &mut self,
+        dst: VirtualReg,
+        lhs: VirtualValue,
+        rhs: VirtualValue,
+        kind: ShiftKind,
+    ) -> Result<(), CompileError> {
+        self.load_value(lhs, SCRATCH0)?;
+        self.load_value(rhs, SCRATCH1)?;
+        self.instructions.push(MachineInstr::Mov {
+            dst: Reg::Rcx,
+            src: SCRATCH1,
+        });
+        self.instructions.push(match kind {
+            ShiftKind::Left => MachineInstr::Shl { dst: SCRATCH0 },
+            ShiftKind::Right => MachineInstr::Shr { dst: SCRATCH0 },
+        });
+        self.store_definition(dst, SCRATCH0)
     }
 
     fn emit_division(
@@ -975,6 +1079,15 @@ enum BinaryKind {
     Add,
     Sub,
     Mul,
+    And,
+    Or,
+    Xor,
+}
+
+#[derive(Clone, Copy)]
+enum ShiftKind {
+    Left,
+    Right,
 }
 
 #[derive(Clone, Copy)]
@@ -989,7 +1102,7 @@ mod tests {
 
     use super::*;
     use crate::machine_eval::{self, MachineEvalError};
-    use crate::son::{Node, UnaryOp};
+    use crate::son::Node;
 
     fn graph_with_return(value: NodeId, start: NodeId, graph: &mut Graph) {
         graph.return_(start, Some(value));
@@ -1350,29 +1463,7 @@ mod tests {
     }
 
     #[test]
-    fn rejects_unsupported_operations_and_multiple_returns() {
-        for operation in [
-            BinaryOp::And,
-            BinaryOp::Or,
-            BinaryOp::Xor,
-            BinaryOp::Shl,
-            BinaryOp::Shr,
-        ] {
-            let mut graph = Graph::new();
-            let start = graph.start();
-            let one = graph.constant(1);
-            let two = graph.constant(2);
-            let unsupported_binary = graph.binary(operation, one, two);
-            graph.return_(start, Some(unsupported_binary));
-            assert!(matches!(
-                compile_graph(&graph, "unsupported_binary"),
-                Err(CompileError::Unsupported {
-                    reason: UnsupportedReason::NodeKind(NodeKind::Binary(actual)),
-                    ..
-                }) if actual == operation
-            ));
-        }
-
+    fn rejects_multiple_returns() {
         let mut graph = Graph::new();
         let start = graph.start();
         let one = graph.constant(1);
@@ -1382,19 +1473,6 @@ mod tests {
             compile_graph(&graph, "returns"),
             Err(unsupported(second, UnsupportedReason::MultipleReturns))
         );
-
-        let mut graph = Graph::new();
-        let start = graph.start();
-        let one = graph.constant(1);
-        let negation = graph.unary(UnaryOp::Neg, one);
-        graph.return_(start, Some(negation));
-        assert!(matches!(
-            lower_graph(&graph),
-            Err(CompileError::Unsupported {
-                reason: UnsupportedReason::NodeKind(NodeKind::Unary(UnaryOp::Neg)),
-                ..
-            })
-        ));
 
         let mut graph = Graph::new();
         let start = graph.start();
@@ -1460,6 +1538,14 @@ mod tests {
                 MachineInstr::Mov { dst, src } => {
                     registers.insert(dst, read_reg(&registers, src));
                 }
+                MachineInstr::Neg { dst } => {
+                    let value = read_reg(&registers, dst).wrapping_neg();
+                    registers.insert(dst, value);
+                }
+                MachineInstr::Not { dst } => {
+                    let value = !read_reg(&registers, dst);
+                    registers.insert(dst, value);
+                }
                 MachineInstr::Add { dst, src } => {
                     let value = read_reg(&registers, dst)
                         .wrapping_add(read_operand(&registers, &slots, src));
@@ -1473,6 +1559,30 @@ mod tests {
                 MachineInstr::IMul { dst, src } => {
                     let value = read_reg(&registers, dst)
                         .wrapping_mul(read_operand(&registers, &slots, src));
+                    registers.insert(dst, value);
+                }
+                MachineInstr::And { dst, src } => {
+                    let value = read_reg(&registers, dst) & read_operand(&registers, &slots, src);
+                    registers.insert(dst, value);
+                }
+                MachineInstr::Or { dst, src } => {
+                    let value = read_reg(&registers, dst) | read_operand(&registers, &slots, src);
+                    registers.insert(dst, value);
+                }
+                MachineInstr::Xor { dst, src } => {
+                    let value = read_reg(&registers, dst) ^ read_operand(&registers, &slots, src);
+                    registers.insert(dst, value);
+                }
+                MachineInstr::Shl { dst } => {
+                    let value =
+                        read_reg(&registers, dst)
+                            .wrapping_shl(read_reg(&registers, Reg::Rcx) as u32);
+                    registers.insert(dst, value);
+                }
+                MachineInstr::Shr { dst } => {
+                    let value =
+                        read_reg(&registers, dst)
+                            .wrapping_shr(read_reg(&registers, Reg::Rcx) as u32);
                     registers.insert(dst, value);
                 }
                 MachineInstr::Cqo => {

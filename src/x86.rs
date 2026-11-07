@@ -60,6 +60,14 @@ pub enum VirtualInstr {
         dst: VirtualReg,
         src: VirtualValue,
     },
+    Neg {
+        dst: VirtualReg,
+        src: VirtualValue,
+    },
+    Not {
+        dst: VirtualReg,
+        src: VirtualValue,
+    },
     Add {
         dst: VirtualReg,
         lhs: VirtualValue,
@@ -71,6 +79,31 @@ pub enum VirtualInstr {
         rhs: VirtualValue,
     },
     Mul {
+        dst: VirtualReg,
+        lhs: VirtualValue,
+        rhs: VirtualValue,
+    },
+    And {
+        dst: VirtualReg,
+        lhs: VirtualValue,
+        rhs: VirtualValue,
+    },
+    Or {
+        dst: VirtualReg,
+        lhs: VirtualValue,
+        rhs: VirtualValue,
+    },
+    Xor {
+        dst: VirtualReg,
+        lhs: VirtualValue,
+        rhs: VirtualValue,
+    },
+    Shl {
+        dst: VirtualReg,
+        lhs: VirtualValue,
+        rhs: VirtualValue,
+    },
+    Shr {
         dst: VirtualReg,
         lhs: VirtualValue,
         rhs: VirtualValue,
@@ -296,9 +329,16 @@ pub enum MachineInstr {
     LoadArg { dst: Reg, index: usize },
     MovImm { dst: Reg, value: i64 },
     Mov { dst: Reg, src: Reg },
+    Neg { dst: Reg },
+    Not { dst: Reg },
     Add { dst: Reg, src: Operand },
     Sub { dst: Reg, src: Operand },
     IMul { dst: Reg, src: Operand },
+    And { dst: Reg, src: Operand },
+    Or { dst: Reg, src: Operand },
+    Xor { dst: Reg, src: Operand },
+    Shl { dst: Reg },
+    Shr { dst: Reg },
     Cqo,
     IDiv { src: Operand },
     Cmp { lhs: Reg, rhs: Operand },
@@ -490,12 +530,22 @@ fn validate_instruction(
                 incoming_arg_offset(index)?;
             }
         }
-        MovImm { dst, .. } | SetCc { dst, .. } => validate_reg(dst)?,
+        MovImm { dst, .. }
+        | Neg { dst }
+        | Not { dst }
+        | Shl { dst }
+        | Shr { dst }
+        | SetCc { dst, .. } => validate_reg(dst)?,
         Mov { dst, src } => {
             validate_reg(dst)?;
             validate_reg(src)?;
         }
-        Add { dst, src } | Sub { dst, src } | IMul { dst, src } => {
+        Add { dst, src }
+        | Sub { dst, src }
+        | IMul { dst, src }
+        | And { dst, src }
+        | Or { dst, src }
+        | Xor { dst, src } => {
             validate_reg(dst)?;
             validate_operand(src)?;
         }
@@ -568,9 +618,16 @@ fn emit_instruction(
         Mov { dst, src } => {
             out.push_str(&format!("\tmov {}, {}\n", dst.name(), src.name()));
         }
+        Neg { dst } => out.push_str(&format!("\tneg {}\n", dst.name())),
+        Not { dst } => out.push_str(&format!("\tnot {}\n", dst.name())),
         Add { dst, src } => emit_binary(out, "add", dst, src, stack_slots)?,
         Sub { dst, src } => emit_binary(out, "sub", dst, src, stack_slots)?,
         IMul { dst, src } => emit_binary(out, "imul", dst, src, stack_slots)?,
+        And { dst, src } => emit_binary(out, "and", dst, src, stack_slots)?,
+        Or { dst, src } => emit_binary(out, "or", dst, src, stack_slots)?,
+        Xor { dst, src } => emit_binary(out, "xor", dst, src, stack_slots)?,
+        Shl { dst } => out.push_str(&format!("\tshl {}, cl\n", dst.name())),
+        Shr { dst } => out.push_str(&format!("\tsar {}, cl\n", dst.name())),
         Cqo => out.push_str("\tcqo\n"),
         IDiv { src } => {
             out.push_str("\tidiv ");

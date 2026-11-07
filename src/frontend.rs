@@ -82,6 +82,11 @@ enum TokenKind {
     Le,
     Gt,
     Ge,
+    And,
+    Or,
+    Xor,
+    Shl,
+    Shr,
     Eof,
 }
 
@@ -331,7 +336,10 @@ impl<'a> Lexer<'a> {
                 }
             }
             Some('<') => {
-                if self.rest().starts_with('=') {
+                if self.rest().starts_with('<') {
+                    self.advance();
+                    TokenKind::Shl
+                } else if self.rest().starts_with('=') {
                     self.advance();
                     TokenKind::Le
                 } else {
@@ -339,13 +347,29 @@ impl<'a> Lexer<'a> {
                 }
             }
             Some('>') => {
-                if self.rest().starts_with('=') {
+                if self.rest().starts_with('>') {
+                    self.advance();
+                    TokenKind::Shr
+                } else if self.rest().starts_with('=') {
                     self.advance();
                     TokenKind::Ge
                 } else {
                     TokenKind::Gt
                 }
             }
+            Some('&') => {
+                if self.rest().starts_with('&') {
+                    return Err(ParseError::new(start, "logical `&&` is not supported"));
+                }
+                TokenKind::And
+            }
+            Some('|') => {
+                if self.rest().starts_with('|') {
+                    return Err(ParseError::new(start, "logical `||` is not supported"));
+                }
+                TokenKind::Or
+            }
+            Some('^') => TokenKind::Xor,
             Some('.') => {
                 return Err(ParseError::new(
                     start,
@@ -881,7 +905,7 @@ impl Parser {
     }
 
     fn parse_comparison(&mut self) -> Result<NodeId, ParseError> {
-        let left = self.parse_additive()?;
+        let left = self.parse_bitwise_or()?;
         let operation = match self.peek().kind {
             TokenKind::EqEq => Some(CompareOp::Eq),
             TokenKind::Ne => Some(CompareOp::Ne),
@@ -895,11 +919,52 @@ impl Parser {
             return Ok(left);
         };
         self.position += 1;
-        let right = self.parse_additive()?;
+        let right = self.parse_bitwise_or()?;
         if self.is_comparison(self.peek()) {
             return Err(self.error_here("chained comparisons are not supported"));
         }
         Ok(self.graph.compare(operation, left, right))
+    }
+
+    fn parse_bitwise_or(&mut self) -> Result<NodeId, ParseError> {
+        let mut value = self.parse_bitwise_xor()?;
+        while self.eat(TokenKind::Or) {
+            let right = self.parse_bitwise_xor()?;
+            value = self.graph.binary(BinaryOp::Or, value, right);
+        }
+        Ok(value)
+    }
+
+    fn parse_bitwise_xor(&mut self) -> Result<NodeId, ParseError> {
+        let mut value = self.parse_bitwise_and()?;
+        while self.eat(TokenKind::Xor) {
+            let right = self.parse_bitwise_and()?;
+            value = self.graph.binary(BinaryOp::Xor, value, right);
+        }
+        Ok(value)
+    }
+
+    fn parse_bitwise_and(&mut self) -> Result<NodeId, ParseError> {
+        let mut value = self.parse_shift()?;
+        while self.eat(TokenKind::And) {
+            let right = self.parse_shift()?;
+            value = self.graph.binary(BinaryOp::And, value, right);
+        }
+        Ok(value)
+    }
+
+    fn parse_shift(&mut self) -> Result<NodeId, ParseError> {
+        let mut value = self.parse_additive()?;
+        loop {
+            let operation = match self.peek().kind {
+                TokenKind::Shl => BinaryOp::Shl,
+                TokenKind::Shr => BinaryOp::Shr,
+                _ => return Ok(value),
+            };
+            self.position += 1;
+            let right = self.parse_additive()?;
+            value = self.graph.binary(operation, value, right);
+        }
     }
 
     fn parse_additive(&mut self) -> Result<NodeId, ParseError> {
@@ -1338,7 +1403,7 @@ mod tests {
         assert!(
             error("fn main() { return 1 && 0; }")
                 .message
-                .contains("unsupported token")
+                .contains("logical `&&`")
         );
         assert!(
             error("fn if() { return 0; }")
