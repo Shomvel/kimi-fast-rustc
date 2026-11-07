@@ -3,7 +3,7 @@ use std::collections::{HashMap, HashSet};
 use std::error::Error;
 use std::fmt;
 
-/// Parses the explicitly supported `i64`, `u64` (`usize`), and `bool` Rust subset.
+/// Parses the explicitly supported `i64` (`isize`), `u64` (`usize`), and `bool` Rust subset.
 ///
 /// Functions and parameters retain their names and source ranges in `Graph::functions`.
 /// `if` expressions and statements merge values through explicit jumps, control regions,
@@ -79,6 +79,11 @@ enum TokenKind {
     StarEq,
     SlashEq,
     PercentEq,
+    AndEq,
+    OrEq,
+    XorEq,
+    ShlEq,
+    ShrEq,
     Eq,
     EqEq,
     Ne,
@@ -236,9 +241,25 @@ impl<'a> Lexer<'a> {
 
     fn lex_integer(&mut self) -> Result<TokenKind, ParseError> {
         let start = self.span();
+        let radix = if self.rest().starts_with("0x") || self.rest().starts_with("0X") {
+            self.advance();
+            self.advance();
+            16
+        } else if self.rest().starts_with("0o") || self.rest().starts_with("0O") {
+            self.advance();
+            self.advance();
+            8
+        } else if self.rest().starts_with("0b") || self.rest().starts_with("0B") {
+            self.advance();
+            self.advance();
+            2
+        } else {
+            10
+        };
+        let digits_start = self.offset;
         while self
             .current_char()
-            .is_some_and(|ch| ch.is_ascii_digit() || ch == '_')
+            .is_some_and(|ch| ch == '_' || ch.is_digit(radix))
         {
             self.advance();
         }
@@ -246,34 +267,38 @@ impl<'a> Lexer<'a> {
         while self.current_char().is_some_and(is_ident_continue) {
             self.advance();
         }
+        let literal_span = Span {
+            end: self.offset,
+            ..start
+        };
         let suffix = &self.source[digits_end..self.offset];
-        if !matches!(suffix, "" | "i64" | "u64" | "usize") {
+        if !matches!(suffix, "" | "i64" | "isize" | "u64" | "usize") {
             return Err(ParseError::new(
-                Span {
-                    end: self.offset,
-                    ..start
-                },
+                literal_span,
                 format!(
-                    "unsupported integer literal suffix `{suffix}`; only decimal i64/u64/usize literals are supported"
+                    "unsupported integer literal suffix `{suffix}`; only i64/isize/u64/usize literals are supported"
                 ),
             ));
         }
-        let digits: String = self.source[start.start..digits_end]
+        let digits: String = self.source[digits_start..digits_end]
             .chars()
             .filter(|ch| *ch != '_')
             .collect();
-        let value = digits.parse::<u64>().map_err(|_| {
+        if digits.is_empty() {
+            return Err(ParseError::new(
+                literal_span,
+                "integer literal has no digits",
+            ));
+        }
+        let value = u64::from_str_radix(&digits, radix).map_err(|_| {
             ParseError::new(
-                Span {
-                    end: self.offset,
-                    ..start
-                },
+                literal_span,
                 "integer literal does not fit in the supported 64-bit magnitude range",
             )
         })?;
         Ok(match suffix {
             "" => TokenKind::Integer(value),
-            "i64" => TokenKind::I64Integer(value),
+            "i64" | "isize" => TokenKind::I64Integer(value),
             "u64" | "usize" => TokenKind::U64Integer(value),
             _ => unreachable!(),
         })
@@ -350,7 +375,11 @@ impl<'a> Lexer<'a> {
                 }
             }
             Some('<') => {
-                if self.rest().starts_with('<') {
+                if self.rest().starts_with("<=") {
+                    self.advance();
+                    self.advance();
+                    TokenKind::ShlEq
+                } else if self.rest().starts_with('<') {
                     self.advance();
                     TokenKind::Shl
                 } else if self.rest().starts_with('=') {
@@ -361,7 +390,11 @@ impl<'a> Lexer<'a> {
                 }
             }
             Some('>') => {
-                if self.rest().starts_with('>') {
+                if self.rest().starts_with(">=") {
+                    self.advance();
+                    self.advance();
+                    TokenKind::ShrEq
+                } else if self.rest().starts_with('>') {
                     self.advance();
                     TokenKind::Shr
                 } else if self.rest().starts_with('=') {
@@ -375,6 +408,9 @@ impl<'a> Lexer<'a> {
                 if self.rest().starts_with('&') {
                     self.advance();
                     TokenKind::AndAnd
+                } else if self.rest().starts_with('=') {
+                    self.advance();
+                    TokenKind::AndEq
                 } else {
                     TokenKind::And
                 }
@@ -383,11 +419,21 @@ impl<'a> Lexer<'a> {
                 if self.rest().starts_with('|') {
                     self.advance();
                     TokenKind::OrOr
+                } else if self.rest().starts_with('=') {
+                    self.advance();
+                    TokenKind::OrEq
                 } else {
                     TokenKind::Or
                 }
             }
-            Some('^') => TokenKind::Xor,
+            Some('^') => {
+                if self.rest().starts_with('=') {
+                    self.advance();
+                    TokenKind::XorEq
+                } else {
+                    TokenKind::Xor
+                }
+            }
             Some('.') => {
                 if self.rest().starts_with(".=") {
                     self.advance();
@@ -455,6 +501,7 @@ fn is_reserved_identifier(identifier: &str) -> bool {
             | "final"
             | "for"
             | "i64"
+            | "isize"
             | "if"
             | "impl"
             | "in"
@@ -668,6 +715,8 @@ impl Parser {
                 let value = self.parse_expression()?;
                 if let Some(expected) = return_type {
                     self.require_type(value, expected)?;
+                } else if self.unsuffixed_literals.contains(&value) {
+                    self.require_type(value, ScalarType::I64)?;
                 }
                 return_node = Some(self.graph.return_(self.control, Some(value)));
                 self.terminated = true;
@@ -782,6 +831,8 @@ impl Parser {
             let value = self.parse_expression()?;
             if let Some(expected) = self.return_type {
                 self.require_type(value, expected)?;
+            } else if self.unsuffixed_literals.contains(&value) {
+                self.require_type(value, ScalarType::I64)?;
             }
             self.expect(TokenKind::Semicolon, "`;` after returned expression")?;
             return Ok(Some(self.graph.return_(self.control, Some(value))));
@@ -838,6 +889,11 @@ impl Parser {
             TokenKind::StarEq => Some(BinaryOp::Mul),
             TokenKind::SlashEq => Some(BinaryOp::Div),
             TokenKind::PercentEq => Some(BinaryOp::Rem),
+            TokenKind::AndEq => Some(BinaryOp::And),
+            TokenKind::OrEq => Some(BinaryOp::Or),
+            TokenKind::XorEq => Some(BinaryOp::Xor),
+            TokenKind::ShlEq => Some(BinaryOp::Shl),
+            TokenKind::ShrEq => Some(BinaryOp::Shr),
             _ => return Err(self.error_here("expected an assignment operator")),
         };
         let right = self.parse_expression()?;
@@ -1245,14 +1301,16 @@ impl Parser {
     }
 
     fn parse_type(&mut self) -> Result<ScalarType, ParseError> {
-        let ty = if self.peek_identifier("i64") {
+        let ty = if self.peek_identifier("i64") || self.peek_identifier("isize") {
             ScalarType::I64
         } else if self.peek_identifier("u64") || self.peek_identifier("usize") {
             ScalarType::U64
         } else if self.peek_identifier("bool") {
             ScalarType::Bool
         } else {
-            return Err(self.error_here("only the `i64`, `u64`, and `bool` types are supported"));
+            return Err(self.error_here(
+                "supported scalar types are `i64`/`isize`, `u64`/`usize`, and `bool`",
+            ));
         };
         self.position += 1;
         Ok(ty)
@@ -1263,6 +1321,12 @@ impl Parser {
     }
 
     fn require_type(&mut self, value: NodeId, expected: ScalarType) -> Result<(), ParseError> {
+        if expected == ScalarType::I64
+            && self.unsuffixed_literals.contains(&value)
+            && matches!(self.graph.node(value).map(|node| node.kind), Some(NodeKind::Const(bits)) if bits < 0)
+        {
+            return Err(self.error_here("integer literal is outside the positive i64 range"));
+        }
         let actual = self.type_of(value);
         if actual == expected {
             return Ok(());
@@ -1448,6 +1512,7 @@ impl Parser {
         if ty == ScalarType::Bool {
             return Err(self.error_here("expected integer operands, found `bool`"));
         }
+        self.require_type(left, ty)?;
         self.require_type(right, ty)?;
         Ok(ty)
     }
@@ -1588,12 +1653,6 @@ impl Parser {
         let token = self.advance();
         match token.kind {
             TokenKind::Integer(value) => {
-                if value > i64::MAX as u64 {
-                    return Err(ParseError::new(
-                        token.span,
-                        "integer literal is outside the positive i64 range",
-                    ));
-                }
                 let node = self.graph.constant(value as i64);
                 self.unsuffixed_literals.insert(node);
                 Ok(node)
@@ -1925,12 +1984,12 @@ mod tests {
         assert!(
             error("fn f(x: i32) -> i64 { return x; }")
                 .message
-                .contains("only the `i64`, `u64`, and `bool` types")
+                .contains("supported scalar types")
         );
         assert!(
             error("fn main() -> u32 { return 1; }")
                 .message
-                .contains("only the `i64`, `u64`, and `bool` types")
+                .contains("supported scalar types")
         );
     }
 
@@ -1971,19 +2030,24 @@ mod tests {
                 .contains("suffix")
         );
         assert!(
-            error("fn main() { return 0xff; }")
+            error("fn main() { return 0b102; }")
                 .message
                 .contains("suffix")
+        );
+        assert!(
+            error("fn main() { return 0x_; }")
+                .message
+                .contains("no digits")
+        );
+        assert!(
+            error("fn main() { return 0x10000000000000000u64; }")
+                .message
+                .contains("64-bit magnitude")
         );
         assert!(
             error("fn main() { return 1.0; }")
                 .message
                 .contains("floating-point")
-        );
-        assert!(
-            error("fn main() { return 0b10; }")
-                .message
-                .contains("literal")
         );
     }
 
