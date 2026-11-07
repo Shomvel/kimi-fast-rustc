@@ -4,7 +4,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use kimi_fast_rustc::cache_admin::{CacheAdmin, OutputFormat};
-use kimi_fast_rustc::llvm::{LlvmConfig, OptLevel, TargetCpu};
+use kimi_fast_rustc::llvm::{LlvmConfig, Lto, OptLevel, TargetCpu};
 use kimi_fast_rustc::native_batch::BatchMode;
 use kimi_fast_rustc::rustc::{self, RustcInvocation};
 use kimi_fast_rustc::tuning_runner::{self, TuningRunner};
@@ -612,6 +612,18 @@ fn profile_args(
     };
     if target_cpu_native {
         config.target_cpu = TargetCpu::Native;
+    }
+    if let Ok(value) = env::var("KFRC_CODEGEN_UNITS") {
+        config.codegen_units = value
+            .parse()
+            .map_err(|_| format!("invalid KFRC_CODEGEN_UNITS {value:?}"))?;
+    }
+    if let Ok(value) = env::var("KFRC_LTO") {
+        config.lto = match value.as_str() {
+            "thin" => Lto::Thin,
+            "fat" => Lto::Fat,
+            _ => return Err(format!("invalid KFRC_LTO {value:?}; expected thin or fat")),
+        };
     }
     let args = config.rustc_args().map_err(|error| error.to_string())?;
     if !proc_macro {

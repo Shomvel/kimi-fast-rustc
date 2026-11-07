@@ -1,5 +1,6 @@
 use std::fs;
 use std::path::PathBuf;
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use kimi_fast_rustc::{
@@ -12,16 +13,24 @@ struct TestDirectory {
 
 impl TestDirectory {
     fn new() -> Self {
+        static NEXT_ID: AtomicU64 = AtomicU64::new(0);
         let timestamp = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .unwrap()
             .as_nanos();
-        let path = std::env::temp_dir().join(format!(
-            "kfrc-native-pipeline-test-{}-{timestamp:x}",
-            std::process::id()
-        ));
-        fs::create_dir(&path).unwrap();
-        Self { path }
+        let sequence = NEXT_ID.fetch_add(1, Ordering::Relaxed);
+        for attempt in 0..128 {
+            let path = std::env::temp_dir().join(format!(
+                "kfrc-native-pipeline-test-{}-{timestamp:x}-{sequence}-{attempt}",
+                std::process::id()
+            ));
+            match fs::create_dir(&path) {
+                Ok(()) => return Self { path },
+                Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => continue,
+                Err(error) => panic!("failed to create test directory: {error}"),
+            }
+        }
+        panic!("failed to allocate a unique test directory")
     }
 }
 

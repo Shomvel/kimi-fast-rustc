@@ -2,7 +2,7 @@
 
 ## Environment
 
-Formal validation uses `yicloud-dev`, Linux x86_64, four available CPUs, and the official Rust 1.99.1 toolchain. Benchmark inputs are ripgrep 15.2.0 (`e89fff89ac9af12e8d4ce9d5fd07beb408ca730f`) and cargo 0.99.0 (`797e8a9bca276c1c9f9f738d2a20f484fa4eea9d`). Dependencies are fetched before timed builds and used offline.
+Formal validation uses `yicloud-dev`, Linux x86_64, four available CPUs, and the official Rust 1.99.1 toolchain. Benchmark inputs are ripgrep 15.2.0 (`e89fff89ac9af12e8d4ce9d5fd07beb408ca730f`) and cargo crate 0.99.0 / CLI 1.98.0 (`797e8a9bca276c1c9f9f738d2a20f484fa4eea9d`). Dependencies are fetched before timed builds and used offline.
 
 ## Confirmed native correctness
 
@@ -35,7 +35,7 @@ These are build prechecks, not performance results.
 
 ## Formal benchmark status
 
-Early attempts stopped before compilation because the fetch target and `/usr/bin/time` were unavailable. Those issues were fixed. A later run built all three ripgrep arms and Cargo's baseline/controlled arms, then stopped when ordinary LTO was rejected for a proc-macro crate. The proc-macro-specific filter is being fixed without disabling LTO for final binaries.
+Early attempts stopped before compilation because the fetch target and `/usr/bin/time` were unavailable. Those issues were fixed. A later run built all three ripgrep arms and Cargo's baseline/controlled arms, then stopped when ordinary LTO was rejected for a proc-macro crate. The proc-macro-specific filter was subsequently fixed without disabling LTO for final binaries.
 
 The successful ripgrep artifacts from `/root/kimi-fast-rustc-benchmarks/results/20261107T154033Z` were measured separately with 15 alternating samples:
 

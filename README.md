@@ -5,7 +5,7 @@
 - **LLVM reference track:** a Cargo-compatible `RUSTC_WRAPPER` using rustc and LLVM. It supports controlled pass-through, reproducible optimization profiles, PGO command modeling, artifact analysis, and benchmarks.
 - **Native track:** a sea-of-nodes IR, graph rewrites, single-block lowering, linear-scan register allocation, and x86_64 System V assembly emission. This track does not use LLVM or Cranelift and does not perform static ILP instruction scheduling. It relies on CPU out-of-order execution after semantics-preserving lowering.
 
-The native frontend currently accepts only a documented, single-basic-block `i64` Rust expression subset. Unsupported Rust is rejected; it never silently falls back to LLVM. Full Cargo projects such as ripgrep and cargo currently require the LLVM reference track. No native performance or whole-project parity claim is made.
+The native frontend currently accepts only a documented, single-basic-block `i64` Rust expression subset. Unsupported Rust is rejected; it never silently falls back to LLVM. Full Cargo projects such as ripgrep and cargo currently require the LLVM reference track. No native whole-project performance or parity claim is made; synthetic native measurements are limited to the workloads documented in `docs/VALIDATION.md`.
 
 ## Build
 
@@ -84,7 +84,7 @@ The repository includes `scripts/bench-yicloud.sh`. It builds ripgrep and cargo 
 - Rust 1.99.1 toolchain: `/root/kfrc-toolchain-1.99.1/bin`
 - Benchmark sources: `/root/kimi-fast-rustc-benchmarks`
 - ripgrep 15.2.0: commit `e89fff89ac9af12e8d4ce9d5fd07beb408ca730f`
-- cargo 0.99.0: commit `797e8a9bca276c1c9f9f738d2a20f484fa4eea9d`
+- cargo crate 0.99.0 (CLI 1.98.0): commit `797e8a9bca276c1c9f9f738d2a20f484fa4eea9d`
 - `kfrc`: `/root/kimi-fast-rustc/target/release/kfrc`
 
 Example on the remote host:
