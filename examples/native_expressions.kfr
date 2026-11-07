@@ -1,0 +1,18 @@
+fn spin(mut value: i64) {
+    while value > 0 {
+        value -= 1;
+    }
+    return;
+}
+
+fn answer() -> i64 {
+    return 42;
+}
+
+fn main() -> i64 {
+    spin(3);
+    answer();
+    1 + 2;
+    3 < 4;
+    return answer();
+}

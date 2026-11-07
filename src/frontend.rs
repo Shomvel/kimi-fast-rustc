@@ -545,6 +545,7 @@ enum ScalarType {
     I64,
     U64,
     Bool,
+    Unit,
 }
 
 impl fmt::Display for ScalarType {
@@ -553,6 +554,7 @@ impl fmt::Display for ScalarType {
             Self::I64 => formatter.write_str("i64"),
             Self::U64 => formatter.write_str("u64"),
             Self::Bool => formatter.write_str("bool"),
+            Self::Unit => formatter.write_str("()"),
         }
     }
 }
@@ -881,7 +883,29 @@ impl Parser {
             self.expect(TokenKind::Semicolon, "`;` after returned expression")?;
             return Ok(Some(self.graph.return_(self.control, Some(value))));
         }
-        self.parse_assignment()?;
+        let is_assignment = matches!(self.peek().kind, TokenKind::Ident(_))
+            && self.tokens.get(self.position + 1).is_some_and(|token| {
+                matches!(
+                    token.kind,
+                    TokenKind::Eq
+                        | TokenKind::PlusEq
+                        | TokenKind::MinusEq
+                        | TokenKind::StarEq
+                        | TokenKind::SlashEq
+                        | TokenKind::PercentEq
+                        | TokenKind::AndEq
+                        | TokenKind::OrEq
+                        | TokenKind::XorEq
+                        | TokenKind::ShlEq
+                        | TokenKind::ShrEq
+                )
+            });
+        if is_assignment {
+            self.parse_assignment()?;
+        } else {
+            self.parse_expression()?;
+            self.expect(TokenKind::Semicolon, "`;` after expression statement")?;
+        }
         Ok(None)
     }
 
@@ -1553,8 +1577,8 @@ impl Parser {
             self.require_type(right, ScalarType::U64)?;
         }
         let ty = self.type_of(left);
-        if ty == ScalarType::Bool {
-            return Err(self.error_here("expected integer operands, found `bool`"));
+        if matches!(ty, ScalarType::Bool | ScalarType::Unit) {
+            return Err(self.error_here(format!("expected integer operands, found `{ty}`")));
         }
         self.require_type(left, ty)?;
         self.require_type(right, ty)?;
@@ -1655,6 +1679,9 @@ impl Parser {
             self.position += 1;
             let target = self.parse_type()?;
             let source = self.type_of(value);
+            if source == ScalarType::Unit {
+                return Err(self.error_here("unit values cannot be cast to scalar types"));
+            }
             if target == ScalarType::Bool && source != ScalarType::Bool {
                 return Err(self.error_here("numeric values cannot be cast to `bool`"));
             }
@@ -1751,14 +1778,7 @@ impl Parser {
                     for (argument, expected) in arguments.iter().zip(signature.parameter_types) {
                         self.require_type(*argument, expected)?;
                     }
-                    let return_type = signature.return_type.ok_or_else(|| {
-                        ParseError::new(
-                            token.span,
-                            format!(
-                                "unit-returning function `{identifier}` cannot be used as a value"
-                            ),
-                        )
-                    })?;
+                    let return_type = signature.return_type.unwrap_or(ScalarType::Unit);
                     let target = self.function_indices[&identifier];
                     let call = self.graph.add_node(
                         crate::son::NodeKind::Call(target),
@@ -2044,11 +2064,7 @@ mod tests {
                 .message
                 .contains("after `return`")
         );
-        assert!(
-            error("fn main() { 1 + 2; }")
-                .message
-                .contains("assignment target")
-        );
+        graph("fn main() { 1 + 2; }");
     }
 
     #[test]
