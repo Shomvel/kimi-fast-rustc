@@ -40,13 +40,14 @@ pub fn optimize(graph: &mut Graph) -> OptimizeStats {
             reported_merges
         };
         let stats = son_optimize::optimize(graph);
+        let strength = strength_reduce_control_graph(graph);
 
         total.value_numbering_merges += merges;
         total.constants_folded += stats.constants_folded;
-        total.algebraic_simplifications += stats.algebraic_simplifications;
+        total.algebraic_simplifications += stats.algebraic_simplifications + strength;
         total.dead_nodes_removed += stats.dead_nodes_removed;
 
-        if merges == 0 && stats.rewrites() == 0 {
+        if merges == 0 && stats.rewrites() == 0 && strength == 0 {
             return total;
         }
     }
@@ -63,7 +64,7 @@ fn optimize_control_flow(graph: &mut Graph) -> OptimizeStats {
             reported_merges
         };
         let folded = fold_control_constants(graph);
-        let simplified = simplify_control_graph(graph);
+        let simplified = simplify_control_graph(graph) + strength_reduce_control_graph(graph);
         let removed = eliminate_control_dead_nodes(graph);
         total.value_numbering_merges += merges;
         total.constants_folded += folded;
@@ -125,6 +126,73 @@ fn eliminate_control_dead_nodes(graph: &mut Graph) -> usize {
         })
         .collect::<Vec<_>>();
     son_optimize::eliminate_dead_nodes_with_roots(graph, &roots)
+}
+
+fn strength_reduce_control_graph(graph: &mut Graph) -> usize {
+    let mut reduced = 0;
+    for id in graph.ids().collect::<Vec<_>>() {
+        let Some(node) = graph.node(id) else {
+            continue;
+        };
+        if !node.control.is_empty() || !node.memory.is_empty() {
+            continue;
+        }
+        let NodeKind::Binary(operation) = node.kind else {
+            continue;
+        };
+        let data = node.data.clone();
+        match operation {
+            crate::son::BinaryOp::Mul => {
+                if let Some(shift) = node_const(graph, data[1]).and_then(power_of_two_shift) {
+                    replace_binary_constant(graph, id, crate::son::BinaryOp::Shl, 1, shift);
+                } else if let Some(shift) = node_const(graph, data[0]).and_then(power_of_two_shift)
+                {
+                    let node = graph.node_mut(id).expect("reduced node exists");
+                    node.kind = NodeKind::Binary(crate::son::BinaryOp::Shl);
+                    node.data = vec![data[1], data[0]];
+                    replace_binary_constant(graph, id, crate::son::BinaryOp::Shl, 1, shift);
+                } else {
+                    continue;
+                }
+            }
+            crate::son::BinaryOp::UDiv => {
+                let Some(shift) = node_const(graph, data[1]).and_then(power_of_two_shift) else {
+                    continue;
+                };
+                replace_binary_constant(graph, id, crate::son::BinaryOp::LShr, 1, shift);
+            }
+            _ => continue,
+        }
+        reduced += 1;
+    }
+    reduced
+}
+
+fn replace_binary_constant(
+    graph: &mut Graph,
+    id: crate::son::NodeId,
+    operation: crate::son::BinaryOp,
+    index: usize,
+    value: i64,
+) {
+    let node = graph.node_mut(id).expect("reduced node exists");
+    node.kind = NodeKind::Binary(operation);
+    let constant = node.data[index];
+    graph
+        .node_mut(constant)
+        .expect("shift constant exists")
+        .kind = NodeKind::Const(value);
+}
+
+fn node_const(graph: &Graph, id: crate::son::NodeId) -> Option<i64> {
+    match graph.node(id)?.kind {
+        NodeKind::Const(value) => Some(value),
+        _ => None,
+    }
+}
+
+fn power_of_two_shift(value: i64) -> Option<i64> {
+    (value > 0 && value.count_ones() == 1).then_some(value.trailing_zeros() as i64)
 }
 
 fn simplify_control_graph(graph: &mut Graph) -> usize {
