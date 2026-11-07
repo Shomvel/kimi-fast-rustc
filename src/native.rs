@@ -232,7 +232,26 @@ pub fn lower_graph(graph: &Graph) -> Result<Vec<VirtualInstr>, CompileError> {
                 }
             }
             NodeKind::Binary(operation) => {
-                let (lhs, rhs) = binary_inputs(id, &node.data, &values)?;
+                let (lhs, rhs) = if matches!(
+                    operation,
+                    BinaryOp::Add | BinaryOp::Mul | BinaryOp::And | BinaryOp::Or | BinaryOp::Xor
+                ) && matches!(
+                    graph.node(node.data[0]).map(|node| node.kind),
+                    Some(NodeKind::Const(_))
+                ) && !matches!(
+                    graph.node(node.data[1]).map(|node| node.kind),
+                    Some(NodeKind::Const(_))
+                ) {
+                    let lhs = value_reference(id, node.data[1], &values)?;
+                    let Some(NodeKind::Const(value)) =
+                        graph.node(node.data[0]).map(|node| node.kind)
+                    else {
+                        unreachable!("left constant was checked")
+                    };
+                    (lhs, VirtualValue::Imm(value))
+                } else {
+                    binary_inputs(id, &node.data, &values)?
+                };
                 let rhs = if let Some(NodeKind::Const(value)) =
                     graph.node(node.data[1]).map(|node| node.kind)
                 {
@@ -657,7 +676,23 @@ fn immediate_constants(graph: &Graph) -> BTreeSet<NodeId> {
             }
         }
         for (index, input) in node.data.iter().enumerate() {
-            if index == 1 && matches!(node.kind, NodeKind::Binary(_) | NodeKind::Compare(_)) {
+            if (index == 1 && matches!(node.kind, NodeKind::Binary(_) | NodeKind::Compare(_)))
+                || (index == 0
+                    && matches!(
+                        node.kind,
+                        NodeKind::Binary(
+                            BinaryOp::Add
+                                | BinaryOp::Mul
+                                | BinaryOp::And
+                                | BinaryOp::Or
+                                | BinaryOp::Xor
+                        )
+                    )
+                    && !matches!(
+                        graph.node(node.data[1]).map(|node| node.kind),
+                        Some(NodeKind::Const(_))
+                    ))
+            {
                 candidates.insert(*input);
             } else {
                 rejected.insert(*input);
