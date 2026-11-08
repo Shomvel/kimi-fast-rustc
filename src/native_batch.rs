@@ -9,16 +9,15 @@ use std::path::{Path, PathBuf};
 use std::string::FromUtf8Error;
 
 use crate::frontend::{self, ParseError};
-use crate::native::{self, CompileError};
-use crate::native_object::{self, NativeObjectError};
-use crate::parallel_native::{self, ParallelCompileError};
-use crate::pipeline::{PipelineBuilder, PipelineError};
-use crate::pipelined_native::PipelinedNativeError;
+use crate::native_object::NativeObjectError;
+use crate::native_program::{NativeProgram, ProgramError};
+use crate::parallel_native::ParallelCompileError;
+use crate::pipeline::PipelineError;
+use crate::pipelined_native::{self, PipelinedNativeError, RunError};
 use crate::placement::{self, PlacementError};
-use crate::scheduler::SchedulerError;
+use crate::scheduler::{Scheduler, SchedulerError, TaskResult};
 use crate::son::Graph;
 use crate::son_optimize;
-use crate::x86::MachineFunction;
 
 #[derive(Debug)]
 pub enum NativeBatchError {
@@ -58,6 +57,11 @@ pub enum NativeBatchError {
         input: PathBuf,
         path: PathBuf,
         source: NativeObjectError,
+    },
+    ProgramObject {
+        input: PathBuf,
+        path: PathBuf,
+        source: ProgramError,
     },
 }
 
@@ -116,6 +120,16 @@ impl fmt::Display for NativeBatchError {
                 input.display(),
                 path.display()
             ),
+            Self::ProgramObject {
+                input,
+                path,
+                source,
+            } => write!(
+                formatter,
+                "native object emission for input {} (output {}) failed: {source}",
+                input.display(),
+                path.display()
+            ),
         }
     }
 }
@@ -133,6 +147,7 @@ impl Error for NativeBatchError {
             Self::Scheduler(source) => Some(source),
             Self::Pipeline(source) => Some(source),
             Self::Object { source, .. } => Some(source),
+            Self::ProgramObject { source, .. } => Some(source),
         }
     }
 }
@@ -151,10 +166,11 @@ struct BatchInput {
     symbol: String,
 }
 
-/// Compiles one single-function `.kfr` graph per input and writes `<stem>.o` files.
+/// Compiles one `.kfr` program per input and writes `<stem>.o` files.
 ///
-/// This retains the DAG compilation mode. See [`compile_batch_with_mode`] for the
-/// ordering, parallelism, filename, and output guarantees shared by both modes.
+/// Each object contains every function declared by its input. This retains the DAG
+/// compilation mode. See [`compile_batch_with_mode`] for the ordering, parallelism,
+/// filename, and output guarantees shared by both modes.
 pub fn compile_batch<I, P>(
     inputs: I,
     output_directory: impl AsRef<Path>,
@@ -171,10 +187,11 @@ where
 ///
 /// Input and returned output paths have the same order. DAG mode uses at most
 /// `max_parallelism` workers. Pipeline mode uses that many workers and queue slots
-/// for each frontend, optimization, and codegen stage. Object files are written
-/// sequentially in input order by the same code in both modes. File stems must be
-/// nonempty ASCII alphanumeric, `_`, or `-` strings. Duplicate output names are
-/// rejected before any input is read.
+/// for each frontend, optimization, and codegen stage. Functions within an input are
+/// compiled by one worker in both modes so nested compilation does not multiply these
+/// limits. Object files are written sequentially in input order by the same code in
+/// both modes. File stems must be nonempty ASCII alphanumeric, `_`, or `-` strings.
+/// Duplicate output names are rejected before any input is read.
 pub fn compile_batch_with_mode<I, P>(
     inputs: I,
     output_directory: impl AsRef<Path>,
@@ -191,19 +208,19 @@ where
 
     let output_directory = output_directory.as_ref();
     let inputs = prepare_inputs(inputs, output_directory)?;
-    let functions = match mode {
+    let programs = match mode {
         BatchMode::Dag => compile_dag(&inputs, max_parallelism)?,
         BatchMode::Pipeline => compile_pipeline(&inputs, max_parallelism)?,
     };
-    write_objects(&inputs, &functions, output_directory)?;
+    write_objects(&inputs, &programs, output_directory)?;
     Ok(inputs.into_iter().map(|input| input.output).collect())
 }
 
 fn compile_dag(
     inputs: &[BatchInput],
     max_parallelism: usize,
-) -> Result<Vec<MachineFunction>, NativeBatchError> {
-    let mut graphs = Vec::with_capacity(inputs.len());
+) -> Result<Vec<NativeProgram>, NativeBatchError> {
+    let mut scheduler = Scheduler::<Result<NativeProgram, StageError>, ()>::new(max_parallelism);
     for input in inputs {
         let bytes = fs::read(&input.source).map_err(|source| NativeBatchError::Read {
             path: input.source.clone(),
@@ -217,11 +234,40 @@ fn compile_dag(
             path: input.source.clone(),
             source,
         })?;
-        graphs.push((input.symbol.clone(), graph));
+        let name = input.symbol.clone();
+        scheduler.add_task([], move || Ok(compile_dag_graph(name, graph)));
     }
 
-    parallel_native::compile_graphs(graphs, max_parallelism)
-        .map_err(|error| compile_error(error, inputs))
+    let results = scheduler.run().map_err(NativeBatchError::Scheduler)?;
+    let mut programs = Vec::with_capacity(results.len());
+    for (index, result) in results.into_iter().enumerate() {
+        match result {
+            TaskResult::Success(Ok(program)) => programs.push(program),
+            TaskResult::Success(Err(source)) => {
+                return Err(stage_error(index, source, inputs));
+            }
+            TaskResult::Panicked(message) => {
+                return Err(compile_error(
+                    ParallelCompileError::Panicked {
+                        index,
+                        name: inputs[index].symbol.clone(),
+                        message,
+                    },
+                    inputs,
+                ));
+            }
+            TaskResult::Failed(()) | TaskResult::Cancelled => {
+                unreachable!("independent compilation tasks cannot fail or be cancelled")
+            }
+        }
+    }
+    Ok(programs)
+}
+
+fn compile_dag_graph(name: String, mut graph: Graph) -> Result<NativeProgram, StageError> {
+    son_optimize::optimize(&mut graph);
+    let graph = placement::place_for_native(&graph).map_err(StageError::Placement)?;
+    pipelined_native::compile_program(name, &graph).map_err(StageError::Compile)
 }
 
 #[derive(Debug)]
@@ -230,80 +276,45 @@ enum StageError {
     InvalidUtf8(FromUtf8Error),
     Parse(ParseError),
     Placement(PlacementError),
-    Compile(CompileError),
+    Compile(ParallelCompileError),
 }
 
 fn compile_pipeline(
     inputs: &[BatchInput],
     max_parallelism: usize,
-) -> Result<Vec<MachineFunction>, NativeBatchError> {
-    let pipeline = PipelineBuilder::new()
-        .add_stage(max_parallelism, max_parallelism, |input: BatchInput| {
+) -> Result<Vec<NativeProgram>, NativeBatchError> {
+    pipelined_native::run_three_stages(
+        inputs.to_vec(),
+        max_parallelism,
+        max_parallelism,
+        [max_parallelism; 3],
+        |input: BatchInput| {
             let bytes = fs::read(&input.source).map_err(StageError::Read)?;
             let source = String::from_utf8(bytes).map_err(StageError::InvalidUtf8)?;
             let graph = frontend::parse(&source).map_err(StageError::Parse)?;
             Ok((input.symbol, graph))
-        })
-        .add_stage(
-            max_parallelism,
-            max_parallelism,
-            |(name, mut graph): (String, Graph)| {
-                son_optimize::optimize(&mut graph);
-                placement::place_for_native(&graph)
-                    .map(|graph| (name, graph))
-                    .map_err(StageError::Placement)
-            },
-        )
-        .add_stage(
-            max_parallelism,
-            max_parallelism,
-            |(name, graph): (String, Graph)| {
-                native::compile_graph(&graph, name).map_err(StageError::Compile)
-            },
-        )
-        .output_capacity(max_parallelism)
-        .build()
-        .map_err(|source| {
+        },
+        |(name, mut graph): (String, Graph)| {
+            son_optimize::optimize(&mut graph);
+            placement::place_for_native(&graph)
+                .map(|graph| (name, graph))
+                .map_err(StageError::Placement)
+        },
+        |(name, graph): (String, Graph)| {
+            pipelined_native::compile_program(name, &graph).map_err(StageError::Compile)
+        },
+    )
+    .map_err(|error| match error {
+        RunError::Configuration(source) => {
             NativeBatchError::Pipeline(PipelinedNativeError::Configuration(source))
-        })?;
-
-    pipeline
-        .run(inputs.to_vec())
-        .map_err(|error| pipeline_error(error, inputs))
+        }
+        RunError::Pipeline(error) => pipeline_error(error, inputs),
+    })
 }
 
 fn pipeline_error(error: PipelineError<StageError>, inputs: &[BatchInput]) -> NativeBatchError {
     match error {
-        PipelineError::Stage { index, source, .. } => match source {
-            StageError::Read(source) => NativeBatchError::Read {
-                path: inputs[index].source.clone(),
-                source,
-            },
-            StageError::InvalidUtf8(source) => NativeBatchError::InvalidUtf8 {
-                path: inputs[index].source.clone(),
-                source,
-            },
-            StageError::Parse(source) => NativeBatchError::Parse {
-                path: inputs[index].source.clone(),
-                source,
-            },
-            StageError::Placement(source) => compile_error(
-                ParallelCompileError::Placement {
-                    index,
-                    name: inputs[index].symbol.clone(),
-                    source,
-                },
-                inputs,
-            ),
-            StageError::Compile(source) => compile_error(
-                ParallelCompileError::Compile {
-                    index,
-                    name: inputs[index].symbol.clone(),
-                    source,
-                },
-                inputs,
-            ),
-        },
+        PipelineError::Stage { index, source, .. } => stage_error(index, source, inputs),
         PipelineError::Panicked { index, message, .. } => compile_error(
             ParallelCompileError::Panicked {
                 index,
@@ -324,9 +335,70 @@ fn pipeline_error(error: PipelineError<StageError>, inputs: &[BatchInput]) -> Na
     }
 }
 
+fn stage_error(index: usize, source: StageError, inputs: &[BatchInput]) -> NativeBatchError {
+    match source {
+        StageError::Read(source) => NativeBatchError::Read {
+            path: inputs[index].source.clone(),
+            source,
+        },
+        StageError::InvalidUtf8(source) => NativeBatchError::InvalidUtf8 {
+            path: inputs[index].source.clone(),
+            source,
+        },
+        StageError::Parse(source) => NativeBatchError::Parse {
+            path: inputs[index].source.clone(),
+            source,
+        },
+        StageError::Placement(source) => compile_error(
+            ParallelCompileError::Placement {
+                index,
+                name: inputs[index].symbol.clone(),
+                source,
+            },
+            inputs,
+        ),
+        StageError::Compile(source) => compile_error_at_input(source, index, inputs),
+    }
+}
+
+fn compile_error_at_input(
+    error: ParallelCompileError,
+    index: usize,
+    inputs: &[BatchInput],
+) -> NativeBatchError {
+    let name = inputs[index].symbol.clone();
+    match error {
+        ParallelCompileError::Scheduler(source) => NativeBatchError::Scheduler(source),
+        ParallelCompileError::Placement { source, .. } => compile_error(
+            ParallelCompileError::Placement {
+                index,
+                name,
+                source,
+            },
+            inputs,
+        ),
+        ParallelCompileError::Compile { source, .. } => compile_error(
+            ParallelCompileError::Compile {
+                index,
+                name,
+                source,
+            },
+            inputs,
+        ),
+        ParallelCompileError::Panicked { message, .. } => compile_error(
+            ParallelCompileError::Panicked {
+                index,
+                name,
+                message,
+            },
+            inputs,
+        ),
+    }
+}
+
 fn write_objects(
     inputs: &[BatchInput],
-    functions: &[MachineFunction],
+    programs: &[NativeProgram],
     output_directory: &Path,
 ) -> Result<(), NativeBatchError> {
     fs::create_dir_all(output_directory).map_err(|source| {
@@ -335,13 +407,21 @@ fn write_objects(
             source,
         }
     })?;
-    for (input, function) in inputs.iter().zip(functions) {
-        native_object::write_object_file(function, &input.output).map_err(|source| {
-            NativeBatchError::Object {
+    for (input, program) in inputs.iter().zip(programs) {
+        let object = program
+            .emit_object()
+            .map_err(|source| NativeBatchError::ProgramObject {
                 input: input.source.clone(),
                 path: input.output.clone(),
                 source,
-            }
+            })?;
+        fs::write(&input.output, object).map_err(|source| NativeBatchError::Object {
+            input: input.source.clone(),
+            path: input.output.clone(),
+            source: NativeObjectError::Write {
+                path: input.output.clone(),
+                source,
+            },
         })?;
     }
     Ok(())
@@ -573,7 +653,7 @@ mod tests {
     }
 
     #[test]
-    fn read_utf8_parse_and_compile_errors_include_source_paths_in_both_modes() {
+    fn read_utf8_parse_errors_and_multiple_functions_work_in_both_modes() {
         let directory = TestDirectory::new();
         let output = directory.path.join("objects");
         let missing = directory.path.join("missing.kfr");
@@ -615,17 +695,9 @@ mod tests {
                 "{message}"
             );
 
-            let error =
-                compile_batch_with_mode([&multiple_functions], &output, 2, mode).unwrap_err();
-            assert!(matches!(
-                &error,
-                NativeBatchError::Compile { path, .. } if path == &multiple_functions
-            ));
-            assert!(
-                error
-                    .to_string()
-                    .contains(&multiple_functions.display().to_string())
-            );
+            let outputs = compile_batch_with_mode([&multiple_functions], &output, 2, mode).unwrap();
+            assert_eq!(outputs, [output.join("compile.o")]);
+            assert!(fs::read(&outputs[0]).unwrap().starts_with(b"\x7fELF"));
         }
     }
 

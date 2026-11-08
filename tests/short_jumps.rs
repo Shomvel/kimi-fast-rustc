@@ -167,6 +167,73 @@ fn near_fixups_survive_shortening_elsewhere() {
     }
 }
 
+fn layout_hash(code: &[u8], relocations: &[CallRelocation]) -> u64 {
+    let mut hash = 0xcbf2_9ce4_8422_2325_u64;
+    for byte in code {
+        hash = (hash ^ u64::from(*byte)).wrapping_mul(0x0000_0100_0000_01b3);
+    }
+    for relocation in relocations {
+        for byte in relocation
+            .offset
+            .to_le_bytes()
+            .into_iter()
+            .chain(relocation.target.bytes())
+        {
+            hash = (hash ^ u64::from(byte)).wrapping_mul(0x0000_0100_0000_01b3);
+        }
+    }
+    hash
+}
+
+#[test]
+fn dense_shortening_and_chains_match_known_bytes_and_call_offsets() {
+    let mut adjacent = function(vec![MachineInstr::Label(0)]);
+    adjacent.symbols = vec!["external".into()];
+    for index in 0..128 {
+        let target = index + 1;
+        adjacent.instructions.push(if index % 2 == 0 {
+            MachineInstr::Jmp(target)
+        } else {
+            branch(Branch::Jcc, target)
+        });
+        if index % 7 == 0 {
+            adjacent.instructions.push(MachineInstr::Call { target: 0 });
+        }
+        adjacent.instructions.push(MachineInstr::Label(target));
+    }
+    adjacent.instructions.push(MachineInstr::Ret);
+
+    let mut chain = function(Vec::new());
+    chain.symbols = vec!["external".into()];
+    for index in 0..64_u32 {
+        let near_label = 2 * index + 1;
+        let far_label = near_label + 1;
+        chain.instructions.push(MachineInstr::Jmp(far_label));
+        chain
+            .instructions
+            .extend(padding(if index % 2 == 0 { 123 } else { 122 }));
+        chain.instructions.push(branch(Branch::Jcc, near_label));
+        chain.instructions.extend([
+            MachineInstr::Label(near_label),
+            MachineInstr::Label(far_label),
+        ]);
+        if index % 7 == 0 {
+            chain.instructions.push(MachineInstr::Call { target: 0 });
+        }
+    }
+    chain.instructions.push(MachineInstr::Ret);
+
+    for (function, code_len, relocation_count, expected_hash) in [
+        (adjacent, 357, 19, 0x7c9a_b305_acb9_cbf7),
+        (chain, 8152, 10, 0xe256_bfe2_828d_f14f),
+    ] {
+        let (code, relocations) = encode_with_relocations(&function).unwrap();
+        assert_eq!(code.len(), code_len);
+        assert_eq!(relocations.len(), relocation_count);
+        assert_eq!(layout_hash(&code, &relocations), expected_hash);
+    }
+}
+
 #[test]
 fn labels_and_plt32_call_offsets_use_the_shortened_layout() {
     let mut function = function(vec![

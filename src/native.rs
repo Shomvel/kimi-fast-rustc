@@ -1021,7 +1021,18 @@ impl Emitter<'_> {
                 self.emit_shift(dst, lhs, rhs, ShiftKind::Logical)?;
             }
             VirtualInstr::Div { dst, lhs, rhs } => {
-                self.emit_division(dst, lhs, rhs, DivisionResult::Quotient, true)?;
+                if let VirtualValue::Imm(divisor) = rhs
+                    && divisor > 0
+                    && (divisor as u64).is_power_of_two()
+                {
+                    self.emit_signed_division_power_of_two(
+                        dst,
+                        lhs,
+                        divisor.trailing_zeros() as u8,
+                    )?;
+                } else {
+                    self.emit_division(dst, lhs, rhs, DivisionResult::Quotient, true)?;
+                }
             }
             VirtualInstr::Rem { dst, lhs, rhs } => {
                 self.emit_division(dst, lhs, rhs, DivisionResult::Remainder, true)?;
@@ -1205,6 +1216,41 @@ impl Emitter<'_> {
             ShiftKind::Logical => MachineInstr::LShr { dst: SCRATCH0 },
         });
         self.store_definition(dst, SCRATCH0)
+    }
+
+    fn emit_signed_division_power_of_two(
+        &mut self,
+        dst: VirtualReg,
+        lhs: VirtualValue,
+        shift: u8,
+    ) -> Result<(), CompileError> {
+        let work = self.definition_register(dst)?;
+        self.load_value(lhs, work)?;
+        if shift == 0 {
+            return self.store_definition(dst, work);
+        }
+
+        self.instructions.push(MachineInstr::Mov {
+            dst: SCRATCH1,
+            src: work,
+        });
+        self.instructions.push(MachineInstr::ShrImm {
+            dst: SCRATCH1,
+            count: 63,
+        });
+        self.instructions.push(MachineInstr::LShrImm {
+            dst: SCRATCH1,
+            count: 64 - shift,
+        });
+        self.instructions.push(MachineInstr::Add {
+            dst: work,
+            src: Operand::Reg(SCRATCH1),
+        });
+        self.instructions.push(MachineInstr::ShrImm {
+            dst: work,
+            count: shift,
+        });
+        self.store_definition(dst, work)
     }
 
     fn emit_division(
@@ -1527,13 +1573,29 @@ mod tests {
             graph_with_return(result, start, &mut graph);
 
             let function = compile_graph(&graph, "spilled_division_result").unwrap();
-            let idiv = function
-                .instructions
-                .iter()
-                .position(|instruction| matches!(instruction, MachineInstr::IDiv { .. }))
-                .unwrap();
+            let result_position = match operation {
+                BinaryOp::Div => {
+                    let shift = function
+                        .instructions
+                        .iter()
+                        .position(|instruction| {
+                            matches!(instruction, MachineInstr::ShrImm { count: 2, .. })
+                        })
+                        .unwrap();
+                    shift + 1
+                }
+                BinaryOp::Rem => {
+                    function
+                        .instructions
+                        .iter()
+                        .position(|instruction| matches!(instruction, MachineInstr::IDiv { .. }))
+                        .unwrap()
+                        + 2
+                }
+                _ => unreachable!(),
+            };
             assert!(matches!(
-                function.instructions[idiv + 2],
+                function.instructions[result_position],
                 MachineInstr::Store { .. }
             ));
             assert_eq!(run(&function, &sequence(1, 20)), expected);

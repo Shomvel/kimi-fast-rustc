@@ -88,17 +88,17 @@ fn const_fn_supports_all_visibilities_and_preserves_object_symbols() {
 }
 
 #[test]
-fn non_literal_const_initializers_are_explicitly_rejected() {
+fn const_fn_calls_in_initializers_are_explicitly_rejected() {
     for source in [
-        "const ANSWER: i64 = 40 + 2; fn main() -> i64 { return ANSWER; }",
-        "pub const ANSWER: i64 = OTHER; fn main() -> i64 { return 0; }",
+        "const ANSWER: i64 = answer(); fn main() -> i64 { return ANSWER; }",
+        "pub const ANSWER: i64 = answer(); fn main() -> i64 { return 0; }",
         "pub(crate) const ANSWER: i64 = answer(); fn main() -> i64 { return 0; }",
     ] {
         let error = frontend::parse(source).unwrap_err();
         assert!(
             error
                 .message
-                .contains("top-level constant expressions are not supported"),
+                .contains("not supported in a constant expression"),
             "source: {source}; error: {error}"
         );
     }

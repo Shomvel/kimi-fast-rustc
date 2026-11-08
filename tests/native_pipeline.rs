@@ -4,9 +4,16 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use kimi_fast_rustc::{
-    frontend, interpreter, native, native_cli, optimizer_pipeline, pipelined_native, placement,
-    son_optimize,
+    frontend, interpreter, native, native_batch, native_cli, native_program, optimizer_pipeline,
+    pipelined_native, placement, son_optimize,
 };
+
+#[cfg(all(target_os = "linux", target_arch = "x86_64"))]
+use std::process::Command;
+
+const FORWARD_SOURCE: &str =
+    "fn main() -> i64 { return later(40); } fn later(value: i64) -> i64 { return value + 2; }";
+const RECURSIVE_SOURCE: &str = "fn factorial(value: i64) -> i64 { if value <= 1 { return 1; } return value * factorial(value - 1); } fn main() -> i64 { return factorial(5); }";
 
 struct TestDirectory {
     path: PathBuf,
@@ -160,6 +167,8 @@ fn pipelined_sources_preserve_order_and_direct_object_bytes() {
             "control_flow".to_owned(),
             "fn main(x: i64) -> i64 { if x < 0 { return -x; } return x + 1; }".to_owned(),
         ),
+        ("forward".to_owned(), FORWARD_SOURCE.to_owned()),
+        ("recursive".to_owned(), RECURSIVE_SOURCE.to_owned()),
     ];
     let expected: Vec<_> = inputs
         .iter()
@@ -167,26 +176,276 @@ fn pipelined_sources_preserve_order_and_direct_object_bytes() {
             let mut graph = frontend::parse(source).unwrap();
             optimizer_pipeline::optimize(&mut graph);
             let graph = placement::place_for_native(&graph).unwrap();
-            native::compile_graph(&graph, name.clone())
-                .unwrap()
-                .emit_object()
-                .unwrap()
+            let program = if graph.functions.len() <= 1 {
+                native_program::NativeProgram {
+                    functions: vec![native::compile_graph(&graph, name.clone()).unwrap()],
+                }
+            } else {
+                native_program::compile_graph(&graph).unwrap()
+            };
+            program.emit_object().unwrap()
         })
         .collect();
 
-    let functions = pipelined_native::compile_sources(inputs, 2).unwrap();
-    let names: Vec<_> = functions
-        .iter()
-        .map(|function| function.name.as_str())
+    for jobs in [1, 2, 4] {
+        let programs =
+            pipelined_native::compile_sources_with_jobs(inputs.clone(), 2, jobs).unwrap();
+        let names: Vec<_> = programs
+            .iter()
+            .flat_map(|program| {
+                program
+                    .functions
+                    .iter()
+                    .map(|function| function.name.as_str())
+            })
+            .collect();
+        let objects: Vec<_> = programs
+            .iter()
+            .map(|program| program.emit_object().unwrap())
+            .collect();
+
+        assert_eq!(
+            names,
+            [
+                "constant",
+                "arithmetic",
+                "comparison",
+                "control_flow",
+                "main",
+                "later",
+                "factorial",
+                "main",
+            ]
+        );
+        assert_eq!(objects, expected, "object bytes differ with jobs={jobs}");
+    }
+}
+
+#[test]
+fn native_batch_multi_function_objects_preserve_order_calls_and_mode_bytes() {
+    let directory = TestDirectory::new();
+    let forward = directory.path.join("forward.kfr");
+    let recursive = directory.path.join("recursive.kfr");
+    fs::write(&forward, FORWARD_SOURCE).unwrap();
+    fs::write(&recursive, RECURSIVE_SOURCE).unwrap();
+    let inputs = [&forward, &recursive];
+    let configurations = [
+        (native_batch::BatchMode::Dag, 1),
+        (native_batch::BatchMode::Dag, 3),
+        (native_batch::BatchMode::Pipeline, 1),
+        (native_batch::BatchMode::Pipeline, 3),
+    ];
+    let mut runs = Vec::new();
+    for (index, (mode, jobs)) in configurations.into_iter().enumerate() {
+        let output = directory.path.join(format!("objects-{index}"));
+        let outputs = native_batch::compile_batch_with_mode(inputs, &output, jobs, mode).unwrap();
+        assert_eq!(
+            outputs,
+            [output.join("forward.o"), output.join("recursive.o")]
+        );
+        runs.push(outputs);
+    }
+
+    for (index, (functions, calls)) in [
+        (&["main", "later"][..], &["later"][..]),
+        (&["factorial", "main"][..], &["factorial", "factorial"][..]),
+    ]
+    .into_iter()
+    .enumerate()
+    {
+        let expected = fs::read(&runs[0][index]).unwrap();
+        assert_object(&expected, functions, calls);
+        for outputs in &runs[1..] {
+            assert_eq!(fs::read(&outputs[index]).unwrap(), expected);
+        }
+    }
+}
+
+#[cfg(all(target_os = "linux", target_arch = "x86_64"))]
+#[test]
+fn native_batch_multi_function_objects_link_and_return() {
+    let Some(linker) = find_command(&["cc", "gcc", "clang"]) else {
+        eprintln!("C linker not found; skipping linked execution");
+        return;
+    };
+    let directory = TestDirectory::new();
+    let forward = directory.path.join("forward.kfr");
+    let recursive = directory.path.join("recursive.kfr");
+    fs::write(&forward, FORWARD_SOURCE).unwrap();
+    fs::write(&recursive, RECURSIVE_SOURCE).unwrap();
+
+    for (mode, prefix) in [
+        (native_batch::BatchMode::Dag, "dag"),
+        (native_batch::BatchMode::Pipeline, "pipeline"),
+    ] {
+        let output = directory.path.join(prefix);
+        let objects =
+            native_batch::compile_batch_with_mode([&forward, &recursive], &output, 2, mode)
+                .unwrap();
+        for (index, expected) in [42, 120].into_iter().enumerate() {
+            let executable = output.join(format!("program-{index}"));
+            let linked = Command::new(linker)
+                .arg(&objects[index])
+                .arg("-o")
+                .arg(&executable)
+                .output()
+                .unwrap();
+            assert!(
+                linked.status.success(),
+                "{linker} failed:\nstdout:\n{}\nstderr:\n{}",
+                String::from_utf8_lossy(&linked.stdout),
+                String::from_utf8_lossy(&linked.stderr)
+            );
+            assert_eq!(
+                Command::new(&executable).status().unwrap().code(),
+                Some(expected)
+            );
+        }
+    }
+}
+
+fn assert_object(object: &[u8], functions: &[&str], calls: &[&str]) {
+    assert_eq!(&object[..4], b"\x7fELF");
+    assert_eq!(read_u16(object, 16), 1, "object must be relocatable");
+    assert_eq!(read_u16(object, 18), 62, "object must target x86_64");
+
+    let symbols = section_contents(object, 3);
+    let names: Vec<_> = (0..symbols.len() / 24)
+        .filter_map(|index| {
+            let symbol = &symbols[index * 24..(index + 1) * 24];
+            (read_u16(symbol, 6) == 1 && symbol[4] & 0x0f == 2)
+                .then(|| symbol_name(object, symbol).to_owned())
+        })
         .collect();
-    let objects: Vec<_> = functions
-        .iter()
-        .map(|function| function.emit_object().unwrap())
+    assert_eq!(names, functions);
+
+    let relocations = section_contents(object, 2);
+    assert_eq!(relocations.len(), calls.len() * 24);
+    for (index, expected) in calls.iter().enumerate() {
+        let relocation = &relocations[index * 24..(index + 1) * 24];
+        let info = read_u64(relocation, 8);
+        assert_eq!(info as u32, 4, "relocation must be R_X86_64_PLT32");
+        assert_eq!(read_i64(relocation, 16), -4);
+        let symbol = &symbols[(info >> 32) as usize * 24..((info >> 32) as usize + 1) * 24];
+        assert_eq!(symbol_name(object, symbol), *expected);
+    }
+}
+
+fn section_contents(object: &[u8], index: usize) -> &[u8] {
+    let headers = read_u64(object, 40) as usize;
+    let header = headers + index * 64;
+    let offset = read_u64(object, header + 24) as usize;
+    let size = read_u64(object, header + 32) as usize;
+    &object[offset..offset + size]
+}
+
+fn symbol_name<'a>(object: &'a [u8], symbol: &[u8]) -> &'a str {
+    let strings = section_contents(object, 4);
+    let start = read_u32(symbol, 0) as usize;
+    let length = strings[start..].iter().position(|byte| *byte == 0).unwrap();
+    std::str::from_utf8(&strings[start..start + length]).unwrap()
+}
+
+fn read_u16(bytes: &[u8], offset: usize) -> u16 {
+    u16::from_le_bytes(bytes[offset..offset + 2].try_into().unwrap())
+}
+
+fn read_u32(bytes: &[u8], offset: usize) -> u32 {
+    u32::from_le_bytes(bytes[offset..offset + 4].try_into().unwrap())
+}
+
+fn read_u64(bytes: &[u8], offset: usize) -> u64 {
+    u64::from_le_bytes(bytes[offset..offset + 8].try_into().unwrap())
+}
+
+fn read_i64(bytes: &[u8], offset: usize) -> i64 {
+    i64::from_le_bytes(bytes[offset..offset + 8].try_into().unwrap())
+}
+
+#[cfg(all(target_os = "linux", target_arch = "x86_64"))]
+fn find_command<'a>(commands: &'a [&'a str]) -> Option<&'a str> {
+    commands.iter().copied().find(|command| {
+        Command::new(command)
+            .arg("--version")
+            .output()
+            .is_ok_and(|output| output.status.success())
+    })
+}
+
+#[test]
+#[ignore = "multi-input throughput benchmark; run explicitly"]
+fn pipelined_multi_input_throughput_comparison() {
+    use std::hint::black_box;
+    use std::time::{Duration, Instant};
+
+    const INPUTS: usize = 64;
+    const TERMS: usize = 40;
+    const ROUNDS: usize = 7;
+    let jobs = std::thread::available_parallelism()
+        .map(usize::from)
+        .unwrap_or(1)
+        .min(4);
+    let inputs: Vec<_> = (0..INPUTS)
+        .map(|index| {
+            let mut source = String::from("fn main(value: i64) -> i64 {\nlet v0 = value + 1;\n");
+            for term in 1..TERMS {
+                source.push_str(&format!(
+                    "let v{term} = v{} * {} + {};\n",
+                    term - 1,
+                    term % 7 + 2,
+                    index + term,
+                ));
+            }
+            source.push_str(&format!("return v{};\n}}", TERMS - 1));
+            (format!("input_{index:03}"), source)
+        })
         .collect();
 
-    assert_eq!(
-        names,
-        ["constant", "arithmetic", "comparison", "control_flow"]
+    fn measure(inputs: &[(String, String)], jobs: usize) -> (Duration, Vec<Vec<u8>>) {
+        let start = Instant::now();
+        let functions =
+            pipelined_native::compile_sources_with_jobs(inputs.to_vec(), 8, jobs).unwrap();
+        let elapsed = start.elapsed();
+        let objects: Vec<_> = functions
+            .iter()
+            .map(|function| function.emit_object().unwrap())
+            .collect();
+        black_box(&objects);
+        (elapsed, objects)
+    }
+
+    measure(&inputs, 1);
+    measure(&inputs, jobs);
+    let mut baseline_times = Vec::new();
+    let mut candidate_times = Vec::new();
+    for round in 0..ROUNDS {
+        let (baseline, candidate) = if round % 2 == 0 {
+            let baseline = measure(&inputs, 1);
+            let candidate = measure(&inputs, jobs);
+            (baseline, candidate)
+        } else {
+            let candidate = measure(&inputs, jobs);
+            let baseline = measure(&inputs, 1);
+            (baseline, candidate)
+        };
+        assert_eq!(baseline.1, candidate.1);
+        println!(
+            "round={} baseline_ms={:.3} jobs={jobs} candidate_ms={:.3}",
+            round + 1,
+            baseline.0.as_secs_f64() * 1000.0,
+            candidate.0.as_secs_f64() * 1000.0,
+        );
+        baseline_times.push(baseline.0);
+        candidate_times.push(candidate.0);
+    }
+    baseline_times.sort_unstable();
+    candidate_times.sort_unstable();
+    let baseline_median = baseline_times[ROUNDS / 2];
+    let candidate_median = candidate_times[ROUNDS / 2];
+    println!(
+        "SUMMARY inputs={INPUTS} terms={TERMS} rounds={ROUNDS} jobs={jobs} baseline_median_ms={:.3} candidate_median_ms={:.3} median_speedup={:.3}x",
+        baseline_median.as_secs_f64() * 1000.0,
+        candidate_median.as_secs_f64() * 1000.0,
+        baseline_median.as_secs_f64() / candidate_median.as_secs_f64(),
     );
-    assert_eq!(objects, expected);
 }

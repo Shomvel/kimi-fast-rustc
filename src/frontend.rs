@@ -9,10 +9,11 @@ use std::fmt;
 /// `if` expressions and statements merge values through explicit jumps, control regions,
 /// and Phi nodes. Mutable bindings and `while` loops use loop-header Phis, multiple back
 /// edges from `continue`, and exit Phis for `break` snapshots.
-/// A pre-scan registers literal scalar constants and function signatures, supporting forward and
-/// recursive calls with checked argument and return types. Comparisons and logical operations produce
-/// booleans; `&&` and `||` evaluate their right operand conditionally. Unsupported Rust is
-/// rejected with a source location.
+/// A pre-scan registers scalar constant declarations and function signatures, supporting forward
+/// constant references and recursive calls with checked types. Constant expressions are evaluated
+/// without emitting runtime nodes. Comparisons and logical operations produce booleans; `&&` and
+/// `||` evaluate their right operand conditionally. Unsupported Rust is rejected with a source
+/// location.
 pub fn parse(source: &str) -> Result<Graph, ParseError> {
     let tokens = Lexer::new(source).tokenize()?;
     Parser::new(tokens).parse_program()
@@ -578,6 +579,22 @@ struct Constant {
     ty: ScalarType,
 }
 
+#[derive(Clone)]
+struct ConstantItem {
+    name: String,
+    name_span: Span,
+    ty: ScalarType,
+    expression_start: usize,
+    expression_end: usize,
+}
+
+#[derive(Clone, Copy)]
+struct ConstantValue {
+    value: i64,
+    ty: ScalarType,
+    unsuffixed: bool,
+}
+
 #[derive(Clone, Copy)]
 struct Binding {
     value: NodeId,
@@ -602,6 +619,10 @@ struct Parser {
     function_indices: HashMap<String, usize>,
     signatures: HashMap<String, FunctionSignature>,
     constants: HashMap<String, Constant>,
+    constant_items: HashMap<String, ConstantItem>,
+    constant_order: Vec<String>,
+    evaluating_constants: HashSet<String>,
+    const_evaluation: bool,
     variables: HashMap<String, Binding>,
     shadowed_variables: Vec<(String, Binding)>,
     types: HashMap<NodeId, ScalarType>,
@@ -622,6 +643,10 @@ impl Parser {
             function_indices: HashMap::new(),
             signatures: HashMap::new(),
             constants: HashMap::new(),
+            constant_items: HashMap::new(),
+            constant_order: Vec::new(),
+            evaluating_constants: HashSet::new(),
+            const_evaluation: true,
             variables: HashMap::new(),
             shadowed_variables: Vec::new(),
             types: HashMap::new(),
@@ -645,16 +670,18 @@ impl Parser {
                 return Err(self.error_here("expected `fn`; this item is not supported"));
             }
             if self.const_item_ahead() {
-                let (name, name_span, constant) = self.parse_const_item()?;
-                if self.functions.contains(&name) || self.constants.contains_key(&name) {
+                let item = self.scan_const_item()?;
+                let name = item.name.clone();
+                if self.functions.contains(&name) || self.constant_items.contains_key(&name) {
                     return Err(ParseError::new(
-                        name_span,
+                        item.name_span,
                         format!(
                             "duplicate item `{name}`; functions and constants must have unique names"
                         ),
                     ));
                 }
-                self.constants.insert(name, constant);
+                self.constant_order.push(name.clone());
+                self.constant_items.insert(name, item);
                 continue;
             }
             let header = self.parse_function_header()?;
@@ -673,7 +700,7 @@ impl Parser {
                     _ => {}
                 }
             }
-            if self.constants.contains_key(&header.name) {
+            if self.constant_items.contains_key(&header.name) {
                 return Err(ParseError::new(
                     header.name_span,
                     format!(
@@ -701,10 +728,14 @@ impl Parser {
         if self.functions.is_empty() {
             return Err(self.error_here("expected at least one function"));
         }
+        for name in self.constant_order.clone() {
+            let name_span = self.constant_items[&name].name_span;
+            self.evaluate_constant(&name, name_span)?;
+        }
         self.position = 0;
         while !self.check(&TokenKind::Eof) {
             if self.const_item_ahead() {
-                self.parse_const_item()?;
+                self.scan_const_item()?;
             } else {
                 self.parse_function()?;
             }
@@ -755,7 +786,7 @@ impl Parser {
             .is_some_and(|token| token.kind == TokenKind::Fn)
     }
 
-    fn parse_const_item(&mut self) -> Result<(String, Span, Constant), ParseError> {
+    fn scan_const_item(&mut self) -> Result<ConstantItem, ParseError> {
         self.parse_function_visibility()?;
         let const_token = self.advance();
         debug_assert!(matches!(
@@ -766,105 +797,615 @@ impl Parser {
         self.expect(TokenKind::Colon, "`:` and explicit constant type")?;
         let ty = self.parse_type()?;
         self.expect(TokenKind::Eq, "`=` in constant item")?;
-        let negative = self.eat(TokenKind::Minus);
-        let token = self.advance();
-        let span = token.span;
-        let constant = match token.kind {
-            TokenKind::Integer(magnitude) | TokenKind::I64Integer(magnitude) if negative => {
-                let value = if magnitude == (i64::MAX as u64) + 1 {
-                    i64::MIN
-                } else if magnitude <= i64::MAX as u64 {
-                    -(magnitude as i64)
-                } else {
-                    return Err(ParseError::new(
-                        span,
-                        "negative integer literal is outside the i64 range",
-                    ));
-                };
-                Constant {
-                    value,
-                    ty: ScalarType::I64,
+        let expression_start = self.position;
+        let mut parentheses = 0usize;
+        loop {
+            if self.check(&TokenKind::Semicolon) {
+                break;
+            }
+            if self.check(&TokenKind::Eof)
+                || (parentheses == 0
+                    && (self.check(&TokenKind::Fn)
+                        || self.peek_identifier("pub")
+                        || self.peek_identifier("const")))
+            {
+                return Err(self.error_here("expected `;` after constant item"));
+            }
+            match self.peek().kind {
+                TokenKind::LParen => {
+                    parentheses = parentheses.checked_add(1).ok_or_else(|| {
+                        self.error_here("constant expression parentheses are nested too deeply")
+                    })?;
+                }
+                TokenKind::RParen => parentheses = parentheses.saturating_sub(1),
+                _ => {}
+            }
+            self.advance();
+        }
+        let expression_end = self.position;
+        self.advance();
+        Ok(ConstantItem {
+            name,
+            name_span,
+            ty,
+            expression_start,
+            expression_end,
+        })
+    }
+
+    fn evaluate_constant(
+        &mut self,
+        name: &str,
+        reference_span: Span,
+    ) -> Result<Constant, ParseError> {
+        if let Some(constant) = self.constants.get(name).copied() {
+            return Ok(constant);
+        }
+        let Some(item) = self.constant_items.get(name).cloned() else {
+            return Err(ParseError::new(
+                reference_span,
+                format!("unknown constant `{name}`"),
+            ));
+        };
+        if !self.evaluating_constants.insert(name.to_owned()) {
+            return Err(ParseError::new(
+                reference_span,
+                format!("cyclic constant reference `{name}`"),
+            ));
+        }
+
+        let saved_position = self.position;
+        let saved_evaluation = self.const_evaluation;
+        self.position = item.expression_start;
+        self.const_evaluation = saved_evaluation;
+        let result = (|| {
+            let value = self.parse_const_logical_or(Some(item.ty))?;
+            if self.position != item.expression_end {
+                return Err(self.error_here("expected `;` after constant expression"));
+            }
+            let found = value.ty;
+            let value = self
+                .require_const_type(value, item.ty, self.peek().span)
+                .map_err(|error| {
+                    if error.message.starts_with("type mismatch") {
+                        ParseError::new(
+                            item.name_span,
+                            format!(
+                                "type mismatch in constant `{}`: expected `{}`, found `{found}`",
+                                item.name, item.ty
+                            ),
+                        )
+                    } else {
+                        error
+                    }
+                })?;
+            Ok(Constant {
+                value: value.value,
+                ty: value.ty,
+            })
+        })();
+        self.position = saved_position;
+        self.const_evaluation = saved_evaluation;
+        self.evaluating_constants.remove(name);
+        let constant = result?;
+        if saved_evaluation {
+            self.constants.insert(name.to_owned(), constant);
+        }
+        Ok(constant)
+    }
+
+    fn require_const_type(
+        &self,
+        mut value: ConstantValue,
+        expected: ScalarType,
+        span: Span,
+    ) -> Result<ConstantValue, ParseError> {
+        if expected == ScalarType::I64 && value.unsuffixed && value.value < 0 {
+            return Err(ParseError::new(
+                span,
+                "integer literal is outside the positive i64 range",
+            ));
+        }
+        if value.ty == expected {
+            return Ok(value);
+        }
+        if value.ty == ScalarType::I64 && expected == ScalarType::U64 && value.unsuffixed {
+            value.ty = ScalarType::U64;
+            value.unsuffixed = false;
+            return Ok(value);
+        }
+        Err(ParseError::new(
+            span,
+            format!("type mismatch: expected `{expected}`, found `{}`", value.ty),
+        ))
+    }
+
+    fn const_numeric_pair(
+        &self,
+        mut left: ConstantValue,
+        mut right: ConstantValue,
+        span: Span,
+    ) -> Result<(ConstantValue, ConstantValue, ScalarType), ParseError> {
+        if left.unsuffixed && right.ty == ScalarType::U64 {
+            left = self.require_const_type(left, ScalarType::U64, span)?;
+        }
+        if right.unsuffixed && left.ty == ScalarType::U64 {
+            right = self.require_const_type(right, ScalarType::U64, span)?;
+        }
+        let ty = left.ty;
+        if matches!(ty, ScalarType::Bool | ScalarType::Unit) {
+            return Err(ParseError::new(
+                span,
+                format!("expected integer operands, found `{ty}`"),
+            ));
+        }
+        left = self.require_const_type(left, ty, span)?;
+        right = self.require_const_type(right, ty, span)?;
+        Ok((left, right, ty))
+    }
+
+    fn const_integer_binary(
+        &self,
+        operation: BinaryOp,
+        left: ConstantValue,
+        right: ConstantValue,
+        span: Span,
+    ) -> Result<ConstantValue, ParseError> {
+        let (left, right, ty) = self.const_numeric_pair(left, right, span)?;
+        if !self.const_evaluation {
+            return Ok(ConstantValue {
+                value: 0,
+                ty,
+                unsuffixed: false,
+            });
+        }
+        let overflow = || ParseError::new(span, "arithmetic overflow in constant expression");
+        let divide_by_zero = || ParseError::new(span, "division by zero in constant expression");
+        let invalid_shift = || {
+            ParseError::new(
+                span,
+                "invalid shift count in constant expression; expected a value in 0..64",
+            )
+        };
+        let value = match ty {
+            ScalarType::I64 => match operation {
+                BinaryOp::Add => left.value.checked_add(right.value).ok_or_else(overflow)?,
+                BinaryOp::Sub => left.value.checked_sub(right.value).ok_or_else(overflow)?,
+                BinaryOp::Mul => left.value.checked_mul(right.value).ok_or_else(overflow)?,
+                BinaryOp::Div => {
+                    if right.value == 0 {
+                        return Err(divide_by_zero());
+                    }
+                    left.value.checked_div(right.value).ok_or_else(overflow)?
+                }
+                BinaryOp::Rem => {
+                    if right.value == 0 {
+                        return Err(divide_by_zero());
+                    }
+                    left.value.checked_rem(right.value).ok_or_else(overflow)?
+                }
+                BinaryOp::And => left.value & right.value,
+                BinaryOp::Or => left.value | right.value,
+                BinaryOp::Xor => left.value ^ right.value,
+                BinaryOp::Shl | BinaryOp::Shr => {
+                    if right.value < 0 || right.value >= 64 {
+                        return Err(invalid_shift());
+                    }
+                    let shift = right.value as u32;
+                    if operation == BinaryOp::Shl {
+                        left.value.wrapping_shl(shift)
+                    } else {
+                        left.value >> shift
+                    }
+                }
+                _ => return Err(ParseError::new(span, "invalid integer constant operation")),
+            },
+            ScalarType::U64 => {
+                let left = left.value as u64;
+                let right = right.value as u64;
+                match operation {
+                    BinaryOp::Add => left.checked_add(right).ok_or_else(overflow)? as i64,
+                    BinaryOp::Sub => left.checked_sub(right).ok_or_else(overflow)? as i64,
+                    BinaryOp::Mul => left.checked_mul(right).ok_or_else(overflow)? as i64,
+                    BinaryOp::Div => {
+                        if right == 0 {
+                            return Err(divide_by_zero());
+                        }
+                        (left / right) as i64
+                    }
+                    BinaryOp::Rem => {
+                        if right == 0 {
+                            return Err(divide_by_zero());
+                        }
+                        (left % right) as i64
+                    }
+                    BinaryOp::And => (left & right) as i64,
+                    BinaryOp::Or => (left | right) as i64,
+                    BinaryOp::Xor => (left ^ right) as i64,
+                    BinaryOp::Shl | BinaryOp::Shr => {
+                        if right >= 64 {
+                            return Err(invalid_shift());
+                        }
+                        let shift = right as u32;
+                        if operation == BinaryOp::Shl {
+                            left.wrapping_shl(shift) as i64
+                        } else {
+                            (left >> shift) as i64
+                        }
+                    }
+                    _ => return Err(ParseError::new(span, "invalid integer constant operation")),
                 }
             }
-            TokenKind::Integer(value) => {
-                if ty == ScalarType::U64 {
-                    Constant {
-                        value: value as i64,
-                        ty: ScalarType::U64,
-                    }
+            _ => unreachable!("numeric pair excludes non-integer operands"),
+        };
+        Ok(ConstantValue {
+            value,
+            ty,
+            unsuffixed: false,
+        })
+    }
+
+    fn parse_const_logical_or(
+        &mut self,
+        hint: Option<ScalarType>,
+    ) -> Result<ConstantValue, ParseError> {
+        let mut left = self.parse_const_logical_and(hint)?;
+        while self.eat(TokenKind::OrOr) {
+            let span = self.peek().span;
+            left = self.require_const_type(left, ScalarType::Bool, span)?;
+            let evaluating = self.const_evaluation;
+            self.const_evaluation = evaluating && left.value == 0;
+            let parsed = self.parse_const_logical_and(Some(ScalarType::Bool));
+            self.const_evaluation = evaluating;
+            let right = self.require_const_type(parsed?, ScalarType::Bool, span)?;
+            left = ConstantValue {
+                value: if evaluating && left.value != 0 {
+                    1
+                } else if evaluating {
+                    right.value
                 } else {
-                    if value > i64::MAX as u64 {
-                        return Err(ParseError::new(
-                            span,
-                            "integer literal is outside the positive i64 range",
-                        ));
-                    }
-                    Constant {
-                        value: value as i64,
-                        ty: ScalarType::I64,
-                    }
+                    0
+                },
+                ty: ScalarType::Bool,
+                unsuffixed: false,
+            };
+        }
+        Ok(left)
+    }
+
+    fn parse_const_logical_and(
+        &mut self,
+        hint: Option<ScalarType>,
+    ) -> Result<ConstantValue, ParseError> {
+        let mut left = self.parse_const_comparison(hint)?;
+        while self.eat(TokenKind::AndAnd) {
+            let span = self.peek().span;
+            left = self.require_const_type(left, ScalarType::Bool, span)?;
+            let evaluating = self.const_evaluation;
+            self.const_evaluation = evaluating && left.value != 0;
+            let parsed = self.parse_const_comparison(Some(ScalarType::Bool));
+            self.const_evaluation = evaluating;
+            let right = self.require_const_type(parsed?, ScalarType::Bool, span)?;
+            left = ConstantValue {
+                value: if evaluating && left.value == 0 {
+                    0
+                } else if evaluating {
+                    right.value
+                } else {
+                    0
+                },
+                ty: ScalarType::Bool,
+                unsuffixed: false,
+            };
+        }
+        Ok(left)
+    }
+
+    fn parse_const_comparison(
+        &mut self,
+        hint: Option<ScalarType>,
+    ) -> Result<ConstantValue, ParseError> {
+        let operand_hint = hint.filter(|ty| matches!(ty, ScalarType::I64 | ScalarType::U64));
+        let left = self.parse_const_bitwise_or(operand_hint)?;
+        let operation = match self.peek().kind {
+            TokenKind::EqEq => Some(CompareOp::Eq),
+            TokenKind::Ne => Some(CompareOp::Ne),
+            TokenKind::Lt => Some(CompareOp::Lt),
+            TokenKind::Le => Some(CompareOp::Le),
+            TokenKind::Gt => Some(CompareOp::Gt),
+            TokenKind::Ge => Some(CompareOp::Ge),
+            _ => None,
+        };
+        let Some(operation) = operation else {
+            return Ok(left);
+        };
+        let span = self.advance().span;
+        let right = self.parse_const_bitwise_or(Some(left.ty))?;
+        if self.is_comparison(self.peek()) {
+            return Err(self.error_here("chained comparisons are not supported"));
+        }
+        let ty = if matches!(operation, CompareOp::Eq | CompareOp::Ne)
+            && (left.ty == ScalarType::Bool || right.ty == ScalarType::Bool)
+        {
+            self.require_const_type(left, ScalarType::Bool, span)?;
+            self.require_const_type(right, ScalarType::Bool, span)?;
+            ScalarType::Bool
+        } else {
+            self.const_numeric_pair(left, right, span)?.2
+        };
+        if !self.const_evaluation {
+            return Ok(ConstantValue {
+                value: 0,
+                ty: ScalarType::Bool,
+                unsuffixed: false,
+            });
+        }
+        let value = match ty {
+            ScalarType::Bool => match operation {
+                CompareOp::Eq => left.value == right.value,
+                CompareOp::Ne => left.value != right.value,
+                _ => unreachable!("boolean ordering is rejected above"),
+            },
+            ScalarType::I64 => match operation {
+                CompareOp::Eq => left.value == right.value,
+                CompareOp::Ne => left.value != right.value,
+                CompareOp::Lt => left.value < right.value,
+                CompareOp::Le => left.value <= right.value,
+                CompareOp::Gt => left.value > right.value,
+                CompareOp::Ge => left.value >= right.value,
+                _ => unreachable!("frontend only parses signed comparisons"),
+            },
+            ScalarType::U64 => {
+                let left = left.value as u64;
+                let right = right.value as u64;
+                match operation {
+                    CompareOp::Eq => left == right,
+                    CompareOp::Ne => left != right,
+                    CompareOp::Lt => left < right,
+                    CompareOp::Le => left <= right,
+                    CompareOp::Gt => left > right,
+                    CompareOp::Ge => left >= right,
+                    _ => unreachable!("frontend only parses unsigned comparisons"),
                 }
+            }
+            ScalarType::Unit => unreachable!("unit constants are not supported"),
+        };
+        Ok(ConstantValue {
+            value: i64::from(value),
+            ty: ScalarType::Bool,
+            unsuffixed: false,
+        })
+    }
+
+    fn parse_const_bitwise_or(
+        &mut self,
+        hint: Option<ScalarType>,
+    ) -> Result<ConstantValue, ParseError> {
+        let mut value = self.parse_const_bitwise_xor(hint)?;
+        while self.eat(TokenKind::Or) {
+            let span = self.peek().span;
+            let right = self.parse_const_bitwise_xor(Some(value.ty))?;
+            value = self.const_integer_binary(BinaryOp::Or, value, right, span)?;
+        }
+        Ok(value)
+    }
+
+    fn parse_const_bitwise_xor(
+        &mut self,
+        hint: Option<ScalarType>,
+    ) -> Result<ConstantValue, ParseError> {
+        let mut value = self.parse_const_bitwise_and(hint)?;
+        while self.eat(TokenKind::Xor) {
+            let span = self.peek().span;
+            let right = self.parse_const_bitwise_and(Some(value.ty))?;
+            value = self.const_integer_binary(BinaryOp::Xor, value, right, span)?;
+        }
+        Ok(value)
+    }
+
+    fn parse_const_bitwise_and(
+        &mut self,
+        hint: Option<ScalarType>,
+    ) -> Result<ConstantValue, ParseError> {
+        let mut value = self.parse_const_shift(hint)?;
+        while self.eat(TokenKind::And) {
+            let span = self.peek().span;
+            let right = self.parse_const_shift(Some(value.ty))?;
+            value = self.const_integer_binary(BinaryOp::And, value, right, span)?;
+        }
+        Ok(value)
+    }
+
+    fn parse_const_shift(&mut self, hint: Option<ScalarType>) -> Result<ConstantValue, ParseError> {
+        let mut value = self.parse_const_additive(hint)?;
+        loop {
+            let operation = match self.peek().kind {
+                TokenKind::Shl => BinaryOp::Shl,
+                TokenKind::Shr => BinaryOp::Shr,
+                _ => return Ok(value),
+            };
+            self.position += 1;
+            let span = self.peek().span;
+            let right = self.parse_const_additive(Some(value.ty))?;
+            value = self.const_integer_binary(operation, value, right, span)?;
+        }
+    }
+
+    fn parse_const_additive(
+        &mut self,
+        hint: Option<ScalarType>,
+    ) -> Result<ConstantValue, ParseError> {
+        let mut value = self.parse_const_multiplicative(hint)?;
+        loop {
+            let operation = match self.peek().kind {
+                TokenKind::Plus => BinaryOp::Add,
+                TokenKind::Minus => BinaryOp::Sub,
+                _ => return Ok(value),
+            };
+            self.position += 1;
+            let span = self.peek().span;
+            let right = self.parse_const_multiplicative(Some(value.ty))?;
+            value = self.const_integer_binary(operation, value, right, span)?;
+        }
+    }
+
+    fn parse_const_multiplicative(
+        &mut self,
+        hint: Option<ScalarType>,
+    ) -> Result<ConstantValue, ParseError> {
+        let mut value = self.parse_const_unary(hint)?;
+        loop {
+            let operation = match self.peek().kind {
+                TokenKind::Star => BinaryOp::Mul,
+                TokenKind::Slash => BinaryOp::Div,
+                TokenKind::Percent => BinaryOp::Rem,
+                _ => return Ok(value),
+            };
+            self.position += 1;
+            let span = self.peek().span;
+            let right = self.parse_const_unary(Some(value.ty))?;
+            value = self.const_integer_binary(operation, value, right, span)?;
+        }
+    }
+
+    fn parse_const_unary(&mut self, hint: Option<ScalarType>) -> Result<ConstantValue, ParseError> {
+        if self.eat(TokenKind::Not) {
+            let span = self.peek().span;
+            let operand = self.parse_const_unary(hint)?;
+            let operand = self.require_const_type(operand, operand.ty, span)?;
+            if !self.const_evaluation {
+                return Ok(ConstantValue {
+                    value: 0,
+                    ty: operand.ty,
+                    unsuffixed: false,
+                });
+            }
+            return Ok(ConstantValue {
+                value: if operand.ty == ScalarType::Bool {
+                    i64::from(operand.value == 0)
+                } else {
+                    !operand.value
+                },
+                ty: operand.ty,
+                unsuffixed: false,
+            });
+        }
+        if !self.eat(TokenKind::Minus) {
+            return self.parse_const_primary(hint);
+        }
+        if let TokenKind::Integer(magnitude) | TokenKind::I64Integer(magnitude) = self.peek().kind {
+            let token = self.advance();
+            let value = if magnitude == (i64::MAX as u64) + 1 {
+                i64::MIN
+            } else if magnitude <= i64::MAX as u64 {
+                -(magnitude as i64)
+            } else {
+                return Err(ParseError::new(
+                    token.span,
+                    "negative integer literal is outside the i64 range",
+                ));
+            };
+            return Ok(ConstantValue {
+                value,
+                ty: ScalarType::I64,
+                unsuffixed: false,
+            });
+        }
+        let span = self.peek().span;
+        let operand = self.parse_const_unary(Some(ScalarType::I64))?;
+        let operand = self.require_const_type(operand, ScalarType::I64, span)?;
+        if !self.const_evaluation {
+            return Ok(ConstantValue {
+                value: 0,
+                ty: ScalarType::I64,
+                unsuffixed: false,
+            });
+        }
+        Ok(ConstantValue {
+            value: operand.value.checked_neg().ok_or_else(|| {
+                ParseError::new(span, "arithmetic overflow in constant expression")
+            })?,
+            ty: ScalarType::I64,
+            unsuffixed: false,
+        })
+    }
+
+    fn parse_const_primary(
+        &mut self,
+        hint: Option<ScalarType>,
+    ) -> Result<ConstantValue, ParseError> {
+        let token = self.advance();
+        match token.kind {
+            TokenKind::Integer(value) => {
+                let unsigned = hint == Some(ScalarType::U64);
+                Ok(ConstantValue {
+                    value: value as i64,
+                    ty: if unsigned {
+                        ScalarType::U64
+                    } else {
+                        ScalarType::I64
+                    },
+                    unsuffixed: !unsigned,
+                })
             }
             TokenKind::I64Integer(value) => {
                 if value > i64::MAX as u64 {
                     return Err(ParseError::new(
-                        span,
+                        token.span,
                         "integer literal is outside the positive i64 range",
                     ));
                 }
-                Constant {
+                Ok(ConstantValue {
                     value: value as i64,
                     ty: ScalarType::I64,
-                }
+                    unsuffixed: false,
+                })
             }
-            TokenKind::U64Integer(_) if negative => {
-                return Err(ParseError::new(
-                    span,
-                    "operator `-` is not supported for unsigned constant literals",
-                ));
-            }
-            TokenKind::U64Integer(value) => Constant {
+            TokenKind::U64Integer(value) => Ok(ConstantValue {
                 value: value as i64,
                 ty: ScalarType::U64,
-            },
-            TokenKind::Ident(identifier) if !negative && identifier == "true" => Constant {
+                unsuffixed: false,
+            }),
+            TokenKind::Ident(identifier) if identifier == "true" => Ok(ConstantValue {
                 value: 1,
                 ty: ScalarType::Bool,
-            },
-            TokenKind::Ident(identifier) if !negative && identifier == "false" => Constant {
+                unsuffixed: false,
+            }),
+            TokenKind::Ident(identifier) if identifier == "false" => Ok(ConstantValue {
                 value: 0,
                 ty: ScalarType::Bool,
-            },
-            _ => {
-                return Err(ParseError::new(
-                    span,
-                    "top-level constant expressions are not supported; expected a literal or negative literal",
-                ));
+                unsuffixed: false,
+            }),
+            TokenKind::Ident(identifier) => {
+                if self.check(&TokenKind::LParen) {
+                    return Err(ParseError::new(
+                        token.span,
+                        format!(
+                            "function call `{identifier}` is not supported in a constant expression"
+                        ),
+                    ));
+                }
+                let constant = self.evaluate_constant(&identifier, token.span)?;
+                Ok(ConstantValue {
+                    value: constant.value,
+                    ty: constant.ty,
+                    unsuffixed: false,
+                })
             }
-        };
-        if constant.ty != ty {
-            return Err(ParseError::new(
-                span,
-                format!(
-                    "type mismatch in constant `{name}`: expected `{ty}`, found `{}`",
-                    constant.ty
-                ),
-            ));
-        }
-        if !self.check(&TokenKind::Semicolon) {
-            if self.check(&TokenKind::Fn)
-                || self.check(&TokenKind::Eof)
-                || self.peek_identifier("pub")
-                || self.peek_identifier("const")
-            {
-                return Err(self.error_here("expected `;` after constant item"));
+            TokenKind::LParen => {
+                let value = self.parse_const_logical_or(hint)?;
+                self.expect(
+                    TokenKind::RParen,
+                    "`)` after parenthesized constant expression",
+                )?;
+                Ok(value)
             }
-            return Err(self.error_here(
-                "top-level constant expressions are not supported; only a literal or negative literal is allowed",
-            ));
+            TokenKind::Eof => Err(ParseError::new(
+                token.span,
+                "expected constant expression, found end of file",
+            )),
+            _ => Err(ParseError::new(token.span, "expected constant expression")),
         }
-        self.advance();
-        Ok((name, name_span, constant))
     }
 
     fn parse_function_header(&mut self) -> Result<FunctionHeader, ParseError> {

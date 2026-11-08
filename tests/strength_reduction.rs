@@ -61,10 +61,14 @@ fn unsigned_division_by_power_of_two_becomes_logical_shift() {
 }
 
 #[test]
-fn signed_division_and_non_power_multiplication_are_not_changed() {
+fn signed_power_division_uses_shifts_and_non_power_multiplication_is_unchanged() {
     let division = compile("fn main(value: i64) -> i64 { return value / 8; }");
+    assert!(division.instructions.iter().any(|instruction| matches!(
+        instruction,
+        MachineInstr::Shr { .. } | MachineInstr::ShrImm { .. }
+    )));
     assert!(
-        division
+        !division
             .instructions
             .iter()
             .any(|instruction| matches!(instruction, MachineInstr::IDiv { .. }))

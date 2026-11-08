@@ -1,0 +1,6 @@
+fn main() -> i64 {
+    let negated = 0 - (-40);
+    let multiplied = 1 * -2;
+    let inverted = 0 ^ -1;
+    return negated + multiplied + inverted + 5;
+}

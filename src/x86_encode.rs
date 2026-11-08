@@ -538,58 +538,48 @@ impl Encoder<'_> {
 
     fn resolve_labels(&mut self) -> Result<(), EncodeError> {
         loop {
+            let mut removed_prefix = Vec::with_capacity(self.fixups.len() + 1);
+            let mut removed = 0;
+            removed_prefix.push(0);
+            for fixup in &self.fixups {
+                if fixup.short {
+                    removed += if self.bytes[fixup.offset] == 0xe9 {
+                        3
+                    } else {
+                        4
+                    };
+                }
+                removed_prefix.push(removed);
+            }
+
             let mut shortened = false;
             for index in 0..self.fixups.len() {
                 if self.fixups[index].short {
                     continue;
                 }
-                let offset = self.fixups[index].offset;
+                let original_offset = self.fixups[index].offset;
                 let target = self.fixups[index].target;
+                let offset = original_offset - removed_prefix[index];
                 let destination = self
                     .labels
                     .get(&target)
                     .copied()
                     .ok_or(EncodeError::UnknownLabel(target))?;
-                let unconditional = self.bytes[offset] == 0xe9;
+                let destination = layout_offset(destination, &self.fixups, &removed_prefix);
+                let unconditional = self.bytes[original_offset] == 0xe9;
                 let long_size = if unconditional { 5 } else { 6 };
                 let short_displacement = if destination > offset {
                     destination as i128 - (offset as i128 + long_size)
                 } else {
                     destination as i128 - (offset as i128 + 2)
                 };
-                if i8::try_from(short_displacement).is_err() {
-                    continue;
+                if i8::try_from(short_displacement).is_ok() {
+                    self.fixups[index].short = true;
+                    shortened = true;
                 }
-
-                let remove_start = offset + 2;
-                let savings = if unconditional {
-                    self.bytes[offset] = 0xeb;
-                    3
-                } else {
-                    self.bytes[offset] = 0x70 + (self.bytes[offset + 1] & 0x0f);
-                    self.bytes[offset + 1] = self.bytes[offset + 2];
-                    4
-                };
-                self.bytes.drain(remove_start..remove_start + savings);
-                for label_offset in self.labels.values_mut() {
-                    if *label_offset > remove_start {
-                        *label_offset -= savings;
-                    }
-                }
-                for call in &mut self.calls {
-                    if call.offset > remove_start as u64 {
-                        call.offset -= savings as u64;
-                    }
-                }
-                for fixup in &mut self.fixups {
-                    if fixup.offset > remove_start {
-                        fixup.offset -= savings;
-                    }
-                }
-                self.fixups[index].short = true;
-                shortened = true;
             }
             if !shortened {
+                self.apply_shortened_layout(&removed_prefix);
                 break;
             }
         }
@@ -619,6 +609,41 @@ impl Encoder<'_> {
             }
         }
         Ok(())
+    }
+
+    fn apply_shortened_layout(&mut self, removed_prefix: &[usize]) {
+        let mut read_offset = 0;
+        let mut write_offset = 0;
+        for fixup in self.fixups.iter().filter(|fixup| fixup.short) {
+            let offset = fixup.offset;
+            self.bytes.copy_within(read_offset..offset, write_offset);
+            write_offset += offset - read_offset;
+            if self.bytes[offset] == 0xe9 {
+                self.bytes[write_offset] = 0xeb;
+                self.bytes[write_offset + 1] = self.bytes[offset + 2];
+                read_offset = offset + 5;
+            } else {
+                self.bytes[write_offset] = 0x70 + (self.bytes[offset + 1] & 0x0f);
+                self.bytes[write_offset + 1] = self.bytes[offset + 2];
+                read_offset = offset + 6;
+            }
+            write_offset += 2;
+        }
+        let original_len = self.bytes.len();
+        self.bytes
+            .copy_within(read_offset..original_len, write_offset);
+        write_offset += original_len - read_offset;
+        self.bytes.truncate(write_offset);
+
+        for label_offset in self.labels.values_mut() {
+            *label_offset = layout_offset(*label_offset, &self.fixups, removed_prefix);
+        }
+        for call in &mut self.calls {
+            call.offset = layout_offset(call.offset as usize, &self.fixups, removed_prefix) as u64;
+        }
+        for (index, fixup) in self.fixups.iter_mut().enumerate() {
+            fixup.offset -= removed_prefix[index];
+        }
     }
 
     fn binary(
@@ -714,6 +739,11 @@ impl Encoder<'_> {
     fn i32(&mut self, value: i32) {
         self.bytes.extend_from_slice(&value.to_le_bytes());
     }
+}
+
+fn layout_offset(offset: usize, fixups: &[JumpFixup], removed_prefix: &[usize]) -> usize {
+    let index = fixups.partition_point(|fixup| fixup.offset + 2 < offset);
+    offset - removed_prefix[index]
 }
 
 trait RegCode: Sized {

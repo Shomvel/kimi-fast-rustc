@@ -1,10 +1,11 @@
 //! Source-to-native compilation as a bounded, cross-input pipeline.
 //!
 //! Unlike `native_batch`, this module does not schedule graph-internal work.
-//! Parsing, optimization/placement, and native compilation each have one worker;
-//! parallelism comes from different inputs occupying different stages.
+//! Parsing, optimization/placement, and native compilation can each run multiple
+//! workers, with stable input ordering restored at the typed output boundary.
 
 use std::any::Any;
+use std::collections::BTreeMap;
 use std::error::Error;
 use std::fmt;
 use std::io;
@@ -14,12 +15,13 @@ use std::sync::{Arc, Mutex, MutexGuard, mpsc};
 use std::thread::{self, JoinHandle};
 
 use crate::frontend::{self, ParseError};
-use crate::native::{self, CompileError};
+use crate::native::CompileError;
+use crate::native_program::NativeProgram;
 use crate::optimizer_pipeline;
+use crate::parallel_native::{self, ParallelCompileError};
 use crate::pipeline::{PipelineConfigError, PipelineError};
 use crate::placement::{self, PlacementError};
 use crate::son::Graph;
-use crate::x86::MachineFunction;
 
 #[derive(Debug)]
 pub enum PipelinedNativeError {
@@ -114,17 +116,38 @@ enum StageError {
     Parse(ParseError),
     Placement(PlacementError),
     Compile(CompileError),
+    Parallel(ParallelCompileError),
 }
 
 /// Compiles named source strings in input order with bounded backpressure.
 ///
-/// `capacity` independently bounds each stage's input queue and the final output
-/// queue. Every stage has exactly one worker, so no instruction-level or DAG
-/// parallelism is introduced; separate inputs can still occupy all three stages.
+/// This retains one worker per stage. Use [`compile_sources_with_jobs`] to run
+/// independent inputs concurrently within each stage. Each result contains all
+/// functions declared by the corresponding input.
 pub fn compile_sources<I, N, S>(
     inputs: I,
     capacity: usize,
-) -> Result<Vec<MachineFunction>, PipelinedNativeError>
+) -> Result<Vec<NativeProgram>, PipelinedNativeError>
+where
+    I: IntoIterator<Item = (N, S)>,
+    I::IntoIter: Send + 'static,
+    N: Into<String> + Send + 'static,
+    S: Into<String> + Send + 'static,
+{
+    compile_sources_with_jobs(inputs, capacity, 1)
+}
+
+/// Compiles named source strings with at most `jobs` workers per stage.
+///
+/// `capacity` independently bounds each stage's input queue and the final output
+/// queue. Workers preserve each input's index and out-of-order completions are
+/// reordered before being returned. Function compilation within an input uses one
+/// worker so it does not multiply the per-stage `jobs` limit.
+pub fn compile_sources_with_jobs<I, N, S>(
+    inputs: I,
+    capacity: usize,
+    jobs: usize,
+) -> Result<Vec<NativeProgram>, PipelinedNativeError>
 where
     I: IntoIterator<Item = (N, S)>,
     I::IntoIter: Send + 'static,
@@ -138,6 +161,7 @@ where
         inputs,
         capacity,
         capacity,
+        [jobs; 3],
         |(name, source): (String, String)| {
             frontend::parse(&source)
                 .map(|graph| (name, graph))
@@ -150,22 +174,49 @@ where
                 .map_err(StageError::Placement)
         },
         |(name, graph): (String, Graph)| {
-            native::compile_graph(&graph, name).map_err(StageError::Compile)
+            compile_program(name, &graph).map_err(parallel_stage_error)
         },
     )
     .map_err(map_pipeline_error)
 }
 
+pub(crate) fn compile_program(
+    name: String,
+    graph: &Graph,
+) -> Result<NativeProgram, ParallelCompileError> {
+    let single_function = graph.functions.len() <= 1;
+    let mut program = parallel_native::compile_graph(graph, 1)?;
+    if single_function {
+        let function = &mut program.functions[0];
+        let original_name = std::mem::replace(&mut function.name, name.clone());
+        for symbol in &mut function.symbols {
+            if symbol == &original_name {
+                symbol.clone_from(&name);
+            }
+        }
+    }
+    Ok(program)
+}
+
+fn parallel_stage_error(error: ParallelCompileError) -> StageError {
+    match error {
+        ParallelCompileError::Placement { source, .. } => StageError::Placement(source),
+        ParallelCompileError::Compile { source, .. } => StageError::Compile(source),
+        error => StageError::Parallel(error),
+    }
+}
+
 #[derive(Debug)]
-enum RunError<E> {
+pub(crate) enum RunError<E> {
     Configuration(PipelineConfigError),
     Pipeline(PipelineError<E>),
 }
 
-fn run_three_stages<In, Parsed, Placed, Out, E, I, Parse, Optimize, Compile>(
+pub(crate) fn run_three_stages<In, Parsed, Placed, Out, E, I, Parse, Optimize, Compile>(
     inputs: I,
     capacity: usize,
     output_capacity: usize,
+    parallelism: [usize; 3],
     parse: Parse,
     optimize: Optimize,
     compile: Compile,
@@ -182,6 +233,13 @@ where
     Optimize: Fn(Parsed) -> Result<Placed, E> + Send + Sync + 'static,
     Compile: Fn(Placed) -> Result<Out, E> + Send + Sync + 'static,
 {
+    for (stage, &workers) in parallelism.iter().enumerate() {
+        if workers == 0 {
+            return Err(RunError::Configuration(
+                PipelineConfigError::ZeroParallelism { stage },
+            ));
+        }
+    }
     if capacity == 0 {
         return Err(RunError::Configuration(PipelineConfigError::ZeroCapacity {
             stage: 0,
@@ -245,6 +303,7 @@ where
         placed_sender,
         placed_receiver,
         output_sender,
+        parallelism,
         parse,
         optimize,
         compile,
@@ -259,16 +318,18 @@ where
     }
 
     let mut outputs = Vec::with_capacity(output_len);
+    let mut pending = BTreeMap::new();
     let mut invalid_output = false;
     while !cancelled.load(Ordering::Acquire) {
         match output_receiver.recv() {
             Ok(task) => {
-                // One worker per stage makes every channel, including the output, FIFO.
-                if task.index != outputs.len() {
+                if task.index < outputs.len() || pending.insert(task.index, task.value).is_some() {
                     invalid_output = true;
                     break;
                 }
-                outputs.push(task.value);
+                while let Some(value) = pending.remove(&outputs.len()) {
+                    outputs.push(value);
+                }
             }
             Err(_) => break,
         }
@@ -295,7 +356,7 @@ where
     if let Some(error) = lock_unpoisoned(&failure).take() {
         return Err(RunError::Pipeline(error));
     }
-    if outputs.len() != submitted.load(Ordering::Acquire) {
+    if outputs.len() != submitted.load(Ordering::Acquire) || !pending.is_empty() {
         return Err(RunError::Pipeline(PipelineError::Disconnected));
     }
     Ok(outputs)
@@ -319,6 +380,7 @@ fn spawn_workers<In, Parsed, Placed, Out, E, Parse, Optimize, Compile>(
     placed_sender: mpsc::SyncSender<Task<Placed>>,
     placed_receiver: mpsc::Receiver<Task<Placed>>,
     output_sender: mpsc::SyncSender<Task<Out>>,
+    parallelism: [usize; 3],
     parse: Parse,
     optimize: Optimize,
     compile: Compile,
@@ -331,90 +393,128 @@ where
     Placed: Send + 'static,
     Out: Send + 'static,
     E: Send + 'static,
-    Parse: Fn(In) -> Result<Parsed, E> + Send + 'static,
-    Optimize: Fn(Parsed) -> Result<Placed, E> + Send + 'static,
-    Compile: Fn(Placed) -> Result<Out, E> + Send + 'static,
+    Parse: Fn(In) -> Result<Parsed, E> + Send + Sync + 'static,
+    Optimize: Fn(Parsed) -> Result<Placed, E> + Send + Sync + 'static,
+    Compile: Fn(Placed) -> Result<Out, E> + Send + Sync + 'static,
 {
-    let mut workers = Vec::with_capacity(3);
-    match spawn_stage(0, input_receiver, parsed_sender, parse, cancelled, failure) {
-        Ok(worker) => workers.push(worker),
-        Err(error) => return Err((workers, error)),
+    let mut workers = Vec::with_capacity(parallelism.iter().sum());
+    match spawn_stage(
+        0,
+        parallelism[0],
+        input_receiver,
+        parsed_sender,
+        parse,
+        cancelled,
+        failure,
+    ) {
+        Ok(mut stage_workers) => workers.append(&mut stage_workers),
+        Err((mut stage_workers, error)) => {
+            workers.append(&mut stage_workers);
+            return Err((workers, error));
+        }
     }
     match spawn_stage(
         1,
+        parallelism[1],
         parsed_receiver,
         placed_sender,
         optimize,
         cancelled,
         failure,
     ) {
-        Ok(worker) => workers.push(worker),
-        Err(error) => return Err((workers, error)),
+        Ok(mut stage_workers) => workers.append(&mut stage_workers),
+        Err((mut stage_workers, error)) => {
+            workers.append(&mut stage_workers);
+            return Err((workers, error));
+        }
     }
     match spawn_stage(
         2,
+        parallelism[2],
         placed_receiver,
         output_sender,
         compile,
         cancelled,
         failure,
     ) {
-        Ok(worker) => workers.push(worker),
-        Err(error) => return Err((workers, error)),
+        Ok(mut stage_workers) => workers.append(&mut stage_workers),
+        Err((mut stage_workers, error)) => {
+            workers.append(&mut stage_workers);
+            return Err((workers, error));
+        }
     }
     Ok(workers)
 }
 
 fn spawn_stage<In, Out, E, F>(
     stage: usize,
+    parallelism: usize,
     input: mpsc::Receiver<Task<In>>,
     output: mpsc::SyncSender<Task<Out>>,
     function: F,
     cancelled: &Arc<AtomicBool>,
     failure: &Arc<Mutex<Option<PipelineError<E>>>>,
-) -> Result<WorkerThread, PipelineError<E>>
+) -> Result<Vec<WorkerThread>, (Vec<WorkerThread>, PipelineError<E>)>
 where
     In: Send + 'static,
     Out: Send + 'static,
     E: Send + 'static,
-    F: Fn(In) -> Result<Out, E> + Send + 'static,
+    F: Fn(In) -> Result<Out, E> + Send + Sync + 'static,
 {
-    let worker_cancelled = Arc::clone(cancelled);
-    let worker_failure = Arc::clone(failure);
-    let name = format!("pipeline-stage-{stage}-worker-0");
-    match thread::Builder::new().name(name).spawn(move || {
-        run_stage(
-            stage,
-            input,
-            output,
-            function,
-            worker_cancelled,
-            worker_failure,
-        );
-    }) {
-        Ok(handle) => Ok(WorkerThread {
-            stage: Some(stage),
-            handle,
-        }),
-        Err(source) => Err(PipelineError::Spawn {
-            stage: Some(stage),
-            source,
-        }),
+    let input = Arc::new(Mutex::new(input));
+    let function = Arc::new(function);
+    let mut workers = Vec::with_capacity(parallelism);
+    for worker_index in 0..parallelism {
+        let input = Arc::clone(&input);
+        let output = output.clone();
+        let function = Arc::clone(&function);
+        let worker_cancelled = Arc::clone(cancelled);
+        let worker_failure = Arc::clone(failure);
+        let name = format!("pipeline-stage-{stage}-worker-{worker_index}");
+        match thread::Builder::new().name(name).spawn(move || {
+            run_stage(
+                stage,
+                input,
+                output,
+                function,
+                worker_cancelled,
+                worker_failure,
+            );
+        }) {
+            Ok(handle) => workers.push(WorkerThread {
+                stage: Some(stage),
+                handle,
+            }),
+            Err(source) => {
+                return Err((
+                    workers,
+                    PipelineError::Spawn {
+                        stage: Some(stage),
+                        source,
+                    },
+                ));
+            }
+        }
     }
+    Ok(workers)
 }
 
 fn run_stage<In, Out, E, F>(
     stage: usize,
-    input: mpsc::Receiver<Task<In>>,
+    input: Arc<Mutex<mpsc::Receiver<Task<In>>>>,
     output: mpsc::SyncSender<Task<Out>>,
-    function: F,
+    function: Arc<F>,
     cancelled: Arc<AtomicBool>,
     failure: Arc<Mutex<Option<PipelineError<E>>>>,
 ) where
     F: Fn(In) -> Result<Out, E>,
 {
     while !cancelled.load(Ordering::Acquire) {
-        let Ok(task) = input.recv() else {
+        let task = {
+            let input = lock_unpoisoned(&input);
+            input.recv()
+        };
+        let Ok(task) = task else {
             break;
         };
         if cancelled.load(Ordering::Acquire) {
@@ -499,6 +599,22 @@ fn map_pipeline_error(error: RunError<StageError>) -> PipelinedNativeError {
             StageError::Parse(source) => PipelinedNativeError::Parse { index, source },
             StageError::Placement(source) => PipelinedNativeError::Placement { index, source },
             StageError::Compile(source) => PipelinedNativeError::Compile { index, source },
+            StageError::Parallel(source) => match source {
+                ParallelCompileError::Placement { source, .. } => {
+                    PipelinedNativeError::Placement { index, source }
+                }
+                ParallelCompileError::Compile { source, .. } => {
+                    PipelinedNativeError::Compile { index, source }
+                }
+                ParallelCompileError::Panicked { message, .. } => PipelinedNativeError::Panicked {
+                    stage: 2,
+                    index,
+                    message,
+                },
+                ParallelCompileError::Scheduler(_) => {
+                    unreachable!("function compilation always uses one worker")
+                }
+            },
         },
         PipelineError::Panicked {
             stage,
@@ -520,6 +636,7 @@ fn map_pipeline_error(error: RunError<StageError>) -> PipelinedNativeError {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::native;
     use std::ops::Range;
     use std::sync::atomic::{AtomicUsize, Ordering};
     use std::sync::{Arc, Barrier, Condvar, Mutex, mpsc};
@@ -543,22 +660,25 @@ mod tests {
             ),
             ("third".to_owned(), source(7)),
         ];
-        let expected: Vec<_> = inputs
+        let expected: Vec<Vec<_>> = inputs
             .iter()
             .map(|(name, source)| {
                 let mut graph = frontend::parse(source).unwrap();
                 optimizer_pipeline::optimize(&mut graph);
                 let graph = placement::place_graph(&graph).unwrap();
-                native::compile_graph(&graph, name.clone()).unwrap()
+                vec![native::compile_graph(&graph, name.clone()).unwrap()]
             })
             .collect();
 
-        let functions = compile_sources(inputs, 2).unwrap();
+        let programs = compile_sources(inputs, 2).unwrap();
 
-        assert_eq!(functions, expected);
-        let names: Vec<_> = functions
+        assert_eq!(programs.len(), expected.len());
+        for (program, expected) in programs.iter().zip(expected) {
+            assert_eq!(program.functions, expected);
+        }
+        let names: Vec<_> = programs
             .iter()
-            .map(|function| function.name.as_str())
+            .map(|program| program.functions[0].name.as_str())
             .collect();
         assert_eq!(names, ["first", "second", "third"]);
     }
@@ -574,6 +694,7 @@ mod tests {
             0..5,
             1,
             1,
+            [1; 3],
             move |input| {
                 if input == 2 {
                     parse_rendezvous.wait();
@@ -632,6 +753,7 @@ mod tests {
                 inputs,
                 1,
                 1,
+                [1; 3],
                 move |input| {
                     started_tx.send(input).unwrap();
                     let (lock, condition) = &*stage_gate;
@@ -665,7 +787,7 @@ mod tests {
     }
 
     #[test]
-    fn parse_and_placement_errors_carry_the_input_index() {
+    fn parse_errors_carry_the_input_index_and_multiple_functions_compile() {
         let parse_error = compile_sources(
             vec![
                 ("first", source(1)),
@@ -681,28 +803,33 @@ mod tests {
         ));
         assert!(parse_error.to_string().contains("input 1"));
 
-        let placement_error = compile_sources(
+        let programs = compile_sources(
             vec![
                 ("first", source(1)),
                 (
-                    "broken",
+                    "multiple",
                     "fn first() { return 1; } fn second() { return 2; }".to_owned(),
                 ),
                 ("last", source(3)),
             ],
             1,
         )
-        .unwrap_err();
-        assert!(matches!(
-            &placement_error,
-            PipelinedNativeError::Compile { index: 1, .. }
-        ));
-        assert!(placement_error.to_string().contains("input 1"));
+        .unwrap();
+        let names: Vec<_> = programs
+            .iter()
+            .flat_map(|program| {
+                program
+                    .functions
+                    .iter()
+                    .map(|function| function.name.as_str())
+            })
+            .collect();
+        assert_eq!(names, ["first", "first", "second", "last"]);
     }
 
     #[test]
     fn native_errors_carry_the_input_index() {
-        let result = run_three_stages(0..4, 1, 1, Ok::<_, StageError>, Ok, |input| {
+        let result = run_three_stages(0..4, 1, 1, [4; 3], Ok::<_, StageError>, Ok, |input| {
             if input == 2 {
                 Err(StageError::Compile(CompileError::MissingReturn))
             } else {
@@ -734,6 +861,7 @@ mod tests {
             inputs,
             1,
             1,
+            [4; 3],
             Ok::<_, &'static str>,
             |input| {
                 if input == 0 {
@@ -762,6 +890,7 @@ mod tests {
             0..8,
             1,
             1,
+            [4; 3],
             Ok::<_, &'static str>,
             |input| {
                 if input == 3 {
@@ -782,9 +911,152 @@ mod tests {
         ));
     }
 
+    struct ActiveGuard(Arc<AtomicUsize>);
+
+    impl Drop for ActiveGuard {
+        fn drop(&mut self) {
+            self.0.fetch_sub(1, Ordering::Relaxed);
+        }
+    }
+
+    fn enter_stage(active: &Arc<AtomicUsize>, peak: &AtomicUsize) -> ActiveGuard {
+        let active_now = active.fetch_add(1, Ordering::Relaxed) + 1;
+        peak.fetch_max(active_now, Ordering::Relaxed);
+        ActiveGuard(Arc::clone(active))
+    }
+
     #[test]
-    fn rejects_zero_queue_capacities() {
-        let zero_stage = run_three_stages(0..1, 0, 1, Ok::<_, &'static str>, Ok, Ok);
+    fn parallel_workers_reorder_out_of_order_completion() {
+        const WORKERS: usize = 4;
+        let rendezvous = Arc::new(Barrier::new(WORKERS));
+        let parse_rendezvous = Arc::clone(&rendezvous);
+        let gate = Arc::new((Mutex::new(false), Condvar::new()));
+        let parse_gate = Arc::clone(&gate);
+        let active = Arc::new(AtomicUsize::new(0));
+        let peak = Arc::new(AtomicUsize::new(0));
+        let parse_active = Arc::clone(&active);
+        let parse_peak = Arc::clone(&peak);
+        let (completed_tx, completed_rx) = mpsc::channel();
+
+        let runner = thread::spawn(move || {
+            run_three_stages(
+                0..32,
+                2,
+                2,
+                [WORKERS; 3],
+                move |input| {
+                    let _guard = enter_stage(&parse_active, &parse_peak);
+                    if input < WORKERS {
+                        parse_rendezvous.wait();
+                    }
+                    if input == 0 {
+                        let (lock, condition) = &*parse_gate;
+                        let mut released = lock.lock().unwrap();
+                        while !*released {
+                            released = condition.wait(released).unwrap();
+                        }
+                    }
+                    Ok::<_, &'static str>(input)
+                },
+                |input| Ok(input + 1),
+                move |input| {
+                    completed_tx.send(input).unwrap();
+                    Ok(input * 2)
+                },
+            )
+        });
+
+        for _ in 1..WORKERS {
+            let completed = completed_rx.recv_timeout(Duration::from_secs(1)).unwrap();
+            assert_ne!(completed, 1, "input 0 completed before its gate opened");
+        }
+        let (lock, condition) = &*gate;
+        *lock.lock().unwrap() = true;
+        condition.notify_all();
+        let outputs = runner.join().unwrap().unwrap();
+
+        assert_eq!(peak.load(Ordering::Relaxed), WORKERS);
+        assert_eq!(
+            outputs,
+            (0..32).map(|input| (input + 1) * 2).collect::<Vec<_>>()
+        );
+    }
+
+    #[test]
+    fn bounded_parallel_first_stage_backpressures_the_source_iterator() {
+        const WORKERS: usize = 3;
+        let (next_tx, next_rx) = mpsc::channel();
+        let (started_tx, started_rx) = mpsc::channel();
+        let rendezvous = Arc::new(Barrier::new(WORKERS));
+        let stage_rendezvous = Arc::clone(&rendezvous);
+        let gate = Arc::new((Mutex::new(false), Condvar::new()));
+        let stage_gate = Arc::clone(&gate);
+        let inputs = ObservedInputs {
+            range: 0..64,
+            next: next_tx,
+        };
+
+        let runner = thread::spawn(move || {
+            run_three_stages(
+                inputs,
+                1,
+                1,
+                [WORKERS; 3],
+                move |input| {
+                    started_tx.send(input).unwrap();
+                    if input < WORKERS {
+                        stage_rendezvous.wait();
+                    }
+                    let (lock, condition) = &*stage_gate;
+                    let mut released = lock.lock().unwrap();
+                    while !*released {
+                        released = condition.wait(released).unwrap();
+                    }
+                    Ok::<_, &'static str>(input)
+                },
+                |input| Ok(input + 1),
+                |input| Ok(input * 2),
+            )
+        });
+
+        let mut started = Vec::new();
+        for _ in 0..WORKERS {
+            started.push(started_rx.recv_timeout(Duration::from_secs(1)).unwrap());
+        }
+        started.sort_unstable();
+        assert_eq!(started, [0, 1, 2]);
+        for expected in 0..=WORKERS + 1 {
+            assert_eq!(
+                next_rx.recv_timeout(Duration::from_secs(1)),
+                Ok(expected),
+                "source read ahead beyond the active workers and one queued input"
+            );
+        }
+        let blocked = next_rx.recv_timeout(Duration::from_millis(75));
+
+        let (lock, condition) = &*gate;
+        *lock.lock().unwrap() = true;
+        condition.notify_all();
+        let outputs = runner.join().unwrap().unwrap();
+
+        assert!(matches!(blocked, Err(mpsc::RecvTimeoutError::Timeout)));
+        assert_eq!(
+            outputs,
+            (0..64).map(|input| (input + 1) * 2).collect::<Vec<_>>()
+        );
+    }
+
+    #[test]
+    fn rejects_zero_parallelism_and_queue_capacities() {
+        let zero_workers = run_three_stages(0..1, 1, 1, [0; 3], Ok::<_, &'static str>, Ok, Ok);
+        assert!(matches!(
+            zero_workers,
+            Err(RunError::Configuration(
+                PipelineConfigError::ZeroParallelism { stage: 0 }
+            ))
+        ));
+
+        let zero_stage = run_three_stages(0..1, 0, 1, [1; 3], Ok::<_, &'static str>, Ok, Ok);
         assert!(matches!(
             zero_stage,
             Err(RunError::Configuration(PipelineConfigError::ZeroCapacity {
@@ -792,7 +1064,7 @@ mod tests {
             }))
         ));
 
-        let zero_output = run_three_stages(0..1, 1, 0, Ok::<_, &'static str>, Ok, Ok);
+        let zero_output = run_three_stages(0..1, 1, 0, [1; 3], Ok::<_, &'static str>, Ok, Ok);
         assert!(matches!(
             zero_output,
             Err(RunError::Configuration(
@@ -804,30 +1076,18 @@ mod tests {
     #[test]
     #[ignore = "throughput benchmark; run explicitly"]
     fn executor_throughput_comparison() {
-        use crate::pipeline::PipelineBuilder;
         use std::hint::black_box;
         use std::time::{Duration, Instant};
 
         const INPUTS: usize = 250_000;
         const ROUNDS: usize = 9;
 
-        fn baseline(inputs: std::ops::Range<usize>) -> Vec<usize> {
-            PipelineBuilder::new()
-                .add_stage(1, 4, |input: usize| Ok::<_, &'static str>(input + 1))
-                .add_stage(1, 4, |input: usize| Ok(input * 2))
-                .add_stage(1, 4, |input: usize| Ok(input + 3))
-                .output_capacity(4)
-                .build()
-                .unwrap()
-                .run(inputs)
-                .unwrap()
-        }
-
-        fn candidate(inputs: std::ops::Range<usize>) -> Vec<usize> {
+        fn run(inputs: std::ops::Range<usize>, jobs: usize) -> Vec<usize> {
             run_three_stages(
                 inputs,
                 4,
                 4,
+                [jobs; 3],
                 |input| Ok::<_, &'static str>(input + 1),
                 |input| Ok(input * 2),
                 |input| Ok(input + 3),
@@ -835,26 +1095,26 @@ mod tests {
             .unwrap()
         }
 
-        fn measure(compile: fn(std::ops::Range<usize>) -> Vec<usize>) -> (Duration, Vec<usize>) {
+        fn measure(inputs: std::ops::Range<usize>, jobs: usize) -> (Duration, Vec<usize>) {
             let start = Instant::now();
-            let outputs = compile(0..INPUTS);
+            let outputs = run(inputs, jobs);
             let elapsed = start.elapsed();
             black_box(&outputs);
             (elapsed, outputs)
         }
 
-        measure(baseline);
-        measure(candidate);
+        measure(0..INPUTS, 1);
+        measure(0..INPUTS, 4);
         let mut baseline_times = Vec::new();
         let mut candidate_times = Vec::new();
         for round in 0..ROUNDS {
             let (baseline, candidate) = if round % 2 == 0 {
-                let baseline = measure(baseline);
-                let candidate = measure(candidate);
+                let baseline = measure(0..INPUTS, 1);
+                let candidate = measure(0..INPUTS, 4);
                 (baseline, candidate)
             } else {
-                let candidate = measure(candidate);
-                let baseline = measure(baseline);
+                let candidate = measure(0..INPUTS, 4);
+                let baseline = measure(0..INPUTS, 1);
                 (baseline, candidate)
             };
             assert_eq!(baseline.1, candidate.1);

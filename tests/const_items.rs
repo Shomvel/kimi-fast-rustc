@@ -149,14 +149,14 @@ fn missing_constant_semicolons_have_a_specific_diagnostic() {
 }
 
 #[test]
-fn unsupported_constant_expressions_are_rejected_instead_of_miscompiled() {
-    for initializer in ["1 + 2", "OTHER", "(1)", "!true", "- -1", "value()"] {
+fn function_calls_in_constant_initializers_are_rejected_instead_of_miscompiled() {
+    for initializer in ["value()", "value(1)", "value(true)"] {
         let source = format!("const VALUE: i64 = {initializer}; fn main() -> i64 {{ return 0; }}");
         let error = frontend::parse(&source).unwrap_err();
         assert!(
             error
                 .message
-                .contains("top-level constant expressions are not supported"),
+                .contains("not supported in a constant expression"),
             "{source}: {error}"
         );
     }

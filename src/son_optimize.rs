@@ -73,6 +73,12 @@ pub fn algebraic_simplify(graph: &mut Graph) -> usize {
                 node.data = vec![left, right];
                 simplified += 1;
             }
+            Rewrite::Unary { operation, value } => {
+                let node = graph.node_mut(id).expect("simplified node exists");
+                node.kind = NodeKind::Unary(operation);
+                node.data = vec![value];
+                simplified += 1;
+            }
         }
     }
     simplified
@@ -120,6 +126,10 @@ enum Rewrite {
         operation: CompareOp,
         left: NodeId,
         right: NodeId,
+    },
+    Unary {
+        operation: UnaryOp,
+        value: NodeId,
     },
 }
 
@@ -318,6 +328,11 @@ pub fn simplify_node_in_place(graph: &mut Graph, id: NodeId) -> bool {
             node.kind = NodeKind::Compare(operation);
             node.data = vec![left, right];
         }
+        Rewrite::Unary { operation, value } => {
+            let node = graph.node_mut(id).expect("simplified node exists");
+            node.kind = NodeKind::Unary(operation);
+            node.data = vec![value];
+        }
     }
     true
 }
@@ -338,6 +353,11 @@ fn simplify_binary(graph: &Graph, op: BinaryOp, left: NodeId, right: NodeId) -> 
         BinaryOp::Sub => {
             if right_const == Some(0) {
                 Some(Rewrite::Node(left))
+            } else if left_const == Some(0) {
+                Some(Rewrite::Unary {
+                    operation: UnaryOp::Neg,
+                    value: right,
+                })
             } else if left == right {
                 Some(Rewrite::Constant(0))
             } else {
@@ -351,6 +371,16 @@ fn simplify_binary(graph: &Graph, op: BinaryOp, left: NodeId, right: NodeId) -> 
                 Some(Rewrite::Node(right))
             } else if right_const == Some(1) {
                 Some(Rewrite::Node(left))
+            } else if left_const == Some(-1) {
+                Some(Rewrite::Unary {
+                    operation: UnaryOp::Neg,
+                    value: right,
+                })
+            } else if right_const == Some(-1) {
+                Some(Rewrite::Unary {
+                    operation: UnaryOp::Neg,
+                    value: left,
+                })
             } else {
                 None
             }
@@ -386,6 +416,16 @@ fn simplify_binary(graph: &Graph, op: BinaryOp, left: NodeId, right: NodeId) -> 
                 Some(Rewrite::Node(right))
             } else if right_const == Some(0) {
                 Some(Rewrite::Node(left))
+            } else if left_const == Some(-1) {
+                Some(Rewrite::Unary {
+                    operation: UnaryOp::Not,
+                    value: right,
+                })
+            } else if right_const == Some(-1) {
+                Some(Rewrite::Unary {
+                    operation: UnaryOp::Not,
+                    value: left,
+                })
             } else {
                 None
             }
