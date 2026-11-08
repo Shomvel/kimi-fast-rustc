@@ -26,7 +26,7 @@
 
 | 名字 | 参数 | 输入 |
 |---|---|---|
-| metadata-nodeps | `metadata --format-version 1 --no-deps --offline --locked` | Cargo 0.99.0 源码树；kfrc 验收 workload |
+| metadata-nodeps | `metadata --format-version 1 --no-deps --offline --locked` | 本轮用 Cargo 0.99.0 源码树作输入；T00 已定 0.95.0，M0 起改用 0.95.0 源码树；kfrc 验收 workload |
 | metadata-full | 同上去掉 `--no-deps` | 同上：全部 manifest + 带锁解析 |
 | tree | `tree --offline --locked` | 同上 |
 | lockfile | `generate-lockfile --offline` | Cargo 0.95.0 源码副本：从零解析 |

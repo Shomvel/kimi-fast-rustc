@@ -5,10 +5,12 @@
 #   LIBRARY_DIR   rust-src 的 library/（本次：Homebrew rust 1.94.1 附带的 rust-src）
 #   COMPILER_DIR  rustc 1.94.1 源码的 compiler/
 #   REGISTRY_SRC  ~/.cargo/registry/src/<index>（已 cargo fetch --locked）
-#   BENCH_DIR     含 ripgrep/ 与 cargo/ 两个检出的目录
+#   BENCH_DIR     含 ripgrep/ 与 cargo/ 两个源码目录（cargo/ 本次为 Cargo 0.95.0 的 crates.io 包解包目录）
 #   OUT_DIR       输出目录
 #   RUSTC         可选，打印 -Vv 核对 rust-src 所属版本
 #   GIT_REPO COMMIT  可选，核对派生树 library/ 是否等于官方 commit
+# 环境变量（可选）：RIPGREP_DIR、CARGO_DIR 覆盖默认的 BENCH_DIR/ripgrep、BENCH_DIR/cargo，
+#   例如 CARGO_DIR=<解包目录>/cargo-0.95.0。
 set -euo pipefail
 lib=${1:?usage: run-all.sh LIBRARY_DIR COMPILER_DIR REGISTRY_SRC BENCH_DIR OUT_DIR [RUSTC] [GIT_REPO COMMIT]}
 comp=${2:?}; reg=${3:?}; bench=${4:?}; out=${5:?}
@@ -16,6 +18,8 @@ rustc=${6:--}; repo=${7:--}; commit=${8:--}
 here=$(cd "$(dirname "$0")" && pwd)
 mkdir -p "$out"
 t=x86_64-unknown-linux-gnu
+rg_dir=${RIPGREP_DIR:-$bench/ripgrep}
+cargo_dir=${CARGO_DIR:-$bench/cargo}
 
 other=-
 [ "$repo" != - ] && other=$repo/library
@@ -32,11 +36,12 @@ other=-
 
 # 依赖闭包：std（官方构建默认 features：panic-unwind + backtrace）、ripgrep 默认、Cargo 默认
 RUSTC_BOOTSTRAP=1 "$here/deps-closure.sh" "$lib/Cargo.toml" "$reg" "$t" sysroot backtrace,panic-unwind > "$out/closure-sysroot.txt"
-"$here/deps-closure.sh" "$bench/ripgrep/Cargo.toml" "$reg" "$t" > "$out/closure-ripgrep.txt"
-"$here/deps-closure.sh" "$bench/cargo/Cargo.toml" "$reg" "$t" cargo > "$out/closure-cargo.txt"
+"$here/deps-closure.sh" "$rg_dir/Cargo.toml" "$reg" "$t" > "$out/closure-ripgrep.txt"
+"$here/deps-closure.sh" "$cargo_dir/Cargo.toml" "$reg" "$t" cargo > "$out/closure-cargo.txt"
 for p in sysroot ripgrep cargo; do
   "$here/deps-scan.sh" "$out/closure-$p.txt" "$out/x86-fns.txt" > "$out/scan-$p.txt"
   "$here/deps-scan.sh" "$out/closure-$p.txt" "$out/x86-fns.txt" x86 | sed -n '/每个 crate 引用/,$p' > "$out/scan-$p-x86.txt"
   "$here/asm-sites.sh" "$out/closure-$p.txt" > "$out/asm-$p.txt"
+  "$here/async-sites.sh" "$out/closure-$p.txt" > "$out/async-$p.txt"
 done
 echo "done: $out"

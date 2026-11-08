@@ -42,17 +42,16 @@
 
 ## 第三档：Cargo
 
-在第二档之上（[deps-cargo](deps-cargo.md)）：
+在第二档之上（[deps-cargo](deps-cargo.md)），目标为 Cargo 0.95.0（[T00](../../plan/m0/t00-freeze-inputs.md)）：
 
 | 需求 | 量化依据 | 工作量（推断） |
 |---|---|---:|
-| 过程宏：原生编译 `proc_macro` + bridge 服务端 + runner | 12 个宏 crate、26 个 host-only 包 | 5–8 |
-| async/await 与协程变换（含析构与 unwind 路径） | `async-trait`、`futures-macro` 等生成的代码 | 4–6 |
-| 29 个 LLVM x86 intrinsic，含 AVX-512（EVEX 编码）、SHA-NI、PCLMUL | zlib-rs 的 AVX-512 函数一定会生成代码 | 4–6 |
-| `asm!` 增量：`syscall` 与显式寄存器破坏列表、`xmm_reg`/`reg_byte` 寄存器类、`#` 注释模板、`cmpxchg16b` | rustix 14、portable-atomic 7+8+1 等 | 1–2 |
-| target 32 + host 3 个构建脚本（15 + 2 个探测编译器）；7 个 `links` C 库的链接与来源记账 | — | 1–2 |
+| 过程宏：原生编译 `proc_macro` + bridge 服务端 + runner | 9 个宏 crate、22 个 host-only 包 | 5–8 |
+| 19 个 LLVM x86 intrinsic：SHA-NI 7 个、PCLMUL、AVX2 的 `madd`/`maddubs`/`sad`/`permutevar8x32`、`_mm256_zeroupper` 等，都是 legacy SSE/VEX 编码 | 脚本列出 27 个，其中 `_mm512_*` 6 个与 `_rdrand*` 2 个按 cfg 核对不编译 | 2–3 |
+| `asm!` 增量：`syscall` 与显式寄存器破坏列表、`reg_byte` 寄存器类、注释模板 | rustix 14、constant_time_eq 1、zmij 1 | 1 |
+| target 33 + host 2 个构建脚本（16 + 2 个探测编译器）；7 个 `links` C 库的链接与来源记账 | — | 1–2 |
 
-**第三档增量约 15–24 人周（推断）。**
+**第三档增量约 9–14 人周（推断）。** 默认构建不编译 async 代码，也不生成 AVX-512 代码，所以不需要协程变换和 EVEX 编码。如果目标改回 Cargo 0.99.0，要加回 async/协程（4–6），并补上 `cmpxchg16b`、`xmm_reg`；原先 0.99.0 估计的 15–24 人周里还算了 AVX-512，复核后它在 0.99.0 默认构建下也不编译（见 [deps-cargo](deps-cargo.md) 末节）。
 
 ## 汇总
 
@@ -60,4 +59,4 @@
 |---|---|---|---:|
 | hello world | sysroot 26 包中的 20 个（含转发壳 rustc-std-workspace-core/alloc；panic_unwind 与 panic_abort 二选一链接） | 全部 sysroot 前端 + intrinsic/asm/unwind/TLS/shim | 32–48 |
 | ripgrep | + 34 包 | SIMD、`target_feature`、构建脚本 | 9–13 |
-| Cargo | + 336 包（301 target、26 host、9 两侧） | 过程宏、async、AVX-512、syscall asm、C 库 | 15–24 |
+| Cargo 0.95.0 | + 307 包（273 target、22 host、12 两侧） | 过程宏、syscall asm、SHA-NI/PCLMUL/AVX2 的 LLVM 名、C 库 | 9–14 |

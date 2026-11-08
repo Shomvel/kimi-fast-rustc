@@ -70,7 +70,7 @@
 `M4 · B · 依赖：T27, T30, T32`
 
 - **做什么：** 冻结 std、平台接口、线程/TLS、IO、panic runtime、test harness 需求，按阻塞能力拆项；产出可用于目标项目的自有 sysroot，Rust/C 库来源分列。
-- **补充：** C `main` shim；SIMD 与按函数 `target_feature` 从 M5 前移到这里（std 的 HashMap 和 ripgrep 都在关键路径上），AVX-512 留在 M5 并单列为风险。
+- **补充：** C `main` shim；SIMD 与按函数 `target_feature` 从 M5 前移到这里（std 的 HashMap 和 ripgrep 都在关键路径上）；ripgrep 与 Cargo 0.95.0 的默认构建都不需要 AVX-512（EVEX 编码），不进 M4/M5 主线。
 - **完成标志：** 代表 std/test 功能的正常和失败路径。
 
 <a id="t34"></a>

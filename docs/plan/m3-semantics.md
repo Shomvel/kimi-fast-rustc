@@ -35,7 +35,7 @@ T21–T24 共享类型和目标布局（const 泛型、模式、drop、trait 结
 - **子项：** (a) 真 dropck（依赖 T21）；(b) 泛型 type test 与 region 要求上传；(c) 闭包三步：typeck 中的捕获分析 → 闭包体借用检查 → 父函数接收上传的 region 要求；(d) placeholder/universe（`for<'a>`）；(e) `impl Trait` 与 member constraints（M4 之前必须完成，任务图增加“调用者依赖被调者借用检查”的边）。
 - **做什么：** loan/region、重借用、部分 move、分支初始化、drop flags、closure 捕获、异常 cleanup，逐项子包。产出 CheckedBody，正常/早退/失败路径的析构都显式表示在 Body 上。
 - **Rust 语义 SoN：** drop 显式化的结果直接对应 `DropValue`/`DropInPlace`；被取地址局部的 Storage 语句保留给 `SlotLive/SlotDead`（[ownership-drop-unwind.md](../design/ir/ownership-drop-unwind.md)）。
-- **(f) 协程：** async/协程变换与状态机布局。Cargo 需要；ripgrep 默认构建不需要。必须在 T36 之前完成。
+- **(f) 协程：** async/协程变换与状态机布局。Cargo 0.95.0 与 ripgrep 的默认构建都不编译 async 代码（gix 的 async 由 `maybe-async` 改写成同步），所以不在 M5 关键路径上；前端仍要能解析 async 语法。升级到 Cargo ≥ 0.99.0 时（`cargo` 本身有 async fn）再做。
 - **完成标志：** 有效/无效程序与 oracle 一致；每条退出路径的析构可检查。真实运行由 T27/T26 验收。
 
 <a id="t23"></a>
@@ -85,5 +85,5 @@ T21–T24 共享类型和目标布局（const 泛型、模式、drop、trait 结
 - **做什么：** 析构调用、不可返回调用、panic 路径；`panic=abort` 和 unwind 两种配置；异常表、personality；atomics/volatile/fence、TLS、所需 intrinsic 和 target feature。按冻结 sysroot 的实际需求拆项。
 - **Rust 语义 SoN：** `panic=unwind` 下按调用摘要 `may_unwind` 删除死 unwind 边和 cleanup；冷区域布局（[ownership-drop-unwind.md](../design/ir/ownership-drop-unwind.md#unwind)）。
 - **补充：** 生成的 LSDA 要能被 std 自带的 `rust_eh_personality` 解析；ELF TLS 模型。
-- **T27.b LLVM intrinsic 替代表：** `link_name = "llvm.*"` 的自有实现，三档分别需要 2（`_mm_pause`、`_xgetbv`）、3、29 个；映射表由 LLVM TableGen 数据和 stdarch 的 `assert_instr`（5739 条）生成，每个 intrinsic 自动生成对 rustc 的差分测试。
+- **T27.b LLVM intrinsic 替代表：** `link_name = "llvm.*"` 的自有实现，三档分别需要 2（`_mm_pause`、`_xgetbv`）、3、19 个（Cargo 0.95.0：SHA-NI、PCLMUL、AVX2，都是 SSE/VEX 编码）；映射表由 LLVM TableGen 数据和 stdarch 的 `assert_instr`（5739 条）生成，每个 intrinsic 自动生成对 rustc 的差分测试。
 - **完成标志：** 与 C/独立 driver 链接后观察到正确的析构次数与顺序（正常/早退/失败）、catch_unwind 支持范围、跨调用展开、线程同步 litmus。早期 abort-only 要显式列为限制并拒绝需要 unwind 的输入；最终同配置验收不能强制 abort。

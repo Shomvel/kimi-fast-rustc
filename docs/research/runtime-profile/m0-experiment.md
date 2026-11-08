@@ -7,7 +7,7 @@
 | 项 | 规定 |
 |---|---|
 | 参考工具链 | rustc 1.94.1 / LLVM 21.1.8（与 T00 一致）；`rustc -Vv`、`perf --version` 入指纹 |
-| 项目 | ripgrep 15.2.0（`e89fff89`）；Cargo：1.94.1 编不了 0.99.0，先用 0.95.0（crates.io SHA-256 `0af45a75…c4d`），T00 定版后替换 |
+| 项目 | ripgrep 15.2.0（`e89fff89`）；Cargo 0.95.0（crates.io SHA-256 `0af45a75…c4d`，T00 已定版）；workload 输入也统一用 0.95.0 源码树 |
 | profile | 项目自己的 release profile，`--target x86_64-unknown-linux-gnu`（RUSTFLAGS 不进 build script / proc macro） |
 | 主机 | 每个项目一个独立 E2B 沙箱（8 vCPU、有 AVX2）；臂在同一沙箱内串行构建、交错测量；不同主机的绝对值不混用 |
 | 语料 | 由 [setup-sandbox.sh](scripts/setup-sandbox.sh) 确定性生成，SHA-256 入指纹 |

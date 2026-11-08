@@ -45,11 +45,11 @@ core_arch 之外: 1 个文件 unwind/src/wasm.rs
    |---|---:|---:|---:|---:|---:|---|
    | sysroot（core、std、std_detect、hashbrown、memchr…） | 25 | 6 | 1 | 9 | 9 | `_mm_pause`、`_xgetbv`；`_rdrand*`、`_rdtsc` 只出现在 SGX 路径 |
    | ripgrep 依赖闭包 | 53 | 3 | 0 | 33 | 17 | `_mm_shuffle_epi8`、`_mm256_shuffle_epi8`、`_mm_packus_epi16` |
-   | Cargo 依赖闭包 | 178 | 29 | 1 | 97 | 51 | SHA-NI 7 个、PCLMUL、AVX-512（`ternarylogic`、`permutex2var`、`dpbusd`、`clmulepi64` 等）、`_mm_prefetch`、`_rdrand*`、`_xgetbv` |
+   | Cargo 0.95.0 依赖闭包 | 171 | 27 | 1 | 101 | 42 | SHA-NI 7 个、PCLMUL、AVX2 的 `madd`/`maddubs`/`sad`/`permutevar8x32`、`_mm256_zeroupper`、`_mm_prefetch`、`_xgetbv`；另有 `_mm512_*` 6 个与 `_rdrand*` 2 个按 cfg 不编译 |
 
 2. **simd 类的 3028 个函数依赖通用 SIMD 语义**：kfrc 后端要有向量类型（`#[repr(simd)]`）、`simd_shuffle` 等通用 intrinsic 和按 `target_feature` 选择指令编码的能力，见 [intrinsics](intrinsics.md)。
 3. **前端负担与是否使用无关。** 6269 个函数共 138785 行（[sources](sources.md)），带 6265 个 `#[target_feature]`、1544 个 `#[rustc_legacy_const_generics]`、3316 个 `#[rustc_const_unstable]`，编 core 时都要解析和类型检查。
-4. **AVX-512 不能完全回避。** Cargo 闭包里的 zlib-rs 有带 `#[target_feature(enable = "avx512…")]` 的非泛型函数，靠运行时检测分派，所以一定会生成代码。要么实现 EVEX 编码，要么在 M5 明确列为阻塞项（[deps-cargo](deps-cargo.md)）。
+4. **默认构建不需要 AVX-512。** Cargo 0.95.0 闭包里引用 `_mm512_*` 的 zlib-rs 0.5.5 把 AVX-512 代码放在非默认 feature `avx512`/`vpclmulqdq` 下，并用编译期 `cfg!(target_feature = …)` 分派；rand 的 AVX-512 分支也在 `cfg(target_feature = "avx512bw")` 下。基线 x86_64 目标不生成 EVEX 代码，只有用 `-C target-cpu`/`target-feature` 打开 AVX-512 时才需要（[deps-cargo](deps-cargo.md)）。
 
 ## `asm!` / `naked_asm!` / `global_asm!`
 
