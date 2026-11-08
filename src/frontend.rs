@@ -6,9 +6,10 @@ use std::fmt;
 /// Parses the explicitly supported `i64` (`isize`), `u64` (`usize`), and `bool` Rust subset.
 ///
 /// Functions and parameters retain their names and source ranges in `Graph::functions`.
-/// `if` expressions and statements and scalar `match` expressions merge values through explicit
-/// jumps, control regions, and Phi nodes. Mutable bindings and `while` loops use loop-header Phis,
-/// multiple back edges from `continue`, and exit Phis for `break` snapshots.
+/// `if` expressions and statements, scalar `match` expressions, and unconditional `loop`
+/// expressions merge values through explicit jumps, control regions, and Phi nodes. Mutable
+/// bindings and loops use loop-header Phis, multiple back edges from `continue`, and exit Phis for
+/// `break` snapshots and values.
 /// A pre-scan registers scalar constant declarations and function signatures, supporting forward
 /// constant references and recursive calls with checked types. Constant expressions are evaluated
 /// without emitting runtime nodes. Comparisons and logical operations produce booleans; `&&` and
@@ -624,7 +625,9 @@ enum MatchPattern {
 struct LoopContext {
     header: NodeId,
     phis: Vec<(String, NodeId)>,
-    breaks: Vec<(NodeId, HashMap<String, Binding>)>,
+    breaks: Vec<(NodeId, HashMap<String, Binding>, NodeId)>,
+    break_type: Option<ScalarType>,
+    unconditional: bool,
     induction: Option<(String, ScalarType)>,
     inclusive_end: Option<String>,
     shadow_depth: usize,
@@ -646,6 +649,7 @@ struct Parser {
     shadowed_variables: Vec<(String, Binding)>,
     types: HashMap<NodeId, ScalarType>,
     unsuffixed_literals: HashSet<NodeId>,
+    loop_results: HashMap<NodeId, Vec<NodeId>>,
     control: NodeId,
     return_type: Option<ScalarType>,
     loops: Vec<LoopContext>,
@@ -670,6 +674,7 @@ impl Parser {
             shadowed_variables: Vec::new(),
             types: HashMap::new(),
             unsuffixed_literals: HashSet::new(),
+            loop_results: HashMap::new(),
             control: NodeId(0),
             return_type: None,
             loops: Vec::new(),
@@ -1539,6 +1544,7 @@ impl Parser {
         self.variables.clear();
         self.shadowed_variables.clear();
         self.types.clear();
+        self.loop_results.clear();
         for (index, (parameter, mutable, ty)) in parameters.iter().enumerate() {
             let node = self.graph.parameter(index);
             self.types.insert(node, *ty);
@@ -1565,6 +1571,8 @@ impl Parser {
                 let value = self.parse_expression()?;
                 if let Some(expected) = return_type {
                     self.require_type(value, expected)?;
+                } else if self.loop_results.contains_key(&value) {
+                    self.require_type(value, ScalarType::Unit)?;
                 } else if self.unsuffixed_literals.contains(&value) {
                     self.require_type(value, ScalarType::I64)?;
                 }
@@ -1621,7 +1629,8 @@ impl Parser {
     fn is_tail_expression_candidate(&self) -> bool {
         if self.check(&TokenKind::Let)
             || self.check(&TokenKind::Return)
-            || ["if", "for", "while", "loop", "break", "continue", "return"]
+            || (self.return_type.is_none() && self.peek_identifier("loop"))
+            || ["if", "for", "while", "break", "continue", "return"]
                 .into_iter()
                 .any(|keyword| self.peek_identifier(keyword))
         {
@@ -1633,7 +1642,7 @@ impl Parser {
                 TokenKind::LBrace => brace_depth += 1,
                 TokenKind::RBrace if brace_depth == 0 => return true,
                 TokenKind::RBrace => brace_depth -= 1,
-                TokenKind::Semicolon => return false,
+                TokenKind::Semicolon if brace_depth == 0 => return false,
                 TokenKind::Eof => return false,
                 _ => {}
             }
@@ -1659,7 +1668,7 @@ impl Parser {
             self.position += 1;
             let condition = self.graph.constant(1);
             self.mark_bool(condition);
-            self.parse_loop(Some(condition), None, None)?;
+            self.parse_loop(Some(condition), None, None, false)?;
             return Ok(None);
         }
         if self.peek_identifier("while") {
@@ -1668,8 +1677,14 @@ impl Parser {
         }
         if self.peek_identifier("break") {
             self.position += 1;
-            self.expect(TokenKind::Semicolon, "`;` after break")?;
-            self.parse_break()?;
+            let value = if self.eat(TokenKind::Semicolon) {
+                None
+            } else {
+                let value = self.parse_expression()?;
+                self.expect(TokenKind::Semicolon, "`;` after break value")?;
+                Some(value)
+            };
+            self.parse_break(value)?;
             return Ok(None);
         }
         if self.peek_identifier("continue") {
@@ -1690,6 +1705,8 @@ impl Parser {
             let value = self.parse_expression()?;
             if let Some(expected) = self.return_type {
                 self.require_type(value, expected)?;
+            } else if self.loop_results.contains_key(&value) {
+                self.require_type(value, ScalarType::Unit)?;
             } else if self.unsuffixed_literals.contains(&value) {
                 self.require_type(value, ScalarType::I64)?;
             }
@@ -1815,10 +1832,58 @@ impl Parser {
         variables
     }
 
-    fn parse_break(&mut self) -> Result<(), ParseError> {
+    fn parse_break(&mut self, value: Option<NodeId>) -> Result<(), ParseError> {
         if self.loops.is_empty() {
             return Err(self.error_here("`break` outside a loop is not supported"));
         }
+        if value.is_some()
+            && !self
+                .loops
+                .last()
+                .expect("loop context exists")
+                .unconditional
+        {
+            return Err(self.error_here(
+                "`break` with a value is only supported in unconditional `loop` expressions",
+            ));
+        }
+        let value = value.unwrap_or_else(|| {
+            let value = self.graph.constant(0);
+            self.types.insert(value, ScalarType::Unit);
+            value
+        });
+        if let Some(expected) = self.loops.last().expect("loop context exists").break_type {
+            if expected == ScalarType::I64 && self.type_of(value) == ScalarType::U64 {
+                let previous_values = self
+                    .loops
+                    .last()
+                    .expect("loop context exists")
+                    .breaks
+                    .iter()
+                    .map(|(_, _, value)| *value)
+                    .collect::<Vec<_>>();
+                for previous in previous_values {
+                    self.require_type(previous, ScalarType::U64)?;
+                }
+                self.loops
+                    .last_mut()
+                    .expect("loop context exists")
+                    .break_type = Some(ScalarType::U64);
+            }
+            let expected = self
+                .loops
+                .last()
+                .expect("loop context exists")
+                .break_type
+                .expect("break type was just set");
+            self.require_type(value, expected)?;
+        } else {
+            self.loops
+                .last_mut()
+                .expect("loop context exists")
+                .break_type = Some(self.type_of(value));
+        }
+
         let jump = self.graph.jump(self.control);
         let (names, shadow_depth) = {
             let context = self.loops.last().expect("loop context exists");
@@ -1840,7 +1905,7 @@ impl Parser {
             .last_mut()
             .expect("loop context exists")
             .breaks
-            .push((jump, variables));
+            .push((jump, variables, value));
         self.terminated = true;
         Ok(())
     }
@@ -1878,7 +1943,7 @@ impl Parser {
 
         let last_iteration = self.graph.projection(branch, 0);
         self.control = last_iteration;
-        self.parse_break()
+        self.parse_break(None)
             .expect("inclusive range is inside a loop");
 
         let next_iteration = self.graph.projection(branch, 1);
@@ -2074,12 +2139,15 @@ impl Parser {
             None,
             Some((index_name, variable, ty, end)),
             inclusive.then_some(end_name),
-        )
+            false,
+        )?;
+        Ok(())
     }
 
     fn parse_while(&mut self) -> Result<(), ParseError> {
         self.position += 1;
-        self.parse_loop(None, None, None)
+        self.parse_loop(None, None, None, false)?;
+        Ok(())
     }
 
     fn parse_loop(
@@ -2087,7 +2155,9 @@ impl Parser {
         condition: Option<NodeId>,
         induction: Option<(String, String, ScalarType, NodeId)>,
         inclusive_end: Option<String>,
-    ) -> Result<(), ParseError> {
+        expression: bool,
+    ) -> Result<Option<NodeId>, ParseError> {
+        let unconditional = condition.is_some();
         let outer_variables = self.variables.clone();
         let shadow_depth = self.shadowed_variables.len();
         let mut loop_variables = outer_variables
@@ -2158,6 +2228,8 @@ impl Parser {
                 .map(|((name, _), phi)| (name.clone(), *phi))
                 .collect(),
             breaks: Vec::new(),
+            break_type: None,
+            unconditional,
             induction: induction.map(|(name, _, ty, _)| (name, ty)),
             inclusive_end,
             shadow_depth,
@@ -2169,39 +2241,82 @@ impl Parser {
             self.append_loop_edge(back_edge);
         }
         let exit_projection = self.graph.projection(branch, 1);
-        let context = self.loops.pop().expect("loop context exists");
+        let single_entry = self
+            .graph
+            .node(header)
+            .expect("loop header exists")
+            .control
+            .len()
+            == 1;
+        let mut context = self.loops.pop().expect("loop context exists");
         self.shadowed_variables.truncate(context.shadow_depth);
+
+        if single_entry {
+            for ((_, initial), phi) in loop_variables.iter().zip(&phis) {
+                self.graph.replace_uses(*phi, initial.value);
+                self.graph.remove(*phi);
+                self.types.remove(phi);
+                for values in self.loop_results.values_mut() {
+                    for value in values {
+                        if *value == *phi {
+                            *value = initial.value;
+                        }
+                    }
+                }
+                for (_, variables, value) in &mut context.breaks {
+                    if *value == *phi {
+                        *value = initial.value;
+                    }
+                    for snapshot in variables.values_mut() {
+                        if snapshot.value == *phi {
+                            snapshot.value = initial.value;
+                        }
+                    }
+                }
+            }
+        }
 
         let mut normal_variables = outer_variables.clone();
         for ((name, binding), phi) in loop_variables.iter().zip(&phis) {
             normal_variables.insert(
                 name.clone(),
                 Binding {
-                    value: *phi,
+                    value: if single_entry { binding.value } else { *phi },
                     mutable: true,
                     ty: binding.ty,
                 },
             );
         }
         if context.breaks.is_empty() {
+            if expression {
+                return Err(self.error_here("a `loop` expression must contain a `break`"));
+            }
             self.variables = normal_variables;
             self.control = exit_projection;
             self.terminated = false;
-            return Ok(());
+            return Ok(None);
+        }
+        if !expression {
+            for (_, _, value) in &context.breaks {
+                self.require_type(*value, ScalarType::Unit)?;
+            }
         }
 
-        let normal_exit = self.graph.jump(exit_projection);
-        let mut controls = vec![normal_exit];
-        controls.extend(context.breaks.iter().map(|(jump, _)| *jump));
+        let normal_exit = (!expression).then(|| self.graph.jump(exit_projection));
+        let mut controls = normal_exit.into_iter().collect::<Vec<_>>();
+        controls.extend(context.breaks.iter().map(|(jump, _, _)| *jump));
         self.control = self.graph.region(controls.clone());
         self.variables = outer_variables;
         for (name, binding) in &loop_variables {
-            let mut values = vec![normal_variables[name].value];
+            let mut values = normal_exit
+                .map(|_| normal_variables[name].value)
+                .into_iter()
+                .collect::<Vec<_>>();
             values.extend(
                 context
                     .breaks
                     .iter()
-                    .map(|(_, variables)| variables[name].value),
+                    .map(|(_, variables, _)| variables[name].value),
             );
             let phi = self.graph.phi(controls.clone(), values);
             self.types.insert(phi, binding.ty);
@@ -2214,8 +2329,26 @@ impl Parser {
                 },
             );
         }
+        let result = if expression {
+            let values = context
+                .breaks
+                .iter()
+                .map(|(_, _, value)| *value)
+                .collect::<Vec<_>>();
+            let result = self.graph.phi(controls, values.clone());
+            self.types.insert(
+                result,
+                context
+                    .break_type
+                    .expect("loop with breaks has a result type"),
+            );
+            self.loop_results.insert(result, values);
+            Some(result)
+        } else {
+            None
+        };
         self.terminated = false;
-        Ok(())
+        Ok(result)
     }
 
     fn parse_type(&mut self) -> Result<ScalarType, ParseError> {
@@ -2239,6 +2372,13 @@ impl Parser {
     }
 
     fn require_type(&mut self, value: NodeId, expected: ScalarType) -> Result<(), ParseError> {
+        if let Some(values) = self.loop_results.get(&value).cloned() {
+            for value in values {
+                self.require_type(value, expected)?;
+            }
+            self.types.insert(value, expected);
+            return Ok(());
+        }
         if expected == ScalarType::I64
             && self.unsuffixed_literals.contains(&value)
             && matches!(self.graph.node(value).map(|node| node.kind), Some(NodeKind::Const(bits)) if bits < 0)
@@ -2292,6 +2432,13 @@ impl Parser {
             self.parse_if_expression()
         } else if self.peek_identifier("match") {
             self.parse_match_expression()
+        } else if self.peek_identifier("loop") {
+            self.position += 1;
+            let condition = self.graph.constant(1);
+            self.mark_bool(condition);
+            Ok(self
+                .parse_loop(Some(condition), None, None, true)?
+                .expect("loop expression has a result"))
         } else {
             self.parse_logical_or()
         }

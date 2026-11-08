@@ -268,13 +268,11 @@ fn many_duplicate_expressions_preserve_graph_and_machine_code() {
         returns.push(graph.return_(start, Some(duplicate)));
     }
 
-    let mut expected = graph.clone();
+    const REPETITIONS: usize = 16;
+
+    let template = graph.clone();
+    let mut expected = template.clone();
     let ids_before: Vec<_> = graph.ids().collect();
-    let started = std::time::Instant::now();
-    let merged = value_numbering::value_numbering(&mut graph);
-    let elapsed = started.elapsed();
-    assert_eq!(merged, LEVELS + 1);
-    assert_eq!(graph.ids().collect::<Vec<_>>(), ids_before);
     for index in 0..=LEVELS {
         expected.node_mut(duplicates[index]).unwrap().data[0] = if index == 0 {
             parameter
@@ -283,11 +281,24 @@ fn many_duplicate_expressions_preserve_graph_and_machine_code() {
         };
         expected.node_mut(returns[index]).unwrap().data[0] = canonicals[index];
     }
-    assert_eq!(
-        graph.iter().collect::<Vec<_>>(),
-        expected.iter().collect::<Vec<_>>()
-    );
-    graph.validate().unwrap();
+
+    let mut elapsed = std::time::Duration::ZERO;
+    let mut optimize = |graph: &mut Graph| {
+        let started = std::time::Instant::now();
+        let merged = value_numbering::value_numbering(graph);
+        elapsed += started.elapsed();
+        assert_eq!(merged, LEVELS + 1);
+        assert_eq!(graph.ids().collect::<Vec<_>>(), ids_before);
+        assert_eq!(
+            graph.iter().collect::<Vec<_>>(),
+            expected.iter().collect::<Vec<_>>()
+        );
+        graph.validate().unwrap();
+    };
+    optimize(&mut graph);
+    for _ in 1..REPETITIONS {
+        optimize(&mut template.clone());
+    }
 
     let mut native_graph = Graph::new();
     let native_start = native_graph.start();
@@ -313,8 +324,9 @@ fn many_duplicate_expressions_preserve_graph_and_machine_code() {
         Ok(41 + NATIVE_LEVELS as i64 + 1)
     );
     eprintln!(
-        "duplicate_levels={LEVELS} elapsed_us={} nodes={} graph_fnv={:016x} code_bytes={} code_fnv={:016x}",
+        "duplicate_levels={LEVELS} repetitions={REPETITIONS} total_elapsed_us={} average_elapsed_us={} nodes={} graph_fnv={:016x} code_bytes={} code_fnv={:016x}",
         elapsed.as_micros(),
+        elapsed.as_micros() / REPETITIONS as u128,
         graph.len(),
         graph_fingerprint(&graph),
         bytes.len(),

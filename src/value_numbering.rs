@@ -1,4 +1,4 @@
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 
 use crate::son::{BinaryOp, CompareOp, Graph, NodeId, NodeKind, UnaryOp};
 
@@ -184,7 +184,7 @@ fn value_numbering_pass(
     control: &ControlInfo,
 ) -> usize {
     let ids: Vec<_> = graph.ids().collect();
-    let mut expressions: BTreeMap<u64, Vec<(ExpressionKey, NodeId)>> = BTreeMap::new();
+    let mut expressions: HashMap<u64, Vec<(ExpressionKey, NodeId)>> = HashMap::new();
     let mut replacements = BTreeMap::new();
     let mut merged = 0;
 

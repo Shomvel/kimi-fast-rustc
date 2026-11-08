@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 use crate::son::{BinaryOp, CompareOp, Graph, InputChannel, Node, NodeId, NodeKind, UnaryOp};
 
@@ -32,16 +32,36 @@ pub fn optimize(graph: &mut Graph) -> OptimizeStats {
 
 pub fn constant_fold(graph: &mut Graph) -> usize {
     let ids: Vec<_> = graph.ids().collect();
-    let mut folded = 0;
-    for id in ids {
-        let Some(value) = constant_value(graph, id) else {
+    let mut replacements = HashMap::new();
+    for &id in &ids {
+        let Some(value) = constant_value_with(graph, id, |input| {
+            let replacement = replacements.get(&input).copied().unwrap_or(input);
+            const_value(graph, replacement)
+        }) else {
             continue;
         };
         let replacement = graph.constant(value);
-        graph.replace_uses(id, replacement);
-        folded += 1;
+        replacements.insert(id, replacement);
     }
-    folded
+    if replacements.is_empty() {
+        return 0;
+    }
+
+    for id in ids {
+        let node = graph.node_mut(id).expect("folded graph node exists");
+        for channel in [
+            InputChannel::Control,
+            InputChannel::Data,
+            InputChannel::Memory,
+        ] {
+            for input in node.inputs_mut(channel) {
+                if let Some(&replacement) = replacements.get(input) {
+                    *input = replacement;
+                }
+            }
+        }
+    }
+    replacements.len()
 }
 
 pub fn algebraic_simplify(graph: &mut Graph) -> usize {
@@ -141,23 +161,31 @@ fn const_value(graph: &Graph, id: NodeId) -> Option<i64> {
 }
 
 pub fn constant_value(graph: &Graph, id: NodeId) -> Option<i64> {
+    constant_value_with(graph, id, |input| const_value(graph, input))
+}
+
+fn constant_value_with(
+    graph: &Graph,
+    id: NodeId,
+    input_value: impl Fn(NodeId) -> Option<i64>,
+) -> Option<i64> {
     let node = graph.node(id)?;
     match node.kind {
         NodeKind::Unary(op) if node.data.len() == 1 => {
-            let value = const_value(graph, node.data[0])?;
+            let value = input_value(node.data[0])?;
             Some(match op {
                 UnaryOp::Neg => value.wrapping_neg(),
                 UnaryOp::Not => !value,
             })
         }
         NodeKind::Binary(op) if node.data.len() == 2 => {
-            let left = const_value(graph, node.data[0])?;
-            let right = const_value(graph, node.data[1])?;
+            let left = input_value(node.data[0])?;
+            let right = input_value(node.data[1])?;
             fold_binary(op, left, right)
         }
         NodeKind::Compare(op) if node.data.len() == 2 => {
-            let left = const_value(graph, node.data[0])?;
-            let right = const_value(graph, node.data[1])?;
+            let left = input_value(node.data[0])?;
+            let right = input_value(node.data[1])?;
             Some(bool_value(match op {
                 CompareOp::Eq => left == right,
                 CompareOp::Ne => left != right,

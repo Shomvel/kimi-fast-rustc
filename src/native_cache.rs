@@ -134,7 +134,7 @@ impl NativeCache {
         backend_version: &str,
         jobs: usize,
     ) -> NativeCacheKey {
-        let slot_count = u64::from(graph.clone().start().0);
+        let slot_count = graph.node_capacity() as u64;
         if graph.functions.is_empty() {
             let mut hasher = Sha256::new();
             hasher.update(KEY_DOMAIN);
@@ -1038,6 +1038,22 @@ mod tests {
         .unwrap()
     }
 
+    fn large_program_graph() -> Graph {
+        let mut source = String::from("fn main() -> i64 { return function0(40); }\n");
+        for index in 0..96 {
+            source.push_str(&format!(
+                "fn function{index}(value: i64) -> i64 {{\n\
+                 let mut result = value;\n\
+                 result += {index};\n\
+                 result *= 3;\n\
+                 result -= 7;\n\
+                 return result;\n\
+                 }}\n"
+            ));
+        }
+        crate::frontend::parse(&source).unwrap()
+    }
+
     fn program_key(graph: &Graph, backend: &str) -> NativeCacheKey {
         NativeCache::key(graph, "main", SUPPORTED_TARGET, SUPPORTED_ABI, backend)
     }
@@ -1198,6 +1214,75 @@ mod tests {
         trailing_hole.remove(removed);
         assert_eq!(trailing_hole.len(), graph.len());
         assert_ne!(program_key(&trailing_hole, BACKEND), base);
+    }
+
+    #[test]
+    fn large_program_trailing_tombstones_preserve_sharded_cache_semantics() {
+        let graph = large_program_graph();
+        assert_eq!(graph.functions.len(), 97);
+        assert!(graph.node_capacity() > 3 * PROGRAM_HASH_SHARD_SLOTS);
+        let base = program_key(&graph, BACKEND);
+
+        let mut trailing_holes = graph.clone();
+        for value in 0..(PROGRAM_HASH_SHARD_SLOTS + 17) {
+            let removed = trailing_holes.constant(value as i64);
+            trailing_holes.remove(removed);
+        }
+        assert_eq!(trailing_holes.len(), graph.len());
+        assert_eq!(
+            trailing_holes.node_capacity(),
+            graph.node_capacity() + PROGRAM_HASH_SHARD_SLOTS + 17
+        );
+        let with_trailing_holes = program_key(&trailing_holes, BACKEND);
+        assert_ne!(with_trailing_holes, base);
+
+        for jobs in [1, 4] {
+            assert_eq!(
+                NativeCache::key_with_jobs(
+                    &graph,
+                    "main",
+                    SUPPORTED_TARGET,
+                    SUPPORTED_ABI,
+                    BACKEND,
+                    jobs,
+                ),
+                base
+            );
+            assert_eq!(
+                NativeCache::key_with_jobs(
+                    &trailing_holes,
+                    "main",
+                    SUPPORTED_TARGET,
+                    SUPPORTED_ABI,
+                    BACKEND,
+                    jobs,
+                ),
+                with_trailing_holes
+            );
+        }
+
+        let temp = TempDir::new();
+        let cache = NativeCache::new(temp.0.join("cache"));
+        let first = cache
+            .get_or_compile_program(&graph, 1, SUPPORTED_TARGET, SUPPORTED_ABI, BACKEND)
+            .unwrap();
+        assert!(!first.cache_hit);
+        let hit = cache
+            .get_or_compile_program(&graph, 4, SUPPORTED_TARGET, SUPPORTED_ABI, BACKEND)
+            .unwrap();
+        assert!(hit.cache_hit);
+        assert_eq!(hit.bytes, first.bytes);
+
+        let isolated = cache
+            .get_or_compile_program(&trailing_holes, 4, SUPPORTED_TARGET, SUPPORTED_ABI, BACKEND)
+            .unwrap();
+        assert!(!isolated.cache_hit);
+        assert_eq!(isolated.bytes, first.bytes);
+        let isolated_hit = cache
+            .get_or_compile_program(&trailing_holes, 1, SUPPORTED_TARGET, SUPPORTED_ABI, BACKEND)
+            .unwrap();
+        assert!(isolated_hit.cache_hit);
+        assert_eq!(isolated_hit.bytes, first.bytes);
     }
 
     #[test]

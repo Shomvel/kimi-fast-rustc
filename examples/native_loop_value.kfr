@@ -1,0 +1,6 @@
+fn main() -> i64 {
+    let answer = loop {
+        break 40 + 2;
+    };
+    answer
+}

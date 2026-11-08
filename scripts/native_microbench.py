@@ -48,8 +48,11 @@ def digest(path):
     return hasher.hexdigest()
 
 
-def run(command):
-    result = subprocess.run(command, capture_output=True, text=True)
+def run(command, env=None):
+    environment = os.environ.copy()
+    if env:
+        environment.update(env)
+    result = subprocess.run(command, capture_output=True, text=True, env=environment)
     if result.returncode != 0:
         raise RuntimeError(
             f"command failed ({result.returncode}): {' '.join(map(str, command))}\n"
@@ -69,6 +72,7 @@ def main():
         default="native",
     )
     parser.add_argument("--jobs", default="1,2,4")
+    parser.add_argument("--cache", choices=("off", "cold", "warm"), default="off")
     parser.add_argument("--samples", type=int, default=7)
     parser.add_argument("--inputs", type=int, default=8)
     parser.add_argument("--workdir", type=Path)
@@ -106,6 +110,15 @@ def main():
                 if output.exists():
                     shutil.rmtree(output)
                 output.mkdir()
+                cache_environment = None
+                if args.cache != "off":
+                    cache_dir = workdir / f"cache-{job_count}"
+                    if args.cache == "cold":
+                        cache_dir = workdir / f"cache-{job_count}-{sample}"
+                        if cache_dir.exists():
+                            shutil.rmtree(cache_dir)
+                    cache_dir.mkdir(parents=True, exist_ok=True)
+                    cache_environment = {"KFRC_NATIVE_CACHE": str(cache_dir)}
                 started = time.perf_counter_ns()
                 if args.mode == "native":
                     for path in inputs:
@@ -116,7 +129,7 @@ def main():
                             "--jobs",
                             str(job_count),
                             f"--emit=obj={output / (path.stem + '.o')}",
-                        ])
+                        ], env=cache_environment)
                 else:
                     command = [
                         str(compiler),
@@ -129,7 +142,7 @@ def main():
                     if args.mode == "batch-pipeline":
                         command.append("--pipeline")
                     command.extend(map(str, inputs))
-                    run(command)
+                    run(command, env=cache_environment)
                 elapsed = time.perf_counter_ns() - started
                 if sample:
                     times.append(elapsed / 1_000_000)
@@ -166,6 +179,7 @@ def main():
             "compiler": str(compiler),
             "compiler_sha256": digest(compiler),
             "mode": args.mode,
+            "cache_mode": args.cache,
             "workload_sha256": workload.hexdigest(),
             "inputs": args.inputs,
             "functions_per_input": 4,

@@ -224,6 +224,11 @@ impl Graph {
         self.live_nodes
     }
 
+    /// Returns the number of node slots, including interior and trailing tombstones.
+    pub fn node_capacity(&self) -> usize {
+        self.nodes.len()
+    }
+
     pub fn is_empty(&self) -> bool {
         self.live_nodes == 0
     }
@@ -638,5 +643,10 @@ mod tests {
         assert_eq!(graph.node(second).unwrap().kind, NodeKind::Const(2));
         assert_eq!(graph.ids().collect::<Vec<_>>(), vec![second]);
         assert_eq!(graph.len(), 1);
+        assert_eq!(graph.node_capacity(), 2);
+
+        assert_eq!(graph.remove(second).unwrap().kind, NodeKind::Const(2));
+        assert!(graph.is_empty());
+        assert_eq!(graph.node_capacity(), 2);
     }
 }

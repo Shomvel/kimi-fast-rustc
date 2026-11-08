@@ -403,24 +403,9 @@ impl Encoder<'_> {
                 self.bytes.push(0xd3);
                 self.modrm(3, Reg::Rbp, dst.low_code());
             }
-            ShlImm { dst, count } => {
-                self.rex(true, None, Some(dst), false);
-                self.bytes.push(0xc1);
-                self.modrm(3, Reg::Rsp, dst.low_code());
-                self.bytes.push(count);
-            }
-            ShrImm { dst, count } => {
-                self.rex(true, None, Some(dst), false);
-                self.bytes.push(0xc1);
-                self.modrm(3, Reg::Rdi, dst.low_code());
-                self.bytes.push(count);
-            }
-            LShrImm { dst, count } => {
-                self.rex(true, None, Some(dst), false);
-                self.bytes.push(0xc1);
-                self.modrm(3, Reg::Rbp, dst.low_code());
-                self.bytes.push(count);
-            }
+            ShlImm { dst, count } => self.shift_immediate(dst, Reg::Rsp, count),
+            ShrImm { dst, count } => self.shift_immediate(dst, Reg::Rdi, count),
+            LShrImm { dst, count } => self.shift_immediate(dst, Reg::Rbp, count),
             IMul { dst, src } => match src {
                 Operand::Reg(src) => {
                     self.rex(true, Some(dst), Some(src), false);
@@ -685,6 +670,15 @@ impl Encoder<'_> {
             self.bytes.push(0x81);
             self.modrm(3, extension, dst.low_code());
             self.i32(value);
+        }
+    }
+
+    fn shift_immediate(&mut self, dst: Reg, extension: Reg, count: u8) {
+        self.rex(true, None, Some(dst), false);
+        self.bytes.push(if count == 1 { 0xd1 } else { 0xc1 });
+        self.modrm(3, extension, dst.low_code());
+        if count != 1 {
+            self.bytes.push(count);
         }
     }
 
