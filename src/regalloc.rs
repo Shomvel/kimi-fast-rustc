@@ -262,7 +262,8 @@ impl RegisterAllocator {
         };
         let mut free_registers: BTreeSet<_> =
             (0..self.register_count).map(PhysicalRegister).collect();
-        let mut free_spill_slots = BTreeSet::new();
+        // Free slot -> position where its last occupant ended.
+        let mut free_spill_slots = BTreeMap::new();
         let mut active: Vec<ActiveInterval> = Vec::new();
         let mut spilled: BTreeSet<SpilledInterval> = BTreeSet::new();
 
@@ -280,7 +281,7 @@ impl RegisterAllocator {
                 .is_some_and(|entry| entry.end <= interval.start)
             {
                 let entry = spilled.pop_first().unwrap();
-                free_spill_slots.insert(entry.slot);
+                free_spill_slots.insert(entry.slot, entry.end);
             }
 
             if let Some(register) = interval.fixed_register {
@@ -368,7 +369,7 @@ impl RegisterAllocator {
                     active.push(ActiveInterval { interval, register });
                 }
                 _ => {
-                    let slot = take_spill_slot(&mut result, &mut free_spill_slots)?;
+                    let slot = take_spill_slot(&mut result, &mut free_spill_slots, interval.start)?;
                     result
                         .allocations
                         .insert(interval.virtual_reg, Location::Spill(slot));
@@ -396,11 +397,21 @@ struct SpilledInterval {
     slot: SpillSlot,
 }
 
+/// A slot for an interval spilled over its whole range starting at `start`.
+/// A freed slot qualifies only if its previous occupant ended by `start`: an
+/// evicted interval started before the eviction point, and a slot freed in
+/// between was still in use during part of its range.
 fn take_spill_slot(
     result: &mut AllocationResult,
-    free_spill_slots: &mut BTreeSet<SpillSlot>,
+    free_spill_slots: &mut BTreeMap<SpillSlot, InstructionPosition>,
+    start: InstructionPosition,
 ) -> Result<SpillSlot, RegAllocError> {
-    if let Some(slot) = free_spill_slots.pop_first() {
+    let reusable = free_spill_slots
+        .iter()
+        .find(|(_, free_since)| **free_since <= start)
+        .map(|(slot, _)| *slot);
+    if let Some(slot) = reusable {
+        free_spill_slots.remove(&slot);
         return Ok(slot);
     }
     let slot = SpillSlot(result.spill_slot_count);
@@ -416,10 +427,10 @@ fn spill_active(
     active: &mut Vec<ActiveInterval>,
     spilled: &mut BTreeSet<SpilledInterval>,
     result: &mut AllocationResult,
-    free_spill_slots: &mut BTreeSet<SpillSlot>,
+    free_spill_slots: &mut BTreeMap<SpillSlot, InstructionPosition>,
 ) -> Result<(), RegAllocError> {
     let entry = active.remove(index);
-    let slot = take_spill_slot(result, free_spill_slots)?;
+    let slot = take_spill_slot(result, free_spill_slots, entry.interval.start)?;
     result
         .allocations
         .insert(entry.interval.virtual_reg, Location::Spill(slot));
@@ -491,6 +502,30 @@ mod tests {
             result.allocation(vreg(2)),
             Some(Location::Register(register(1)))
         );
+    }
+
+    /// An interval evicted at a later point is spilled over its whole range,
+    /// so it must not reuse a slot whose previous occupant overlapped it.
+    #[test]
+    fn evicted_interval_does_not_reuse_a_slot_still_in_use_at_its_start() {
+        let intervals = [
+            interval(0, 0, 2),
+            interval(1, 1, 5),
+            interval(2, 2, 40),
+            interval(3, 6, 7),
+        ];
+        let result = allocate(1, &intervals);
+        for (index, a) in intervals.iter().enumerate() {
+            for b in &intervals[index + 1..] {
+                if a.overlaps(b) {
+                    assert_ne!(
+                        result.allocation(a.virtual_reg),
+                        result.allocation(b.virtual_reg),
+                        "{a:?} and {b:?} share a location"
+                    );
+                }
+            }
+        }
     }
 
     #[test]

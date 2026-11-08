@@ -44,6 +44,18 @@ pub fn lower_function(graph: &FunctionGraph) -> Result<MachineFunction, LowerErr
     lowering.run()?;
     let instructions = lowering.instructions;
     let intervals = live_intervals(&instructions);
+    if let Ok(pattern) = std::env::var("KFRC_DUMP_MACHINE")
+        && graph.symbol.contains(&pattern)
+    {
+        eprintln!("machine {} {{", graph.symbol);
+        for (position, instruction) in instructions.iter().enumerate() {
+            eprintln!("  {position:5} {instruction:?}");
+        }
+        for interval in &intervals {
+            eprintln!("  interval v{} [{}, {})", interval.virtual_reg.0, interval.start.0, interval.end.0);
+        }
+        eprintln!("}}");
+    }
     compile_virtual_function(instructions, intervals, graph.symbol.clone()).map_err(LowerError::Backend)
 }
 

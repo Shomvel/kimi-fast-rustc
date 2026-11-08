@@ -184,6 +184,22 @@ fn compile_instance_inner<'tcx>(tcx: TyCtxt<'tcx>, instance: Instance<'tcx>) -> 
     if std::env::var_os("KFRC_DUMP_GRAPH").is_some() {
         eprintln!("{}", graph.dump());
     }
+    // `KFRC_INTERPRET=<symbol substring>=<arg>,<arg>`: run the reference
+    // interpreter on the verified graph to separate graph bugs from
+    // lowering bugs.
+    if let Ok(request) = std::env::var("KFRC_INTERPRET")
+        && let Some((pattern, arguments)) = request.split_once('=')
+        && symbol.contains(pattern)
+    {
+        let arguments: Vec<u64> = arguments
+            .split(',')
+            .filter(|text| !text.is_empty())
+            .map(|text| text.trim().parse::<i128>().map(|value| value as u64).unwrap_or(0))
+            .collect();
+        let mut no_calls = |callee: &str, _: &[u64]| Err(kfrc_son::InterpretError::UnknownCallee(callee.to_owned()));
+        let outcome = kfrc_son::Interpreter::new(&graph).run(&arguments, &mut no_calls);
+        eprintln!("kfrc interpret {symbol}{arguments:?} = {outcome:?}");
+    }
     kfrc_x86::lower_function(&graph).unwrap_or_else(|error| fail("x86 lowering", error.to_string()))
 }
 

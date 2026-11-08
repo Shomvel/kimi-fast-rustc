@@ -41,3 +41,10 @@ PoC 先做中后端，完整计划的 M1–M4 后做前端与 sysroot。PoC 写�
 ## 契约缺口清单
 
 PoC 过程中发现的 Body 契约、`TypeOracle`、答案种类的缺口记在这里，P4 结束时批量回改 design。
+
+| 编号 | 发现于 | 缺口 | 处理 |
+|---|---|---|---|
+| G1 | P0 标量链 | `Assert` 的失败路径要调用 panic lang item，并传 `&'static Location`；Body 里没有“数据对象”（字节 + 指向其他数据的重定位），也没有源位置旁表到数据的映射 | 给 Body 加数据对象池与 `PanicLocationId`；代码只引用符号，不读内容（设计红线 2） |
+| G2 | P0 标量链 | `#[track_caller]` 被调者的 ABI 比 MIR 实参多一个隐式 `Location` | 与 G1 一起：转换器补隐式实参，`FunctionAbi` 标出隐式参数 |
+| G3 | P0 标量链 | match guard 的绑定是 `&T`（共享借用），纯标量程序也会出现引用 | P1 的 `StackSlot` + `Local` 分区；当前明确报未支持 |
+| G4 | P0 标量链 | `-Coverflow-checks=on`（cargo 默认 debug）产生 `AddWithOverflow` 等返回 `(T, bool)` 的运算 | P1 的聚合值；当前要求 `overflow-checks=off` |
