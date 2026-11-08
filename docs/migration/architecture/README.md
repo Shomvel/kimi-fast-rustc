@@ -11,6 +11,7 @@
 | [cache.md](cache.md) | 缓存分层、键、失效测试 |
 | [cargo-sysroot.md](cargo-sysroot.md) | Cargo 协议、host/target、sysroot、来源标签 |
 | [code-layout.md](code-layout.md) | 规划目录和新旧链切换方式 |
+| [contracts/](contracts/README.md) | 字段级契约草案：ID、SoN、verifier、机器/ABI、Typed Body |
 
 ## 编译链
 

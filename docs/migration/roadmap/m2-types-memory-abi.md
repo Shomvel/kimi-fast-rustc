@@ -22,14 +22,15 @@
 `M2 · B · 依赖：T14`
 
 - **做什么：** 整数宽度、浮点、tuple/struct/enum、array/slice、指针/引用、`repr`/layout，每类一个子项。产出自有类型/布局、Place 投影和 ABI 分类所需输入；区分语言保证的布局与内部约定。
-- **完成标志：** 大小、对齐、投影、有效值的正反例。差分只用有 `repr` 契约的布局，不读 padding。
+- **补充：** 布局算法按 `rustc_abi::layout` 移植，`repr(Rust)` 也与 rustc 位级一致（x86_64 Rust ABI 由布局决定）；含生命周期参数的 ADT 需要方差推导（`variances_of`）与推断 outlives（`inferred_outlives_of`）。
+- **完成标志：** 大小、对齐、投影、有效值的正反例；布局与 ABI 还要通过[一致性测试](../validation/layout-abi-parity.md)。
 
 <a id="t16"></a>
 ## T16 安全子集的初始化、move 与借用检查
 
 `M2 · B · 依赖：T13, T15`
 
-- **做什么：** 对 M2 接受的引用/聚合语义做受限借用、move 和初始化分析，产出 CheckedBody。复杂生命周期暂不支持时明确拒绝。
+- **做什么：** 对 M2 接受的引用/聚合语义做受限借用、move 和初始化分析，产出 CheckedBody。复杂生命周期暂不支持时明确拒绝。drop-live 先用保守近似（字段递归 + 有 `Drop` impl 的类型参数全部 live），真 dropck 等 T21。
 - **完成标志：** 可变别名借用、move 后使用、分支未初始化等拒绝用例与 oracle 一致。
 
 <a id="t17"></a>

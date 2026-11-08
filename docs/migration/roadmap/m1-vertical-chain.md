@@ -21,7 +21,9 @@
 
 `M1 · A · 依赖：T02, T03`
 
-- **做什么：** `src/syntax/`：source/span/token tree，按选定 rustc 版本移植字面量、优先级、函数/块语法。解析器只产出 AST，不建 SoN、不维护 SSA。
+细化：[m1/t04-syntax.md](m1/t04-syntax.md)
+
+- **做什么：** `src/syntax/`：token tree、AST、HIR 级节点 ID。`Span` 现在就带 `SyntaxContext`，edition 按 span 查询，token tree 保留不可见分组和 spacing——这些晚加会改遍下游。解析器只产出 AST。
 - **完成标志：** 语法正反例、边界字面量、作用域结构和源位置；移植来源、许可、测试来源有记录。
 
 <a id="t05"></a>
@@ -29,7 +31,9 @@
 
 `M1 · A · 依赖：T04`
 
-- **做什么：** `src/resolve/`：定义登记、显式路径、词法作用域、前向/递归声明、可见性。先登记声明，再检查函数体。
+细化：[m1/t05-resolve.md](m1/t05-resolve.md)
+
+- **做什么：** `src/resolve/`：定义登记、模块图、导入不动点（含 glob）、晚期 rib 规则、可见性；查找从 M1 起就返回三态（已确定/失败/待定），以便 T23 接入宏展开。同时产出签名级生命周期（省略、early/late-bound）。
 - **完成标志：** 多模块、遮蔽、递归、重复/未定义/不可见名称的正反例；完成顺序变化不改变 DefKey。
 
 <a id="t06"></a>
@@ -37,13 +41,17 @@
 
 `M1 · B · 依赖：T05`
 
-- **做什么：** `src/semantics/`、`src/body/`：标量、函数调用、局部变量、赋值、分支/循环/return 的类型检查，生成带 LocalId/Place/CFG 的 [Typed Body](../architecture/representations.md#typed-body)，含初始化检查、求值顺序和源映射。
-- **完成标志：** 非法赋值/返回/调用/初始化被拒绝；变量在所有控制路径上可追踪；Body verifier 和支持范围表。
+细化：[m1/t06-typeck-and-body.md](m1/t06-typeck-and-body.md)
+
+- **做什么：** 两步。T06.a 类型检查产出 TypeckResults：全部整数宽度（含 `i32` 字面量 fallback）、`!`、推导表与快照、rustc 的阶段顺序、默认 Deny 的溢出 lint。T06.b 用 TypeckResults 构建 [Typed Body](../architecture/contracts/body.md)：作用域栈与 DropTree、`StorageDead`、`Assert` 的 unwind 边、region scope tree；即使 `panic=abort` 也建出 cleanup 边。
+- **完成标志：** 无推导变量泄漏；Body 通过 verifier；正反例的接受/拒绝和错误码与 rustc 一致。
 
 <a id="t07"></a>
 ## T07 SoN 表示与 verifier
 
 `M1 · C · 依赖：T02, T03`
+
+细化：[m1/t07-son-verifier.md](m1/t07-son-verifier.md)
 
 - **做什么：** `src/son/{graph,types,verify}.rs`：节点结果和输入的类型约束；控制、值、效果三类输入与多结果投影；图内引用与跨实例引用分开；循环“未封闭 → 已封闭”状态。旧 `src/son.rs` 在调用者迁移前保留兼容入口，旧标量图通过显式适配器构造。
 - **完成标志：** 故意破坏的 Phi 前驱、跨图引用、类型、支配、效果依赖都被拒绝；合法循环/多前驱图通过；同一输入的图 dump 稳定。
@@ -53,6 +61,8 @@
 
 `M1 · D · 依赖：T02, T03`
 
+细化：[m1/t08-scalar-abi.md](m1/t08-scalar-abi.md)
+
 - **做什么：** 从 `native.rs`、`x86.rs`、`regalloc.rs`、`native_program.rs` 抽出标量调用入口，定义 FnAbi、寄存器约束、栈参数/返回和 ObjectFragment 接口（规划 `src/machine/`），做接入新图所需的最小适配。
 - **完成标志：** 经 C ABI driver 真实执行：标量调用、递归、跨调用活跃值、高压力 spill。
 
@@ -60,6 +70,8 @@
 ## T09 Typed Body → SoN 的统一控制降低
 
 `M1 · C · 依赖：T06, T07, T08`
+
+细化：[m1/t09-body-to-son.md](m1/t09-body-to-son.md)
 
 - **做什么：** `src/son/build.rs`，唯一的生产入口。按 CFG 前驱统一构造值和效果合并，处理 if/match/短路/loop/return、多回边、break/continue、不可达块；变量按 LocalId 识别。不再在各语法分支里各自拼 Phi。
 - **完成标志：** T01 错误类及嵌套循环、遮蔽、多出口、分支赋值组合，经 T03 runner + T08 机器入口真实执行与 rustc 一致。一个测试能同时导出 Body、SoN 和机器码。只过图层不算 verified。
@@ -69,6 +81,8 @@
 
 `M1 · E · 依赖：T09`
 
+细化：[m1/t10-new-driver.md](m1/t10-new-driver.md)
+
 - **做什么：** 新 `.rs` 入口串起各阶段：串行调度、对象、链接、诊断和来源清单。
 - **完成标志：** 通过公共 CLI 跑通 源码 → 对象 → 执行；目标对象没有 rustc 生产者；诊断、来源和退出码可从 CLI 取得。
 
@@ -76,6 +90,8 @@
 ## T11 有界任务、预算和取消
 
 `M1 · E · 依赖：T07, T08, T10`
+
+细化：[m1/t11-tasks-budget.md](m1/t11-tasks-budget.md)
 
 - **做什么：** 函数/语义组级任务（暂无持久缓存）：不可变产物发布、CPU/jobserver 预算、字节背压、fail-fast、唤醒等待者；单图独占修改，图之间并行。设计见 [build-pipeline](../architecture/build-pipeline.md)。
 - **完成标志：** jobs=1/2/4 结果和对象一致；循环依赖、队列满、上游失败、取消都在有限时间内收束；串行参考路径仍可用。
@@ -85,6 +101,9 @@
 
 `M1 · B · 依赖：T02, T03, T06`
 
+细化：[m1/t12-trait-experiment.md](m1/t12-trait-experiment.md)
+
+- **注意：** rustc 1.94.1 的默认结果来自旧求解器，新求解器只用于 coherence。算法参考新求解器，oracle 两种模式都跑，结果不一致的用例记为 `solver-divergence`。
 - **输入闭包：** 一个 trait、一个关联类型、两个候选 impl、一个带 `where` 约束的泛型函数及跨函数调用。先记录 rustc 对“有效 / 无 impl / 歧义或不满足约束”三类程序的结果。
 - **做什么：** 设计 canonical goal、推导变量的驻留与回滚，移植最小求解步骤；列出实际需要的 rustc 依赖闭包。高阶约束、opaque type、specialization 等未覆盖项列出。
 - **完成标志：** 正例、缺 impl、冲突/歧义、循环边界与 oracle 一致；没有永久携带 TyCtxt/query；给出保留/替换清单和 M3 估算。`verified` 只表示实验结论成立，不表示 trait 已进入生产。
@@ -94,6 +113,10 @@
 
 `M1 · B · 依赖：T02, T03, T06`
 
+细化：[m1/t13-ownership-borrow-experiment.md](m1/t13-ownership-borrow-experiment.md)
+
+分两个子项：**T13.a** move/初始化/drop 显式化（先做）；**T13.b** loan 与最小 NLL（loan 失效点由 region 决定，绕不开 region 推导）。
+
 - **输入闭包：** 结构体字段读取、可变借用与重借用、分支部分 move、提前返回，以及一次有副作用的析构。
 - **做什么：** 在 Body 上建立 Place/move path、初始化状态和 loan 事实，再做分析和 drop 显式化（显式析构 CFG）。
 - **完成标志：** move 后使用、借用冲突的拒绝分类与 oracle 一致；分支和提前退出的析构 CFG 可检查；依赖成本报告可重放。析构的真实执行由 T22/T27/T26 验收。在 parser 里直接插析构算实验失败。
@@ -102,6 +125,8 @@
 ## T14 M1 出口与迁移估算
 
 `M1 · I · 依赖：T09, T10, T11, T12, T13`
+
+细化：[m1/t14-m1-exit.md](m1/t14-m1-exit.md)
 
 - **做什么：** 汇总首轮支持矩阵、串行/并行链、接口变更、剩余风险；把 M2/M3 拆成子项并估算资源。
 - **完成标志：** 满足本阶段出口；没有为扩展语法而绕过统一 Body 的入口。

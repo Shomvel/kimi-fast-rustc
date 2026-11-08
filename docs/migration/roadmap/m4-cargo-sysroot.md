@@ -29,7 +29,7 @@
 
 `M4 · E · 依赖：T19, T25, T28`
 
-- **做什么：** 自有格式与 schema：定义、类型、泛型体、依赖身份、目标与版本校验，rlib 包装。不兼容官方 `.rmeta`。
+- **做什么：** 自有格式与 schema：定义、类型、泛型体、依赖身份、const/const fn 的 CTFE body、泛型与可内联函数的 body、导出宏的 token 与定义 crate 的 edition 和 hygiene 表、目标与版本校验，rlib 包装。不兼容官方 `.rmeta`。
 - **完成标志：** 两个以上冻结 fixture crate 的跨 crate 泛型/符号链；旧 schema、错误目标、缺失依赖被拒绝；接口和泛型体变化正确失效。
 
 <a id="t30"></a>
@@ -37,6 +37,7 @@
 
 `M4 · E · 依赖：T23, T28, T29`
 
+- **拆分：** T30.a 构建脚本（ripgrep 依赖闭包里有 10 个，必需）；T30.b 过程宏协议（ripgrep 默认构建不需要——`serde_derive` 只是 dev-dependency——但 Cargo 构建和 ripgrep 测试需要）。
 - **做什么：** host 图、过程宏协议与 runner、build script 输出和动态输入跟踪；早期可用明确标记的 bootstrap 方案。不可完整跟踪输入的任务不跨构建缓存。
 - **完成标志：** host/target 不混链；宏输入或环境变化不会错误命中。官方 rustc 编译的 proc-macro dylib 不假定能直接加载。
 
@@ -45,6 +46,7 @@
 
 `M4 · B · 依赖：T26, T27, T29`
 
+- **已知需求：** core 1.94.1 打开 `const_trait_impl`、`min_specialization`、`negative_impls`、`auto_traits`（T21 覆盖）；ripgrep 依赖的 zmij 在 x86_64 上用 `asm!`，至少要支持空模板 + 寄存器约束。
 - **做什么：** 列出冻结 core 实际需要的语言特性、属性、lang item、intrinsic 和 builtins，阻塞项先拆子项；自有代码生成编出 core/builtins。
 - **完成标志：** core 代表功能运行；所有目标 Rust 对象生产者可追溯，没有混入官方预编译对象。
 

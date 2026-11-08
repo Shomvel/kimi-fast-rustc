@@ -31,6 +31,8 @@
 
 已编码的代码/数据、符号、重定位和必要的展开信息。合并顺序稳定，按显式符号身份进行；不依赖 worker 完成顺序、HashMap 迭代顺序或 arena 编号。
 
+字段级定义见 [contracts/body.md](contracts/body.md)（Typed Body）、[contracts/son.md](contracts/son.md)（SoN）、[contracts/machine-abi.md](contracts/machine-abi.md)（Machine IR 与 ABI）。
+
 ## 每层 verifier 检查什么
 
 验证配置下每个变换的入口和出口都跑 verifier。verifier 通过不等于算法正确，最终以真实执行对拍为准。

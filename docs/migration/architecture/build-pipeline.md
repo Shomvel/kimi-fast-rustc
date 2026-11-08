@@ -42,6 +42,11 @@ flowchart TD
 
 依赖可以后续补充进图，但已发布的成功产物不可修改。循环三类处理：名字/递归定义先声明后检查；语义依赖的 SCC 作为一组求解和发布；trait 递归按移植算法的 canonical goal 和归纳/余归纳规则。未完成任务挂到等待集合并归还执行资源。
 
+两条来自 rustc 精读的依赖规则：
+
+- **函数体任务的单位是 typeck root**：函数加上它的全部嵌套闭包；子 body 先于父 body 做借用检查，闭包的 region 要求上传给父函数（[borrowck/closures.md](../rustc/borrowck/closures.md)）。
+- **`impl Trait` 返回类型**的隐藏类型来自被调函数的借用检查结果。调用者的类型检查因此依赖被调者的借用检查——任务图需要这条边，并检测由它形成的环。
+
 ## 任务状态与发布
 
 `pending → ready → running → validated → published`，失败或取消为 `failed` / `cancelled`。只有 `published` 能被依赖者消费。（这与[项目任务状态](../roadmap/README.md#任务状态)是两回事。）

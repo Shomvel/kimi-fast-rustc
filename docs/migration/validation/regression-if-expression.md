@@ -34,6 +34,15 @@ pub fn check(flag: bool) -> i64 {
 - 编译器二进制 SHA-256：`9f9e730d3ddc9fcc233297399cab3bd5e813c325f3216513a9b97c0913ed3c0d`
 - 执行对象 SHA-256：`c7f4a5eaeeef8e97d3aa57e3520d709b818db340815c98bd098fabe9127775cb`
 
+## 同类实例（2026-11-08 计划细化时探测）
+
+用现有库函数 `frontend::parse → placement::place_for_native → native::compile_graph → machine_eval::evaluate` 探测（内部模型，不是真实执行）：
+
+- **另一个错编译：** if 表达式嵌套在 if 表达式分支里并在 `loop` 中赋值，`f=false` 期望 4，得到 3。
+- **潜在错编译：** 赋值放在 else 分支，或放在 `match` 表达式的某个臂里，结果碰巧正确；但图中合并点之后的 `x + y` 直接使用了只在该分支内定义的 Phi（例如 `n23 = Add(n18, n22)`，`n18` 位于 else 分支内部的 Region），属于支配违规，结果取决于寄存器分配。
+
+根因是 `parse_if_expression` 和 `parse_match_expression` 不快照、不恢复、不合并 `Parser.variables`，详见 [T01 细化](../roadmap/m0/t01-reproduce-miscompile.md)。“碰巧正确”的形状靠执行对拍发现不了，需要 SoN verifier 的支配检查（[son-verifier.md](../architecture/contracts/son-verifier.md)）。
+
 ## 后续
 
 - [T01](../roadmap/m0-baseline.md#t01)：在冻结源码上重新构建并复现，把源码、driver、参考/候选命令和原始输出存为公开回归。

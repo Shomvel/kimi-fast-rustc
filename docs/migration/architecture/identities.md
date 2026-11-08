@@ -6,7 +6,7 @@
 
 | 类型/产物 | 身份范围 | 必须携带 |
 |---|---|---|
-| `CrateKey` / `DefKey` | 构建图与定义 | 源版本、依赖身份、定义路径、宏卫生；可确定性命名 |
+| `CrateKey` / `DefKey` | 构建图与定义 | 源版本、依赖身份、规范化定义路径与消歧编号（与 rustc 一致不含 hygiene，见 [contracts/ids.md](contracts/ids.md)）；可确定性命名 |
 | `TypeId` / `LayoutId` | 一个固定的语义快照 | 驻留的类型或目标布局；数字本身不能作为持久内容键 |
 | `BodyId` / `LocalId` / `BlockId` | 定义与单个函数体 | 变量遮蔽、Place、CFG 前驱/后继 |
 | `InstanceKey` | 单态实例 | 定义、规范化泛型参数、所选 impl 及关联依赖 |

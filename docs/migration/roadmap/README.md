@@ -4,8 +4,8 @@
 
 | 阶段 | 文件 | 任务 |
 |---|---|---|
-| M0 基线 | [m0-baseline.md](m0-baseline.md) | T00–T03 |
-| M1 纵向新链 | [m1-vertical-chain.md](m1-vertical-chain.md) | T04–T14 |
+| M0 基线 | [m0-baseline.md](m0-baseline.md)，细化 [m0/](m0/) | T00–T03 |
+| M1 纵向新链 | [m1-vertical-chain.md](m1-vertical-chain.md)，细化 [m1/](m1/) | T04–T14 |
 | M2 类型/内存/ABI | [m2-types-memory-abi.md](m2-types-memory-abi.md) | T15–T20 |
 | M3 Rust 语义 | [m3-semantics.md](m3-semantics.md) | T21–T27 |
 | M4 Cargo/sysroot | [m4-cargo-sysroot.md](m4-cargo-sysroot.md) | T28–T34 |

@@ -9,6 +9,7 @@
 | [coverage-matrix.md](coverage-matrix.md) | 各主题必须覆盖的组合维度 |
 | [pipeline-faults.md](pipeline-faults.md) | 调度、缓存、取消的故障测试 |
 | [performance.md](performance.md) | 编译时间、运行时间、体积的公平比较 |
+| [layout-abi-parity.md](layout-abi-parity.md) | 布局与 ABI 和 rustc 位级一致的测试 |
 | [evidence.md](evidence.md) | 证据包格式与执行环境 |
 
 ## 验证层次

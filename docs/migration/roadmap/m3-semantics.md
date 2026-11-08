@@ -23,7 +23,7 @@ T21–T24 共享类型和目标布局（const 泛型、模式、drop、trait 结
 
 `M3 · B · 依赖：T12, T20`
 
-- **做什么：** substitution、可回滚推导事务、obligations、关联类型规范化、方法查找、coherence、对象安全与动态分发，按能力逐项开放。canonical goal、循环和歧义规则沿用移植算法。
+- **做什么：** substitution、可回滚推导事务、obligations、关联类型规范化、方法查找、coherence、对象安全与动态分发，按能力逐项开放。canonical goal、循环和歧义规则沿用移植算法。core/alloc 使用的不稳定特性也在本任务范围：const trait（HostEffect）、`min_specialization`、负 impl、auto trait。T25 需要求解器在 post-analysis 模式下返回所选 impl 及其参数。
 - **完成标志：** 约束成功/失败、关联类型规范化、冲突 impl、对象安全、递归边界与 oracle 一致；递归 goal 不会被一律判成功。
 
 <a id="t22"></a>
@@ -31,6 +31,7 @@ T21–T24 共享类型和目标布局（const 泛型、模式、drop、trait 结
 
 `M3 · B · 依赖：T13, T20`
 
+- **子项：** (a) 真 dropck（依赖 T21）；(b) 泛型 type test 与 region 要求上传；(c) 闭包三步：typeck 中的捕获分析 → 闭包体借用检查 → 父函数接收上传的 region 要求；(d) placeholder/universe（`for<'a>`）；(e) `impl Trait` 与 member constraints（M4 之前必须完成，任务图增加“调用者依赖被调者借用检查”的边）。
 - **做什么：** loan/region、重借用、部分 move、分支初始化、drop flags、closure 捕获、异常 cleanup，逐项子包。产出 CheckedBody，正常/早退/失败路径的析构都显式表示在 Body 上。
 - **完成标志：** 有效/无效程序与 oracle 一致；每条退出路径的析构可检查。真实运行由 T27/T26 验收。
 
@@ -39,7 +40,7 @@ T21–T24 共享类型和目标布局（const 泛型、模式、drop、trait 结
 
 `M3 · A · 依赖：T20`
 
-- **做什么：** token tree 匹配/转录、fragment 与重复、`macro_rules!`、宏可见性、cfg/属性、edition 差异、递归限制；展开与名称解析迭代进行。产物带 hygiene 信息。
+- **做什么：** token tree 匹配/转录、fragment 与重复、`macro_rules!`、宏可见性、cfg/属性、edition 差异、递归限制；展开与名称解析迭代进行。产物带 hygiene 信息。编译 std 就需要完整 macro_rules 引擎（`println!`、`vec!`、`assert_eq!` 都是库宏），因此本任务在 hello world 的关键路径上；还需要 `format_args!` 等内建宏，且 `format_args!` 的降低形状必须与冻结 core 的解码一致（依赖 Body 的 `super let`）。
 - **完成标志：** 同名捕获/遮蔽、跨模块导入、嵌套与重复、edition 差异的正反例；hygiene 身份不随诊断 span 丢失。
 
 <a id="t24"></a>
@@ -47,6 +48,7 @@ T21–T24 共享类型和目标布局（const 泛型、模式、drop、trait 结
 
 `M3 · B · 依赖：T15, T20, T21`
 
+- **位置：** 解释器运行在 Typed Body 上（对应 rustc 的 `mir_for_ctfe`），不在 SoN 上；值模型从第一步就采用 rustc 的 `Scalar`（整数或 `AllocId` 指针）+ `Allocation`（字节、provenance、init mask）。
 - **做什么：** 自有 const 解释器，分三步：纯整数 → 目标内存/指针 → 所需内建项；有效性检查、必要的 const 泛型、常量依赖循环和资源限制诊断。
 - **完成标志：** 有效常量与运行时结果一致；溢出、越界、无效值、循环依赖按 oracle 拒绝。
 
@@ -55,7 +57,7 @@ T21–T24 共享类型和目标布局（const 泛型、模式、drop、trait 结
 
 `M3 · B · 依赖：T21, T22, T24`
 
-- **做什么：** `src/instantiate/`：InstanceKey、可达实例图、递归先声明后定义、静态 allocation 引用、vtable 与 drop glue。泛型实例身份同时用于符号和缓存。
+- **做什么：** `src/instantiate/`：InstanceKey、可达实例图、递归先声明后定义、静态 allocation 引用、vtable 与 drop glue。泛型实例身份同时用于符号和缓存。`InstanceKey` 含 instance kind（Item/ReifyShim/ClosureOnceShim/DropGlue…），const 参数按 valtree；常量和 vtable 作为数据在使用处发射，按内容哈希去重；最终实例集合排序后输出。
 - **完成标志：** 多实例、递归、动态派发、drop glue 引用确定；换并发顺序不改变实例集合。
 
 <a id="t26"></a>

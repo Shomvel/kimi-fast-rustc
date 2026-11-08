@@ -53,6 +53,7 @@
 | [architecture/](architecture/README.md) | 编译链、各层表示、共享 ID、流水线、缓存、Cargo |
 | [validation/](validation/README.md) | 差分测试、覆盖矩阵、性能比较、证据格式 |
 | [sources/](sources/README.md) | rustc 版本选择、模块映射、来源与许可记录 |
+| [rustc/](rustc/README.md) | rustc 实现精读笔记：借用、所有权、类型推导、trait、宏、布局/ABI |
 | [inventory/](inventory/README.md) | 46 个现有源码文件和测试的去向 |
 
 ## 与现有文档的关系
