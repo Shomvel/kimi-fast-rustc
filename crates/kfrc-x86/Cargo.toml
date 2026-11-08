@@ -1,0 +1,13 @@
+[package]
+name = "kfrc-x86"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.89"
+description = "kfrc x86-64 back end: graph scheduling, machine lowering, object emission"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+kfrc-body = { path = "../kfrc-body" }
+kfrc-son = { path = "../kfrc-son" }
+kimi-fast-rustc = { path = "../.." }
+object = { version = "0.36", default-features = false, features = ["write"] }
