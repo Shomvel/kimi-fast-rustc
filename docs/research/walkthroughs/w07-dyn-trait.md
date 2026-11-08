@@ -55,8 +55,8 @@ pub fn emit(w: &mut dyn Write, x: u64) -> io::Result<()> { writeln!(w, "{x}") } 
 **vtable 去重。** 每个 CGU 自建一份：`CodegenCx.vtables` 是按 CGU 的缓存（`rustc_codegen_llvm/src/context.rs` L106–107，`rustc_codegen_ssa/src/meth.rs` 的 `get_vtable`），按 `(Ty, trait_ref)` 查，生成 private 常量。同一 `(Rect, Shape)` 在两个 CGU 各一份；跨 crate 同理。三个 dyn drop shim 只差被调符号：
 
 ```text
-  cgu.0: vtables=5 rect_shape_vtables=1 fns: main 
-  cgu.1: vtables=1 rect_shape_vtables=1 fns: emit local_devirt total 
+  cgu.0: vtables=5 rect_shape_vtables=1 fns: main
+  cgu.1: vtables=1 rect_shape_vtables=1 fns: emit local_devirt total
   shims=3 distinct_bodies=3 distinct_with_symbols_masked=1
 ```
 
@@ -71,7 +71,7 @@ pub fn emit(w: &mut dyn Write, x: u64) -> io::Result<()> { writeln!(w, "{x}") } 
 == pre IR: pointer loads with !invariant.load / all pointer loads, in dynk fns
   3 / 6
 == pre IR: allocator attributes on the __rust_alloc declaration
-  nounwind allockind("alloc,uninitialized,aligned") allocsize(0) 
+  nounwind allockind("alloc,uninitialized,aligned") allocsize(0)
 ```
 
 ## 3. kfrc 编译计划

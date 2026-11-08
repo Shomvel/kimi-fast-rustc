@@ -58,4 +58,3 @@ def category($l):
                     "effective_visibilities"]) then "fe_lint"
   elif pfx($l; ["self_profile"]) or isin($l; ["query_key_hash_verify_for", "get_apple_sdk_root"]) then "profiler"
   else "fe_other" end;
-

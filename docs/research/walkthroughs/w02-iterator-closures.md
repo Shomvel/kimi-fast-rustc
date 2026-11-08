@@ -32,7 +32,7 @@ TOTAL functions=1 inst=28 alloca=0 memcpy=0 lifetime=0 assume=0 call=2 invoke=0 
 == overflow-checks=on  x86 asm (rustc 1.99.1)
    26 asm-inst _RNvCshvxMuXbm9NJ_3w0210sum_scaled:
 == IR passes that changed sum_scaled (overflow-checks=off, host target)
-5 SimplifyCFGPass; 5 LCSSAPass; 4 LoopSimplifyPass; 4 InstCombinePass; 1 TailCallElimPass; 1 SROAPass; 1 ReassociatePass; 1 PostOrderFunctionAttrsPass; 1 LoopVectorizePass; 1 LoopUnrollPass; 1 LoopLoadEliminationPass; 1 JumpThreadingPass; 1 InstSimplifyPass; 1 InlinerPass; 1 IndVarSimplifyPass; 1 GlobalOptPass; 1 GVNPass; 1 EarlyCSEPass; 
+5 SimplifyCFGPass; 5 LCSSAPass; 4 LoopSimplifyPass; 4 InstCombinePass; 1 TailCallElimPass; 1 SROAPass; 1 ReassociatePass; 1 PostOrderFunctionAttrsPass; 1 LoopVectorizePass; 1 LoopUnrollPass; 1 LoopLoadEliminationPass; 1 JumpThreadingPass; 1 InstSimplifyPass; 1 InlinerPass; 1 IndVarSimplifyPass; 1 GlobalOptPass; 1 GVNPass; 1 EarlyCSEPass;
 IR pass changes total: 32
 ```
 

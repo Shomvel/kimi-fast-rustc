@@ -48,8 +48,8 @@ TOTAL functions=4 inst=78 alloca=0 memcpy=0 lifetime=0 assume=1 call=1 invoke=0 
 == unoptimized IR: llvm.assume / load ptr with !nonnull / niche decodes (icmp uge 2^63), per function
   any_lib28_: assume=3 load-ptr-!nonnull=3 niche-decode=3
 == LLVM passes that changed each function (O3 pipeline, host target)
-  doctestable: total 36: 6 SimplifyCFGPass; 6 InstCombinePass; 5 LCSSAPass; 4 LoopSimplifyPass; 2 PostOrderFunctionAttrsPass; 2 JumpThreadingPass; 2 EarlyCSEPass; 1 TailCallElimPass; 1 SROAPass; 1 LoopUnrollPass; 1 InstSimplifyPass; 1 InlinerPass; 1 InferFunctionAttrsPass; 1 IPSCCPPass; 1 GlobalOptPass; 1 GVNPass; 
-  any_lib: total 22: 7 InstCombinePass; 5 LCSSAPass; 1 SROAPass; 1 PostOrderFunctionAttrsPass; 1 LoopUnrollPass; 1 InstSimplifyPass; 1 InlinerPass; 1 InferFunctionAttrsPass; 1 IPSCCPPass; 1 GlobalOptPass; 1 GVNPass; 1 EarlyCSEPass; 
+  doctestable: total 36: 6 SimplifyCFGPass; 6 InstCombinePass; 5 LCSSAPass; 4 LoopSimplifyPass; 2 PostOrderFunctionAttrsPass; 2 JumpThreadingPass; 2 EarlyCSEPass; 1 TailCallElimPass; 1 SROAPass; 1 LoopUnrollPass; 1 InstSimplifyPass; 1 InlinerPass; 1 InferFunctionAttrsPass; 1 IPSCCPPass; 1 GlobalOptPass; 1 GVNPass;
+  any_lib: total 22: 7 InstCombinePass; 5 LCSSAPass; 1 SROAPass; 1 PostOrderFunctionAttrsPass; 1 LoopUnrollPass; 1 InstSimplifyPass; 1 InlinerPass; 1 InferFunctionAttrsPass; 1 IPSCCPPass; 1 GlobalOptPass; 1 GVNPass; 1 EarlyCSEPass;
 == x86 asm (rustc release printed above)
    25 asm-inst _RNvCsj4z1WP6sg4c_3w0311doctestable:
    21 asm-inst _RNvCsj4z1WP6sg4c_3w037any_lib:
