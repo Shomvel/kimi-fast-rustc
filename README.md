@@ -6,6 +6,8 @@ The frontend currently supports a documented `i64` (`isize`), `u64` (`usize`), a
 
 Legacy LLVM modules and benchmark data are retained only as historical evidence. They are not the current compiler architecture or a supported fallback.
 
+The [rustc adaptation and migration plan](docs/migration/README.md) describes the proposed path from this subset to a compiler with its own semantic model, SoN backend, and dependency pipeline. It includes staged work packages and acceptance gates; the planned capabilities are not implemented yet.
+
 ## Build
 
 ```sh
