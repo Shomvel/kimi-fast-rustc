@@ -1,38 +1,60 @@
-# rustc 实现迁移与自有 SoN 编译器计划
+# rustc 移植与自有 SoN 编译器：迁移计划
 
-状态：**计划，尚未实施**。基线是 `44c9d80b02ab140d7edf5348b6946d8122d842b6`。本目录中的任务、接口和拟建目录均不代表当前实现已经具有这些能力。
+状态：**计划，尚未实施**。基线 commit `44c9d80b02ab140d7edf5348b6946d8122d842b6`。本目录描述的接口、目录和能力都还不存在。
 
-目标是参考并移植 rustc 中成熟的语义算法，适配我们自己的数据模型、SoN 优化器、机器码后端和依赖流水线。生产架构不采用 rustc codegen 插件，也不长期依赖 rustc 私有查询运行时。目标 Rust 代码不通过 LLVM 或 Cranelift 生成；rustc+LLVM 用作对照工具链。
+## 一句话
 
-保留 SoN、线性扫描寄存器分配、不做静态 ILP 指令调度的既定方向。最终验收是完整 ripgrep/Cargo 工作区的正确性、编译耗时、产物体积和运行性能；其中任何单项的局部进展都不代表整体达标。
+把 kfrc 从“标量子集编译器”变成能原生编译 ripgrep 和 Cargo 的 Rust 编译器：语义规则参考并移植 rustc，数据模型、SoN 优化器、x86 后端和构建流水线都是自己的。
 
-## 阅读与执行入口
+## 现状 → 目标
 
-| 文档 | 用途 |
+| | 现在 | 目标 |
+|---|---|---|
+| 前端 | `frontend.rs` 边解析边建 SoN；类型只有 `i64/u64/bool/()` | 自有 AST → 名称解析 → 类型/trait → Typed Body → 借用/drop 检查 |
+| 中端 | 整数 SoN，`memory` 只是预留输入 | 带类型、内存和异常效果的 SoN，带 verifier |
+| 后端 | 标量线性扫描、spill 用 Load/Store、ELF 文本段 | 完整 System V ABI、通用内存、数据段/TLS/展开表 |
+| 构建 | 函数级并行、图对象缓存；Cargo 显式拒绝 | 实例级任务图、语义缓存、Cargo 驱动、自有 sysroot |
+
+## 固定的技术决策
+
+- **自有实现，参考 rustc。** rustc 是算法、测试和对照结果的来源，不做 `CodegenBackend` 插件，也不把 `TyCtxt`/query 运行时包进产品。
+- **后端不用 LLVM/Cranelift。** 保留 SoN 和线性扫描寄存器分配，不加静态 ILP 指令调度。rustc+LLVM 只作对照工具链。
+- **首个目标平台** Linux x86_64 System V。
+
+## 红线（所有文档共用，后文不再重复）
+
+1. 不支持的输入**明确报错**；不静默回退到 rustc、旧 `.kfr` 链或其他后端。
+2. 不为通过测试而改变 panic/overflow/features/target 等语义配置。
+3. 正确性以**真实 x86 执行**与 stock rustc 对拍为准；内部 evaluator、图测试只用于定位。
+4. 混合 bootstrap、人工 IR fixture、分析原型单独标记，不计入 full-native 覆盖。
+5. 局部 pass 加速、缓存命中不代表整项目冷编译加速。
+6. 发现一类错误后先静态排查同类路径、批量修复，再恢复压测。
+
+## 路线图摘要
+
+| 阶段 | 要证明什么 | 详情 |
+|---|---|---|
+| M0 | 输入、工具链和已知错误可复现 | [roadmap/m0-baseline.md](roadmap/m0-baseline.md) |
+| M1 | 普通 `.rs` 走通新链：AST → Body → SoN → ELF → 运行 | [roadmap/m1-vertical-chain.md](roadmap/m1-vertical-chain.md) |
+| M2 | 类型、布局、内存和 ABI 正确 | [roadmap/m2-types-memory-abi.md](roadmap/m2-types-memory-abi.md) |
+| M3 | 泛型/trait、借用/drop、宏、const、单态化 | [roadmap/m3-semantics.md](roadmap/m3-semantics.md) |
+| M4 | Cargo、自有 metadata、core/alloc/std | [roadmap/m4-cargo-sysroot.md](roadmap/m4-cargo-sysroot.md) |
+| M5 | ripgrep 与 Cargo 原生构建且功能等价 | [roadmap/m5-real-projects.md](roadmap/m5-real-projects.md) |
+| M6 | 运行时间/体积不退化，编译更快 | [roadmap/m6-quality-performance.md](roadmap/m6-quality-performance.md) |
+
+第一步是十个工作日的时间盒，见 [first-round/](first-round/README.md)。
+
+## 目录
+
+| 目录 | 内容 |
 |---|---|
-| [阶段与验收门槛](milestones.md) | M0–M6 的依赖、交付与继续条件 |
-| [架构与共享接口](architecture.md) | 数据模型、Typed Body、SoN 与模块职责的权威契约 |
-| [rustc 来源与移植映射](rustc-source-map.md) | 算法来源、耦合程度、许可与版本固定方式 |
-| [现有源码迁移清单](migration-inventory.md) | 每个现有模块的保留、替换、切换与退役条件 |
-| [语法和语义工作流](workstreams/frontend-semantics.md) | 语言能力如何按依赖迁移 |
-| [SoN 与机器码工作流](workstreams/son-backend.md) | 图、效果、优化、寄存器分配、ABI 与对象文件 |
-| [构建与流水线工作流](workstreams/build-pipeline.md) | 任务、缓存、Cargo、sysroot、host/target 与产物发布 |
-| [验证协议](validation.md) | 正例、拒绝例、真实执行、性能和来源证明 |
-| [任务依赖与派工清单](tasks.md) | 可分派任务、所有权、前置条件、证据与状态 |
-| [首轮执行计划](batches/01-foundation.md) | 首个时间盒的分批派工、收敛与移交 |
+| [roadmap/](roadmap/README.md) | 每个阶段一份：目标、出口、任务 T00–T42 |
+| [first-round/](first-round/README.md) | 首个十日时间盒：批次、PR 切分、缩减顺序 |
+| [architecture/](architecture/README.md) | 编译链、各层表示、共享 ID、流水线、缓存、Cargo |
+| [validation/](validation/README.md) | 差分测试、覆盖矩阵、性能比较、证据格式 |
+| [sources/](sources/README.md) | rustc 版本选择、模块映射、来源与许可记录 |
+| [inventory/](inventory/README.md) | 46 个现有源码文件和测试的去向 |
 
-推荐先读阶段表和架构，再按具体任务进入对应工作流。跨文档冲突由集成人在派工前解决；任务清单不能悄悄放宽架构不变量或验收标准。
+## 与现有文档的关系
 
-## 这份计划如何维护
-
-所有实现任务初始为 `planned`。派工前先满足依赖；记录负责人、输入 revision 和范围，再切换到 `in_progress`。只有实现和阶段要求的原始验证证据齐备，才能切换到 `verified`。阻塞项使用 `blocked` 并记录具体缺口，不用测试数或代码量代替进度。
-
-一次实现 PR 应交付一个可独立验收的行为闭包，并更新对应任务状态、来源记录和覆盖矩阵。未支持的语义明确报错；不静默回退到 rustc。开发时的混合 bootstrap 必须单独标记，不进入全 native 的验收统计。
-
-代码移植按算法、数据依赖和相应测试一起推进。保留来源与许可证，不能把改名后的 rustc 私有类型当成自有接口设计。先建立统一 ID、类型、Body 和效果契约，再分派依赖这些契约的任务。
-
-## 与当前文档的关系
-
-[当前架构](../ARCHITECTURE.md) 和 [历史验证记录](../VALIDATION.md) 描述已存在的子集实现与历史实验。本目录描述目标架构和迁移过程，不覆盖或追认历史性能结论。当前 `src/mir.rs` 等同名文件也不意味着已经实现计划中的完整 Rust 语义表示。
-
-本计划 PR 只新增与连接文档，不迁移生产代码，也不声称重新执行过历史测试。第一批工作先固定输入版本、复现现有错误并建立验证入口，再实施迁移。
+[docs/ARCHITECTURE.md](../ARCHITECTURE.md) 和 [docs/VALIDATION.md](../VALIDATION.md) 描述现有子集实现和历史实验；本目录不追认其中的性能数字。现有 `src/mir.rs` 等同名文件不代表已具备计划中的能力。
