@@ -23,6 +23,7 @@
 
 - **做什么：** 整数宽度、浮点、tuple/struct/enum、array/slice、指针/引用、`repr`/layout，每类一个子项。产出自有类型/布局、Place 投影和 ABI 分类所需输入；区分语言保证的布局与内部约定。
 - **补充：** 布局算法按 `rustc_abi::layout` 移植，`repr(Rust)` 也与 rustc 位级一致（x86_64 Rust ABI 由布局决定）；含生命周期参数的 ADT 需要方差推导（`variances_of`）与推断 outlives（`inferred_outlives_of`）。
+- **布局计算：** 依赖 `rustc_abi` 的 `LayoutCalculator`（决策 D1），类型分派自写；`LayoutData` 驻留为 `LayoutId`。
 - **完成标志：** 大小、对齐、投影、有效值的正反例；布局与 ABI 还要通过[一致性测试](../research/rustc/layout-abi-mono/test-cases.md)。
 
 <a id="t16"></a>
@@ -40,6 +41,7 @@
 
 - **做什么：** 整数截断/扩展、指针和聚合值；通用 Load/Store、地址计算、静态对象、间接调用、数据初始化；效果节点与合并（规划 `src/son/effects.rs`、`lower_place.rs`）。首版用一条保守效果链，详见 [SoN 效果模型](../design/ir/levels.md)。越界/溢出检查按配置保留；地址逃逸和未知调用保守处理。
 - **Rust 语义 SoN：** 聚合、enum、宽指针以值形式进图；新增 `lower_layout`（Scalar/ScalarPair/value slot、enum 编码、`FieldAddr` → 偏移）；分区字段存在但只建 `Unknown`（[nodes.md](../design/ir/nodes.md)、[memory-partitions.md](../design/ir/memory-partitions.md#首版与分阶段)）。
+- **语义解释器首版：** 整数、聚合、enum、union 字节值；`Unknown`/`Const` 分区；固定 `Load` 与 `Load.spec`；`nsw` 的 poison；R→S 相等检查（[semantics](../design/ir/semantics.md#首版范围)）。
 - **完成标志：** 用固定的带类型 Body/图 fixture 验证：别名写后读、调用改写内存、循环中的效果、检查失败路径；访问不会跨检查、volatile 或未知调用移动。真实机器差分在 T20 完成。
 
 <a id="t18"></a>

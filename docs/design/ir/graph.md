@@ -11,7 +11,11 @@
 ```rust
 pub struct FunctionGraph {
     instance: InstanceId,
-    nodes: Vec<Option<Node>>,      // 保留 tombstone，NodeId 稳定
+    recs: Vec<NodeRec>,            // 16 字节定长记录，按创建顺序
+    ctl: Vec<NodeId>,              // 列：控制输入（纯值节点为 NONE）
+    ty: Vec<ValueTyId>,            // 列：结果类型
+    extra: Vec<NodeId>,            // 多输入节点（Phi、Call、Aggregate）的输入池
+    forward: Vec<NodeId>,          // 替换转发表（4 字节/节点），不维护 use-list
     start: NodeId,
     state: GraphState,
     level: GraphLevel,             // Rust | Specialized | Layout，只降不升
@@ -26,14 +30,20 @@ pub enum GraphState { Building, Sealed, Verified }
 ## 节点
 
 ```rust
-pub struct Node {
-    kind: NodeKind,
-    ty: ValueTy,                   // 结果类型；多结果节点为 Tuple，由 Projection 取
-    control: Option<NodeId>,       // 所属控制（纯值节点为 None）
-    inputs: SmallVec<[NodeId; 3]>, // 值输入
-    effects: SmallVec<[(PartitionId, NodeId); 1]>, // 按分区的效果输入；首版只有 Unknown
+#[repr(C)]
+pub struct NodeRec {               // 16 字节；字段私有，经访问器读写
+    op: u16, flags: u16,           // opcode、DEAD 等标志
+    payload: u32,                  // 常量池下标、字段号、孔位号…
+    in0: NodeId, in1: NodeId,      // 前两个输入；更多输入放 extra 池，in1 存池区间
 }
+```
 
+- **布局依据**：现状每节点约 96 字节、1.33 次堆分配；16 字节记录加 `ctl`/`ty` 两列实测 19–22 字节，几乎不分配，克隆从 36–64 ns/节点降到 0.3–1.0 ns/节点，1M 节点 DFS 快约 2.6 倍（本机微基准，只作相对比较，[node-storage](../../research/data-structures/node-storage.md)）。Carbon、Cranelift 也是 16 字节。
+- **效果输入就是普通 `NodeId`**：分区写在效果 token 的类型 `Effect(P)` 里，不在每条边上带 `PartitionId`；调用和 `Return` 只收一个 `MemMerge`。
+- **不维护 use-list**：维护它每节点多约 30 字节，比节点本身还大（V8 SoN 节点大正是因为同时指向输入和使用）。替换用转发表；需要使用者的 pass 临时建反向索引，或用饱和计数（Turboshaft 只留 1 字节）。
+- **压实**：删除只打 `DEAD` 标志；在 R 图发布、`specialize`、placement 之前三处保序压实（随机顺序存放时遍历慢 2.6–4.0 倍；Graal 在存活率低于 70% 时压缩）。
+
+```rust
 pub enum ValueTy {
     Rust(TyId),                       // R/S 级：聚合、enum、引用、宽指针都是值
     Int { bits: u8, signed: bool },   // 8/16/32/64/128；bool 用 Int{bits:1}

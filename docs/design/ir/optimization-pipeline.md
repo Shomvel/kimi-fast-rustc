@@ -3,7 +3,10 @@
 ## 共同机制
 
 - **构建期窥孔：** 每建一个节点就做常量折叠、代数化简和 GVN 哈希查找（Click 的做法）。大部分“清理临时值”的工作在这里完成。规则准入条件：按固定代价**单向化简**（不加交换律、结合律这类非化简恒等式）；右侧递归重写有层数和次数上限；可标记 `subsume`（结果严格更好，直接替换）。Cranelift 的同类一遍重写在约 400 万值节点中只错过 2 次等价（[prior-art/egraph-rewrite.md](../../research/prior-art/egraph-rewrite.md)）。
+- **语义约束：** 不由 `p == q` 把 `q` 换成 `p`（provenance 可能不同）；浮点常量折叠选与 x86 硬件相同的 NaN；规则表每条带 `poison_producing`/`introduces_ub_point`/`speculates`/`float_bits` 标志（[semantics.md](semantics.md)）。
 - **声明式规则表：** 窥孔规则写成一张表（ISLE 风格），每条规则一份记录，生成匹配代码和 SMT 查询，并做 overlap 检查。整数规则用 SMT 证明或 ≤8 位穷举检查，CI 读缓存的证明结果，缺失即失败（Alive 在 334 条 LLVM 规则里找出 8 条错误；Arrival 已进 Cranelift CI）。不做整图翻译验证。
+- **GVN 表：** hashbrown `HashTable<(NodeId, u32)>`，表项存 32 位哈希，Fx 哈希（SipHash 慢 2.4–3.8 倍）；在表中的节点改输入前先移出。
+- **worklist 顺序：** 初始按 `NodeId` 升序（即创建顺序，局部性好），之后 LIFO；记录访问数与改动数。
 - **变化驱动：** 每个 pass 由 worklist 驱动，入口给出种子节点集合；没有种子就不运行。pipeline 不按固定序列重复跑整图。
 - **乐观分析：** SoN 上可以把 SCCP 与 GVN 组合成一次乐观分析（Click 的组合分析），穿过循环 Phi 传播常量，对应 LLVM 的 SCCP/IPSCCP 在函数内的部分。
 - **燃料与预算：** 每个 pass 有确定性的步数上限，内联有节点增长上限；用完就停，结果仍是合法图。

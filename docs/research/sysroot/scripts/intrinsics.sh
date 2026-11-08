@@ -47,11 +47,11 @@ echo "$defs" | awk '{print $1}' | sort -u > "$tmp/names"
 scan_files | while read -r f; do
   awk -v names="$tmp/names" '
     BEGIN { while ((getline nm < names) > 0) known[nm] = 1 }
-    /^[ \t]*\/\// { next }
+    /^[[:space:]]*\/\// { next }
     {
       line = $0
       # use 语句可能跨行：累积到分号后整体判断是否涉及 intrinsics
-      if (inuse || line ~ /^[ \t]*(pub(\([a-z]+\))? )?use /) {
+      if (inuse || line ~ /^[[:space:]]*(pub(\([a-z]+\))? )?use /) {
         stmt = stmt " " line; inuse = (line !~ /;/)
         if (inuse) next
         if (stmt ~ /intrinsics/) {
@@ -69,7 +69,7 @@ scan_files | while read -r f; do
       }
       if (simdglob) {
         t = line
-        while (match(t, /simd_[a-z_0-9]+[ \t]*(::<[^(]*>)?\(/)) {
+        while (match(t, /simd_[a-z_0-9]+[[:space:]]*(::<[^(]*>)?\(/)) {
           w0 = substr(t, RSTART, RLENGTH); sub(/[^a-z_0-9].*/, "", w0)
           if (w0 in known) hit[w0] = 1
           t = substr(t, RSTART + RLENGTH)

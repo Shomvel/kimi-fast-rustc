@@ -19,12 +19,15 @@
 | full | **支配**：值 `v` 被节点 `u` 使用时，`v` 的放置块支配 `u` 的块；`u` 是 Phi 时，`v` 支配对应前驱的末尾 | `DominanceViolation { def, use }` |
 | full | 循环：每个循环 header Region 恰有一个入口前驱；回边来自循环体 | `BadLoop` |
 | full | 纯值节点之间无环（环只能经过 Phi） | `DataCycle` |
-| full | 效果链线性：同一效果 token 至多被一个写效果消费（首版保守链） | `EffectFork` |
+| full | 效果链在**每条可执行路径上**线性：同一效果 token 可以被多个写效果消费，但这些消费者的控制必须两两互斥（位于同一分支的不同后继，彼此不可达）；互斥路径在合并点经效果 Phi 汇合。`if c { store A } else { store B }` 两臂消费同一 token 是合法的 | `EffectFork` |
 | full | may-trap 节点（除法、Check）的 control 不早于其守卫条件 | `TrapHoisted` |
 | structural | 节点种类在当前 `GraphLevel` 合法（R 级无布局常量，L 级无 Rust 聚合/孔位） | `IllegalAtLevel` |
 | typed | 内存访问取了指针根集合中每个分区的 token（根集合穿过 Phi/Select/指针 Cast/聚合字段，[memory-partitions.md](memory-partitions.md#规则)） | `PartitionMismatch` |
 | full | 分区在已逃逸的控制点之后不再单独使用；汇合处已合并进 `Unknown` | `EscapedPartitionUse` |
-| full | 非 `Frozen`/`Unique`/`Const` 分区的 `Load`/`Store` 带控制输入；Release 原子与 fence 取了全部 `Unique`/`Local`/`Heap` token | `UnpinnedAccess` / `FenceMissingPartition` |
+| full | 固定 `Load`/`Store` 带控制输入；`Load.spec` 满足 [semantics.md](semantics.md#load固定与投机) 的条件；Release 原子与 fence 取了全部 `Unique`/`Local`/`Heap` token | `UnpinnedAccess` / `BadSpeculation` / `FenceMissingPartition` |
+| placed | 放置后浮动 load 不晚于同分区后续的写 | `AntiDependence` |
+| placed | 放置后 Release 原子与 fence 之前的 `Unique`/`Local` 写没有被移到它之后（另需多线程 litmus 测试，顺序语义观察不到这类错误） | `ReleaseOrder` |
+| typed | 节点种类属于 [semantics.md](semantics.md#执行模型) 四类中的哪一类已登记；立即 UB 节点不浮动 | `UnclassifiedNode` |
 | full | `VariantField` 被同一变体的 `VariantSwitch` 出口或 `Refine` 支配 | `UnprovenVariant` |
 | full | `Refine` 的使用者都被它的控制支配 | `RefineEscapes` |
 | full | 需要 drop 的值在每条路径上恰好被消费一次（以 `Unreachable`/`Terminate` 结束的路径除外） | `OwnershipLinear` |

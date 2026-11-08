@@ -22,6 +22,10 @@ Cargo 的 MSRV 1.94 决定了参考 rustc 至少是 1.94；1.94.1 满足，ripgr
 
 移植前与官方实现对比相应文件，不把本地修改归因到官方。每次移植在 `docs/plan/inputs/provenance/` 留一份记录：来源 commit、文件与行范围、许可（MIT/Apache-2.0）、改动摘要、对应回归用例。
 
+## 依赖 crate 的输入
+
+kfrc 依赖 rustc 发布的 crate（决策 D1/D2），输入清单加上 `ra-ap-*` 的精确版本（`=0.148.0`）与“源码与官方 1.94.1 diff 为 0”的证据；来源记录分三类：移植代码、依赖 crate、仅设计参考。
+
 ## 交付物
 
 1. `docs/plan/inputs/manifest.toml`（或同等格式），每个输入一条：

@@ -34,9 +34,9 @@ n20 = Call(Vec<u8>::push) ctl=n18 mem=[P0:n3, P1:n19] (n16, n17) : (Control, Con
 | 整数/浮点运算 | RSL | 模式在 opcode 上（[values-and-types.md](values-and-types.md#整数运算模式)） |
 | `Compare{mode, pred}` | RSL | `mode ∈ {int_signed, int_unsigned, float_ordered, float_unordered}`；`bool`/`char`/指针按无符号 |
 | `Cast{kind}` | RSL | 数值转换；`Cast.Unsize{meta}` 见下 |
-| `Refine{fact}` | RSL | 控制依赖事实，固定在控制上 |
+| `Refine{fact, origin}` | RSL | 控制依赖事实，固定在控制上；`origin` 是 `Proven`（编译器推出）或 `Assumed`（语言 UB 规则推出，投机移动时丢弃） |
 | `Aggregate{ty}`、`Field[i]`、`InsertField[i]` | RS | struct/tuple/闭包环境/数组的值形式 |
-| `MakeVariant{ty, v}`、`VariantOf`、`VariantField[v, i]` | RS | enum 的构造、取变体编号（不是编码）、取字段。`VariantField` 的输入必须是固定在控制上的 `Refine{variant=v}`，因此不能被提到判断之前；L 级降成 tag 事实（例如 `Option<&T>` 的 nonnull）时保留这条控制 |
+| `MakeVariant{ty, v}`、`VariantOf`、`VariantField[v, i]` | RS | enum 的构造、取变体编号（不是编码）、取字段。`VariantField` 的输入通常是固定在控制上的 `Refine{variant=v}`；变体不符时结果是 poison，所以即使被提到判断之前也不会引入 UB；L 级降成 tag 事实（例如 `Option<&T>` 的 nonnull）时保留这条控制 |
 | `WidePtr(ptr, meta)` | RS | `&[T]`、`&dyn Tr`；`Field[0]`/`Field[1]` 取部件 |
 | `Discriminant` | RS | 用户可见的判别值，规范化为 `Const(判别值表)[VariantOf(v)]`。判别值互不相同，所以 `Discriminant(a) == Discriminant(b)` 改写为变体相等，derive 的 `eq` 由此折叠 |
 | `Cast.Unsize{meta}` | RS | `&T → &dyn Tr`、`Box<[T; N]> → Box<[T]>` 等；`meta` 是 vtable 常量或长度。作用于引用/裸指针时直接产出 `WidePtr`；作用于 `Box` 等智能指针时穿透到其指针字段 |
@@ -49,7 +49,9 @@ n20 = Call(Vec<u8>::push) ctl=n18 mem=[P0:n3, P1:n19] (n16, n17) : (Control, Con
 | `StackSlot{ty}` | RS | 地址被取走的局部；L 级变成栈帧偏移 |
 | `FieldAddr[i]`、`IndexAddr`、`VariantFieldAddr[v, i]` | RS | 结构化投影；L 级变成 `AddrAdd` |
 | `AddrAdd`、`StaticAddr` | L / RSL | |
-| `Load[P]{ty}`、`Store[P]` | RSL | 指定分区；**默认带 `ctl`**，固定在产生它的控制下，只有 `Frozen`/`Unique`/`Const` 分区的访问可以解除固定（这些分区在调用期间可解引用）。R/S 级的 `ty` 可以是聚合 |
+| `Load[P]{ty}`、`Store[P]` | RSL | 指定分区，固定在产生它的控制下；读到非法值是 UB。R/S 级的 `ty` 可以是聚合 |
+| `Load.spec[P]{ty}` | RSL | 投机 load：可浮动、可上提，读到非法值得 poison。何时允许见 [semantics.md](semantics.md#load固定与投机) |
+| `Transmute`、`Transmute.spec` | RS | 按字节重解释；固定版非法值 UB，投机版得 poison；需要两边的布局孔位 |
 | `VariantOfAt[P]`、`FieldLoad[P, i]` | RS | 直接从内存读 enum 变体或单个字段，避免整值 load 后只用投影 |
 | `CopyMem[Psrc→Pdst]` | RSL | 类型化拷贝（`copy_nonoverlapping` 等），读一个分区、写另一个 |
 | `Reborrow{kind}`、`EndBorrow` | RS(L) | 开启/关闭一个分区（[memory-partitions.md](memory-partitions.md)） |

@@ -11,7 +11,7 @@
 | 瘦指针 | `Ptr{addr, prov}`，`prov = Option<(AllocId, 分区标签)>` | `Ptr`（同样带 prov） | 恒等，provenance 不丢 |
 | 宽指针 | `WidePtr(Ptr, Meta)`，`Meta = Len(usize) \| VTable(VTableKey)` | 两个标量（ScalarPair） | 按 PassMode 拆 |
 | struct/tuple/数组/闭包环境 | `Tuple(List<Value>)` | 拆成标量、≤8 字节整数，或 `ValueSlot` 字节 | `encode(layout)`：字段落到偏移，padding 为 `Uninit` |
-| enum | `Variant{idx, fields}` | tag/niche 位串 + 字段 | `encode` 依 `VariantEncoding` 答案 |
+| enum | `Variant{idx, fields}`（MiniRust 为 `Variant{discriminant, data}`） | tag/niche 位串 + 字段 | `encode` 依 `VariantEncoding` 答案 |
 | union、`MaybeUninit<T>` | `Bytes(List<AbstractByte>)` | 同样的字节 | 恒等 |
 | ZST | `Unit` | 无 | 无 |
 | poison | 标量叶子上的 `Poison` | 同样的 `Poison` | `Poison` ↦ `Poison` |
@@ -23,7 +23,7 @@
 
 **1. 内存三级都是字节级，SSA 值才分级。** unsafe 代码可以 transmute、按字节拷贝、经裸指针改写任意类型，所以内存不能是“按类型的格子”。MiniRust 和 Miri 都用“抽象字节 + provenance”。由此得出：R 级的 `Store{ty}` 要把值 `encode` 成字节，**语义上需要布局**。R 图“不出现布局常量”是语法限制；它的语义 ⟦R⟧ 以答案表为参数（[refinement.md](refinement.md)）。
 
-**2. 不要 undef，要 poison（推断，依据 LLVM 的教训）。** LLVM 的 undef 每次使用可取不同值，导致 `x+x ≠ 2*x` 一类的已知不健全优化（Lee 等 PLDI '17）。kfrc 从零开始，没有兼容包袱：
+**2. 不要 undef，要 poison（推断，依据 LLVM 的教训）。** Lee 等（PLDI '17）指出 LLVM 的循环 unswitching 与 GVN 对“按 poison/undef 分支”需要互相矛盾的语义，提案去掉 undef、只留 poison、加 `freeze`、按 poison 分支即 UB，并报告编译时间与性能无退化。kfrc 从零开始，没有兼容包袱，直接取提案的终点：
 
 | 概念 | kfrc 的表示 | 来自 |
 |---|---|---|

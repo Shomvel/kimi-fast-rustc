@@ -8,7 +8,7 @@ T01 显示现在的前端在 `parse_if_expression`、`parse_match_expression` �
 
 ## 输入
 
-SoN builder 只接收检查、drop 显式化、清理之后的 Body（[body.md](../../design/frontend/body.md#阶段与清理)）：`FalseEdge` 已变 `Goto`，`FakeRead`/Fake 借用/`StorageDead` 已删除，drop flag 是普通 `bool` 局部。`Call`、`Assert`、`Drop` 降为带异常控制出口的效果节点；`panic=abort` 下 unwind 出口在进入 builder 前已裁掉（对应 rustc 的 `AbortUnwindingCalls`）。溢出/越界失败分支调用 panic lang item，带隐式 `&'static Location` 参数（[machine-abi.md](../../design/backend.md#隐式参数)）。
+SoN builder 只接收检查、drop 显式化、清理之后的 Body（[body.md](../../design/frontend/body.md#阶段与清理)）：`FalseEdge` 已变 `Goto`，`FakeRead`/Fake 借用/`StorageDead` 已删除，drop flag 是普通 `bool` 局部。`Call`、`Assert`、`Drop` 降为带异常控制出口的效果节点；unwind 出口全部保留到 R 图，`panic=abort` 的裁剪在 S 级按 `PanicStrategy` 答案进行（对应 rustc 的 `AbortUnwindingCalls`；M1 没有泛型，S 级就是同一图上的一步）。溢出/越界失败分支调用 panic lang item，带隐式 `&'static Location` 参数（[machine-abi.md](../../design/backend.md#隐式参数)）。
 
 ## 算法
 

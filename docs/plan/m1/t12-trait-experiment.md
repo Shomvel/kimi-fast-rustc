@@ -1,4 +1,4 @@
-# T12 实验：trait 与关联类型 — 细化
+# T12 trait：复用 next-solver — 细化
 
 `M1 · B · 依赖：T02, T03, T06` · 概要见 [m1-vertical-chain.md](../m1-vertical-chain.md#t12) · rustc 笔记：[traits](../../research/rustc/traits/README.md)
 
@@ -35,7 +35,14 @@
 
 `rustc_next_trait_solver` + `rustc_type_ir` 可在 stable 上编译。直接复用需要实现约 70 个关联类型 + 96 个方法的主接口、30 个辅助 trait（159 个方法）、48 个方法的推导上下文接口，kfrc 的类型表示也要采用 rustc 的泛型枚举。
 
-做法：主线写最小自有求解器（推断 2–3k 行）；另用 1–2 天在同一组用例上试复用路线；T14 决定。
+**决定（D2）：复用。** 主线实现 `Interner`，不再写自有求解器。上面的“移植范围”表改作理解求解器行为的阅读清单。
+
+## rust-analyzer 的参照
+
+- 依赖钉 `ra-ap-rustc_type_ir`/`ra-ap-rustc_next_trait_solver` `=0.148.0`：这一版与 rustc 1.94.1 源码逐字节相同，stable 上能构建。
+- 先读 RA 的 `next_solver/interner.rs` 找出 `Interner` 实际必需的方法。RA 为复用 next-solver 写了约 1.98 万行，其中 8,182 行是 rustc_infer 的移植，这是复用路线的成本参照。
+- mini core 借 RA minicore 的“按标志裁剪”机制，但内容要能被 rustc 以 `#![no_core]` 编译。
+- RA 的结果不能当 oracle：它一律用 next-solver，而 1.94.1 默认还是旧求解器（[types-traits](../../research/rust-analyzer/types-traits.md)）。
 
 ## 可推迟
 

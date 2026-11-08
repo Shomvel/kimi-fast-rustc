@@ -49,7 +49,7 @@ L 级把 `Memory` 表示的值放进 value slot。槽位分配在 SSA 上做，�
 
 ## unwind
 
-- `panic=abort`：**本 crate 的 Body** 交给 SoN 前可以裁掉 unwind 边（[T09](../../plan/m1/t09-body-to-son.md)）；但发布到 metadata 的 R 图一律保留 unwind 边，下游按自己的 `PanicStrategy` 答案在 S 级裁剪（W04：rustc abort 构建里上游泛型体留下 `resume=8` 的死 cleanup）。
+- `panic=abort`：CheckedBody 和 R 图一律保留 unwind 边，只在 S 级按 `PanicStrategy` 答案裁剪，本 crate 与下游相同（W04：rustc abort 构建里上游泛型体留下 `resume=8` 的死 cleanup）。
 - `panic=unwind`：`Call` 带 unwind 控制出口，接 cleanup 区域，区域以 `Landing` 开始、`Resume` 结束。
 - **nounwind 推断：** 每个实例的调用摘要带 `may_unwind`（[计算方式](optimization-pipeline.md#调用摘要)：未优化 S 图上的廉价遍历，SCC 从 ⊥ 迭代）。调用点的被调者摘要为 `false` 时，unwind 出口是死边，cleanup 区域随 DCE 消失。这替代 LLVM 的 FunctionAttrs 推断 + 删除空 landingpad。
 - 展开中再 panic：`UnwindTerminate` 变成 `Terminate` 控制。

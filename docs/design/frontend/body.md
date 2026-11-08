@@ -16,9 +16,9 @@ pub struct Body {
     pub locals: IndexVec<LocalId, LocalDecl>,      // _0 = 返回值，随后参数，再是用户变量与临时值
     pub blocks: IndexVec<BlockId, BlockData>,
     pub arg_count: usize,
-    pub span_map: …,                               // 每条语句/终结指令的源位置
+    // 源位置不在 Body 里：BodySourceMap 旁表（参考 RA 的 Body/BodySourceMap 分离），只移动位置不改变 CheckedBody 的哈希
 }
-pub struct BlockData { pub stmts: Vec<Stmt>, pub term: Terminator, pub is_cleanup: bool }
+pub struct BlockData { pub stmts: Range<StmtId>, pub term: Terminator, pub is_cleanup: bool }  // 语句全函数连续存放，块是区间
 
 pub struct Place { pub local: LocalId, pub proj: ProjListId }
 pub enum ProjElem {
@@ -55,6 +55,8 @@ pub enum TerminatorKind {
 pub enum UnwindAction { Continue, Cleanup(BlockId), Terminate, Unreachable }
 ```
 
+紧凑表示：`Place` 是 8 字节（局部 + 投影列表 id），变长实参放进池，span 放旁表（rustc 的 `Statement` 56 字节且 `Assign` 要装箱）。
+
 ## 关键规则
 
 | 规则 | 原因 |
@@ -62,7 +64,7 @@ pub enum UnwindAction { Continue, Cleanup(BlockId), Terminate, Unreachable }
 | 所有局部读写走 Place，不在 Body 里做 SSA | SSA 只在 SoN builder 里构造一次（[T09](../../plan/m1/t09-body-to-son.md)），根治 T01 那类问题 |
 | 每个作用域出口无条件插 `Drop` 和 `StorageDead` | drop flag 由事后的数据流决定（Dead/Static/Conditional/Open），flag 是普通 `bool` 局部 |
 | 溢出、越界、除零是可 unwind 的 `Assert` | 纯标量子集也有 cleanup 边 |
-| **即使 `panic=abort`，Body 也建出全部 cleanup 边** | rustc 的 MIR 构建和借用检查不看 panic 策略；去掉 cleanup 边会改变接受/拒绝结果。按策略裁剪发生在交给 SoN 之前 |
+| **即使 `panic=abort`，Body 也建出全部 cleanup 边** | rustc 的 MIR 构建和借用检查不看 panic 策略；去掉 cleanup 边会改变接受/拒绝结果。CheckedBody 和 R 图始终保留完整控制流，按策略裁剪只在 S 级进行（`PanicStrategy` 是孔位答案），这样每个定义只建一份 R 图 |
 | `StorageDead` 必须有 | move data 把它当 move；“曾经初始化”分析在此清零（循环里的 `let x; x = …`）；NLL 用它判断“活得不够久” |
 | Copy/Move 在构建时按类型是否 `Copy` 决定 | Body builder 依赖一个最小 trait 查询（M1：基本类型硬编码；M3 起走 T21） |
 | 两阶段借用标记只出现在三类位置 | 方法接收者的 autoref、复合赋值运算符、实参重借用 |
@@ -71,7 +73,7 @@ pub enum UnwindAction { Continue, Cleanup(BlockId), Terminate, Unreachable }
 ## 阶段与清理
 
 ```text
-Body (built) ─→ 借用检查/移动检查 ─→ drop 显式化 ─→ 清理 ─→ 按 panic 策略裁剪 ─→ SoN builder
+Body (built) ─→ 借用检查/移动检查 ─→ drop 显式化 ─→ 清理 ─→ SoN builder（R 级）
 ```
 
 “清理”把 `FalseEdge` 变 `Goto`，删除 `FakeRead`、Fake 借用，以及**未被取地址局部**的 `StorageLive/StorageDead`；被取地址局部的保留，在图中变成 `SlotLive/SlotDead`（[ownership-drop-unwind.md](../ir/ownership-drop-unwind.md#栈槽活跃区间)）。SoN 只见到清理后的 Body；`Call`/`Assert`/`Drop` 在 SoN 里是带异常控制出口的效果节点。

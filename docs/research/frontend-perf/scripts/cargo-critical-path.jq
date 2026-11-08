@@ -7,7 +7,7 @@
 # build-script runs, unsplit rustc units (no sections, e.g. check builds) and waiting gaps.
 def fe_len: ((.sections // []) | map(select(.[0] == "frontend")) | .[0][1].end) // null;
 def r2: (. * 100 | round) / 100;
-def unit_name: "\(.name)\(if .target == "" then "" else " " + .target end)\(if .mode == "run-custom-build" then " (build script run)" else "" end)";
+def unit_name: "\(.name)\(if .target == "" then "" else " " + .target end)";
 . as $units
 | (map({key: (.i | tostring), value: .}) | from_entries) as $by
 | def preds($v):

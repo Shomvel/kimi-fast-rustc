@@ -42,6 +42,7 @@ T21–T24 共享类型和目标布局（const 泛型、模式、drop、trait 结
 `M3 · A · 依赖：T20`
 
 - **做什么：** token tree 匹配/转录、fragment 与重复、`macro_rules!`、宏可见性、cfg/属性、edition 差异、递归限制；展开与名称解析迭代进行。产物带 hygiene 信息。编译 std 就需要完整 macro_rules 引擎（`println!`、`vec!`、`assert_eq!` 都是库宏），因此本任务在 hello world 的关键路径上；还需要 `format_args!` 等内建宏，且 `format_args!` 的降低形状必须与冻结 core 的解码一致（依赖 Body 的 `super let`）。
+- **格式串：** `format_args!` 的解析依赖 `rustc_parse_format`（决策 D1）。
 - **完成标志：** 同名捕获/遮蔽、跨模块导入、嵌套与重复、edition 差异的正反例；hygiene 身份不随诊断 span 丢失。
 
 <a id="t24"></a>
@@ -51,6 +52,7 @@ T21–T24 共享类型和目标布局（const 泛型、模式、drop、trait 结
 
 - **位置：** 解释器运行在 Typed Body 上（对应 rustc 的 `mir_for_ctfe`），不在 SoN 上；值模型从第一步就采用 rustc 的 `Scalar`（整数或 `AllocId` 指针）+ `Allocation`（字节、provenance、init mask）。
 - **做什么：** 自有 const 解释器，分三步：纯整数 → 目标内存/指针 → 所需内建项；有效性检查、必要的 const 泛型、常量依赖循环和资源限制诊断。
+- **共享核心：** CTFE 仍解释 Body，但与 IR 解释器共享值、内存、`encode/decode`（[semantics](../design/ir/semantics.md#解释器的用途)）。
 - **完成标志：** 有效常量与运行时结果一致；溢出、越界、无效值、循环依赖按 oracle 拒绝。
 
 <a id="t25"></a>

@@ -16,7 +16,7 @@
 |---|---|---|---|
 | ParsedModule | 源文件、edition、源身份 | token/AST、精确源范围、解析错误 | 名字含义、类型、宏已展开 |
 | ExpandedModule | token tree、宏定义、hygiene、cfg | 本轮可解析的定义和展开来源 | 导入/宏依赖已稳定 |
-| ResolvedInterface | 定义表、命名空间、可见性 | 路径映射到定义身份，接口依赖可枚举 | 函数体已检查 |
+| ResolvedInterface | 定义表、命名空间、可见性 | 路径映射到定义身份，接口依赖可枚举；**包含函数体内嵌套的项**（体内的 impl 在 rustc 中全局可见），但不含任何表达式；接口指纹覆盖“体内项树”的哈希而不是体的文本（参考 RA 的 item tree，[item-tree](../../research/rust-analyzer/item-tree.md)） | 函数体已检查 |
 | TypedBody | 已解析接口、类型约束、trait obligations | 每个表达式/Place 有类型，控制流和检查点显式 | 所有权合法、drop 已展开 |
 | CheckedBody | TypedBody、move/loan/region 分析 | 受支持语义的借用约束成立，初始化与退出路径明确 | — |
 | （单态化） | R 级图、具体泛型参数 | 在图上回答孔位、按答案键特化（[generics-specialization.md](../ir/generics-specialization.md)）；不再单独产出实例化的 Body | — |

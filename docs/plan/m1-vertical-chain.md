@@ -24,6 +24,7 @@
 细化：[m1/t04-syntax.md](m1/t04-syntax.md)
 
 - **做什么：** `src/syntax/`：token tree、AST、HIR 级节点 ID。`Span` 现在就带 `SyntaxContext`，edition 按 span 查询，token tree 保留不可见分组和 spacing——这些晚加会改遍下游。解析器只产出 AST。
+- **词法：** 依赖 `rustc_lexer`（决策 D1），token cooking 自写。1.94.1 没有 token 级的 `-Zunpretty`，token 对拍需要另做 oracle（例如打印 `TokenStream` 的过程宏）。
 - **完成标志：** 语法正反例、边界字面量、作用域结构和源位置；移植来源、许可、测试来源有记录。
 
 <a id="t05"></a>
@@ -44,6 +45,7 @@
 细化：[m1/t06-typeck-and-body.md](m1/t06-typeck-and-body.md)
 
 - **做什么：** 两步。T06.a 类型检查产出 TypeckResults：全部整数宽度（含 `i32` 字面量 fallback）、`!`、推导表与快照、rustc 的阶段顺序、默认 Deny 的溢出 lint。T06.b 用 TypeckResults 构建 [Typed Body](../design/frontend/body.md)：作用域栈与 DropTree、`StorageDead`、`Assert` 的 unwind 边、region scope tree；即使 `panic=abort` 也建出 cleanup 边。
+- **模式检查：** 模式穷尽与可反驳性检查（E0004/E0005）在 M1 的 `match` 就需要；先冻结模式 IR（对应 rustc THIR 级的 `Pat`），依赖 `rustc_pattern_analysis`（决策 D1），kfrc 提供它要求的类型上下文接口。
 - **完成标志：** 无推导变量泄漏；Body 通过 verifier；正反例的接受/拒绝和错误码与 rustc 一致。
 
 <a id="t07"></a>
@@ -55,6 +57,8 @@
 
 - **做什么：** `src/son/{graph,types,verify}.rs`：节点结果和输入的类型约束；控制、值、效果三类输入与多结果投影；图内引用与跨实例引用分开；循环“未封闭 → 已封闭”状态。旧 `src/son.rs` 在调用者迁移前保留兼容入口，旧标量图通过显式适配器构造。
 - **Rust 语义 SoN：** `GraphLevel` 和按分区的效果字段从第一版起就有；M1 只有单态标量，R/S 级重合（[levels.md](../design/ir/levels.md)）。
+- **语义：** 与 verifier 一起写 [semantics.md](../design/ir/semantics.md) 的四类节点登记；R/S 级解释器骨架（整数、控制、`Phi`）在本任务开始。
+- **数据结构：** 新图直接用 16 字节 `NodeRec` + 列存 + 转发表（[graph.md](../design/ir/graph.md#节点)）。现有 `son.rs` 的 `replace_uses` 每次扫全图（64k 节点时慢约 2,400 倍）和整图循环到不动点，可以先于新契约单独修（[current-gap](../research/data-structures/current-gap.md)）。
 - **完成标志：** 故意破坏的 Phi 前驱、跨图引用、类型、支配、效果依赖都被拒绝；合法循环/多前驱图通过；同一输入的图 dump 稳定。
 
 <a id="t08"></a>
@@ -65,6 +69,10 @@
 细化：[m1/t08-scalar-abi.md](m1/t08-scalar-abi.md)
 
 - **做什么：** 从 `native.rs`、`x86.rs`、`regalloc.rs`、`native_program.rs` 抽出标量调用入口，定义 FnAbi、寄存器约束、栈参数/返回和 ObjectFragment 接口（规划 `src/machine/`），做接入新图所需的最小适配。
+- **T08.b 最小 panic runtime 与只读数据：** M1 的溢出、除零、越界失败路径要调用 panic lang item（`core::panicking::panic_const::*`），并传 `&'static Location`；Location 含指向文件名的指针，所以 M1 就需要 `.rodata` 和数据重定位。本任务提供：
+  - 只读数据片段的发射与 `R_X86_64_64`/`PC32` 重定位（T19 再扩展到完整数据对象）；
+  - 一个隔离的最小 runtime：实现 M1 用到的 panic 入口，按 rustc 默认格式向 stderr 打印 `thread 'main' panicked at <file>:<line>:<col>:` 和消息，以退出码 101 结束（对没有 drop 的 M1 程序，这与 rustc 默认的 `panic=unwind` 可观察行为一致）；T27 用真正的 runtime 取代它。
+  - 覆盖标签：用到该 runtime 的用例标 `panic-stub`（总览红线 4），不计入 full-native 覆盖；M1 只支持这一种 panic 配置，需要真正 unwind 的输入明确拒绝。
 - **完成标志：** 经 C ABI driver 真实执行：标量调用、递归、跨调用活跃值、高压力 spill。
 
 <a id="t09"></a>
@@ -76,6 +84,7 @@
 
 - **做什么：** `src/son/build.rs`，唯一的生产入口。按 CFG 前驱统一构造值和效果合并，处理 if/match/短路/loop/return、多回边、break/continue、不可达块；变量按 LocalId 识别。不再在各语法分支里各自拼 Phi。
 - **Rust 语义 SoN：** builder 产出 R 级图；M1 程序无泛型，`specialize` 是恒等。被取地址的局部变成 `StackSlot`，其余是 SSA 值（[values-and-types.md](../design/ir/values-and-types.md#什么是值什么在内存里)）。
+- **解释器差分接入：** 用 T07 的解释器骨架对 builder 产出的图和每个 pass 前后的图做逐 pass 差分，不一致即报 pass 名和规则序号（[semantics](../design/ir/semantics.md#解释器的用途)）。
 - **完成标志：** T01 错误类及嵌套循环、遮蔽、多出口、分支赋值组合，经 T03 runner + T08 机器入口真实执行与 rustc 一致。一个测试能同时导出 Body、SoN 和机器码。只过图层不算 verified。
 
 <a id="t10"></a>
@@ -99,7 +108,7 @@
 - **完成标志：** jobs=1/2/4 结果和对象一致；循环依赖、队列满、上游失败、取消都在有限时间内收束；串行参考路径仍可用。
 
 <a id="t12"></a>
-## T12 实验：trait 与关联类型
+## T12 trait：复用 next-solver
 
 `M1 · B · 依赖：T02, T03, T06`
 
@@ -107,8 +116,8 @@
 
 - **注意：** rustc 1.94.1 的默认结果来自旧求解器，新求解器只用于 coherence。算法参考新求解器，oracle 两种模式都跑，结果不一致的用例记为 `solver-divergence`。
 - **输入闭包：** 一个 trait、一个关联类型、两个候选 impl、一个带 `where` 约束的泛型函数及跨函数调用。先记录 rustc 对“有效 / 无 impl / 歧义或不满足约束”三类程序的结果。
-- **做什么：** 设计 canonical goal、推导变量的驻留与回滚，移植最小求解步骤；列出实际需要的 rustc 依赖闭包。高阶约束、opaque type、specialization 等未覆盖项列出。
-- **完成标志：** 正例、缺 impl、冲突/歧义、循环边界与 oracle 一致；没有永久携带 TyCtxt/query；给出保留/替换清单和 M3 估算。`verified` 只表示实验结论成立，不表示 trait 已进入生产。
+- **做什么：** 依赖 `rustc_type_ir` + `rustc_next_trait_solver`（`=0.148.0`），为 kfrc 的驻留表实现 `Interner` 和推导上下文接口；推导变量的驻留与回滚接到 T06 的推导表。高阶约束、opaque type、specialization 等未覆盖项列出。
+- **完成标志：** 正例、缺 impl、冲突/歧义、循环边界与 oracle 一致；没有携带 TyCtxt/query；`Interner` 实现覆盖用例所需的方法，并给出 M3 的剩余方法清单与估算。
 
 <a id="t13"></a>
 ## T13 实验：move、借用与分支 drop
@@ -131,4 +140,5 @@
 细化：[m1/t14-m1-exit.md](m1/t14-m1-exit.md)
 
 - **做什么：** 汇总首轮支持矩阵、串行/并行链、接口变更、剩余风险；把 M2/M3 拆成子项并估算资源。
+- **覆盖标签：** 支持矩阵分“可表示 / 可检查 / 可执行”三列（例如 M1 的 `i128`）；`panic-stub` 用例单列。
 - **完成标志：** 满足本阶段出口；没有为扩展语法而绕过统一 Body 的入口。

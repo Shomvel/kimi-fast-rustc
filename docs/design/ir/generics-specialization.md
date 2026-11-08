@@ -42,8 +42,19 @@ pub enum Hole {
 pub struct SpecializationKey { generic: GraphHash, answers: AnswersHash }
 ```
 
-- 答案键对“同一份机器码”负责，所以它还包含 L 级读过的被调者调用摘要（决定 `call` 还是 `invoke`、能否省拷贝）。
-- `Resolve` 的答案是被调实例的**答案键**而不是 `InstanceKey`，所以去重是递归的：`Vec<u32>::push` 和 `Vec<i32>::push` 调用的 `RawVec::grow_one` 本身就同键，于是它们也同键。递归调用形成环时，先按 `InstanceKey` 分组再做和 `-Zmono-dedup` 一样的类细化不动点。
+
+三种键，冻结时机不同：
+
+| 键 | 内容 | 何时冻结 | 用途 |
+|---|---|---|---|
+| **特化身份键** `SpecializationKey` | R 图哈希 + 孔位答案（`Resolve` 的答案取被调者的特化身份键） | 特化**之前** | 查重、共享代码：同键的实例特化结果必然相同 |
+| **摘要依赖** | 本实例 S/L 级读过的被调者调用摘要的哈希 | S/L 级结束时 | 只用于缓存失效，不参与查重 |
+| **机器码缓存键** | 特化身份键 + 摘要依赖 + 被内联者的特化身份键 + L 级配置 + target | 机器码生成后 | 跨构建复用 |
+
+查重只看特化身份键：同键的两个实例读到的摘要也必然相同，所以不需要摘要参与查重。摘要依赖只决定“上一次构建的机器码还能不能用”。
+
+**环。** 递归调用使特化身份键互相引用。先按 `InstanceKey` 分组，给 SCC 内每个实例一个临时身份（SCC 内序号），对整个 SCC 做 `-Zmono-dedup` 式的类细化不动点，得到最终的特化身份键。SCC 的摘要从 ⊥ 一起迭代（[optimization-pipeline.md](optimization-pipeline.md#调用摘要)），SCC 的机器码缓存键包含整个 SCC 的键集合。
+- `Resolve` 的答案是被调实例的**特化身份键**而不是 `InstanceKey`，所以去重是递归的：`Vec<u32>::push` 和 `Vec<i32>::push` 调用的 `RawVec::grow_one` 本身就同键，于是它们也同键。
 - `InstanceKey`（[ids.md](../ids.md)）仍然存在，用于符号和可达性；多个 `InstanceKey` 映射到一个答案键，共享一份代码，其余是别名符号。
 - 函数指针相等：Rust 不保证不同函数的指针不同（LLVM mergefunc 和链接器 ICF 已经会合并），所以共享代码合法。`#[inline(never)]` 且导出的泛型实例不参与跨 crate 合并（`-Zmono-dedup` v5 的结论）。
 

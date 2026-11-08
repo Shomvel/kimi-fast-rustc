@@ -11,6 +11,10 @@
 5. **符号**：`Call { target: SymbolId }`，`ObjectFragment.symbols` 由 `InstanceKey` 生成；`native_program.rs` 改为合并 `ObjectFragment`。
 6. **C driver 对拍**：`tests/fixtures/abi/scalar/` 下，C 侧以 `int64_t f(int64_t, …)` 等签名调用 kfrc 生成的函数，覆盖 0–8 个参数（跨过 6 个寄存器）。
 
+## T08.b 最小 panic runtime 与只读数据
+
+见 [概要](../m1-vertical-chain.md#t08)。实现位置：`src/object/` 的只读数据片段与重定位；runtime 是仓库内单独的小目标（C 或汇编均可），只导出 M1 用到的 panic 入口符号，链接时显式加入。对拍时比较退出码 101 和 stderr 的 panic 位置行。
+
 ## 测试
 
 | 维度 | 取值 |

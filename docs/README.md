@@ -19,6 +19,7 @@
 
 - **自有实现，参考 rustc。** rustc 是算法、测试和对照结果的来源，不做 `CodegenBackend` 插件，也不把 `TyCtxt`/query 运行时包进产品。
 - **优化在带 Rust 语义的 SoN 上做。** 聚合/enum 是值、借用是内存分区、drop 和 trait 调用是节点，最后才按布局降低；不先降成 LLVM 式低级 IR 再重建语义。
+- **依赖少量 rustc 发布的算法 crate。** 以 `ra-ap-*` `=0.148.0` 形式依赖（与 rustc 1.94.1 源码逐字节相同）：`rustc_lexer`、`rustc_parse_format`、`rustc_pattern_analysis`、`rustc_abi`（布局计算），以及 `rustc_type_ir` + `rustc_next_trait_solver`（kfrc 实现 `Interner`）。其余语义自写；rust-analyzer 只作设计参考，不作移植来源。
 - **后端不用 LLVM/Cranelift。** 线性扫描寄存器分配，不加静态 ILP 指令调度。rustc+LLVM 只作对照工具链。
 - **首个目标平台** Linux x86_64 System V。
 
@@ -30,7 +31,7 @@
 4. 混合 bootstrap、人工 IR fixture、分析原型单独标记，不计入 full-native 覆盖。
 5. 局部 pass 加速、缓存命中不代表整项目冷编译加速。
 6. 发现一类错误后先静态排查同类路径、批量修复，再恢复压测。
-7. 移植 rustc 代码时记录来源 commit、文件和许可。
+7. 移植 rustc 代码、或依赖 rustc 发布的 crate（`ra-ap-*`）时，记录来源 commit/版本、文件和许可。rust-analyzer 只作设计参考，不作移植来源（它有部分代码本身派生自旧版 rustc）。
 
 ## 目录
 

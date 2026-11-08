@@ -32,7 +32,7 @@
 两类的后果：
 
 1. **分析分区不扩大 UB 集合。** `Local`/`Heap` 的事实对所有程序成立；解释器发现违反就是编译器 bug，不需要 Miri 判定。M3 前的全部分区都属于这一类。
-2. **UB 分区有一条证明义务：** kfrc 声称的 UB ⊆ Miri 在 SB 和 TB 两种模式下都报告的 UB。这正是 [README 设计红线 1](../../design/README.md) 与 [rust-aliasing.md](../prior-art/rust-aliasing.md) 的“两种模式对拍”的形式化表述。可执行检查：生成程序先过 Miri（两种模式），无 UB 的程序在 kfrc 检查模式下也不能触发 UB 分区违反。
+2. **UB 分区有一条证明义务：** kfrc 声称的 UB ⊆ Miri 在 SB 和 TB 两种模式下都报告的 UB。这正是 [设计红线 1](../../design/README.md#设计红线) 与 [rust-aliasing.md](../prior-art/rust-aliasing.md) 的“两种模式对拍”的形式化表述。可执行检查：生成程序先过 Miri（两种模式），无 UB 的程序在 kfrc 检查模式下也不能触发 UB 分区违反。
 
 ## 检查模式：把静态分区规则变成动态断言
 

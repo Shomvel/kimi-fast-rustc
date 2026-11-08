@@ -10,8 +10,8 @@
 | [prior-art/](prior-art/README.md) | 编译器研究与工业实践：SoN、e-graph、OSSA、MLIR、Tree Borrows、泛型共享、快速后端、增量缓存、测试 | 没有人做过“多态 Rust 语义 SoN + 按答案特化 + 自有后端”；自写后端在 release 运行时间上没有先例 |
 | [rustc/](rustc/README.md) | rustc 1.94.1 精读笔记：借用、所有权、类型推导、trait、宏/解析、布局/ABI/单态化，以及模块映射（[rustc-map](rustc/rustc-map.md)） | 每个主题有“kfrc 最小闭包”与代表性 `tests/ui` 用例 |
 | [frontend-perf/](frontend-perf/README.md) | 前端优化：rustc 前端时间分布、为什么慢、快速前端先例（Zig、Carbon、Go、RA、tsgo） | FRONTEND_SUMMARY |
-| [ir-semantics/](ir-semantics/README.md) | R/S/L 三级 IR 的可执行语义：MiniRust、Alive2、CompCert 等先例，用途与首版范围 | IRSEM_SUMMARY |
-| [rust-analyzer/](rust-analyzer/README.md) | rust-analyzer 与可独立使用的 rustc 组件怎么参考（不照搬） | RA_SUMMARY |
+| [ir-semantics/](ir-semantics/README.md) | R/S/L 三级 IR 的可执行语义：MiniRust、Alive2、CompCert 等先例，用途与首版范围 | 三级各写一个可执行参考解释器，不做证明；引入 poison（`Add.nsw` 溢出得 poison 而非 UB），分区分“分析结果”和“UB 条件”两类；首版 7–9 人周。已并入 [semantics.md](../design/ir/semantics.md) |
+| [rust-analyzer/](rust-analyzer/README.md) | rust-analyzer 与可独立使用的 rustc 组件怎么参考（不照搬） | RA 的语义有意偏离 rustc（不报歧义、不做借用检查、trait 一律 next-solver），任何规则都不以它为准；值得借的是增量友好的数据切分（item tree、BodySourceMap、durability）；`ra-ap-*` 0.148.0 与 rustc 1.94.1 源码逐字节相同，叶子算法 crate 是否直接依赖待决策 |
 | [sysroot/](sysroot/README.md) | core/alloc/std 与 ripgrep/Cargo 依赖需要的 intrinsic、lang item、unstable feature、SIMD、C 依赖 | SYSROOT_SUMMARY |
 | [runtime-profile/](runtime-profile/README.md) | ripgrep/Cargo 运行时热点与对 LLVM 优化的依赖，前期 profile 汇总 | RUNTIME_SUMMARY |
-| [data-structures/](data-structures/README.md) | 编译器自身数据结构：节点布局、驻留、arena、序列化、并行 | DS_SUMMARY |
+| [data-structures/](data-structures/README.md) | 编译器自身数据结构：节点布局、驻留、arena、序列化、并行 | 节点做到 16 字节记录加两列、不维护 use-list、按创建顺序压实；驻留分片加每任务缓存；现状的主要问题是 O(K·N) 替换和 BTreeMap，不是 SoN 本身。已并入 design |

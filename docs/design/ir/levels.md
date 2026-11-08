@@ -31,7 +31,7 @@ pub enum GraphLevel { Rust, Specialized, Layout }
 
 ## 固定与浮动
 
-有副作用的节点（调用、store、非 `Frozen`/`Const` 的 load、检查、drop）固定在控制上，构成**控制骨架**；只有纯值节点、`Frozen`/`Const` load 和未逃逸 `Local` 的 load 浮动。这与 Graal 的 FixedNode、Cranelift 的副作用骨架一致，也回应了 V8 的经验：内存操作本来就很少浮动，让它们全部自由反而增加调度成本（[prior-art/sea-of-nodes.md](../../research/prior-art/sea-of-nodes.md)）。
+有副作用或可能立即 UB 的节点（调用、store、固定 `Load`、`Div`/`Rem`、检查、`Refine`、drop）固定在控制上，构成**控制骨架**；浮动的只有全函数的纯值节点、产生 poison 的节点（`Add.nsw`、`Load.spec` 等）。哪些 load 可以写成 `Load.spec` 由 [semantics.md](semantics.md#load固定与投机) 一处规定，nodes 和 verifier 引用它。这与 Graal 的 FixedNode、Cranelift 的副作用骨架一致，也回应了 V8 的经验：内存操作本来就很少浮动，让它们全部自由反而增加调度成本（[prior-art/sea-of-nodes.md](../../research/prior-art/sea-of-nodes.md)）。
 
 ## verifier 何时全量运行
 
@@ -52,7 +52,7 @@ kfrc 的应对和要测的量：
 | 风险 | 应对 | 指标（M2 起每次跑 walkthrough 和真实 crate 都记录） |
 |---|---|---|
 | 效果节点占比高 | 聚合是值、借用分区，大部分 Rust 代码的内存访问不在同一条链上 | 效果链上节点数 / 总节点数；每条分区链的长度 |
-| 局部性 | arena 按创建顺序分配；R 级图按 Body 块顺序构建 | 每节点平均访问时间；placement 耗时占比 |
+| 局部性 | 16 字节记录 + 列存；按创建顺序分配并在三处保序压实（[graph.md](graph.md#节点)） | 字节/节点、每节点分配次数、存活率；“打乱顺序”对照臂；L1d miss/指令按阶段在 E2B 上采（macOS 无 perf） |
 | placement 成本 | 只在 L 级末尾做一次；R/S 级不放置 | placement 指令数 / 函数节点数 |
 | 无效访问 | 变化驱动的 worklist | 每次改动对应的节点访问数（V8 测得约 20 次访问才改 1 次） |
 | 缓存不命中 | 同上 | L1d miss（V8 测得 SoN 约为 CFG 的 3 倍） |

@@ -8,7 +8,7 @@
 
 范围（M1 标量）：
 
-- 类型：`bool`、全部整数宽度（**必须含 `i32`**——无约束字面量 fallback 到 `i32`；现在的 kfrc 只有 `i64/u64`，`let x = 1;` 的溢出点会与 rustc 不同）、`()`、`!`。
+- 类型：`bool`、全部整数宽度（`i128/u128` 在 M1 只**可表示、可检查**：typeck 接受，lowering 报 `UnsupportedFeature`，覆盖矩阵标为“不可执行”，到 M2 的 T15/T18 才执行；**必须含 `i32`**——无约束字面量 fallback 到 `i32`；现在的 kfrc 只有 `i64/u64`，`let x = 1;` 的溢出点会与 rustc 不同）、`()`、`!`。
 - 推导表、快照、挂起约束队列从一开始就实现（[types.md](../../design/frontend/types.md#推导表)）。
 - Expectation 传播；分支合并（`CoerceMany` 的 LUB，M1 只有 `NeverToAny` 一种 adjustment）。
 - 阶段顺序照搬 rustc，它本身是语义：

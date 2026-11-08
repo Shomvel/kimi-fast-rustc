@@ -40,6 +40,7 @@
 
 - **拆分：** T30.a 构建脚本（ripgrep 依赖闭包里有 10 个，必需）；T30.b 过程宏协议（ripgrep 默认构建不需要——`serde_derive` 只是 dev-dependency——但 Cargo 构建和 ripgrep 测试需要）。
 - **做什么：** host 图、过程宏协议与 runner、build script 输出和动态输入跟踪；早期可用明确标记的 bootstrap 方案。不可完整跟踪输入的任务不跨构建缓存。
+- **协议细节：** 版本协商、span 子请求、响应里带 `tracked_env_vars`/`tracked_paths`（进缓存键）；proc-macro 进程池计入 jobserver 预算。RA 的 proc-macro-srv 也只兼容同一工具链的 bridge，所以加载官方 rustc 编译的宏（方案 A）风险更高（[proc-macro-srv](../research/rust-analyzer/proc-macro-srv.md)）。
 - **完成标志：** host/target 不混链；宏输入或环境变化不会错误命中。官方 rustc 编译的 proc-macro dylib 不假定能直接加载。
 
 <a id="t31"></a>

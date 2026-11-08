@@ -34,6 +34,10 @@
    - Release/AcqRel/SeqCst 的原子写和 fence：以 `Unknown` 和**全部 `Unique`、`Local`、`Heap`** token 为输入。原因：`*x = 42; fence(Release)` 之后经 Relaxed 发布 `x` 的地址，另一线程同步后必须看到 42；`Local` 槽在 fence 之后才逃逸也一样（W10）。这些输入只约束 placement，不让 DSE 把 fence 当成读。
    - volatile、内联汇编：`Unknown` 加全部可能可达的分区。
 
+## 分区的两类地位
+
+`Local`、`Heap`、`Const` 是**分析结果**：违反即编译器 bug。`Frozen`、`Unique` 和 `Reborrow` 出的分区是 **UB 条件**：违反即程序 UB，证明义务是“kfrc 认定的分区 UB ⊆ Miri 在 SB 和 TB 下都报的 UB”（[semantics.md](semantics.md#分区的两类地位)）。
+
 ## 字段级不相交
 
 同一基址、常量偏移不重叠的两个访问互不影响——这是地址算术，不依赖 UB 规则。R/S 级用结构化投影（`FieldAddr[1]` vs `FieldAddr[2]`）判定，L 级用偏移。`RefCell` 的借用计数与值字段因此不相交（前提是规则 1 穿过 `UnsafeCell::get` 的指针 cast）。

@@ -1,7 +1,7 @@
 # Input: [ {cat, secs} ] from phase-categories.jq. Output: markdown table rows.
 # work = everything except "wait" (coordinator waiting) and "profiler";
 # front end = fe_* + md_* (parse … borrowck, MIR, metadata read/write).
-def r1: (. * 10 | round) / 10;
+def r1: if . < 1 then (. * 100 | round) / 100 else (. * 10 | round) / 10 end;
 def pct($x; $t): if $t == 0 then "–" else (($x / $t * 1000 | round) / 10 | tostring) + "%" end;
 (map(select(.cat != "wait" and .cat != "profiler")) ) as $w
 | ($w | map(.secs) | add) as $work

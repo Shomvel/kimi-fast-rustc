@@ -50,7 +50,7 @@ flowchart TD
 |---|---|
 | [ids.md](ids.md) | 共享 ID、阶段接口、错误分类 |
 | [frontend/](frontend/overview.md) | 前端产物与交接（[overview](frontend/overview.md)）、类型表示（[types](frontend/types.md)）、Typed Body（[body](frontend/body.md)） |
-| [ir/](ir/levels.md) | 三级 SoN：[levels](ir/levels.md)、[graph](ir/graph.md)、[nodes](ir/nodes.md)、[values-and-types](ir/values-and-types.md)、[memory-partitions](ir/memory-partitions.md)、[ownership-drop-unwind](ir/ownership-drop-unwind.md)、[generics-specialization](ir/generics-specialization.md)、[optimization-pipeline](ir/optimization-pipeline.md)、[verifier](ir/verifier.md) |
+| [ir/](ir/levels.md) | 三级 SoN：[levels](ir/levels.md)、[graph](ir/graph.md)、[nodes](ir/nodes.md)、[values-and-types](ir/values-and-types.md)、[memory-partitions](ir/memory-partitions.md)、[ownership-drop-unwind](ir/ownership-drop-unwind.md)、[generics-specialization](ir/generics-specialization.md)、[optimization-pipeline](ir/optimization-pipeline.md)、[verifier](ir/verifier.md)、[semantics](ir/semantics.md) |
 | [backend.md](backend.md) | Machine IR、FnAbi、CallLayout、对象片段 |
 | [build/](build/pipeline.md) | 任务与产物发布（[pipeline](build/pipeline.md)）、缓存（[cache](build/cache.md)）、Cargo/sysroot（[cargo-sysroot](build/cargo-sysroot.md)） |
 | [goals/](goals/compile-time.md) | 四个目标怎么保证：[编译时间](goals/compile-time.md)、[体积](goals/size.md)、[运行速度](goals/runtime.md)；缓存见 [build/cache](build/cache.md) |

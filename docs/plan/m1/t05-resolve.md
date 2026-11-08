@@ -16,7 +16,7 @@
 
 ## DefKey 与 hygiene
 
-rustc 的 `DefKey` 不带 hygiene：同名定义的消歧编号按创建顺序分配，“完成顺序不影响 DefKey”依赖展开顺序确定。kfrc 采用同样做法，若将来并行展开，按展开树中的位置定序。[ids.md](../../design/ids.md) 按此修订。
+rustc 的 `DefKey` 不带 hygiene：同名定义的消歧编号按创建顺序分配，“完成顺序不影响 DefKey”依赖展开顺序确定。kfrc 采用同样做法（决策 D3：rustc 形状）：宏生成项的消歧器按展开树先序分配，代价是父模块的 DefKey 要等其中的展开全部完成；若将来并行展开，按展开树中的位置定序。[ids.md](../../design/ids.md) 按此修订。
 
 ## 产物
 

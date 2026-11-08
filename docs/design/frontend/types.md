@@ -4,7 +4,7 @@
 
 ## TyKind
 
-种类划分与 `rustc_type_ir` 同构，这样以后可以选择实现 rustc 的 `Interner` trait 去复用新 trait 求解器（是否复用在 T14 决定，见 [T12](../../plan/m1/t12-trait-experiment.md)）。
+**类型就是 `rustc_type_ir` 的 `TyKind<KfrcInterner>`。** kfrc 实现 `Interner`，直接复用 `rustc_next_trait_solver`（决策 D2，钉 `=0.148.0`）。下面的枚举是种类一览；字段以 `rustc_type_ir` 为准。复用成本参照：rust-analyzer 为此写了约 2 万行，其中约 8 千行是 rustc_infer 的移植（[T12](../../plan/m1/t12-trait-experiment.md)）。
 
 ```rust
 pub enum TyKind {
@@ -23,7 +23,7 @@ pub enum TyKind {
 pub enum InferVar { Ty(TyVid), Int(IntVid), Float(FloatVid) }
 ```
 
-- **M1 必需的种类：** `Bool`、`Int/Uint` 全部宽度（**含 `i32`**，因为无约束整数字面量 fallback 到 `i32`）、`Tuple([])`、`Never`、`FnDef`、`Infer`、`Error`。其他种类在类型上存在，lowering 遇到即报未支持。
+- **M1 必需的种类：** `Bool`、`Int/Uint` 全部宽度（**含 `i32`**，因为无约束整数字面量 fallback 到 `i32`；`i128/u128` 在 M1 可表示、可检查、不可执行，lowering 明确拒绝）、`Tuple([])`、`Never`、`FnDef`、`Infer`、`Error`。其他种类在类型上存在，lowering 遇到即报未支持。
 - **region 槽：** `Ref` 和 `Dynamic` 带 `Region`。typeck 一律填 `Erased`；借用检查在 Body 上把每个槽替换为自己的 `RegionVid`。
 - **驻留：** `TyId` 全局驻留（见 [ids.md](../ids.md)）。`Infer` 只能出现在一个 body 的推导表里，发布 TypedBody 前全部解析掉（对应 rustc writeback 的断言）；它不能出现在 Body、缓存键或跨任务产物中。
 

@@ -53,4 +53,5 @@
 细化：[m0/t03-differential-runner.md](m0/t03-differential-runner.md)
 
 - **做什么：** `tests/` 下的 fixture 和拟建 `tools/` runner，支持：接受、拒绝、真实 x86 执行、结果比较、证据保存。协议见 [差分测试](README.md#验收)。
+- **范围：** 只做源级 runner。逐 pass 的 IR 解释器差分依赖解释器本身，接入放在 T09（骨架来自 T07）和 T17（首版），不作为本任务的完成条件。
 - **完成标志：** 成功、拒绝、T01 已知失败三类样例可在干净目录重放；故意给错结果时 runner 判失败；超时、跳过、unsupported 不算成功。
