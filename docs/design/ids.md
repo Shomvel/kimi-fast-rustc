@@ -46,6 +46,8 @@ pub struct NodeId(u32);                    // 只在一个 FunctionGraph 内有�
 
 ## 规则
 
+- **接口指纹** 只覆盖接口（签名、体内项树、可见性、布局相关属性），不含私有函数体和 span。rustc 写 metadata 时对全部 HIR 求哈希，所以 release 下改注释也要重做 28.7% 的工作。
+
 - **持久 vs 会话。** `CrateKey`、`DefKey`、`InstanceKey`、`Fingerprint` 可以写进缓存和 metadata；`DefId`、`TyId`、`LayoutId`、`InstanceId`、`NodeId` 只在会话内有效，持久化时必须转换成持久键。
 - **驻留表只追加。** 分块存储，读不加锁；写入分片，加每任务本地缓存，片内编号。单锁在 8 线程下吞吐只有单线程的 0.65 倍，按 rustc 方式分 32 片也只到 1.05 倍（瓶颈是缓存行在核间搬运），加本地缓存后到 3.37 倍（[interning-and-keys](../research/data-structures/interning-and-keys.md)）。
 - **类型不缓存指纹。** 持久指纹按需计算并备忘（rustc 2022 年给类型加了指纹，2026 年又删掉，每类型省 16 字节）。

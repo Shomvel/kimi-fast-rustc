@@ -23,7 +23,7 @@ TOOLCHAIN=1.94.1
 mkdir -p "$WORK/src"
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -qq
-apt-get install -y -qq build-essential pkg-config libssl-dev zlib1g-dev linux-tools-generic >/dev/null
+apt-get install -y -qq build-essential pkg-config libssl-dev zlib1g-dev linux-tools-generic libc6-dbg >/dev/null
 PERF=$(ls -d /usr/lib/linux-tools/*/perf | sort -V | tail -1)
 ln -sf "$PERF" /usr/local/bin/perf
 

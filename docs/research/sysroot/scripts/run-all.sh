@@ -37,5 +37,6 @@ RUSTC_BOOTSTRAP=1 "$here/deps-closure.sh" "$lib/Cargo.toml" "$reg" "$t" sysroot 
 for p in sysroot ripgrep cargo; do
   "$here/deps-scan.sh" "$out/closure-$p.txt" "$out/x86-fns.txt" > "$out/scan-$p.txt"
   "$here/deps-scan.sh" "$out/closure-$p.txt" "$out/x86-fns.txt" x86 | sed -n '/每个 crate 引用/,$p' > "$out/scan-$p-x86.txt"
+  "$here/asm-sites.sh" "$out/closure-$p.txt" > "$out/asm-$p.txt"
 done
 echo "done: $out"

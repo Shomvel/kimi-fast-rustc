@@ -116,6 +116,11 @@ target_feature_attr|#\[target_feature\(
 may_dangle|#\[may_dangle\]
 coroutine_attr|#\[coroutine\]
 super_let|super let
+const_fn_decl|(^|[^a-z_])const (unsafe )?(extern "[^"]*" )?fn 
+tait_decl|^[[:space:]]*(pub(\([a-z]+\))? )?type [A-Za-z_]+(<[^>]*>)? = impl 
+try_block|(^|[^a-z_])try \{
+static_item|^[[:space:]]*(pub(\([a-z]+\))? )?static (mut )?[A-Z_][A-Z0-9_]*:
+const_item|^[[:space:]]*(pub(\([a-z]+\))? )?const [A-Z_][A-Z0-9_]*:
 f16_f128|\bf(16|128)\b
 EOF
 if [ "$mode" = list ]; then

@@ -23,6 +23,17 @@
 
 每个产物带状态（成功 / 错误 / 等待依赖）、依赖指纹、目标与 edition 配置、来源。只有成功且依赖已满足的产物能被缓存命中使用。诊断位置不是定义身份，但宏 hygiene 不能随 span 一起丢掉。
 
+## crate 内的阶段与冻结点
+
+```text
+收集定义 → 签名 → impl 索引与 coherence → 冻结共享表 → 函数体（按 typeck root 并行）
+```
+
+- 冻结之后，共享表（定义、签名、impl 索引、布局答案）只读，函数体任务之间没有锁，也不需要死锁检测。rustc 在 typeck 中途按需拉取签名，所以它的并行模式必须加锁并配 deadlock handler。
+- 函数体任务按 typeck root 切分，worker 数固定、切分确定，结果按定义顺序合并。check 构建中约 65% 的前端工作可以这样并行（[frontend-perf](../../research/frontend-perf/README.md)）。
+- 只建一棵 HIR 级 AST：脱糖在原地完成，不再建 HIR 和 THIR 两层（rustc 的 HIR + THIR 约占前端 3.8%）。
+- token 与 AST 节点用 u32 下标、struct-of-arrays，span 放旁表（Zig 的紧凑布局让解析快 22%、ZIR 阶段快 39%）。
+
 ## 循环与等待
 
 - 调用和递归：先登记声明与类型，再构造函数体。

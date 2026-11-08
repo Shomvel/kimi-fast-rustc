@@ -31,6 +31,7 @@
 
 - **做什么：** 自有格式与 schema：定义、类型、泛型体、依赖身份、const/const fn 的 CTFE body、泛型与可内联函数的 body、导出宏的 token 与定义 crate 的 edition 和 hygiene 表、目标与版本校验，rlib 包装。不兼容官方 `.rmeta`。
 - **Rust 语义 SoN：** metadata 携带优化后的 R 图、孔位表、mentioned 集合和调用摘要；接口先于函数体发布（[compile-time.md](../design/goals/compile-time.md#关键路径)）。
+- **读取：** metadata 按 `DefKey` 建索引、惰性解码，一次构建内共享解码结果（rustc 的解码占前端 7–9%）。
 - **完成标志：** 两个以上冻结 fixture crate 的跨 crate 泛型/符号链；旧 schema、错误目标、缺失依赖被拒绝；接口和泛型体变化正确失效。
 
 <a id="t30"></a>
@@ -50,6 +51,8 @@
 
 - **已知需求：** core 1.94.1 打开 `const_trait_impl`、`min_specialization`、`negative_impls`、`auto_traits`（T21 覆盖）；ripgrep 依赖的 zmij 在 x86_64 上用 `asm!`，至少要支持空模板 + 寄存器约束。
 - **做什么：** 列出冻结 core 实际需要的语言特性、属性、lang item、intrinsic 和 builtins，阻塞项先拆子项；自有代码生成编出 core/builtins。
+- **补充：** 依赖 T30.a（sysroot 有 4 个 build script）；`#![no_builtins]`/`#![compiler_builtins]` 的语义与 169 个导出函数的 libcall 名表。
+- **T31.b asm 子系统与汇编器：** compiler-builtins 的 `div`、`rep movsb`，naked 的 `__rust_probestack`（带 `.cfi_*`），std_detect 的 `cpuid`。原来写的“空模板 + 寄存器约束”明显低估。
 - **完成标志：** core 代表功能运行；所有目标 Rust 对象生产者可追溯，没有混入官方预编译对象。
 
 <a id="t32"></a>
@@ -58,6 +61,7 @@
 `M4 · B · 依赖：T31`
 
 - **做什么：** 冻结 alloc、分配器 runtime、Vec/String/Box 等所需特性。
+- **补充：** 编译器生成的分配器 shim（`__rust_alloc` 等转发到 `#[global_allocator]` 或默认实现）。
 - **完成标志：** 在真实 alloc 实现上运行 Vec/String/Box 测试，含分配失败和析构路径。
 
 <a id="t33"></a>
@@ -66,6 +70,7 @@
 `M4 · B · 依赖：T27, T30, T32`
 
 - **做什么：** 冻结 std、平台接口、线程/TLS、IO、panic runtime、test harness 需求，按阻塞能力拆项；产出可用于目标项目的自有 sysroot，Rust/C 库来源分列。
+- **补充：** C `main` shim；SIMD 与按函数 `target_feature` 从 M5 前移到这里（std 的 HashMap 和 ripgrep 都在关键路径上），AVX-512 留在 M5 并单列为风险。
 - **完成标志：** 代表 std/test 功能的正常和失败路径。
 
 <a id="t34"></a>

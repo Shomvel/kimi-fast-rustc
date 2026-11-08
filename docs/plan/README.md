@@ -2,6 +2,8 @@
 
 每个阶段一个文件，包含该阶段的目标、出口条件和全部任务。任务编号 T00–T42 是唯一的派工编号。设计见 [design/](../design/README.md)。
 
+**先做 PoC。** [poc/](poc/README.md) 用 rustc 前端加 kfrc 中后端，在 regex-syntax、semver 上证明理念（约 13–15 人周）；它的结论决定下面 M0–M6 是否改成“中后端先行”（[relation](poc/relation.md)）。
+
 | 阶段 | 文件 | 任务 |
 |---|---|---|
 | M0 基线 | [m0-baseline.md](m0-baseline.md)，细化 [m0/](m0/) | T00–T03 |

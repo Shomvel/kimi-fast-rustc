@@ -27,6 +27,6 @@ while IFS=$'\t' read -r -a f; do
         "$WORK/bin/$ARM/$BIN" "${args[@]}")
     read -r e u s < "$T"
     awk -v w="$name" -v n="$N" -v e="$e" -v u="$u" -v s="$s" \
-        'BEGIN {printf "| %s | %.2f | %.2f | %.2f | %.0f%% |\n", w, 1000 * e / n, 1000 * u / n, 1000 * s / n, (u + s) > 0 ? 100 * s / (u + s) : 0}'
+        'BEGIN {printf "| %s | %.2f | %.2f | %.2f | %.0f%% |\n", w, 1000 * e / n, 1000 * u / n, 1000 * s / n, ((u + s) > 0 ? 100 * s / (u + s) : 0)}'
 done < <(bash "$HERE/workloads.sh" "$PROJECT" "$WORK")
 rm -f "$T"

@@ -35,6 +35,13 @@ Go、Clang/Swift、rust-analyzer、TypeScript 7（tsgo）。约定同 [prior-art
 | sysroot 接口按 durability 只验证一次，跨 crate 进程共享解码结果 | **改编**：首版做“每会话一次 + mmap 共享”，常驻进程留到 T39 后 | rust-analyzer durability；rustc 每进程重复解码 std |
 | 并行检查采用 tsgo 式“固定 worker + 确定性划分”，允许 worker 局部缓存重复 | **采纳**（库内 typeck root 并行） | 不需要 rustc 的全局查询锁与死锁检测；结果顺序稳定 |
 | 用 Salsa/查询系统驱动整个前端 | **不采纳** | 与“自有实现、不把 query 运行时包进产品”的固定决策一致；冷构建无收益 |
-| 复用 `rustc_next_trait_solver` | **待 T14 决定**（维持） | rust-analyzer 的经验支持复用；类型表示受外部约束，见 [rustc/traits](../rustc/traits/README.md) |
+| 复用 `rustc_next_trait_solver` | **已决定复用**（[总览固定决策](../../README.md#固定的技术决策)），补性能闸门 | rust-analyzer 换用后 trait 密集 crate 大幅变快；但 rustc 1.94.1 全局开启新求解器时 rg check 指令 ×1.148（[design-gaps.md](design-gaps.md) G10） |
 | 推导设确定性燃料上限（Swift） | **采纳** | 时间上限不确定；与 [design/goals/compile-time.md](../../design/goals/compile-time.md) 的“预算确定性”一致 |
 | 接口单独产物，不带函数体（Clang Reduced BMI、Swift module、header jar） | **采纳**（维持 C4） | 见 [critical-path.md](critical-path.md) |
+
+## 4. 未找到原始来源
+
+- Swift/Xcode explicit module builds 的端到端构建时间数字。
+- tsgo “3.5× 原生 + 3× 并发”的具体拆分（只有 Hejlsberg “各一半”的访谈原话，具体倍数为二手）。
+- Kobzol 2024 “What part of Rust compilation is the bottleneck?” 正文没有百分比，只有图表；perf.rust-lang.org 的逐查询占比未收集。
+- rust-analyzer 换求解器前后的受控 A/B（metrics 是 CI 中位数，混有其他改动）。

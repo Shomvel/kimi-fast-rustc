@@ -17,7 +17,7 @@
 
 ## 固定的技术决策
 
-- **自有实现，参考 rustc。** rustc 是算法、测试和对照结果的来源，不做 `CodegenBackend` 插件，也不把 `TyCtxt`/query 运行时包进产品。
+- **自有实现，参考 rustc。** rustc 是算法、测试和对照结果的来源，产品不做 `CodegenBackend` 插件，也不把 `TyCtxt`/query 运行时包进产品。唯一例外是 [PoC](plan/poc/README.md)：它借用 rustc 前端作外壳，但 SoN 与后端代码不依赖任何 `rustc_*` crate。
 - **优化在带 Rust 语义的 SoN 上做。** 聚合/enum 是值、借用是内存分区、drop 和 trait 调用是节点，最后才按布局降低；不先降成 LLVM 式低级 IR 再重建语义。
 - **依赖少量 rustc 发布的算法 crate。** 以 `ra-ap-*` `=0.148.0` 形式依赖（与 rustc 1.94.1 源码逐字节相同）：`rustc_lexer`、`rustc_parse_format`、`rustc_pattern_analysis`、`rustc_abi`（布局计算），以及 `rustc_type_ir` + `rustc_next_trait_solver`（kfrc 实现 `Interner`）。其余语义自写；rust-analyzer 只作设计参考，不作移植来源。
 - **后端不用 LLVM/Cranelift。** 线性扫描寄存器分配，不加静态 ILP 指令调度。rustc+LLVM 只作对照工具链。
@@ -38,5 +38,5 @@
 | 目录 | 读者要什么 |
 |---|---|
 | [design/](design/README.md) | **要做成什么样**：编译链、三级 SoN、前端产物、后端、构建与缓存、四个目标怎么保证 |
-| [plan/](plan/README.md) | **怎么做**：阶段 M0–M6、任务 T00–T42、首轮十天、验收 |
+| [plan/](plan/README.md) | **怎么做**：先做 [PoC](plan/poc/README.md)（rustc 前端 + kfrc 中后端，在真实 crate 上证明理念，约 13–15 人周），再按阶段 M0–M6、任务 T00–T42 推进 |
 | [research/](research/README.md) | **为什么这样设计**：rustc 精读、LLVM/MIR 流水线、编译模拟、先例调研、前期测量。不读也能理解计划 |

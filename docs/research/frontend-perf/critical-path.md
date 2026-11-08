@@ -12,7 +12,7 @@
 
 metadata 先于 codegen 编码（[passes.rs#L1253](https://github.com/rust-lang/rust/blob/e408947bfd200af42db322daf0fadfe7e26d3bd1/compiler/rustc_interface/src/passes.rs#L1253)），且要求所有可导出泛型/可内联项先算出 `optimized_mir`（[encoder.rs#L1099](https://github.com/rust-lang/rust/blob/e408947bfd200af42db322daf0fadfe7e26d3bd1/compiler/rustc_metadata/src/rmeta/encoder.rs#L1099)）。所以 rustc 的“前端”在关键路径意义上包含 MIR 优化。
 
-## 2. 实测：release 关键路径（E2B 8 vCPU，官方 1.94.1，带 self-profile）
+## 2. 实测：关键路径（E2B 8 vCPU，官方 1.94.1，带 self-profile）
 
 `scripts/cargo-critical-path.sh` 从 Cargo `--timings` 的单元数据回溯关键路径（前期 2026-10-10 运行的原始数据）。二进制单元在 1.94 没有 frontend/codegen 分段，记为“未拆分”。
 
@@ -38,17 +38,28 @@ ripgrep（构建总长 11.33 s）：
 | stage1 下 cargo 库前端期间只有 1.46 个 CPU 忙 | 前端段 36.2 s | 前期 next-directions §4.2 |
 | `-Zthreads=4` 填空窗 | cargo 关键路径前端段 36.2 → 21.1 s；墙钟 rg −6.2%、cargo −9.8%，产物逐字节相同 | 前期 next-directions §4.1、§4.2 |
 
-check 构建的关键路径全部是前端；dev 与增量见 [time-breakdown.md](time-breakdown.md)。
+四种构建的关键路径构成（秒；同一脚本，check/dev 来自 2026-11-08 运行，release 来自上表）：
+
+| 构建 | 总长 | 前端 | codegen | 构建脚本运行 | 未拆分（bin） | 等待间隙 |
+|---|---:|---:|---:|---:|---:|---:|
+| rg check | 3.58 | 3.37 | 0.15 | 0 | 0 | -0 |
+| rg dev | 6.03 | 3.8 | 0.36 | 0 | 1.72 | 0.08 |
+| rg release | 11.33 | 5.11 | 1.78 | 0 | 3.42 | 0.82 |
+| Cargo check | 28.4 | 12.23 | 0.76 | 12.95 | 0.37 | 0.87 |
+| Cargo dev | 55.85 | 17.29 | 12.8 | 16.34 | 3.4 | 4.52 |
+| Cargo release | 105.31 | 18.29 | 27.64 | 35.22 | 4.33 | 14.33 |
+
+rg 的关键路径以库前端链为主（check 3.37/3.58 s，dev 3.8/6.03 s）；Cargo 的关键路径有 29–46% 是 C 构建脚本运行（libgit2、libssh2、libsqlite3），前端再快也绕不过。
 
 ## 3. 前期流水线实验：接口提前能换来多少
 
 | 实验 | 结果 | 来源 |
 |---|---|---|
-| P1：bin 在上游 rmeta 齐备后启动 | rg 墙钟 −8.4% / −9.8% / −9.6%（三轮）；cargo −3.1% | 前期 pipelined-p1 |
-| P2a：rmeta 分两段 | 库元数据阶段的 90–98% 是可后移的 MIR 选择、optimized MIR、导出符号；链上元数据阶段约 2.1 s → 约 0.14 s（模型） | 前期 p2a §2 |
-| P2b M0：签名就绪时刻 | regex_automata 0.556 s（rmeta 4.210 s，13%）；cargo 1.561 s（15.186 s，10%）；各库 10–17% | p2b-m0 |
-| P2b 模型（CPU 不限） | rg 15.43 → 11.04 s（−28.5%）；cargo −8.8% | p2b-m0 |
-| P2b 实测（8 vCPU） | rg −3.3%，cargo 无变化；8 vCPU 下 rg CPU 地板约 13 s，P1 后只剩约 3 s 调度空间 | p2b-m2-m3 |
+| P1：bin 在上游 rmeta 齐备后启动 | rg 墙钟 −8.4% / −9.8% / −9.6%（三轮）；cargo −3.1% | 前期 P1 |
+| P2a：rmeta 分两段 | 库元数据阶段的 90–98% 是可后移的 MIR 选择、optimized MIR、导出符号；链上元数据阶段约 2.1 s → 约 0.14 s（模型） | 前期 P2a §2 |
+| P2b M0：签名就绪时刻 | regex_automata 0.556 s（rmeta 4.210 s，13%）；cargo 1.561 s（15.186 s，10%）；各库 10–17% | 前期 P2b M0 |
+| P2b 模型（CPU 不限） | rg 15.43 → 11.04 s（−28.5%）；cargo −8.8% | 前期 P2b M0 |
+| P2b 实测（8 vCPU） | rg −3.3%，cargo 无变化；8 vCPU 下 rg CPU 地板约 13 s，P1 后只剩约 3 s 调度空间 | 前期 P2b M2/M3 |
 | headstart（外部，16 核） | `cargo build` 最多 −42%，`cargo check` 最多 −54%；4 核时收益明显变小 | [prior-art/ct-parallel-pipeline.md](../prior-art/ct-parallel-pipeline.md) |
 
 ## 4. 结论

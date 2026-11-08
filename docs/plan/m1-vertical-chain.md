@@ -25,6 +25,7 @@
 
 - **做什么：** `src/syntax/`：token tree、AST、HIR 级节点 ID。`Span` 现在就带 `SyntaxContext`，edition 按 span 查询，token tree 保留不可见分组和 spacing——这些晚加会改遍下游。解析器只产出 AST。
 - **词法：** 依赖 `rustc_lexer`（决策 D1），token cooking 自写。1.94.1 没有 token 级的 `-Zunpretty`，token 对拍需要另做 oracle（例如打印 `TokenStream` 的过程宏）。
+- **布局：** token 与 AST 节点用 u32 下标、struct-of-arrays，span 放旁表；只建一棵 HIR 级 AST，脱糖原地完成（[overview](../design/frontend/overview.md#crate-内的阶段与冻结点)）。
 - **完成标志：** 语法正反例、边界字面量、作用域结构和源位置；移植来源、许可、测试来源有记录。
 
 <a id="t05"></a>
@@ -59,6 +60,7 @@
 - **Rust 语义 SoN：** `GraphLevel` 和按分区的效果字段从第一版起就有；M1 只有单态标量，R/S 级重合（[levels.md](../design/ir/levels.md)）。
 - **语义：** 与 verifier 一起写 [semantics.md](../design/ir/semantics.md) 的四类节点登记；R/S 级解释器骨架（整数、控制、`Phi`）在本任务开始。
 - **数据结构：** 新图直接用 16 字节 `NodeRec` + 列存 + 转发表（[graph.md](../design/ir/graph.md#节点)）。现有 `son.rs` 的 `replace_uses` 每次扫全图（64k 节点时慢约 2,400 倍）和整图循环到不动点，可以先于新契约单独修（[current-gap](../research/data-structures/current-gap.md)）。
+- **规则 DSL 首版：** 自写的小规则 DSL 与生成器（规则语法、类型检查、优先级、overlap 检查、生成匹配代码）；把现有 `son_optimize.rs` 的常量折叠与代数化简改写成规则表。SMT 导出放到 T38。
 - **完成标志：** 故意破坏的 Phi 前驱、跨图引用、类型、支配、效果依赖都被拒绝；合法循环/多前驱图通过；同一输入的图 dump 稳定。
 
 <a id="t08"></a>
@@ -105,6 +107,7 @@
 细化：[m1/t11-tasks-budget.md](m1/t11-tasks-budget.md)
 
 - **做什么：** 函数/语义组级任务（暂无持久缓存）：不可变产物发布、CPU/jobserver 预算、字节背压、fail-fast、唤醒等待者；单图独占修改，图之间并行。设计见 [build-pipeline](../design/build/pipeline.md)。
+- **前端并行：** 冻结共享表后按 typeck root 并行检查函数体，worker 数固定、切分确定（[overview](../design/frontend/overview.md#crate-内的阶段与冻结点)）；M1 先做串行和 2 worker 两种配置，验证结果一致。
 - **完成标志：** jobs=1/2/4 结果和对象一致；循环依赖、队列满、上游失败、取消都在有限时间内收束；串行参考路径仍可用。
 
 <a id="t12"></a>
@@ -117,6 +120,7 @@
 - **注意：** rustc 1.94.1 的默认结果来自旧求解器，新求解器只用于 coherence。算法参考新求解器，oracle 两种模式都跑，结果不一致的用例记为 `solver-divergence`。
 - **输入闭包：** 一个 trait、一个关联类型、两个候选 impl、一个带 `where` 约束的泛型函数及跨函数调用。先记录 rustc 对“有效 / 无 impl / 歧义或不满足约束”三类程序的结果。
 - **做什么：** 依赖 `rustc_type_ir` + `rustc_next_trait_solver`（`=0.148.0`），为 kfrc 的驻留表实现 `Interner` 和推导上下文接口；推导变量的驻留与回滚接到 T06 的推导表。高阶约束、opaque type、specialization 等未覆盖项列出。
+- **性能闸门：** rg `check` 在 `-Znext-solver=globally` 下指令数是默认模式的 1.15 倍；kfrc 的 trait 求解指令数要与 rustc 默认模式对比，超出时记录原因（缓存、规范化路径）。
 - **完成标志：** 正例、缺 impl、冲突/歧义、循环边界与 oracle 一致；没有携带 TyCtxt/query；`Interner` 实现覆盖用例所需的方法，并给出 M3 的剩余方法清单与估算。
 
 <a id="t13"></a>
@@ -130,6 +134,7 @@
 
 - **输入闭包：** 结构体字段读取、可变借用与重借用、分支部分 move、提前返回，以及一次有副作用的析构。
 - **做什么：** 在 Body 上建立 Place/move path、初始化状态和 loan 事实，再做分析和 drop 显式化（显式析构 CFG）。
+- **性能重点：** 约束生成与 region 求解（借用检查中 dataflow 只占 4.5%）；不复制 Body，region 放旁表。
 - **完成标志：** move 后使用、借用冲突的拒绝分类与 oracle 一致；分支和提前退出的析构 CFG 可检查；依赖成本报告可重放。析构的真实执行由 T22/T27/T26 验收。在 parser 里直接插析构算实验失败。
 
 <a id="t14"></a>

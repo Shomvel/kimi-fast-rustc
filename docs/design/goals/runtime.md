@@ -26,7 +26,7 @@
 | 后端补全：栈槽着色、shrink wrapping、热路径块布局与尾复制、x86 修补（false deps、vzeroupper） | 列为“必须有 / 可以晚做 / 不做”清单（[codegen-backend](../../research/llvm-mir/codegen-backend.md)） | 中 |
 | 循环内的 load 转发与 PRE | 穿过分区 Phi | 中；W05 中 LLVM 也每次重读 cap/ptr，这里是追平而非超越 |
 | 寄存器分配 | SSA 线性扫描（Wimmer & Franz 2010）+ 区间拆分 + 远者优先 spill；约束接口（Early/Late × Fixed/Reuse、并行 move）和分配后的符号 checker 学 regalloc2，算法不照搬 | 中：热循环的 spill |
-| 指令选择 | ISLE 式类型化规则：有优先级、拒绝重叠，不另设选择 IR | 低 |
+| 指令选择 | 与窥孔共用自写规则 DSL（[规则表](../ir/optimization-pipeline.md#共同机制)）：有优先级、拒绝重叠，不另设选择 IR | 低 |
 | 归纳变量与强度削减 | L 级 | 低 |
 | 循环展开 | 小循环，体积预算内 | 中 |
 | 向量化 | 晚期，T38 之后单独验收 | **高**：ripgrep/Cargo 中依赖自动向量化的热点要先定位 |

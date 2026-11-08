@@ -6,7 +6,7 @@
 #   role name ver pm build links rs_lines unsafe arch_lines x86_fns(llvm/asm/simd/other)
 #   tf_attrs detect asm global_asm repr_simd features(always/cfg) rustc_probe c_src custom_cfgs
 # 其中 x86_fns 按 llvm-asm-arch.sh list 的分类表统计“该 crate 引用的不同 core::arch x86 函数”。
-# rustc_probe：build.rs 读取 RUSTC 或使用 autocfg/rustc_version/version_check 探测编译器。
+# rustc_probe：build.rs 以 "RUSTC" 为参数读环境变量，或使用 autocfg/rustc_version/version_check 探测编译器。
 # custom_cfgs：cfg(...) 中出现、且不属于 rustc 内建名称的 cfg 名（多由 build.rs 的 rustc-cfg 设置）。
 #
 # 用法：deps-scan.sh CLOSURE_FILE X86_FNS_FILE [summary|x86]
@@ -69,7 +69,7 @@ while read -r role name ver pm dir; do
     [ -n "$l" ] && links=$l
   fi
   if [ "$build" = yes ] && [ -f "$dir/build.rs" ]; then
-    grep -qE 'env::var(_os)?\("RUSTC"\)|autocfg|rustc_version|version_check' "$dir/build.rs" && probe=yes
+    grep -qE '\("RUSTC"\)|autocfg|rustc_version|version_check' "$dir/build.rs" && probe=yes
   fi
   csrc=$(find "$dir" \( -name '*.c' -o -name '*.cc' -o -name '*.cpp' -o -name '*.S' -o -name '*.s' \) 2>/dev/null | wc -l | tr -d ' ')
   echo "$role $name $ver $pm $build $links $(scan_one "$dir" "$name") $probe $csrc"

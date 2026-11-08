@@ -109,5 +109,7 @@ echo "$table" | awk '{d[$2]++; if ($3 == "const") k[$2]++; if ($4 == "body") b[$
   END {for (c in d) printf "%s %d %d %d %d\n", c, d[c], k[c], b[c], u[c]}' | sort -k2,2nr
 echo "$table" | awk '{d++; if ($3 == "const") k++; if ($4 == "body") b++; if ($5 > 0) u++}
   END {printf "TOTAL %d %d %d %d\n", d, k, b, u}'
-echo "# 未被引用的定义"
+echo "# float 类中 f16/f128 版本（名称以 f16/f128 结尾）：defined referenced"
+echo "$table" | awk '$2 == "float" && $1 ~ /f(16|128)$/ {d++; if ($5 > 0) u++} END {print d + 0, u + 0}'
+echo "# 未被引用的定义（$(echo "$table" | awk '$5 == 0' | wc -l | tr -d ' ') 个）"
 echo "$table" | awk '$5 == 0 {print $1}' | sort | tr '\n' ' '; echo

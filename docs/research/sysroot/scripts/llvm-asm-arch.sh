@@ -96,3 +96,6 @@ echo "# asm!/global_asm!/naked_asm! 使用点（x86_64 Linux 相关文件；按 
     print $2, x, f }' | sort -k3,3 > "$tmp/asm"
 awk '{c[$2] += $1; n[$2]++} END {for (k in c) print "合计", k, "文件", n[k], "使用点", c[k]}' "$tmp/asm" | sort
 awk '$2 != "other" {print $1, $2, $3}' "$tmp/asm"
+echo "# 按顶层目录合计（不分架构）：dir files sites"
+awk '{split($3, p, "/"); d = p[1]; if (d == "stdarch") d = "stdarch/core_arch-" p[5]; f[d]++; s[d] += $1}
+  END {for (k in f) print k, f[k], s[k]}' "$tmp/asm" | sort

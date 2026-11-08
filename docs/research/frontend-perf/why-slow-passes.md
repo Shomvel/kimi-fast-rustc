@@ -1,6 +1,6 @@
 # rustc 前端为什么慢（二）：展开、多次建 IR、typeck/trait、借用检查
 
-约定同 [why-slow-infra.md](why-slow-infra.md)。本机两项补测只看比例和计数：trait 重复用 Homebrew rustc 1.94.1（同 commit），借用检查拆分用 nightly 1.101.0（`12433c307` 2026-10-24，它的借用检查有更细的事件），输入都是 ripgrep 15.2.0 的 `cargo check`。
+约定同 [why-slow-infra.md](why-slow-infra.md)。语义细节见 [rustc/macros-resolve](../rustc/macros-resolve/README.md)、[rustc/typeck](../rustc/typeck/README.md)、[rustc/traits](../rustc/traits/README.md)、[rustc/borrowck](../rustc/borrowck/README.md)，这里只讲成本。本机两项补测只看比例和计数：trait 重复用 Homebrew rustc 1.94.1（同 commit），借用检查拆分用 nightly 1.101.0（`12433c307` 2026-10-24，它的借用检查有更细的事件），输入都是 ripgrep 15.2.0 的 `cargo check`。
 
 ## 1. 宏展开与名称解析：串行、每次全量、解析器反复进出
 
@@ -44,7 +44,9 @@ cargo release 实测：`mir_built` 2.83 s、`thir_body` 1.17 s、`hir_crate` 3.0
 | trait 查询 self 时间中可省的比例 | 12.5% |
 | 其中 `evaluate_obligation` | 50,805 次，可省 21.2% |
 
-trait 类只占前端 6–10%（[time-breakdown.md](time-breakdown.md)），所以跨 crate 共享冷构建的上限约为前端的 1%。原因（推断）：每个 crate 内已有会话级全局缓存，跨 crate 剩下的 goal 大多含本 crate 的类型或泛型参数。泛型参数按名字打印，会把不同函数的 `T: Clone` 判为相同，所以这个上限偏宽。
+trait 类只占前端 7–10%（[time-breakdown.md](time-breakdown.md)），所以跨 crate 共享冷构建的上限约为前端的 1%。原因（推断）：每个 crate 内已有会话级全局缓存，跨 crate 剩下的 goal 大多含本 crate 的类型或泛型参数。泛型参数按名字打印，会把不同函数的 `T: Clone` 判为相同，所以这个上限偏宽。
+
+**新求解器的成本**（`scripts/next-solver-ab.sh` + `ab-summary.sh`，Homebrew rustc 1.94.1，rg `cargo check`，ABBA，全部 50 个 rustc 进程的 instructions retired 之和）：默认（新求解器只用于 coherence）均值 71,073,550,042，`-Znext-solver=globally` 均值 81,592,082,214，B/A = 1.1479。kfrc 已决定复用 `rustc_next_trait_solver`，这 15% 是要用缓存设计追回的起点（[design-gaps.md](design-gaps.md) G10）。
 
 ## 4. 借用检查：贵的不是数据流
 
@@ -68,4 +70,5 @@ nightly 1.101 的子事件（`scripts/local-check-profile.sh` → `borrowck-spli
 | 展开/解析串行且不增量 | 前端 6–10%（parse+expand），rg 增量每次 0.14 s | 按文件并行解析；展开结果在增量里可缓存（[recommendations.md](recommendations.md)） |
 | 四种 IR + MIR 克隆 | HIR+THIR+MIR 构建约 6% | 设计已跳过 THIR；HIR 级 AST 只建一次，借用检查原地加 region 旁表 |
 | trait 缓存不跨 crate | 跨 crate 重复只占 trait 时间 12.5% | 冷构建不值得优先做；优先单 crate 内的求解效率 |
+| 新求解器更慢 | rg check 全部 rustc 指令 ×1.148 | 复用 next-solver 要带性能闸门 |
 | 借用检查 | 前端 9–13%，其中数据流 <5% | 优化重点是 MIR 类型检查与 region 求解，不是 bitset 数据流 |

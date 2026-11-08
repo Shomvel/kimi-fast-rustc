@@ -22,6 +22,7 @@
 
 - **做什么：** 依据 profile 推进。迁移顺序：纯值规则 → 控制与死代码 → 检查消除 → 受限内存/循环优化 → 内联/标量替换 → 目标相关选择/向量化。逐项迁移 `son_optimize.rs`、`value_numbering.rs`、`loop_analysis.rs`、`optimizer_pipeline.rs`，保存新旧规则差分。每个 pass 写明输入前提、保持的不变量、预算、终止条件和单独关闭开关。基础纯值规则可以在 M1 起随所属任务实现。
 - **Rust 语义 SoN：** 按级别推进：R 级规则 → S 级种子化简与内联 → 分区（`Local` → `Frozen`/`Unique`）→ L 级机器优化 → 循环/向量化（[optimization-pipeline.md](../design/ir/optimization-pipeline.md)、[runtime.md](../design/goals/runtime.md)）。
+- **规则验证：** 规则 DSL 增加 SMT 导出；整数规则用 SMT 证明或 ≤8 位穷举，CI 读缓存的证明结果。
 - **完成标志：** 每个 pass 启用和禁用都能通过真实执行；浮点不默认 reassociate；整数规则按宽度与 overflow 模式验证；可能 trap 的除法不随意消除；关键 workload 的 runtime/体积数据。
 
 <a id="t39"></a>
@@ -40,6 +41,7 @@
 
 - **做什么：** “接口就绪 / 对象就绪”通知、构建世代与依赖校验、jobserver token、布局/泛型体等真实消费条件；必要的 Cargo 变更单独列出，可整体关闭。
 - **Rust 语义 SoN：** 就绪信号逐体（R 图）、逐实例（摘要、机器码）发出；库 crate 用空闲 token 预生成实例（[compile-time.md](../design/goals/compile-time.md#关键路径)）。
+- **crate 内并行：** 在 T11 的基础上扩展到全部前端阶段，并测 1/4/8 worker 曲线。
 - **完成标志：** 取消、崩溃、旧产物、循环等待、内存压力都验证过。若没有稳定收益，保留 crate 内调度并记录可重复的“不采用”结论，任务同样可完成；T41 只测实际采用的配置。
 
 <a id="t41"></a>

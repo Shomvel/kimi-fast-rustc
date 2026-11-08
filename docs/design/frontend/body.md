@@ -57,6 +57,8 @@ pub enum UnwindAction { Continue, Cleanup(BlockId), Terminate, Unreachable }
 
 紧凑表示：`Place` 是 8 字节（局部 + 投影列表 id），变长实参放进池，span 放旁表（rustc 的 `Statement` 56 字节且 `Assign` 要装箱）。
 
+借用检查不复制 Body：region 变量放旁表。rustc 为借用检查深拷贝 MIR；其中 dataflow 只占借用检查的 4.5%，大头是 MIR 类型检查、region 求解、访问检查（66.6%）。
+
 ## 关键规则
 
 | 规则 | 原因 |

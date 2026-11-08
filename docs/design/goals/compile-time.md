@@ -25,7 +25,7 @@
 - 下游不需要等上游的机器码，除非链接。
 - 每个依赖是**逐体/逐实例**的等待，不是整 crate 屏障。签名优先流水线的模型上限是 rg 比 bin pipelining 再降 28.5%（CPU 不设上限），但 8 vCPU 上的原型实测只降 3.3%，cargo 项目无变化：CPU 已饱和时，提前发布只是挪动工作。收益与核数强相关，按 4/8/16 核分别测。
 - **接口不带函数体图。** 跨 crate 设两道屏障：接口就绪、所需 R 图就绪；逐个函数体等待首版只在同一进程内做（跨进程按体等待没有先例；rustc #64112 的尝试收益很小，headstart 原型在 16 核上 build 最多 −42%，[prior-art/ct-parallel-pipeline.md](../../research/prior-art/ct-parallel-pipeline.md)）。
-- **接口体：** 以下函数体必须在发布接口前检查完，因为接口依赖它们：`impl Trait` 返回、async 函数和 async 块（auto trait 泄漏）、const 与 const fn、数组长度、static。
+- **接口体：** 以下函数体必须在发布接口前检查完，因为接口依赖它们：`impl Trait` 返回（含 trait 中的 RPITIT）、async 函数和 async 块（auto trait 泄漏）、const 与 const fn（CTFE 要用它们的 Body）、数组长度、static 的类型推断、`impl_parent` 这类 impl 级查询。发布接口时断言没有触发其他函数体的检查（P2b M0 的测量列出了这些条目）。
 - C6 会把部分代码生成推迟到二进制 crate 一步。为了不把它变成串行瓶颈：库 crate 在有空闲 jobserver token 时**预先生成**可能需要的实例（非泛型 `pub` 函数、已知被用到的泛型实例），写进 build 级存储；二进制 crate 只做缺失的那部分。预生成浪费的只是空闲时间，体积不受影响（体积只看可达性）。proc-macro、dylib、cdylib/staticlib 边界必须整体生成；可达性按变化增量更新（Zig 一次 37 ms 的更新里约 31 ms 花在全量遍历引用图）。
 - 链接：首版用确定性拼接 + 快速全量链接（mold 全量已接近拷贝速度），原地增量链接列为 T39 之后的候选（MSVC `/INCREMENTAL` 遇到 `/OPT:REF`/`/OPT:ICF` 就退回全量）。
 
@@ -46,7 +46,19 @@
 
 Swift 的 SIL 优化器（同样在语义级 IR 上做特化、内联）约占编译时间的三分之一，其余主要是 LLVM（2016 WMO 博客）。kfrc 的 R+S 级以此为参照：R+S 级占比明显更高时，先查是不是在做本该由 L 级做的事。Carbon 在前端按类型化指纹合并实例，压力测试中函数数减少 44%–98%，同条件下 LLVM MergeFunctions 只有 0–4%（[prior-art/generic-sharing.md](../../research/prior-art/generic-sharing.md)）。
 
+## 前端
+
+rustc 前端在 check 构建中占全部工作约 90%，dev 约 50%，release 约 25%；typeck + trait + borrowck 占前端一半以上；增量编辑时依赖图本身占前端 26–33%（E2B，[frontend-perf](../../research/frontend-perf/time-breakdown.md)）。kfrc 的前端收益来自三处，不来自“同样的事做得更快”：
+
+1. MIR 优化不在 rmeta 之前（release 中它占前端 15–22%，且串行在关键路径上）——设计已由 C4 保证；
+2. 削减每 crate 的固定开销：metadata 按 `DefKey` 索引、惰性解码、一次构建内共享解码结果（解码占前端 7–9%，Cargo release 中 `impl_trait_header` 被解码 320 万次）；
+3. crate 内按 typeck root 并行（[overview](../frontend/overview.md#crate-内的阶段与冻结点)）。
+
+估计单 crate 前端 wall 快 2.7–3.9×；整个 `cargo check` 不到 2.2×，因为 Cargo 的 C 构建脚本在关键路径上（12.95 s，前端 12.23 s）。rustc 的 `-Zthreads=8` 在 `cargo check` 上 wall −15%（rg）/ −6%（Cargo），CPU +60% / +30%。
+
 ## 指标与闸门
+
+前端分项：各阶段占比、接口就绪时间、1/4/8 worker 的扩展曲线、metadata 解码次数。
 
 两个新串行点要单独计：下游特化等待上游 R 图的时间；二进制 crate 末段的忙碌 CPU 数（C6 集中生成）。各级耗时按与 LLVM 相同的 pass 族名分项（[llvm-mir](../../research/llvm-mir/README.md) 的总表），便于逐族对比。
 
