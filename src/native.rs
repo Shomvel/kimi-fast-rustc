@@ -1040,8 +1040,12 @@ impl Emitter<'_> {
             } => {
                 let work = self.definition_register(dst)?;
                 self.load_value(lhs, work)?;
-                let rhs = self.operand(rhs, SCRATCH1)?;
-                self.instructions.push(MachineInstr::Cmp { lhs: work, rhs });
+                if rhs == VirtualValue::Imm(0) {
+                    self.instructions.push(MachineInstr::Test { reg: work });
+                } else {
+                    let rhs = self.operand(rhs, SCRATCH1)?;
+                    self.instructions.push(MachineInstr::Cmp { lhs: work, rhs });
+                }
                 self.instructions.push(MachineInstr::SetCc {
                     condition,
                     dst: work,
@@ -1050,9 +1054,13 @@ impl Emitter<'_> {
             }
             VirtualInstr::Test { lhs, rhs } => {
                 self.load_value(lhs, SCRATCH0)?;
-                let rhs = self.operand(rhs, SCRATCH1)?;
-                self.instructions
-                    .push(MachineInstr::Cmp { lhs: SCRATCH0, rhs });
+                if rhs == VirtualValue::Imm(0) {
+                    self.instructions.push(MachineInstr::Test { reg: SCRATCH0 });
+                } else {
+                    let rhs = self.operand(rhs, SCRATCH1)?;
+                    self.instructions
+                        .push(MachineInstr::Cmp { lhs: SCRATCH0, rhs });
+                }
             }
             VirtualInstr::Nop => {}
             VirtualInstr::Label(label) => {
@@ -1912,6 +1920,9 @@ mod tests {
                         read_reg(&registers, lhs),
                         read_operand(&registers, &slots, rhs),
                     ));
+                }
+                MachineInstr::Test { reg } => {
+                    comparison = Some((read_reg(&registers, reg), 0));
                 }
                 MachineInstr::SetCc { condition, dst } => {
                     let (lhs, rhs) = comparison.expect("compare before setcc");

@@ -16,16 +16,11 @@ fn backward_jump_uses_next_instruction_relative_displacement() {
     ])
     .emit_machine_code()
     .unwrap();
-    assert_eq!(
-        code,
-        [
-            0x55, 0x48, 0x89, 0xe5, 0xe9, 0xfb, 0xff, 0xff, 0xff, 0xc9, 0xc3,
-        ]
-    );
+    assert_eq!(code, [0x55, 0x48, 0x89, 0xe5, 0xeb, 0xfe, 0xc9, 0xc3]);
 }
 
 #[test]
-fn conditional_jump_uses_near_condition_encoding() {
+fn conditional_jump_uses_short_condition_encoding() {
     let code = function(vec![
         MachineInstr::Label(1),
         MachineInstr::Jcc {
@@ -36,12 +31,7 @@ fn conditional_jump_uses_near_condition_encoding() {
     ])
     .emit_machine_code()
     .unwrap();
-    assert_eq!(
-        code,
-        [
-            0x55, 0x48, 0x89, 0xe5, 0x0f, 0x84, 0xfa, 0xff, 0xff, 0xff, 0xc9, 0xc3,
-        ]
-    );
+    assert_eq!(code, [0x55, 0x48, 0x89, 0xe5, 0x74, 0xfe, 0xc9, 0xc3]);
 }
 
 #[test]

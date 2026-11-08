@@ -3,6 +3,7 @@ use std::error::Error;
 use std::fmt;
 use std::panic::{self, AssertUnwindSafe};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::thread;
 
 use crate::native::{self, CompileError};
@@ -100,38 +101,12 @@ pub fn compile_graph(graph: &Graph, jobs: usize) -> Result<NativeProgram, Parall
 
     let function_count = graph.functions.len();
     let worker_count = jobs.min(function_count);
-    let indexed_results = thread::scope(|scope| {
-        let mut handles = Vec::with_capacity(worker_count);
-        for worker in 0..worker_count {
-            handles.push((
-                worker,
-                scope.spawn(move || {
-                    (worker..function_count)
-                        .step_by(worker_count)
-                        .map(|index| {
-                            let metadata = &graph.functions[index];
-                            let result = compile_catching(|| {
-                                let function_graph = graph.function_graph(metadata);
-                                native::compile_graph(&function_graph, metadata.name.clone())
-                            });
-                            (index, result)
-                        })
-                        .collect::<Vec<_>>()
-                }),
-            ));
-        }
-
-        let mut results = Vec::with_capacity(function_count);
-        for (worker, handle) in handles {
-            match handle.join() {
-                Ok(worker_results) => results.extend(worker_results),
-                Err(payload) => results.push((
-                    worker,
-                    Err(CompilationFailure::Panicked(panic_message(payload))),
-                )),
-            }
-        }
-        results
+    let indexed_results = run_indexed_workers(function_count, worker_count, |index| {
+        let metadata = &graph.functions[index];
+        compile_catching(|| {
+            let function_graph = graph.function_graph(metadata);
+            native::compile_graph(&function_graph, metadata.name.clone())
+        })
     });
 
     let mut results: Vec<_> = std::iter::repeat_with(|| None)
@@ -149,6 +124,51 @@ pub fn compile_graph(graph: &Graph, jobs: usize) -> Result<NativeProgram, Parall
         functions.push(function);
     }
     Ok(NativeProgram { functions })
+}
+
+fn run_indexed_workers<T, F>(
+    item_count: usize,
+    worker_count: usize,
+    work: F,
+) -> Vec<(usize, Result<T, CompilationFailure>)>
+where
+    T: Send,
+    F: Fn(usize) -> Result<T, CompilationFailure> + Sync,
+{
+    let next_index = AtomicUsize::new(0);
+    thread::scope(|scope| {
+        let next_index = &next_index;
+        let work = &work;
+        let mut handles = Vec::with_capacity(worker_count);
+        for worker in 0..worker_count {
+            handles.push((
+                worker,
+                scope.spawn(move || {
+                    let mut results = Vec::new();
+                    loop {
+                        let index = next_index.fetch_add(1, Ordering::Relaxed);
+                        if index >= item_count {
+                            break;
+                        }
+                        results.push((index, work(index)));
+                    }
+                    results
+                }),
+            ));
+        }
+
+        let mut results = Vec::with_capacity(item_count);
+        for (worker, handle) in handles {
+            match handle.join() {
+                Ok(worker_results) => results.extend(worker_results),
+                Err(payload) => results.push((
+                    worker,
+                    Err(CompilationFailure::Panicked(panic_message(payload))),
+                )),
+            }
+        }
+        results
+    })
 }
 
 fn compile_catching<F>(compile: F) -> Result<MachineFunction, CompilationFailure>
@@ -408,6 +428,34 @@ mod tests {
                 ),
             }
         );
+    }
+
+    #[test]
+    fn indexed_workers_claim_later_items_while_an_early_item_is_slow() {
+        let (later_done_tx, later_done_rx) = std::sync::mpsc::channel();
+        let later_done_rx = std::sync::Mutex::new(later_done_rx);
+
+        let results = super::run_indexed_workers(6, 2, |index| {
+            if index == 0 {
+                later_done_rx
+                    .lock()
+                    .unwrap()
+                    .recv_timeout(std::time::Duration::from_secs(5))
+                    .expect("a second worker should dynamically claim index 4");
+            }
+            if index == 4 {
+                later_done_tx.send(()).unwrap();
+            }
+            Ok::<_, super::CompilationFailure>(index)
+        });
+
+        let mut indexes = Vec::new();
+        for (index, result) in results {
+            assert!(result.is_ok(), "function {index} failed");
+            indexes.push(index);
+        }
+        indexes.sort_unstable();
+        assert_eq!(indexes, [0, 1, 2, 3, 4, 5]);
     }
 
     #[test]

@@ -237,3 +237,77 @@ fn unknown_self_and_duplicate_hints_are_deterministic_and_safe() {
         assert_eq!(allocate(3, &intervals, &rotated), expected);
     }
 }
+
+#[test]
+fn simultaneous_spill_expiration_reuses_the_lowest_slot() {
+    let intervals = [
+        interval(0, 0, 2),
+        interval(1, 0, 3),
+        interval(2, 0, 4),
+        interval(3, 2, 5),
+        interval(4, 3, 6),
+        interval(5, 6, 10),
+    ];
+
+    let result = allocate(0, &intervals, &[]);
+
+    assert_eq!(result.spill_slot_count, 3);
+    for number in 0..6 {
+        let expected_slot = match number {
+            0 | 3 | 5 => 0,
+            1 | 4 => 1,
+            2 => 2,
+            _ => unreachable!(),
+        };
+        assert_eq!(
+            result.allocation(vreg(number)),
+            Some(Location::Spill(SpillSlot(expected_slot)))
+        );
+    }
+}
+
+#[test]
+fn large_live_spill_set_preserves_slots_and_determinism() {
+    const INTERVAL_COUNT: u32 = 20_000;
+
+    let intervals = (0..INTERVAL_COUNT)
+        .map(|number| interval(number, number, INTERVAL_COUNT * 2))
+        .collect::<Vec<_>>();
+    let expected = allocate(0, &intervals, &[]);
+    let mut reversed = intervals.clone();
+    reversed.reverse();
+    let actual = allocate(0, &reversed, &[]);
+
+    assert_eq!(actual, expected);
+    assert_eq!(actual.spill_slot_count, INTERVAL_COUNT);
+    assert_eq!(actual.allocations.len(), INTERVAL_COUNT as usize);
+    for number in 0..INTERVAL_COUNT {
+        assert_eq!(
+            actual.allocation(vreg(number)),
+            Some(Location::Spill(SpillSlot(number)))
+        );
+    }
+}
+
+#[test]
+#[ignore = "timing comparison; run with --release -- --ignored --nocapture"]
+fn large_live_spill_set_allocation_time() {
+    const INTERVAL_COUNT: u32 = 50_000;
+    const RUNS: usize = 3;
+
+    let intervals = (0..INTERVAL_COUNT)
+        .map(|number| interval(number, number, INTERVAL_COUNT * 2))
+        .collect::<Vec<_>>();
+    for run in 0..RUNS {
+        let started = std::time::Instant::now();
+        let result = allocate(0, &intervals, &[]);
+        let elapsed = started.elapsed();
+
+        assert_eq!(result.spill_slot_count, INTERVAL_COUNT);
+        assert_eq!(
+            result.allocation(vreg(INTERVAL_COUNT - 1)),
+            Some(Location::Spill(SpillSlot(INTERVAL_COUNT - 1)))
+        );
+        println!("intervals={INTERVAL_COUNT} run={run} allocation_time={elapsed:?}");
+    }
+}

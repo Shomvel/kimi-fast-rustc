@@ -1,0 +1,5 @@
+pub const ANSWER: i64 = 0x2a;
+
+fn main() -> i64 {
+    return ANSWER;
+}

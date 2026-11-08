@@ -368,6 +368,7 @@ pub enum MachineInstr {
     IDiv { src: Operand },
     UDiv { src: Operand },
     Cmp { lhs: Reg, rhs: Operand },
+    Test { reg: Reg },
     SetCc { condition: Condition, dst: Reg },
     Load { dst: Reg, slot: StackSlot },
     Store { slot: StackSlot, src: Reg },
@@ -596,6 +597,7 @@ fn validate_instruction(
             validate_reg(lhs)?;
             validate_operand(rhs)?;
         }
+        Test { reg } => validate_reg(reg)?,
         Load { dst, slot } => {
             validate_reg(dst)?;
             validate_slot(slot, stack_slots)?;
@@ -682,6 +684,13 @@ fn emit_instruction(
             out.push_str("\tdiv ");
             emit_operand(out, src, stack_slots)?;
             out.push('\n');
+        }
+        Cmp {
+            lhs,
+            rhs: Operand::Imm(0),
+        }
+        | Test { reg: lhs } => {
+            out.push_str(&format!("\ttest {}, {}\n", lhs.name(), lhs.name()));
         }
         Cmp { lhs, rhs } => {
             out.push_str(&format!("\tcmp {}, ", lhs.name()));

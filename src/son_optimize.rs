@@ -51,13 +51,28 @@ pub fn algebraic_simplify(graph: &mut Graph) -> usize {
         let Some(rewrite) = algebraic_rewrite(graph, id) else {
             continue;
         };
-        let replacement = match rewrite {
-            Rewrite::Node(node) => node,
-            Rewrite::Constant(value) => graph.constant(value),
-        };
-        if replacement != id {
-            graph.replace_uses(id, replacement);
-            simplified += 1;
+        match rewrite {
+            Rewrite::Node(replacement) => {
+                if replacement != id {
+                    graph.replace_uses(id, replacement);
+                    simplified += 1;
+                }
+            }
+            Rewrite::Constant(value) => {
+                let replacement = graph.constant(value);
+                graph.replace_uses(id, replacement);
+                simplified += 1;
+            }
+            Rewrite::Comparison {
+                operation,
+                left,
+                right,
+            } => {
+                let node = graph.node_mut(id).expect("simplified node exists");
+                node.kind = NodeKind::Compare(operation);
+                node.data = vec![left, right];
+                simplified += 1;
+            }
         }
     }
     simplified
@@ -101,6 +116,11 @@ pub fn eliminate_dead_nodes_with_roots(graph: &mut Graph, extra_roots: &[NodeId]
 enum Rewrite {
     Node(NodeId),
     Constant(i64),
+    Comparison {
+        operation: CompareOp,
+        left: NodeId,
+        right: NodeId,
+    },
 }
 
 fn const_value(graph: &Graph, id: NodeId) -> Option<i64> {
@@ -182,16 +202,28 @@ fn algebraic_rewrite(graph: &Graph, id: NodeId) -> Option<Rewrite> {
         NodeKind::Binary(op) if node.data.len() == 2 => {
             simplify_binary(graph, op, node.data[0], node.data[1])
         }
-        NodeKind::Compare(op) if node.data.len() == 2 && node.data[0] == node.data[1] => {
-            let value = match op {
-                CompareOp::Eq | CompareOp::Le | CompareOp::Ge | CompareOp::ULe | CompareOp::UGe => {
-                    1
-                }
-                CompareOp::Ne | CompareOp::Lt | CompareOp::Gt | CompareOp::ULt | CompareOp::UGt => {
-                    0
-                }
-            };
-            Some(Rewrite::Constant(value))
+        NodeKind::Compare(op) if node.data.len() == 2 => {
+            if let Some(rewrite) =
+                simplify_boolean_comparison(graph, op, node.data[0], node.data[1])
+            {
+                Some(rewrite)
+            } else if node.data[0] == node.data[1] {
+                let value = match op {
+                    CompareOp::Eq
+                    | CompareOp::Le
+                    | CompareOp::Ge
+                    | CompareOp::ULe
+                    | CompareOp::UGe => 1,
+                    CompareOp::Ne
+                    | CompareOp::Lt
+                    | CompareOp::Gt
+                    | CompareOp::ULt
+                    | CompareOp::UGt => 0,
+                };
+                Some(Rewrite::Constant(value))
+            } else {
+                None
+            }
         }
         NodeKind::Phi if !node.data.is_empty() => {
             let replacement = node.data.iter().copied().find(|&input| input != id)?;
@@ -201,6 +233,63 @@ fn algebraic_rewrite(graph: &Graph, id: NodeId) -> Option<Rewrite> {
                 .then_some(Rewrite::Node(replacement))
         }
         _ => None,
+    }
+}
+
+fn simplify_boolean_comparison(
+    graph: &Graph,
+    outer: CompareOp,
+    left: NodeId,
+    right: NodeId,
+) -> Option<Rewrite> {
+    if !matches!(outer, CompareOp::Eq | CompareOp::Ne) {
+        return None;
+    }
+    let (inner_id, constant) = if matches!(
+        graph.node(right).map(|node| node.kind),
+        Some(NodeKind::Const(0) | NodeKind::Const(1))
+    ) {
+        (left, const_value(graph, right)?)
+    } else if matches!(
+        graph.node(left).map(|node| node.kind),
+        Some(NodeKind::Const(0) | NodeKind::Const(1))
+    ) {
+        (right, const_value(graph, left)?)
+    } else {
+        return None;
+    };
+    let inner = graph.node(inner_id)?;
+    let NodeKind::Compare(inner_op) = inner.kind else {
+        return None;
+    };
+    if inner.data.len() != 2 {
+        return None;
+    }
+    let negate =
+        (outer == CompareOp::Eq && constant == 0) || (outer == CompareOp::Ne && constant == 1);
+    if negate {
+        Some(Rewrite::Comparison {
+            operation: inverse_comparison(inner_op),
+            left: inner.data[0],
+            right: inner.data[1],
+        })
+    } else {
+        Some(Rewrite::Node(inner_id))
+    }
+}
+
+fn inverse_comparison(operation: CompareOp) -> CompareOp {
+    match operation {
+        CompareOp::Eq => CompareOp::Ne,
+        CompareOp::Ne => CompareOp::Eq,
+        CompareOp::Lt => CompareOp::Ge,
+        CompareOp::Le => CompareOp::Gt,
+        CompareOp::Gt => CompareOp::Le,
+        CompareOp::Ge => CompareOp::Lt,
+        CompareOp::ULt => CompareOp::UGe,
+        CompareOp::ULe => CompareOp::UGt,
+        CompareOp::UGt => CompareOp::ULe,
+        CompareOp::UGe => CompareOp::ULt,
     }
 }
 
@@ -219,6 +308,15 @@ pub fn simplify_node_in_place(graph: &mut Graph, id: NodeId) -> bool {
             let node = graph.node_mut(id).expect("simplified node exists");
             node.kind = NodeKind::Const(value);
             node.data.clear();
+        }
+        Rewrite::Comparison {
+            operation,
+            left,
+            right,
+        } => {
+            let node = graph.node_mut(id).expect("simplified node exists");
+            node.kind = NodeKind::Compare(operation);
+            node.data = vec![left, right];
         }
     }
     true

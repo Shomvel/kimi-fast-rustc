@@ -20,7 +20,7 @@ use crate::placement::{self, PlacementError};
 use crate::son::Graph;
 
 const USAGE: &str = "usage: kfrc native <input> -o <output> [--emit=asm | --emit=obj | -S] [--jobs <N> | --jobs=<N>]\n       kfrc native <input> [--emit=asm=<path> | --emit=obj=<path>] [--jobs <N> | --jobs=<N>]";
-const NATIVE_OBJECT_BACKEND_VERSION: &str = "native-x86_64-elf-v1";
+const NATIVE_OBJECT_BACKEND_VERSION: &str = "native-x86_64-elf-v2";
 
 #[derive(Debug)]
 pub enum NativeCliError {
@@ -208,21 +208,21 @@ fn run_with_driver_and_cache(
         return Ok(options.output.clone());
     }
 
-    let assembly = if graph.functions.is_empty() {
-        native_program::compile_graph_to_assembly(&graph)?
-    } else {
-        parallel_native::compile_graph(&graph, options.jobs)?.emit_gnu_assembly()?
-    };
-    let kind = if options.emit == NativeEmitKind::Assembly {
-        NativeOutputKind::Assembly
-    } else {
-        NativeOutputKind::Executable
-    };
-    let output = NativeOutputOptions {
-        output: options.output.clone(),
-        kind,
-    };
-    Ok(driver.compile(&assembly, &output)?)
+    if options.emit == NativeEmitKind::Assembly {
+        let assembly = if graph.functions.is_empty() {
+            native_program::compile_graph_to_assembly(&graph)?
+        } else {
+            parallel_native::compile_graph(&graph, options.jobs)?.emit_gnu_assembly()?
+        };
+        let output = NativeOutputOptions {
+            output: options.output.clone(),
+            kind: NativeOutputKind::Assembly,
+        };
+        return Ok(driver.compile(&assembly, &output)?);
+    }
+
+    let object = compile_object(&graph, cache_directory, options.jobs)?;
+    Ok(driver.link_object(&object.bytes, &options.output)?)
 }
 
 fn compile_object(
@@ -777,6 +777,76 @@ mod tests {
         }
     }
 
+    #[cfg(all(target_os = "linux", target_arch = "x86_64"))]
+    #[test]
+    fn executable_uses_cached_direct_object_without_running_assembler() {
+        let directory = TestDirectory::new();
+        let input = directory.path.join("input.rs");
+        let output = directory.path.join("program");
+        let cache = directory.path.join("cache");
+        fs::write(&input, "fn main() { return 42; }").unwrap();
+        let options = parse_args(vec![
+            input.into_os_string(),
+            OsString::from("-o"),
+            output.clone().into_os_string(),
+        ])
+        .unwrap();
+        let driver = NativeDriver::new()
+            .with_tools(directory.path.join("missing-as"), "gcc")
+            .with_temp_root(&directory.path);
+
+        let returned = run_with_driver_and_cache(&options, &driver, Some(&cache)).unwrap();
+        let entries = cache_entries(&cache);
+        assert_eq!(entries.len(), 1);
+        fs::File::open(&entries[0])
+            .unwrap()
+            .set_modified(UNIX_EPOCH)
+            .unwrap();
+        assert_eq!(
+            run_with_driver_and_cache(&options, &driver, Some(&cache)).unwrap(),
+            output
+        );
+
+        assert_eq!(returned, output);
+        assert_eq!(cache_entries(&cache), entries);
+        assert_eq!(
+            fs::metadata(&entries[0]).unwrap().modified().unwrap(),
+            UNIX_EPOCH
+        );
+        let status = std::process::Command::new(output).status().unwrap();
+        assert_eq!(status.code(), Some(42));
+    }
+
+    #[cfg(all(target_os = "linux", target_arch = "x86_64"))]
+    #[test]
+    fn multi_function_executable_links_parallel_direct_object_without_assembler() {
+        let directory = TestDirectory::new();
+        let input = directory.path.join("input.rs");
+        let output = directory.path.join("program");
+        fs::write(
+            &input,
+            "fn main() -> i64 { return identity(42); }\n\
+             fn identity(value: i64) -> i64 { return value; }\n",
+        )
+        .unwrap();
+        let options = parse_args(vec![
+            input.into_os_string(),
+            OsString::from("--jobs=2"),
+            OsString::from("-o"),
+            output.clone().into_os_string(),
+        ])
+        .unwrap();
+        let driver = NativeDriver::new()
+            .with_tools(directory.path.join("missing-as"), "gcc")
+            .with_temp_root(&directory.path);
+
+        let returned = run_with_driver(&options, &driver).unwrap();
+
+        assert_eq!(returned, output);
+        let status = std::process::Command::new(output).status().unwrap();
+        assert_eq!(status.code(), Some(42));
+    }
+
     #[test]
     fn object_cache_hit_reuses_the_cached_entry() {
         let directory = TestDirectory::new();
@@ -807,6 +877,40 @@ mod tests {
             UNIX_EPOCH,
             "a cache hit must not recompile and replace the entry"
         );
+    }
+
+    #[test]
+    fn object_cache_recompiles_when_backend_version_changes() {
+        let directory = TestDirectory::new();
+        let cache_directory = directory.path.join("cache");
+        let cache = NativeCache::new(&cache_directory);
+        let mut graph = frontend::parse("fn main() { return 42; }").unwrap();
+        optimizer_pipeline::optimize(&mut graph);
+        let graph = placement::place_for_native(&graph).unwrap();
+        let previous = cache
+            .get_or_compile(
+                &graph,
+                "main",
+                native_cache::SUPPORTED_TARGET,
+                native_cache::SUPPORTED_ABI,
+                "native-x86_64-elf-v1",
+            )
+            .unwrap();
+        assert!(!previous.cache_hit);
+        assert_eq!(NATIVE_OBJECT_BACKEND_VERSION, "native-x86_64-elf-v2");
+
+        let recompiled = compile_object(&graph, Some(&cache_directory), 1).unwrap();
+
+        assert!(!recompiled.cache_hit);
+        assert_eq!(&recompiled.bytes[..4], b"\x7fELF");
+        assert_eq!(&recompiled.bytes[16..18], &[1, 0]);
+        assert_eq!(&recompiled.bytes[18..20], &[62, 0]);
+        assert_eq!(cache_entries(&cache_directory).len(), 2);
+
+        let cached = compile_object(&graph, Some(&cache_directory), 1).unwrap();
+        assert!(cached.cache_hit);
+        assert_eq!(cached.bytes, recompiled.bytes);
+        assert_eq!(cache_entries(&cache_directory).len(), 2);
     }
 
     #[test]
@@ -924,7 +1028,7 @@ mod tests {
         assert!(matches!(error, NativeCliError::Parse { .. }));
         let message = error.to_string();
         assert!(message.contains("input.rs:1:20"), "{message}");
-        assert!(message.contains("unknown variable `missing`"));
+        assert!(message.contains("unknown variable or constant `missing`"));
     }
 
     #[cfg(unix)]

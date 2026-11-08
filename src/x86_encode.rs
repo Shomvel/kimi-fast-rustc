@@ -247,6 +247,7 @@ fn validate_instruction(
             validate_reg(lhs)?;
             validate_operand(rhs, stack_slots)?;
         }
+        Test { reg } => validate_reg(reg)?,
         Load { dst, slot } => {
             validate_reg(dst)?;
             validate_slot(slot, stack_slots)?;
@@ -308,6 +309,12 @@ fn incoming_arg_offset(index: usize) -> Result<i32, EncodeError> {
         .ok_or(EncodeError::ArgumentOffsetOverflow { index })
 }
 
+struct JumpFixup {
+    offset: usize,
+    target: u32,
+    short: bool,
+}
+
 struct Encoder<'a> {
     bytes: Vec<u8>,
     stack_slots: u32,
@@ -315,7 +322,7 @@ struct Encoder<'a> {
     symbols: &'a [String],
     calls: Vec<CallRelocation>,
     labels: BTreeMap<u32, usize>,
-    fixups: Vec<(usize, u32)>,
+    fixups: Vec<JumpFixup>,
 }
 
 impl Encoder<'_> {
@@ -460,6 +467,11 @@ impl Encoder<'_> {
                     self.stack_memory(Reg::Rsi, spill_offset(slot)?);
                 }
             },
+            Cmp {
+                lhs,
+                rhs: Operand::Imm(0),
+            }
+            | Test { reg: lhs } => self.reg_reg(0x85, lhs, lhs),
             Cmp { lhs, rhs } => self.binary(0x39, 0x3b, lhs, rhs)?,
             SetCc { condition, dst } => {
                 self.rex(false, None, Some(dst), dst.code() >= 4);
@@ -494,15 +506,24 @@ impl Encoder<'_> {
                 }
             }
             Jmp(target) => {
-                self.bytes.push(0xe9);
-                self.fixups.push((self.bytes.len(), target));
-                self.bytes.extend_from_slice(&[0, 0, 0, 0]);
+                let offset = self.bytes.len();
+                self.bytes.extend_from_slice(&[0xe9, 0, 0, 0, 0]);
+                self.fixups.push(JumpFixup {
+                    offset,
+                    target,
+                    short: false,
+                });
             }
             Jcc { condition, target } => {
+                let offset = self.bytes.len();
                 self.bytes
                     .extend_from_slice(&[0x0f, 0x80 + condition_code(condition)]);
-                self.fixups.push((self.bytes.len(), target));
                 self.bytes.extend_from_slice(&[0, 0, 0, 0]);
+                self.fixups.push(JumpFixup {
+                    offset,
+                    target,
+                    short: false,
+                });
             }
             Ret => {
                 for (index, reg) in self.callee_saved.iter().copied().enumerate() {
@@ -516,16 +537,86 @@ impl Encoder<'_> {
     }
 
     fn resolve_labels(&mut self) -> Result<(), EncodeError> {
-        for (offset, target) in self.fixups.iter().copied() {
+        loop {
+            let mut shortened = false;
+            for index in 0..self.fixups.len() {
+                if self.fixups[index].short {
+                    continue;
+                }
+                let offset = self.fixups[index].offset;
+                let target = self.fixups[index].target;
+                let destination = self
+                    .labels
+                    .get(&target)
+                    .copied()
+                    .ok_or(EncodeError::UnknownLabel(target))?;
+                let unconditional = self.bytes[offset] == 0xe9;
+                let long_size = if unconditional { 5 } else { 6 };
+                let short_displacement = if destination > offset {
+                    destination as i128 - (offset as i128 + long_size)
+                } else {
+                    destination as i128 - (offset as i128 + 2)
+                };
+                if i8::try_from(short_displacement).is_err() {
+                    continue;
+                }
+
+                let remove_start = offset + 2;
+                let savings = if unconditional {
+                    self.bytes[offset] = 0xeb;
+                    3
+                } else {
+                    self.bytes[offset] = 0x70 + (self.bytes[offset + 1] & 0x0f);
+                    self.bytes[offset + 1] = self.bytes[offset + 2];
+                    4
+                };
+                self.bytes.drain(remove_start..remove_start + savings);
+                for label_offset in self.labels.values_mut() {
+                    if *label_offset > remove_start {
+                        *label_offset -= savings;
+                    }
+                }
+                for call in &mut self.calls {
+                    if call.offset > remove_start as u64 {
+                        call.offset -= savings as u64;
+                    }
+                }
+                for fixup in &mut self.fixups {
+                    if fixup.offset > remove_start {
+                        fixup.offset -= savings;
+                    }
+                }
+                self.fixups[index].short = true;
+                shortened = true;
+            }
+            if !shortened {
+                break;
+            }
+        }
+
+        for fixup in &self.fixups {
             let destination = self
                 .labels
-                .get(&target)
+                .get(&fixup.target)
                 .copied()
-                .ok_or(EncodeError::UnknownLabel(target))?;
-            let displacement = destination as i128 - (offset as i128 + 4);
-            let displacement =
-                i32::try_from(displacement).map_err(|_| EncodeError::RelocationOverflow(target))?;
-            self.bytes[offset..offset + 4].copy_from_slice(&displacement.to_le_bytes());
+                .ok_or(EncodeError::UnknownLabel(fixup.target))?;
+            if fixup.short {
+                let displacement = destination as i128 - (fixup.offset as i128 + 2);
+                let displacement = i8::try_from(displacement)
+                    .map_err(|_| EncodeError::RelocationOverflow(fixup.target))?;
+                self.bytes[fixup.offset + 1] = displacement as u8;
+            } else {
+                let displacement_offset = if self.bytes[fixup.offset] == 0xe9 {
+                    fixup.offset + 1
+                } else {
+                    fixup.offset + 2
+                };
+                let displacement = destination as i128 - (displacement_offset as i128 + 4);
+                let displacement = i32::try_from(displacement)
+                    .map_err(|_| EncodeError::RelocationOverflow(fixup.target))?;
+                self.bytes[displacement_offset..displacement_offset + 4]
+                    .copy_from_slice(&displacement.to_le_bytes());
+            }
         }
         Ok(())
     }

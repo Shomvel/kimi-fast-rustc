@@ -230,6 +230,25 @@ impl NativeDriver {
         Ok(options.output.clone())
     }
 
+    pub fn link_object(
+        &self,
+        object: &[u8],
+        output: impl AsRef<Path>,
+    ) -> Result<PathBuf, NativeDriverError> {
+        let output = output.as_ref();
+        validate_output_path(output)?;
+        ensure_native_target()?;
+
+        let temporary = TempDirectory::create(&self.temp_root)?;
+        let object_path = temporary.path.join("input.o");
+        write_file(&object_path, object)?;
+        self.run_tool(NativeStage::Link, &self.linker, |command| {
+            command.arg("-o").arg(output).arg(&object_path);
+        })?;
+
+        Ok(output.to_path_buf())
+    }
+
     fn run_tool(
         &self,
         stage: NativeStage,
@@ -511,6 +530,27 @@ main:
         let returned = driver
             .compile(EXIT_42, &NativeOutputOptions::executable(&output))
             .unwrap();
+
+        assert_eq!(returned, output);
+        assert!(output.is_file());
+        let status = Command::new(&output).status().unwrap();
+        assert_eq!(status.code(), Some(42));
+        assert_temp_root_is_empty(&root.path);
+    }
+
+    #[cfg(all(target_os = "linux", target_arch = "x86_64"))]
+    #[test]
+    fn links_direct_object_and_runs_without_assembler() {
+        let root = TempDirectory::create(&env::temp_dir()).unwrap();
+        let output = root.path.join("program");
+        let graph = crate::frontend::parse("fn main() -> i64 { return 42; }\n").unwrap();
+        let graph = crate::placement::place_for_native(&graph).unwrap();
+        let object = crate::native_object::compile_graph_to_object(&graph, "main").unwrap();
+        let driver = NativeDriver::new()
+            .with_tools(root.path.join("missing-as"), "gcc")
+            .with_temp_root(&root.path);
+
+        let returned = driver.link_object(&object, &output).unwrap();
 
         assert_eq!(returned, output);
         assert!(output.is_file());

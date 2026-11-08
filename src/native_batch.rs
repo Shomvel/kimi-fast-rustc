@@ -610,7 +610,10 @@ mod tests {
             ));
             let message = error.to_string();
             assert!(message.contains("parse.kfr:1:20"), "{message}");
-            assert!(message.contains("unknown variable `missing`"), "{message}");
+            assert!(
+                message.contains("unknown variable or constant `missing`"),
+                "{message}"
+            );
 
             let error =
                 compile_batch_with_mode([&multiple_functions], &output, 2, mode).unwrap_err();

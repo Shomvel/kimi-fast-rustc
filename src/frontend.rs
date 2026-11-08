@@ -9,8 +9,8 @@ use std::fmt;
 /// `if` expressions and statements merge values through explicit jumps, control regions,
 /// and Phi nodes. Mutable bindings and `while` loops use loop-header Phis, multiple back
 /// edges from `continue`, and exit Phis for `break` snapshots.
-/// A signature pre-scan supports forward and recursive calls with checked argument and return
-/// types. Comparisons and logical operations produce
+/// A pre-scan registers literal scalar constants and function signatures, supporting forward and
+/// recursive calls with checked argument and return types. Comparisons and logical operations produce
 /// booleans; `&&` and `||` evaluate their right operand conditionally. Unsupported Rust is
 /// rejected with a source location.
 pub fn parse(source: &str) -> Result<Graph, ParseError> {
@@ -573,6 +573,12 @@ struct FunctionHeader {
 }
 
 #[derive(Clone, Copy)]
+struct Constant {
+    value: i64,
+    ty: ScalarType,
+}
+
+#[derive(Clone, Copy)]
 struct Binding {
     value: NodeId,
     mutable: bool,
@@ -585,6 +591,7 @@ struct LoopContext {
     breaks: Vec<(NodeId, HashMap<String, Binding>)>,
     induction: Option<(String, ScalarType)>,
     inclusive_end: Option<String>,
+    shadow_depth: usize,
 }
 
 struct Parser {
@@ -594,7 +601,9 @@ struct Parser {
     functions: HashSet<String>,
     function_indices: HashMap<String, usize>,
     signatures: HashMap<String, FunctionSignature>,
+    constants: HashMap<String, Constant>,
     variables: HashMap<String, Binding>,
+    shadowed_variables: Vec<(String, Binding)>,
     types: HashMap<NodeId, ScalarType>,
     unsuffixed_literals: HashSet<NodeId>,
     control: NodeId,
@@ -612,7 +621,9 @@ impl Parser {
             functions: HashSet::new(),
             function_indices: HashMap::new(),
             signatures: HashMap::new(),
+            constants: HashMap::new(),
             variables: HashMap::new(),
+            shadowed_variables: Vec::new(),
             types: HashMap::new(),
             unsuffixed_literals: HashSet::new(),
             control: NodeId(0),
@@ -627,8 +638,24 @@ impl Parser {
             return Err(self.error_here("expected at least one function"));
         }
         while !self.check(&TokenKind::Eof) {
-            if !self.check(&TokenKind::Fn) && !self.peek_identifier("pub") {
+            if !self.check(&TokenKind::Fn)
+                && !self.peek_identifier("pub")
+                && !self.peek_identifier("const")
+            {
                 return Err(self.error_here("expected `fn`; this item is not supported"));
+            }
+            if self.const_item_ahead() {
+                let (name, name_span, constant) = self.parse_const_item()?;
+                if self.functions.contains(&name) || self.constants.contains_key(&name) {
+                    return Err(ParseError::new(
+                        name_span,
+                        format!(
+                            "duplicate item `{name}`; functions and constants must have unique names"
+                        ),
+                    ));
+                }
+                self.constants.insert(name, constant);
+                continue;
             }
             let header = self.parse_function_header()?;
             self.expect(TokenKind::LBrace, "`{` before function body")?;
@@ -646,6 +673,15 @@ impl Parser {
                     _ => {}
                 }
             }
+            if self.constants.contains_key(&header.name) {
+                return Err(ParseError::new(
+                    header.name_span,
+                    format!(
+                        "duplicate item `{}`; functions and constants must have unique names",
+                        header.name
+                    ),
+                ));
+            }
             if !self.functions.insert(header.name.clone()) {
                 return Err(ParseError::new(
                     header.name_span,
@@ -662,9 +698,16 @@ impl Parser {
                 },
             );
         }
+        if self.functions.is_empty() {
+            return Err(self.error_here("expected at least one function"));
+        }
         self.position = 0;
         while !self.check(&TokenKind::Eof) {
-            self.parse_function()?;
+            if self.const_item_ahead() {
+                self.parse_const_item()?;
+            } else {
+                self.parse_function()?;
+            }
         }
         debug_assert!(
             self.graph.validate().is_ok(),
@@ -673,8 +716,159 @@ impl Parser {
         Ok(self.graph)
     }
 
-    fn parse_function_header(&mut self) -> Result<FunctionHeader, ParseError> {
+    fn const_item_ahead(&self) -> bool {
+        let mut position = self.position;
+        if matches!(
+            self.tokens.get(position).map(|token| &token.kind),
+            Some(TokenKind::Ident(identifier)) if identifier == "pub"
+        ) {
+            position += 1;
+            if self
+                .tokens
+                .get(position)
+                .is_some_and(|token| token.kind == TokenKind::LParen)
+            {
+                position += 1;
+                if !matches!(
+                    self.tokens.get(position).map(|token| &token.kind),
+                    Some(TokenKind::Ident(path)) if matches!(path.as_str(), "crate" | "self" | "super")
+                ) {
+                    return false;
+                }
+                position += 1;
+                if !self
+                    .tokens
+                    .get(position)
+                    .is_some_and(|token| token.kind == TokenKind::RParen)
+                {
+                    return false;
+                }
+                position += 1;
+            }
+        }
+        matches!(
+            self.tokens.get(position).map(|token| &token.kind),
+            Some(TokenKind::Ident(identifier)) if identifier == "const"
+        ) && !self
+            .tokens
+            .get(position + 1)
+            .is_some_and(|token| token.kind == TokenKind::Fn)
+    }
+
+    fn parse_const_item(&mut self) -> Result<(String, Span, Constant), ParseError> {
         self.parse_function_visibility()?;
+        let const_token = self.advance();
+        debug_assert!(matches!(
+            const_token.kind,
+            TokenKind::Ident(identifier) if identifier == "const"
+        ));
+        let (name, name_span) = self.parse_identifier("constant name")?;
+        self.expect(TokenKind::Colon, "`:` and explicit constant type")?;
+        let ty = self.parse_type()?;
+        self.expect(TokenKind::Eq, "`=` in constant item")?;
+        let negative = self.eat(TokenKind::Minus);
+        let token = self.advance();
+        let span = token.span;
+        let constant = match token.kind {
+            TokenKind::Integer(magnitude) | TokenKind::I64Integer(magnitude) if negative => {
+                let value = if magnitude == (i64::MAX as u64) + 1 {
+                    i64::MIN
+                } else if magnitude <= i64::MAX as u64 {
+                    -(magnitude as i64)
+                } else {
+                    return Err(ParseError::new(
+                        span,
+                        "negative integer literal is outside the i64 range",
+                    ));
+                };
+                Constant {
+                    value,
+                    ty: ScalarType::I64,
+                }
+            }
+            TokenKind::Integer(value) => {
+                if ty == ScalarType::U64 {
+                    Constant {
+                        value: value as i64,
+                        ty: ScalarType::U64,
+                    }
+                } else {
+                    if value > i64::MAX as u64 {
+                        return Err(ParseError::new(
+                            span,
+                            "integer literal is outside the positive i64 range",
+                        ));
+                    }
+                    Constant {
+                        value: value as i64,
+                        ty: ScalarType::I64,
+                    }
+                }
+            }
+            TokenKind::I64Integer(value) => {
+                if value > i64::MAX as u64 {
+                    return Err(ParseError::new(
+                        span,
+                        "integer literal is outside the positive i64 range",
+                    ));
+                }
+                Constant {
+                    value: value as i64,
+                    ty: ScalarType::I64,
+                }
+            }
+            TokenKind::U64Integer(_) if negative => {
+                return Err(ParseError::new(
+                    span,
+                    "operator `-` is not supported for unsigned constant literals",
+                ));
+            }
+            TokenKind::U64Integer(value) => Constant {
+                value: value as i64,
+                ty: ScalarType::U64,
+            },
+            TokenKind::Ident(identifier) if !negative && identifier == "true" => Constant {
+                value: 1,
+                ty: ScalarType::Bool,
+            },
+            TokenKind::Ident(identifier) if !negative && identifier == "false" => Constant {
+                value: 0,
+                ty: ScalarType::Bool,
+            },
+            _ => {
+                return Err(ParseError::new(
+                    span,
+                    "top-level constant expressions are not supported; expected a literal or negative literal",
+                ));
+            }
+        };
+        if constant.ty != ty {
+            return Err(ParseError::new(
+                span,
+                format!(
+                    "type mismatch in constant `{name}`: expected `{ty}`, found `{}`",
+                    constant.ty
+                ),
+            ));
+        }
+        if !self.check(&TokenKind::Semicolon) {
+            if self.check(&TokenKind::Fn)
+                || self.check(&TokenKind::Eof)
+                || self.peek_identifier("pub")
+                || self.peek_identifier("const")
+            {
+                return Err(self.error_here("expected `;` after constant item"));
+            }
+            return Err(self.error_here(
+                "top-level constant expressions are not supported; only a literal or negative literal is allowed",
+            ));
+        }
+        self.advance();
+        Ok((name, name_span, constant))
+    }
+
+    fn parse_function_header(&mut self) -> Result<FunctionHeader, ParseError> {
+        self.parse_function_modifiers()?;
         self.expect(TokenKind::Fn, "`fn`")?;
         let (name, name_span) = self.parse_identifier("function name")?;
         self.expect(TokenKind::LParen, "`(` after function name")?;
@@ -720,6 +914,28 @@ impl Parser {
         })
     }
 
+    fn parse_function_modifiers(&mut self) -> Result<(), ParseError> {
+        self.parse_function_visibility()?;
+        if !self.peek_identifier("const") {
+            return Ok(());
+        }
+
+        let const_token = self.advance();
+        if self.check(&TokenKind::Fn) {
+            return Ok(());
+        }
+        if self.peek_identifier("pub") || self.peek_identifier("const") {
+            return Err(ParseError::new(
+                self.peek().span,
+                "malformed function modifiers: expected visibility before a single `const`, followed by `fn`",
+            ));
+        }
+        Err(ParseError::new(
+            const_token.span,
+            "malformed function modifiers: expected `fn` after `const`",
+        ))
+    }
+
     fn parse_function_visibility(&mut self) -> Result<(), ParseError> {
         if !self.peek_identifier("pub") {
             return Ok(());
@@ -761,6 +977,7 @@ impl Parser {
         self.terminated = false;
         self.loops.clear();
         self.variables.clear();
+        self.shadowed_variables.clear();
         self.types.clear();
         for (index, (parameter, mutable, ty)) in parameters.iter().enumerate() {
             let node = self.graph.parameter(index);
@@ -943,13 +1160,7 @@ impl Parser {
         } else {
             false
         };
-        let (name, name_span) = self.parse_identifier("binding name")?;
-        if self.variables.contains_key(&name) {
-            return Err(ParseError::new(
-                name_span,
-                format!("duplicate binding or parameter `{name}`; shadowing is not supported"),
-            ));
-        }
+        let (name, _) = self.parse_identifier("binding name")?;
         let annotation = if self.eat(TokenKind::Colon) {
             Some(self.parse_type()?)
         } else {
@@ -960,6 +1171,9 @@ impl Parser {
         let ty = annotation.unwrap_or_else(|| self.type_of(value));
         self.require_type(value, ty)?;
         self.expect(TokenKind::Semicolon, "`;` after let binding")?;
+        if let Some(binding) = self.variables.get(&name).copied() {
+            self.shadowed_variables.push((name.clone(), binding));
+        }
         self.variables.insert(name, Binding { value, mutable, ty });
         Ok(())
     }
@@ -1011,12 +1225,48 @@ impl Parser {
         Ok(())
     }
 
+    fn binding_before_shadows(&self, name: &str, shadow_depth: usize) -> Binding {
+        self.shadowed_variables[shadow_depth..]
+            .iter()
+            .find(|(shadowed, _)| shadowed == name)
+            .map(|(_, binding)| *binding)
+            .unwrap_or(self.variables[name])
+    }
+
+    fn variables_before_shadows(
+        &self,
+        outer_variables: &HashMap<String, Binding>,
+        shadow_depth: usize,
+    ) -> HashMap<String, Binding> {
+        let mut variables = self.variables.clone();
+        for name in outer_variables.keys() {
+            let binding = self.binding_before_shadows(name, shadow_depth);
+            variables.insert(name.clone(), binding);
+        }
+        variables
+    }
+
     fn parse_break(&mut self) -> Result<(), ParseError> {
         if self.loops.is_empty() {
             return Err(self.error_here("`break` outside a loop is not supported"));
         }
         let jump = self.graph.jump(self.control);
-        let variables = self.variables.clone();
+        let (names, shadow_depth) = {
+            let context = self.loops.last().expect("loop context exists");
+            (
+                context
+                    .phis
+                    .iter()
+                    .map(|(name, _)| name.clone())
+                    .collect::<Vec<_>>(),
+                context.shadow_depth,
+            )
+        };
+        let mut variables = self.variables.clone();
+        for name in names {
+            let binding = self.binding_before_shadows(&name, shadow_depth);
+            variables.insert(name, binding);
+        }
         self.loops
             .last_mut()
             .expect("loop context exists")
@@ -1094,8 +1344,9 @@ impl Parser {
         let context = self.loops.last().expect("loop context exists");
         let header = context.header;
         let phis = context.phis.clone();
+        let shadow_depth = context.shadow_depth;
         for (name, phi) in phis {
-            let value = self.variables[&name].value;
+            let value = self.binding_before_shadows(&name, shadow_depth).value;
             let node = self.graph.node_mut(phi).expect("loop phi exists");
             node.control.push(jump);
             node.data.push(value);
@@ -1131,6 +1382,7 @@ impl Parser {
     fn parse_if_statement(&mut self) -> Result<(), ParseError> {
         self.position += 1;
         let outer_variables = self.variables.clone();
+        let shadow_depth = self.shadowed_variables.len();
         let condition = self.parse_expression()?;
         self.require_type(condition, ScalarType::Bool)?;
         let branch = self.graph.if_(self.control, condition);
@@ -1139,7 +1391,7 @@ impl Parser {
         let true_projection = self.graph.projection(branch, 0);
         self.control = true_projection;
         let true_terminated = self.parse_statement_body()?;
-        let true_variables = self.variables.clone();
+        let true_variables = self.variables_before_shadows(&outer_variables, shadow_depth);
         let true_jump = if true_terminated {
             None
         } else {
@@ -1147,6 +1399,7 @@ impl Parser {
         };
 
         self.variables = outer_variables.clone();
+        self.shadowed_variables.truncate(shadow_depth);
         let false_projection = self.graph.projection(branch, 1);
         self.control = false_projection;
         let false_terminated = if self.peek_identifier("else") {
@@ -1162,7 +1415,7 @@ impl Parser {
             self.terminated = false;
             false
         };
-        let false_variables = self.variables.clone();
+        let false_variables = self.variables_before_shadows(&outer_variables, shadow_depth);
         let false_jump = if false_terminated {
             None
         } else {
@@ -1170,6 +1423,7 @@ impl Parser {
         };
 
         self.variables = outer_variables;
+        self.shadowed_variables.truncate(shadow_depth);
         if true_terminated && false_terminated {
             self.terminated = true;
             return Ok(());
@@ -1215,13 +1469,7 @@ impl Parser {
 
     fn parse_for(&mut self) -> Result<(), ParseError> {
         self.position += 1;
-        let (variable, variable_span) = self.parse_identifier("range loop variable")?;
-        if self.variables.contains_key(&variable) {
-            return Err(ParseError::new(
-                variable_span,
-                format!("duplicate binding or parameter `{variable}`; shadowing is not supported"),
-            ));
-        }
+        let (variable, _) = self.parse_identifier("range loop variable")?;
         if !self.peek_identifier("in") {
             return Err(self.error_here("expected `in` after range loop variable"));
         }
@@ -1272,6 +1520,7 @@ impl Parser {
         inclusive_end: Option<String>,
     ) -> Result<(), ParseError> {
         let outer_variables = self.variables.clone();
+        let shadow_depth = self.shadowed_variables.len();
         let mut loop_variables = outer_variables
             .iter()
             .filter(|(_, binding)| binding.mutable)
@@ -1320,6 +1569,9 @@ impl Parser {
         self.control = body_projection;
         if let Some((index_name, variable, ty, _)) = &induction {
             let binding = self.variables[index_name];
+            if let Some(outer) = self.variables.get(variable).copied() {
+                self.shadowed_variables.push((variable.clone(), outer));
+            }
             self.variables.insert(
                 variable.clone(),
                 Binding {
@@ -1339,6 +1591,7 @@ impl Parser {
             breaks: Vec::new(),
             induction: induction.map(|(name, _, ty, _)| (name, ty)),
             inclusive_end,
+            shadow_depth,
         });
         let body_terminated = self.parse_statement_body()?;
         if !body_terminated {
@@ -1348,6 +1601,7 @@ impl Parser {
         }
         let exit_projection = self.graph.projection(branch, 1);
         let context = self.loops.pop().expect("loop context exists");
+        self.shadowed_variables.truncate(context.shadow_depth);
 
         let mut normal_variables = outer_variables.clone();
         for ((name, binding), phi) in loop_variables.iter().zip(&phis) {
@@ -1840,17 +2094,20 @@ impl Parser {
                     let value = self.graph.constant(0);
                     return Ok(self.mark_bool(value));
                 }
-                self.variables
-                    .get(&identifier)
-                    .map(|binding| binding.value)
-                    .ok_or_else(|| {
-                        ParseError::new(
-                            token.span,
-                            format!(
-                                "unknown variable `{identifier}`; variables must be declared before use"
-                            ),
-                        )
-                    })
+                if let Some(binding) = self.variables.get(&identifier) {
+                    return Ok(binding.value);
+                }
+                if let Some(constant) = self.constants.get(&identifier).copied() {
+                    let value = self.graph.constant(constant.value);
+                    self.types.insert(value, constant.ty);
+                    return Ok(value);
+                }
+                Err(ParseError::new(
+                    token.span,
+                    format!(
+                        "unknown variable or constant `{identifier}`; local bindings must be declared before use"
+                    ),
+                ))
             }
             TokenKind::LParen => {
                 let value = self.parse_expression()?;
@@ -2020,7 +2277,7 @@ mod tests {
     }
 
     #[test]
-    fn rejects_duplicate_names_and_shadowing() {
+    fn rejects_duplicate_function_and_parameter_names_but_allows_shadowing() {
         assert!(
             error("fn f() { return 0; } fn f() { return 1; }")
                 .message
@@ -2031,11 +2288,7 @@ mod tests {
                 .message
                 .contains("duplicate parameter")
         );
-        assert!(
-            error("fn main() { let x = 1; let x = 2; return x; }")
-                .message
-                .contains("shadowing")
-        );
+        graph("fn main() { let x = 1; let x = x + 1; return x; }");
     }
 
     #[test]

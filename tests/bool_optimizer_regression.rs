@@ -128,3 +128,104 @@ fn loop_exit_expressions_use_current_phi_values() {
         );
     }
 }
+
+#[test]
+fn large_branch_loop_and_unreachable_graph_is_deterministic() {
+    const DIAMONDS: usize = 48;
+
+    let mut graph = Graph::new();
+    let start = graph.start();
+    let parameter = graph.parameter(0);
+    let one = graph.constant(1);
+    let shared = graph.binary(BinaryOp::Add, parameter, one);
+    let mut value = graph.binary(BinaryOp::Mul, parameter, one);
+    let mut control = start;
+    let mut branch_local = Vec::new();
+    let mut shared_returns = Vec::new();
+
+    for _ in 0..DIAMONDS {
+        let branch = graph.if_(control, value);
+        let left = graph.projection(branch, 0);
+        let left_value = graph.binary(BinaryOp::Add, value, one);
+        let duplicate_left = graph.binary(BinaryOp::Add, value, one);
+        let left_return = graph.return_(left, Some(duplicate_left));
+        let right = graph.projection(branch, 1);
+        let right_value = graph.binary(BinaryOp::Add, value, one);
+        let duplicate_right = graph.binary(BinaryOp::Add, value, one);
+        let right_return = graph.return_(right, Some(duplicate_right));
+        control = graph.region(vec![left, right]);
+        value = graph.phi(vec![left, right], vec![left_value, right_value]);
+        let duplicate_shared = graph.binary(BinaryOp::Add, parameter, one);
+        shared_returns.push(graph.return_(control, Some(duplicate_shared)));
+        branch_local.push((left_value, left_return, right_value, right_return));
+    }
+
+    let header = graph.region(vec![control]);
+    let loop_value = graph.phi(vec![control], vec![value]);
+    let branch = graph.if_(header, loop_value);
+    let body = graph.projection(branch, 0);
+    let body_value = graph.binary(BinaryOp::Add, loop_value, one);
+    let duplicate_body = graph.binary(BinaryOp::Add, loop_value, one);
+    let body_return = graph.return_(body, Some(duplicate_body));
+    let latch = graph.region(vec![body]);
+    graph.node_mut(header).unwrap().control.push(latch);
+    graph.node_mut(loop_value).unwrap().control.push(latch);
+    graph.node_mut(loop_value).unwrap().data.push(body_value);
+    let exit = graph.projection(branch, 1);
+    let duplicate_shared = graph.binary(BinaryOp::Add, parameter, one);
+    shared_returns.push(graph.return_(exit, Some(duplicate_shared)));
+    let exit_value = graph.binary(BinaryOp::Add, loop_value, one);
+    let exit_return = graph.return_(exit, Some(exit_value));
+
+    let unreachable = graph.region(vec![NodeId(graph.len() as u32 + 2)]);
+    let unreachable_branch = graph.if_(unreachable, parameter);
+    let unreachable_body = graph.projection(unreachable_branch, 0);
+    let unreachable_value = graph.binary(BinaryOp::Add, parameter, one);
+    let duplicate_unreachable = graph.binary(BinaryOp::Add, parameter, one);
+    let unreachable_return = graph.return_(unreachable_body, Some(duplicate_unreachable));
+    assert_eq!(
+        graph.node(unreachable).unwrap().control,
+        vec![unreachable_body]
+    );
+
+    let other_start = graph.start();
+    let other_parameter = graph.parameter(0);
+    let other_value = graph.binary(BinaryOp::Add, other_parameter, one);
+    let duplicate_other = graph.binary(BinaryOp::Add, other_parameter, one);
+    let other_return = graph.return_(other_start, Some(duplicate_other));
+
+    let before: Vec<_> = graph.iter().map(|(id, node)| (id, node.clone())).collect();
+    let mut repeated = graph.clone();
+    assert_eq!(
+        value_numbering::value_numbering(&mut graph),
+        3 * DIAMONDS + 4
+    );
+    assert_eq!(
+        value_numbering::value_numbering(&mut repeated),
+        3 * DIAMONDS + 4
+    );
+    let after: Vec<_> = graph.iter().map(|(id, node)| (id, node.clone())).collect();
+    let repeated_after: Vec<_> = repeated
+        .iter()
+        .map(|(id, node)| (id, node.clone()))
+        .collect();
+    assert_eq!(after, repeated_after);
+    assert_eq!(after.len(), before.len());
+
+    for (left, left_return, right, right_return) in branch_local {
+        assert_eq!(graph.node(left_return).unwrap().data, vec![left]);
+        assert_eq!(graph.node(right_return).unwrap().data, vec![right]);
+    }
+    for return_id in shared_returns {
+        assert_eq!(graph.node(return_id).unwrap().data, vec![shared]);
+    }
+    assert_eq!(graph.node(body_return).unwrap().data, vec![body_value]);
+    assert_eq!(graph.node(exit_return).unwrap().data, vec![exit_value]);
+    assert_eq!(
+        graph.node(unreachable_return).unwrap().data,
+        vec![unreachable_value]
+    );
+    assert_eq!(graph.node(other_return).unwrap().data, vec![other_value]);
+    graph.validate().unwrap();
+    repeated.validate().unwrap();
+}

@@ -264,7 +264,7 @@ impl RegisterAllocator {
             (0..self.register_count).map(PhysicalRegister).collect();
         let mut free_spill_slots = BTreeSet::new();
         let mut active: Vec<ActiveInterval> = Vec::new();
-        let mut spilled: Vec<SpilledInterval> = Vec::new();
+        let mut spilled: BTreeSet<SpilledInterval> = BTreeSet::new();
 
         for interval in intervals {
             active.retain(|entry| {
@@ -275,14 +275,13 @@ impl RegisterAllocator {
                     true
                 }
             });
-            spilled.retain(|entry| {
-                if entry.end <= interval.start {
-                    free_spill_slots.insert(entry.slot);
-                    false
-                } else {
-                    true
-                }
-            });
+            while spilled
+                .first()
+                .is_some_and(|entry| entry.end <= interval.start)
+            {
+                let entry = spilled.pop_first().unwrap();
+                free_spill_slots.insert(entry.slot);
+            }
 
             if let Some(register) = interval.fixed_register {
                 let occupant = active.iter().position(|entry| entry.register == register);
@@ -373,7 +372,7 @@ impl RegisterAllocator {
                     result
                         .allocations
                         .insert(interval.virtual_reg, Location::Spill(slot));
-                    spilled.push(SpilledInterval {
+                    spilled.insert(SpilledInterval {
                         end: interval.end,
                         slot,
                     });
@@ -391,7 +390,7 @@ struct ActiveInterval {
     register: PhysicalRegister,
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
 struct SpilledInterval {
     end: InstructionPosition,
     slot: SpillSlot,
@@ -415,7 +414,7 @@ fn take_spill_slot(
 fn spill_active(
     index: usize,
     active: &mut Vec<ActiveInterval>,
-    spilled: &mut Vec<SpilledInterval>,
+    spilled: &mut BTreeSet<SpilledInterval>,
     result: &mut AllocationResult,
     free_spill_slots: &mut BTreeSet<SpillSlot>,
 ) -> Result<(), RegAllocError> {
@@ -424,7 +423,7 @@ fn spill_active(
     result
         .allocations
         .insert(entry.interval.virtual_reg, Location::Spill(slot));
-    spilled.push(SpilledInterval {
+    spilled.insert(SpilledInterval {
         end: entry.interval.end,
         slot,
     });

@@ -90,3 +90,83 @@ fn optimized_strength_constants_survive_function_splitting() {
         sequential.emit_object().unwrap()
     );
 }
+
+#[test]
+fn unbalanced_function_sizes_preserve_order_and_object_bytes() {
+    let heavy_statements = (0..256)
+        .map(|value| format!("value = value * 3 + {value};"))
+        .collect::<String>();
+    let mut source =
+        format!("fn heavy(mut value: i64) -> i64 {{ {heavy_statements} return value; }}");
+    for index in 0..6 {
+        source.push_str(&format!(
+            "fn small_{index}(value: i64) -> i64 {{ return value + {index}; }}"
+        ));
+    }
+    source.push_str("fn main() -> i64 { return heavy(1) + small_5(2); }");
+
+    let graph = frontend::parse(&source).unwrap();
+    let expected = native_program::compile_graph(&graph).unwrap();
+    let expected_object = expected.emit_object().unwrap();
+    let expected_names: Vec<_> = graph
+        .functions
+        .iter()
+        .map(|function| function.name.as_str())
+        .collect();
+
+    for jobs in [1, 2, 3, 8] {
+        let program = parallel_native::compile_graph(&graph, jobs).unwrap();
+        let names: Vec<_> = program
+            .functions
+            .iter()
+            .map(|function| function.name.as_str())
+            .collect();
+        assert_eq!(names, expected_names, "jobs: {jobs}");
+        assert_eq!(program.functions, expected.functions, "jobs: {jobs}");
+        assert_eq!(
+            program.emit_object().unwrap(),
+            expected_object,
+            "jobs: {jobs}"
+        );
+    }
+}
+
+#[test]
+fn function_parallel_errors_keep_declaration_index() {
+    let mut graph = frontend::parse(WORKLOAD).unwrap();
+    graph.functions[2].return_node = graph.functions[2].start;
+
+    for jobs in [1, 2, 4, 8] {
+        assert_eq!(
+            parallel_native::compile_graph(&graph, jobs).unwrap_err(),
+            ParallelCompileError::Compile {
+                index: 2,
+                name: "factorial".to_owned(),
+                source: kimi_fast_rustc::native::CompileError::MissingReturn,
+            },
+            "jobs: {jobs}"
+        );
+    }
+}
+
+#[test]
+fn function_parallel_panics_keep_declaration_index() {
+    let mut graph = frontend::parse(WORKLOAD).unwrap();
+    graph.functions[2].start = kimi_fast_rustc::son::NodeId(u32::MAX);
+
+    for jobs in [1, 2, 4, 8] {
+        let error = parallel_native::compile_graph(&graph, jobs).unwrap_err();
+        match error {
+            ParallelCompileError::Panicked {
+                index,
+                name,
+                message,
+            } => {
+                assert_eq!(index, 2, "jobs: {jobs}");
+                assert_eq!(name, "factorial", "jobs: {jobs}");
+                assert_eq!(message, "ordered node exists", "jobs: {jobs}");
+            }
+            other => panic!("expected function panic, got {other:?}"),
+        }
+    }
+}

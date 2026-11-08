@@ -4,7 +4,8 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use kimi_fast_rustc::{
-    frontend, interpreter, native, native_cli, optimizer_pipeline, placement, son_optimize,
+    frontend, interpreter, native, native_cli, optimizer_pipeline, pipelined_native, placement,
+    son_optimize,
 };
 
 struct TestDirectory {
@@ -138,4 +139,54 @@ fn optimization_preserves_interpreted_results() {
         let expected = interpreter::interpret(&original, &[argument]).unwrap();
         assert_eq!(interpreter::interpret(&placed, &[argument]), Ok(expected));
     }
+}
+
+#[test]
+fn pipelined_sources_preserve_order_and_direct_object_bytes() {
+    let inputs = vec![
+        (
+            "constant".to_owned(),
+            "fn main() -> i64 { return 40 + 2; }".to_owned(),
+        ),
+        (
+            "arithmetic".to_owned(),
+            "fn main(x: i64) -> i64 { let square = x * x; return square + x * x; }".to_owned(),
+        ),
+        (
+            "comparison".to_owned(),
+            "fn main(x: i64) -> bool { return x < 7; }".to_owned(),
+        ),
+        (
+            "control_flow".to_owned(),
+            "fn main(x: i64) -> i64 { if x < 0 { return -x; } return x + 1; }".to_owned(),
+        ),
+    ];
+    let expected: Vec<_> = inputs
+        .iter()
+        .map(|(name, source)| {
+            let mut graph = frontend::parse(source).unwrap();
+            optimizer_pipeline::optimize(&mut graph);
+            let graph = placement::place_for_native(&graph).unwrap();
+            native::compile_graph(&graph, name.clone())
+                .unwrap()
+                .emit_object()
+                .unwrap()
+        })
+        .collect();
+
+    let functions = pipelined_native::compile_sources(inputs, 2).unwrap();
+    let names: Vec<_> = functions
+        .iter()
+        .map(|function| function.name.as_str())
+        .collect();
+    let objects: Vec<_> = functions
+        .iter()
+        .map(|function| function.emit_object().unwrap())
+        .collect();
+
+    assert_eq!(
+        names,
+        ["constant", "arithmetic", "comparison", "control_flow"]
+    );
+    assert_eq!(objects, expected);
 }

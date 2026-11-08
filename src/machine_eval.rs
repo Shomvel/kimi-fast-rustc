@@ -258,6 +258,9 @@ fn execute(function: &MachineFunction, arguments: &[i64]) -> Result<Execution, M
                     machine.operand(rhs, function.stack_slots)?,
                 ));
             }
+            MachineInstr::Test { reg } => {
+                machine.comparison = Some((machine.reg(reg), 0));
+            }
             MachineInstr::SetCc { condition, dst } => {
                 let (lhs, rhs) = machine
                     .comparison
@@ -449,6 +452,7 @@ fn validate_instruction(
             validate_reg(lhs)?;
             validate_operand(rhs)
         }
+        Test { reg } => validate_reg(reg),
         Load { dst, slot } => {
             validate_reg(dst)?;
             validate_slot(slot, stack_slots)

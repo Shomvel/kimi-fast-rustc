@@ -27,7 +27,7 @@ pub fn value_numbering(graph: &mut Graph) -> usize {
 #[derive(Default)]
 struct ControlInfo {
     blocks: BTreeMap<NodeId, NodeId>,
-    dominators: BTreeMap<NodeId, BTreeSet<NodeId>>,
+    immediate_dominators: BTreeMap<NodeId, NodeId>,
 }
 
 impl ControlInfo {
@@ -64,51 +64,59 @@ impl ControlInfo {
             }
         }
 
-        let mut dominators = BTreeMap::new();
+        let mut immediate_dominators = BTreeMap::new();
         for (root, node) in graph.iter() {
             if node.kind != NodeKind::Start {
                 continue;
             }
             let mut reachable = BTreeSet::from([root]);
-            let mut stack = vec![root];
-            while let Some(block) = stack.pop() {
-                for &successor in successors.get(&block).into_iter().flatten() {
+            let mut postorder = Vec::new();
+            let mut stack = vec![(root, 0)];
+            while let Some((block, next_successor)) = stack.last_mut() {
+                let successors = successors.get(block).map_or(&[][..], Vec::as_slice);
+                if let Some(&successor) = successors.get(*next_successor) {
+                    *next_successor += 1;
                     if reachable.insert(successor) {
-                        stack.push(successor);
+                        stack.push((successor, 0));
                     }
+                } else {
+                    postorder.push(*block);
+                    stack.pop();
                 }
             }
+            postorder.reverse();
+            let reverse_postorder = postorder;
+            let order: BTreeMap<_, _> = reverse_postorder
+                .iter()
+                .enumerate()
+                .map(|(index, &block)| (block, index))
+                .collect();
 
-            for &block in &reachable {
-                dominators.insert(
-                    block,
-                    if block == root {
-                        BTreeSet::from([root])
-                    } else {
-                        reachable.clone()
-                    },
-                );
-            }
+            immediate_dominators.insert(root, root);
             loop {
                 let mut changed = false;
-                for &block in &reachable {
-                    if block == root {
-                        continue;
-                    }
-                    let mut block_dominators = reachable.clone();
-                    for predecessor in predecessors.get(&block).into_iter().flatten() {
-                        if !reachable.contains(predecessor) {
+                for &block in reverse_postorder.iter().skip(1) {
+                    let mut new_dominator = None;
+                    for &predecessor in predecessors.get(&block).into_iter().flatten() {
+                        if !order.contains_key(&predecessor)
+                            || !immediate_dominators.contains_key(&predecessor)
+                        {
                             continue;
                         }
-                        let predecessor_dominators = &dominators[predecessor];
-                        block_dominators = block_dominators
-                            .intersection(predecessor_dominators)
-                            .copied()
-                            .collect();
+                        new_dominator = Some(match new_dominator {
+                            None => predecessor,
+                            Some(dominator) => intersect_dominators(
+                                &immediate_dominators,
+                                &order,
+                                dominator,
+                                predecessor,
+                            ),
+                        });
                     }
-                    block_dominators.insert(block);
-                    if dominators.get(&block) != Some(&block_dominators) {
-                        dominators.insert(block, block_dominators);
+                    let new_dominator = new_dominator
+                        .expect("every reachable non-root block has a processed predecessor");
+                    if immediate_dominators.get(&block) != Some(&new_dominator) {
+                        immediate_dominators.insert(block, new_dominator);
                         changed = true;
                     }
                 }
@@ -118,7 +126,10 @@ impl ControlInfo {
             }
         }
 
-        Self { blocks, dominators }
+        Self {
+            blocks,
+            immediate_dominators,
+        }
     }
 
     fn can_reuse(&self, graph: &Graph, representative: NodeId, candidate: NodeId) -> bool {
@@ -134,12 +145,37 @@ impl ControlInfo {
         let Some(&candidate_block) = self.blocks.get(&candidate) else {
             return false;
         };
-        representative_block == candidate_block
-            || self
-                .dominators
-                .get(&candidate_block)
-                .is_some_and(|dominators| dominators.contains(&representative_block))
+        let mut block = candidate_block;
+        loop {
+            if block == representative_block {
+                return true;
+            }
+            let Some(&dominator) = self.immediate_dominators.get(&block) else {
+                return false;
+            };
+            if dominator == block {
+                return false;
+            }
+            block = dominator;
+        }
     }
+}
+
+fn intersect_dominators(
+    immediate_dominators: &BTreeMap<NodeId, NodeId>,
+    order: &BTreeMap<NodeId, usize>,
+    mut left: NodeId,
+    mut right: NodeId,
+) -> NodeId {
+    while left != right {
+        while order[&left] > order[&right] {
+            left = immediate_dominators[&left];
+        }
+        while order[&right] > order[&left] {
+            right = immediate_dominators[&right];
+        }
+    }
+    left
 }
 
 fn value_numbering_pass(
