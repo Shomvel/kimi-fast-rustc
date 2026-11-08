@@ -627,7 +627,7 @@ impl Parser {
             return Err(self.error_here("expected at least one function"));
         }
         while !self.check(&TokenKind::Eof) {
-            if !self.check(&TokenKind::Fn) {
+            if !self.check(&TokenKind::Fn) && !self.peek_identifier("pub") {
                 return Err(self.error_here("expected `fn`; this item is not supported"));
             }
             let header = self.parse_function_header()?;
@@ -674,6 +674,7 @@ impl Parser {
     }
 
     fn parse_function_header(&mut self) -> Result<FunctionHeader, ParseError> {
+        self.parse_function_visibility()?;
         self.expect(TokenKind::Fn, "`fn`")?;
         let (name, name_span) = self.parse_identifier("function name")?;
         self.expect(TokenKind::LParen, "`(` after function name")?;
@@ -717,6 +718,32 @@ impl Parser {
             parameters,
             return_type,
         })
+    }
+
+    fn parse_function_visibility(&mut self) -> Result<(), ParseError> {
+        if !self.peek_identifier("pub") {
+            return Ok(());
+        }
+        self.advance();
+        if !self.eat(TokenKind::LParen) {
+            return Ok(());
+        }
+
+        let visibility = self.advance();
+        if !matches!(
+            &visibility.kind,
+            TokenKind::Ident(path) if matches!(path.as_str(), "crate" | "self" | "super")
+        ) {
+            return Err(ParseError::new(
+                visibility.span,
+                "expected `crate`, `self`, or `super` as restricted function visibility",
+            ));
+        }
+        self.expect(
+            TokenKind::RParen,
+            "`)` after restricted function visibility",
+        )?;
+        Ok(())
     }
 
     fn parse_function(&mut self) -> Result<(), ParseError> {
@@ -1557,7 +1584,15 @@ impl Parser {
         if self.is_comparison(self.peek()) {
             return Err(self.error_here("chained comparisons are not supported"));
         }
-        let ty = self.numeric_pair(left, right)?;
+        let ty = if matches!(operation, CompareOp::Eq | CompareOp::Ne)
+            && (self.type_of(left) == ScalarType::Bool || self.type_of(right) == ScalarType::Bool)
+        {
+            self.require_type(left, ScalarType::Bool)?;
+            self.require_type(right, ScalarType::Bool)?;
+            ScalarType::Bool
+        } else {
+            self.numeric_pair(left, right)?
+        };
         let operation = match (operation, ty) {
             (CompareOp::Lt, ScalarType::U64) => CompareOp::ULt,
             (CompareOp::Le, ScalarType::U64) => CompareOp::ULe,
@@ -2126,11 +2161,7 @@ mod tests {
 
     #[test]
     fn rejects_other_rust_items_and_control_flow() {
-        assert!(
-            error("pub fn main() { return 0; }")
-                .message
-                .contains("expected `fn`")
-        );
+        assert!(error("struct main;").message.contains("expected `fn`"));
         assert!(
             error("fn main() { @ }")
                 .message

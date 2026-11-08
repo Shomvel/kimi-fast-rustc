@@ -3,8 +3,10 @@ use std::error::Error;
 use std::fmt;
 use std::panic::{self, AssertUnwindSafe};
 use std::sync::Arc;
+use std::thread;
 
 use crate::native::{self, CompileError};
+use crate::native_program::NativeProgram;
 use crate::placement::{self, PlacementError};
 use crate::scheduler::{Scheduler, SchedulerError, TaskResult};
 use crate::son::Graph;
@@ -77,6 +79,85 @@ impl Error for ParallelCompileError {
 impl From<SchedulerError> for ParallelCompileError {
     fn from(error: SchedulerError) -> Self {
         Self::Scheduler(error)
+    }
+}
+
+/// Compiles all functions in one graph with at most `jobs` worker threads.
+///
+/// Functions and compilation errors retain declaration order. Object emission is left
+/// to [`NativeProgram`], so call relocations are resolved against the complete function set.
+pub fn compile_graph(graph: &Graph, jobs: usize) -> Result<NativeProgram, ParallelCompileError> {
+    if jobs == 0 {
+        return Err(SchedulerError::ZeroParallelism.into());
+    }
+    if graph.functions.is_empty() {
+        let function = compile_catching(|| native::compile_graph(graph, "main"))
+            .map_err(|error| error.with_context(0, "main".to_owned()))?;
+        return Ok(NativeProgram {
+            functions: vec![function],
+        });
+    }
+
+    let function_count = graph.functions.len();
+    let worker_count = jobs.min(function_count);
+    let indexed_results = thread::scope(|scope| {
+        let mut handles = Vec::with_capacity(worker_count);
+        for worker in 0..worker_count {
+            handles.push((
+                worker,
+                scope.spawn(move || {
+                    (worker..function_count)
+                        .step_by(worker_count)
+                        .map(|index| {
+                            let metadata = &graph.functions[index];
+                            let result = compile_catching(|| {
+                                let function_graph = graph.function_graph(metadata);
+                                native::compile_graph(&function_graph, metadata.name.clone())
+                            });
+                            (index, result)
+                        })
+                        .collect::<Vec<_>>()
+                }),
+            ));
+        }
+
+        let mut results = Vec::with_capacity(function_count);
+        for (worker, handle) in handles {
+            match handle.join() {
+                Ok(worker_results) => results.extend(worker_results),
+                Err(payload) => results.push((
+                    worker,
+                    Err(CompilationFailure::Panicked(panic_message(payload))),
+                )),
+            }
+        }
+        results
+    });
+
+    let mut results: Vec<_> = std::iter::repeat_with(|| None)
+        .take(function_count)
+        .collect();
+    for (index, result) in indexed_results {
+        results[index] = Some(result);
+    }
+
+    let mut functions = Vec::with_capacity(function_count);
+    for (index, result) in results.into_iter().enumerate() {
+        let result = result.expect("every function is assigned to one worker");
+        let function = result
+            .map_err(|error| error.with_context(index, graph.functions[index].name.clone()))?;
+        functions.push(function);
+    }
+    Ok(NativeProgram { functions })
+}
+
+fn compile_catching<F>(compile: F) -> Result<MachineFunction, CompilationFailure>
+where
+    F: FnOnce() -> Result<MachineFunction, CompileError>,
+{
+    match panic::catch_unwind(AssertUnwindSafe(compile)) {
+        Ok(result) => result.map_err(CompilationFailure::Compile),
+        Err(payload) => Err(CompilationFailure::Panicked(panic_message(payload))),
     }
 }
 

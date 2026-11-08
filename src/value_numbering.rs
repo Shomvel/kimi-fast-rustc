@@ -12,10 +12,11 @@ enum ExpressionKey {
 }
 
 pub fn value_numbering(graph: &mut Graph) -> usize {
+    let control = ControlInfo::new(graph);
     let mut merged_ids = BTreeSet::new();
     let mut merged = 0;
     loop {
-        let pass_merged = value_numbering_pass(graph, &mut merged_ids);
+        let pass_merged = value_numbering_pass(graph, &mut merged_ids, &control);
         merged += pass_merged;
         if pass_merged == 0 {
             return merged;
@@ -23,7 +24,129 @@ pub fn value_numbering(graph: &mut Graph) -> usize {
     }
 }
 
-fn value_numbering_pass(graph: &mut Graph, merged_ids: &mut BTreeSet<NodeId>) -> usize {
+#[derive(Default)]
+struct ControlInfo {
+    blocks: BTreeMap<NodeId, NodeId>,
+    dominators: BTreeMap<NodeId, BTreeSet<NodeId>>,
+}
+
+impl ControlInfo {
+    fn new(graph: &Graph) -> Self {
+        let mut blocks = BTreeMap::new();
+        let mut current_block = None;
+        for (id, node) in graph.iter() {
+            if matches!(
+                node.kind,
+                NodeKind::Start | NodeKind::Projection(_) | NodeKind::Region
+            ) {
+                current_block = Some(id);
+            }
+            if let Some(block) = current_block {
+                blocks.insert(id, block);
+            }
+        }
+
+        let mut predecessors: BTreeMap<NodeId, Vec<NodeId>> = BTreeMap::new();
+        let mut successors: BTreeMap<NodeId, Vec<NodeId>> = BTreeMap::new();
+        for (id, node) in graph.iter() {
+            if !matches!(node.kind, NodeKind::Projection(_) | NodeKind::Region) {
+                continue;
+            }
+            let Some(&block) = blocks.get(&id) else {
+                continue;
+            };
+            for control in &node.control {
+                let Some(&predecessor) = blocks.get(control) else {
+                    continue;
+                };
+                predecessors.entry(block).or_default().push(predecessor);
+                successors.entry(predecessor).or_default().push(block);
+            }
+        }
+
+        let mut dominators = BTreeMap::new();
+        for (root, node) in graph.iter() {
+            if node.kind != NodeKind::Start {
+                continue;
+            }
+            let mut reachable = BTreeSet::from([root]);
+            let mut stack = vec![root];
+            while let Some(block) = stack.pop() {
+                for &successor in successors.get(&block).into_iter().flatten() {
+                    if reachable.insert(successor) {
+                        stack.push(successor);
+                    }
+                }
+            }
+
+            for &block in &reachable {
+                dominators.insert(
+                    block,
+                    if block == root {
+                        BTreeSet::from([root])
+                    } else {
+                        reachable.clone()
+                    },
+                );
+            }
+            loop {
+                let mut changed = false;
+                for &block in &reachable {
+                    if block == root {
+                        continue;
+                    }
+                    let mut block_dominators = reachable.clone();
+                    for predecessor in predecessors.get(&block).into_iter().flatten() {
+                        if !reachable.contains(predecessor) {
+                            continue;
+                        }
+                        let predecessor_dominators = &dominators[predecessor];
+                        block_dominators = block_dominators
+                            .intersection(predecessor_dominators)
+                            .copied()
+                            .collect();
+                    }
+                    block_dominators.insert(block);
+                    if dominators.get(&block) != Some(&block_dominators) {
+                        dominators.insert(block, block_dominators);
+                        changed = true;
+                    }
+                }
+                if !changed {
+                    break;
+                }
+            }
+        }
+
+        Self { blocks, dominators }
+    }
+
+    fn can_reuse(&self, graph: &Graph, representative: NodeId, candidate: NodeId) -> bool {
+        if matches!(
+            graph.node(representative).map(|node| node.kind),
+            Some(NodeKind::Const(_) | NodeKind::Parameter { .. })
+        ) {
+            return true;
+        }
+        let Some(&representative_block) = self.blocks.get(&representative) else {
+            return false;
+        };
+        let Some(&candidate_block) = self.blocks.get(&candidate) else {
+            return false;
+        };
+        representative_block == candidate_block
+            || self
+                .dominators
+                .get(&candidate_block)
+                .is_some_and(|dominators| dominators.contains(&representative_block))
+    }
+}
+
+fn value_numbering_pass(
+    graph: &mut Graph,
+    merged_ids: &mut BTreeSet<NodeId>,
+    control: &ControlInfo,
+) -> usize {
     let ids: Vec<_> = graph.ids().collect();
     let mut expressions: BTreeMap<u64, Vec<(ExpressionKey, NodeId)>> = BTreeMap::new();
     let mut merged = 0;
@@ -43,9 +166,10 @@ fn value_numbering_pass(graph: &mut Graph, merged_ids: &mut BTreeSet<NodeId>) ->
         };
         let hash = structural_hash(&key);
         let bucket = expressions.entry(hash).or_default();
-        let representative = bucket
-            .iter()
-            .find_map(|(candidate, representative)| (candidate == &key).then_some(*representative));
+        let representative = bucket.iter().find_map(|(candidate, representative)| {
+            (candidate == &key && control.can_reuse(graph, *representative, id))
+                .then_some(*representative)
+        });
 
         if let Some(representative) = representative {
             graph.replace_uses(id, representative);

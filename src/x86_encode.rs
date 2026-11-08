@@ -322,8 +322,14 @@ impl Encoder<'_> {
     fn prologue(&mut self, frame_size: u32) -> Result<(), EncodeError> {
         self.bytes.extend_from_slice(&[0x55, 0x48, 0x89, 0xe5]);
         if frame_size != 0 {
-            self.bytes.extend_from_slice(&[0x48, 0x81, 0xec]);
-            self.i32(frame_size as i32);
+            self.bytes.extend_from_slice(&[0x48]);
+            if i8::try_from(frame_size as i32).is_ok() {
+                self.bytes
+                    .extend_from_slice(&[0x83, 0xec, frame_size as u8]);
+            } else {
+                self.bytes.extend_from_slice(&[0x81, 0xec]);
+                self.i32(frame_size as i32);
+            }
         }
         for (index, reg) in self.callee_saved.iter().copied().enumerate() {
             let offset = saved_offset(self.stack_slots, index)?;
@@ -415,10 +421,16 @@ impl Encoder<'_> {
                     self.stack_memory(dst, spill_offset(slot)?);
                 }
                 Operand::Imm(value) => {
-                    self.rex(true, Some(dst), None, false);
-                    self.bytes.push(0x69);
-                    self.modrm(3, dst, dst.low_code());
-                    self.i32(value);
+                    self.rex(true, Some(dst), Some(dst), false);
+                    if let Ok(value) = i8::try_from(value) {
+                        self.bytes.push(0x6b);
+                        self.modrm(3, dst, dst.low_code());
+                        self.bytes.push(value as u8);
+                    } else {
+                        self.bytes.push(0x69);
+                        self.modrm(3, dst, dst.low_code());
+                        self.i32(value);
+                    }
                 }
             },
             Cqo => self.bytes.extend_from_slice(&[0x48, 0x99]),
@@ -544,9 +556,15 @@ impl Encoder<'_> {
             _ => unreachable!("not a group-one arithmetic opcode"),
         };
         self.rex(true, None, Some(dst), false);
-        self.bytes.push(0x81);
-        self.modrm(3, extension, dst.low_code());
-        self.i32(value);
+        if let Ok(value) = i8::try_from(value) {
+            self.bytes.push(0x83);
+            self.modrm(3, extension, dst.low_code());
+            self.bytes.push(value as u8);
+        } else {
+            self.bytes.push(0x81);
+            self.modrm(3, extension, dst.low_code());
+            self.i32(value);
+        }
     }
 
     fn reg_reg(&mut self, opcode: u8, dst: Reg, src: Reg) {
@@ -562,14 +580,27 @@ impl Encoder<'_> {
     }
 
     fn stack_memory(&mut self, reg: Reg, offset: i32) {
-        self.modrm(2, reg, Reg::Rbp.low_code());
-        self.i32(offset);
+        if let Ok(offset) = i8::try_from(offset) {
+            self.modrm(1, reg, Reg::Rbp.low_code());
+            self.bytes.push(offset as u8);
+        } else {
+            self.modrm(2, reg, Reg::Rbp.low_code());
+            self.i32(offset);
+        }
     }
 
     fn stack_memory_rsp(&mut self, reg: Reg, offset: i32) {
-        self.modrm(2, reg, Reg::Rsp.low_code());
-        self.bytes.push(0x24);
-        self.i32(offset);
+        if offset == 0 {
+            self.modrm(0, reg, Reg::Rsp.low_code());
+            self.bytes.push(0x24);
+        } else if let Ok(offset) = i8::try_from(offset) {
+            self.modrm(1, reg, Reg::Rsp.low_code());
+            self.bytes.extend_from_slice(&[0x24, offset as u8]);
+        } else {
+            self.modrm(2, reg, Reg::Rsp.low_code());
+            self.bytes.push(0x24);
+            self.i32(offset);
+        }
     }
 
     fn rex(&mut self, w: bool, reg: Option<Reg>, base: Option<Reg>, force: bool) {
@@ -697,8 +728,8 @@ mod tests {
         .unwrap();
         let expected = [
             0x55, 0x48, 0x89, 0xe5, 0x48, 0xb8, 0x88, 0x77, 0x66, 0x55, 0x44, 0x33, 0x22, 0x11,
-            0x48, 0x89, 0xf9, 0x48, 0x01, 0xc8, 0x4c, 0x8b, 0x85, 0x10, 0x00, 0x00, 0x00, 0x4c,
-            0x29, 0xc0, 0x48, 0x0f, 0xaf, 0xc1, 0x49, 0x89, 0xc1, 0xc9, 0xc3,
+            0x48, 0x89, 0xf9, 0x48, 0x01, 0xc8, 0x4c, 0x8b, 0x45, 0x10, 0x4c, 0x29, 0xc0, 0x48,
+            0x0f, 0xaf, 0xc1, 0x49, 0x89, 0xc1, 0xc9, 0xc3,
         ];
         assert_eq!(code, expected);
     }
@@ -744,13 +775,11 @@ mod tests {
         };
         let code = function.emit_machine_code().unwrap();
         let expected = [
-            0x55, 0x48, 0x89, 0xe5, 0x48, 0x81, 0xec, 0x20, 0x00, 0x00, 0x00, 0x48, 0x89, 0x9d,
-            0xe8, 0xff, 0xff, 0xff, 0x4c, 0x89, 0xa5, 0xe0, 0xff, 0xff, 0xff, 0x48, 0x89, 0x85,
-            0xf8, 0xff, 0xff, 0xff, 0x4c, 0x8b, 0x8d, 0xf0, 0xff, 0xff, 0xff, 0x48, 0x03, 0x85,
-            0xf8, 0xff, 0xff, 0xff, 0x4d, 0x29, 0xd1, 0x4c, 0x0f, 0xaf, 0xa5, 0xf0, 0xff, 0xff,
-            0xff, 0x48, 0x3b, 0x85, 0xf8, 0xff, 0xff, 0xff, 0x41, 0x0f, 0x9f, 0xc4, 0x45, 0x0f,
-            0xb6, 0xe4, 0x48, 0x8b, 0x9d, 0xe8, 0xff, 0xff, 0xff, 0x4c, 0x8b, 0xa5, 0xe0, 0xff,
-            0xff, 0xff, 0xc9, 0xc3,
+            0x55, 0x48, 0x89, 0xe5, 0x48, 0x83, 0xec, 0x20, 0x48, 0x89, 0x5d, 0xe8, 0x4c, 0x89,
+            0x65, 0xe0, 0x48, 0x89, 0x45, 0xf8, 0x4c, 0x8b, 0x4d, 0xf0, 0x48, 0x03, 0x45, 0xf8,
+            0x4d, 0x29, 0xd1, 0x4c, 0x0f, 0xaf, 0x65, 0xf0, 0x48, 0x3b, 0x45, 0xf8, 0x41, 0x0f,
+            0x9f, 0xc4, 0x45, 0x0f, 0xb6, 0xe4, 0x48, 0x8b, 0x5d, 0xe8, 0x4c, 0x8b, 0x65, 0xe0,
+            0xc9, 0xc3,
         ];
         assert_eq!(code, expected);
     }
@@ -781,9 +810,8 @@ mod tests {
         assert_eq!(
             code,
             [
-                0x55, 0x48, 0x89, 0xe5, 0x48, 0x81, 0xec, 0x10, 0x00, 0x00, 0x00, 0x48, 0x99, 0x48,
-                0xf7, 0xf9, 0x48, 0x99, 0x49, 0xf7, 0xf8, 0x48, 0x99, 0x48, 0xf7, 0xbd, 0xf8, 0xff,
-                0xff, 0xff, 0xc9, 0xc3,
+                0x55, 0x48, 0x89, 0xe5, 0x48, 0x83, 0xec, 0x10, 0x48, 0x99, 0x48, 0xf7, 0xf9, 0x48,
+                0x99, 0x49, 0xf7, 0xf8, 0x48, 0x99, 0x48, 0xf7, 0x7d, 0xf8, 0xc9, 0xc3,
             ]
         );
 
@@ -864,6 +892,48 @@ mod tests {
                 0xc9, 0xc3,
             ]
         );
+    }
+
+    #[test]
+    fn rbp_and_rsp_stack_displacements_have_exact_boundary_encodings() {
+        let cases: &[(i32, &[u8], &[u8])] = &[
+            (
+                -129,
+                &[0x85, 0x7f, 0xff, 0xff, 0xff],
+                &[0x84, 0x24, 0x7f, 0xff, 0xff, 0xff],
+            ),
+            (-128, &[0x45, 0x80], &[0x44, 0x24, 0x80]),
+            (0, &[0x45, 0x00], &[0x04, 0x24]),
+            (127, &[0x45, 0x7f], &[0x44, 0x24, 0x7f]),
+            (
+                128,
+                &[0x85, 0x80, 0x00, 0x00, 0x00],
+                &[0x84, 0x24, 0x80, 0x00, 0x00, 0x00],
+            ),
+            (
+                129,
+                &[0x85, 0x81, 0x00, 0x00, 0x00],
+                &[0x84, 0x24, 0x81, 0x00, 0x00, 0x00],
+            ),
+        ];
+        let mut encoder = Encoder {
+            bytes: Vec::new(),
+            stack_slots: 0,
+            callee_saved: &[],
+            symbols: &[],
+            calls: Vec::new(),
+            labels: BTreeMap::new(),
+            fixups: Vec::new(),
+        };
+        for (offset, expected_rbp, expected_rsp) in cases {
+            encoder.bytes.clear();
+            encoder.stack_memory(Reg::Rax, *offset);
+            assert_eq!(encoder.bytes.as_slice(), *expected_rbp, "rbp{offset:+}");
+
+            encoder.bytes.clear();
+            encoder.stack_memory_rsp(Reg::Rax, *offset);
+            assert_eq!(encoder.bytes.as_slice(), *expected_rsp, "rsp{offset:+}");
+        }
     }
 
     #[test]

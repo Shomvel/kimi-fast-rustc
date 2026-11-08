@@ -15,10 +15,11 @@ use crate::native_driver::{
 use crate::native_object::{self, NativeObjectError};
 use crate::native_program::{self, ProgramError};
 use crate::optimizer_pipeline;
+use crate::parallel_native::{self, ParallelCompileError};
 use crate::placement::{self, PlacementError};
 use crate::son::Graph;
 
-const USAGE: &str = "usage: kfrc native <input> -o <output> [--emit=asm | --emit=obj | -S]\n       kfrc native <input> [--emit=asm=<path> | --emit=obj=<path>]";
+const USAGE: &str = "usage: kfrc native <input> -o <output> [--emit=asm | --emit=obj | -S] [--jobs <N> | --jobs=<N>]\n       kfrc native <input> [--emit=asm=<path> | --emit=obj=<path>] [--jobs <N> | --jobs=<N>]";
 const NATIVE_OBJECT_BACKEND_VERSION: &str = "native-x86_64-elf-v1";
 
 #[derive(Debug)]
@@ -38,6 +39,7 @@ pub enum NativeCliError {
     },
     Placement(PlacementError),
     Compile(CompileError),
+    ParallelCompile(ParallelCompileError),
     Object(NativeObjectError),
     Program(ProgramError),
     Cache(NativeCacheError),
@@ -65,6 +67,9 @@ impl fmt::Display for NativeCliError {
             }
             Self::Placement(source) => write!(formatter, "native graph placement failed: {source}"),
             Self::Compile(source) => write!(formatter, "native compilation failed: {source}"),
+            Self::ParallelCompile(source) => {
+                write!(formatter, "parallel native compilation failed: {source}")
+            }
             Self::Object(source) => source.fmt(formatter),
             Self::Program(source) => source.fmt(formatter),
             Self::Cache(source) => source.fmt(formatter),
@@ -82,6 +87,7 @@ impl Error for NativeCliError {
             Self::Parse { source, .. } => Some(source),
             Self::Placement(source) => Some(source),
             Self::Compile(source) => Some(source),
+            Self::ParallelCompile(source) => Some(source),
             Self::Object(source) => Some(source),
             Self::Program(source) => Some(source),
             Self::Cache(source) => Some(source),
@@ -99,6 +105,12 @@ impl From<PlacementError> for NativeCliError {
 impl From<CompileError> for NativeCliError {
     fn from(source: CompileError) -> Self {
         Self::Compile(source)
+    }
+}
+
+impl From<ParallelCompileError> for NativeCliError {
+    fn from(source: ParallelCompileError) -> Self {
+        Self::ParallelCompile(source)
     }
 }
 
@@ -138,6 +150,7 @@ struct NativeCliOptions {
     input: PathBuf,
     output: PathBuf,
     emit: NativeEmitKind,
+    jobs: usize,
 }
 
 pub fn run_with_args<I, S>(args: I) -> Result<PathBuf, NativeCliError>
@@ -187,7 +200,7 @@ fn run_with_driver_and_cache(
     optimizer_pipeline::optimize(&mut graph);
     let graph = placement::place_for_native(&graph)?;
     if options.emit == NativeEmitKind::Object {
-        let object = compile_object(&graph, cache_directory)?;
+        let object = compile_object(&graph, cache_directory, options.jobs)?;
         fs::write(&options.output, object.bytes).map_err(|source| NativeObjectError::Write {
             path: options.output.clone(),
             source,
@@ -195,7 +208,11 @@ fn run_with_driver_and_cache(
         return Ok(options.output.clone());
     }
 
-    let assembly = native_program::compile_graph_to_assembly(&graph)?;
+    let assembly = if graph.functions.is_empty() {
+        native_program::compile_graph_to_assembly(&graph)?
+    } else {
+        parallel_native::compile_graph(&graph, options.jobs)?.emit_gnu_assembly()?
+    };
     let kind = if options.emit == NativeEmitKind::Assembly {
         NativeOutputKind::Assembly
     } else {
@@ -211,10 +228,11 @@ fn run_with_driver_and_cache(
 fn compile_object(
     graph: &Graph,
     cache_directory: Option<&std::path::Path>,
+    jobs: usize,
 ) -> Result<CachedObject, NativeCliError> {
     if !graph.functions.is_empty() {
         return Ok(CachedObject {
-            bytes: native_program::compile_graph_to_object(graph)?,
+            bytes: parallel_native::compile_graph(graph, jobs)?.emit_object()?,
             cache_hit: false,
         });
     }
@@ -242,6 +260,7 @@ where
     let mut input = None;
     let mut output = None;
     let mut emit = None;
+    let mut jobs = None;
 
     while let Some(argument) = args.next() {
         if argument == "-o" {
@@ -254,6 +273,18 @@ where
             set_output(&mut output, PathBuf::from(path))?;
         } else if argument == "-S" {
             set_emit(&mut emit, NativeEmitKind::Assembly)?;
+        } else if argument == "--jobs" {
+            let value = args
+                .next()
+                .ok_or_else(|| argument_error("missing value after --jobs; expected --jobs <N>"))?;
+            set_jobs(&mut jobs, &value)?;
+        } else if let Some(value) = inline_jobs_value(&argument) {
+            if value.is_empty() {
+                return Err(argument_error(
+                    "missing value after --jobs=; expected --jobs=<N>",
+                ));
+            }
+            set_jobs(&mut jobs, value)?;
         } else if let Some(path) = emit_path(&argument, "--emit=asm") {
             set_emit(&mut emit, NativeEmitKind::Assembly)?;
             if let Some(path) = path {
@@ -300,11 +331,15 @@ where
             "missing output path; use -o <output>, --emit=asm=<path>, or --emit=obj=<path>",
         )
     })?;
+    let jobs = jobs.unwrap_or_else(|| {
+        std::thread::available_parallelism().map_or(1, |parallelism| parallelism.get())
+    });
 
     Ok(NativeCliOptions {
         input,
         output,
         emit: emit.unwrap_or(NativeEmitKind::Executable),
+        jobs,
     })
 }
 
@@ -333,12 +368,50 @@ fn set_emit(emit: &mut Option<NativeEmitKind>, kind: NativeEmitKind) -> Result<(
     Ok(())
 }
 
+fn set_jobs(jobs: &mut Option<usize>, value: &OsStr) -> Result<(), NativeCliError> {
+    let value = value.to_str().ok_or_else(|| {
+        argument_error(format!(
+            "invalid jobs value {value:?}; expected a positive integer"
+        ))
+    })?;
+    let parsed = value.parse::<usize>().map_err(|_| {
+        argument_error(format!(
+            "invalid jobs value {value:?}; expected a positive integer"
+        ))
+    })?;
+    if parsed == 0 {
+        return Err(argument_error(
+            "jobs must be greater than zero; expected --jobs <N> with N >= 1",
+        ));
+    }
+    if jobs.is_some() {
+        return Err(argument_error(
+            "parallelism was provided more than once; use only one of --jobs <N> and --jobs=<N>",
+        ));
+    }
+    *jobs = Some(parsed);
+    Ok(())
+}
+
 fn argument_error(message: impl Into<String>) -> NativeCliError {
     NativeCliError::Arguments(message.into())
 }
 
 fn starts_with_ascii(argument: &OsStr, prefix: &str) -> bool {
     argument.as_encoded_bytes().starts_with(prefix.as_bytes())
+}
+
+#[cfg(unix)]
+fn inline_jobs_value(argument: &OsStr) -> Option<&OsStr> {
+    use std::os::unix::ffi::OsStrExt;
+
+    let value = argument.as_bytes().strip_prefix(b"--jobs=")?;
+    Some(OsStr::from_bytes(value))
+}
+
+#[cfg(not(unix))]
+fn inline_jobs_value(argument: &OsStr) -> Option<&OsStr> {
+    argument.to_str()?.strip_prefix("--jobs=").map(OsStr::new)
 }
 
 #[cfg(unix)]
@@ -469,10 +542,26 @@ mod tests {
     }
 
     #[test]
+    fn parses_job_counts_and_defaults_to_available_parallelism() {
+        let default = parse_args(strings(&["input.rs", "-o", "program"])).unwrap();
+        let expected =
+            std::thread::available_parallelism().map_or(1, |parallelism| parallelism.get());
+        assert_eq!(default.jobs, expected);
+
+        for (arguments, expected) in [
+            (strings(&["input.rs", "--jobs", "1", "-o", "program"]), 1),
+            (strings(&["--jobs=2", "input.rs", "-o", "program"]), 2),
+            (strings(&["input.rs", "-o", "program", "--jobs=8"]), 8),
+        ] {
+            assert_eq!(parse_args(arguments).unwrap().jobs, expected);
+        }
+    }
+
+    #[test]
     fn help_succeeds_only_without_additional_arguments() {
         assert_eq!(
             USAGE,
-            "usage: kfrc native <input> -o <output> [--emit=asm | --emit=obj | -S]\n       kfrc native <input> [--emit=asm=<path> | --emit=obj=<path>]"
+            "usage: kfrc native <input> -o <output> [--emit=asm | --emit=obj | -S] [--jobs <N> | --jobs=<N>]\n       kfrc native <input> [--emit=asm=<path> | --emit=obj=<path>] [--jobs <N> | --jobs=<N>]"
         );
 
         for help in ["--help", "-h"] {
@@ -494,6 +583,30 @@ mod tests {
             (strings(&[]), "missing input path"),
             (strings(&["input.rs"]), "missing output path"),
             (strings(&["input.rs", "-o"]), "missing path after -o"),
+            (
+                strings(&["input.rs", "-o", "a", "--jobs"]),
+                "missing value after --jobs",
+            ),
+            (
+                strings(&["input.rs", "-o", "a", "--jobs="]),
+                "missing value after --jobs=",
+            ),
+            (
+                strings(&["input.rs", "-o", "a", "--jobs", "0"]),
+                "jobs must be greater than zero",
+            ),
+            (
+                strings(&["input.rs", "-o", "a", "--jobs=0"]),
+                "jobs must be greater than zero",
+            ),
+            (
+                strings(&["input.rs", "-o", "a", "--jobs=many"]),
+                "invalid jobs value \"many\"",
+            ),
+            (
+                strings(&["input.rs", "-o", "a", "--jobs=2", "--jobs", "3"]),
+                "parallelism was provided more than once",
+            ),
             (
                 strings(&["input.rs", "-o", "a", "-o", "b"]),
                 "output path was provided more than once",
@@ -626,6 +739,45 @@ mod tests {
     }
 
     #[test]
+    fn multi_function_outputs_match_serial_compilation() {
+        let directory = TestDirectory::new();
+        let input = directory.path.join("input.rs");
+        let source = "fn main() -> i64 { return identity(42); }\n\
+                      fn identity(value: i64) -> i64 { return value; }\n";
+        fs::write(&input, source).unwrap();
+        let mut graph = frontend::parse(source).unwrap();
+        optimizer_pipeline::optimize(&mut graph);
+        let graph = placement::place_for_native(&graph).unwrap();
+        let expected_assembly = native_program::compile_graph_to_assembly(&graph).unwrap();
+        let expected_object = native_program::compile_graph_to_object(&graph).unwrap();
+        let driver = NativeDriver::new().with_tools("missing-as", "missing-gcc");
+
+        for jobs in [1, 2, 8] {
+            for emit in [NativeEmitKind::Assembly, NativeEmitKind::Object] {
+                let (emit_argument, extension, expected) = match emit {
+                    NativeEmitKind::Assembly => ("--emit=asm", "s", expected_assembly.as_bytes()),
+                    NativeEmitKind::Object => ("--emit=obj", "o", expected_object.as_slice()),
+                    NativeEmitKind::Executable => unreachable!(),
+                };
+                let output = directory.path.join(format!("output-{jobs}.{extension}"));
+                let options = parse_args(vec![
+                    input.clone().into_os_string(),
+                    OsString::from(format!("--jobs={jobs}")),
+                    OsString::from(emit_argument),
+                    OsString::from("-o"),
+                    output.clone().into_os_string(),
+                ])
+                .unwrap();
+
+                let returned = run_with_driver(&options, &driver).unwrap();
+
+                assert_eq!(returned, output);
+                assert_eq!(fs::read(&output).unwrap(), expected, "jobs: {jobs}");
+            }
+        }
+    }
+
+    #[test]
     fn object_cache_hit_reuses_the_cached_entry() {
         let directory = TestDirectory::new();
         let input = directory.path.join("input.rs");
@@ -722,6 +874,26 @@ mod tests {
         assert_eq!(
             error.to_string(),
             "native graph placement failed: graph has no return node"
+        );
+        assert_eq!(
+            std::error::Error::source(&error).unwrap().to_string(),
+            source.to_string()
+        );
+    }
+
+    #[test]
+    fn parallel_compile_errors_have_explicit_display_and_source() {
+        let source = ParallelCompileError::Placement {
+            index: 2,
+            name: "helper".to_owned(),
+            source: PlacementError::MissingReturn,
+        };
+        let error = NativeCliError::from(source.clone());
+
+        assert!(matches!(error, NativeCliError::ParallelCompile(_)));
+        assert_eq!(
+            error.to_string(),
+            "parallel native compilation failed: function helper at index 2: placement failed: graph has no return node"
         );
         assert_eq!(
             std::error::Error::source(&error).unwrap().to_string(),

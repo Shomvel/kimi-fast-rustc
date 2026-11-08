@@ -1,0 +1,15 @@
+pub fn main() -> i64 {
+    return 40 + 2;
+}
+
+pub(crate) fn crate_visible() -> i64 {
+    return 42;
+}
+
+pub(self) fn self_visible() -> i64 {
+    return 42;
+}
+
+pub(super) fn super_visible() -> i64 {
+    return 42;
+}

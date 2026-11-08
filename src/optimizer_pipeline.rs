@@ -161,6 +161,21 @@ fn strength_reduce_control_graph(graph: &mut Graph) -> usize {
                 };
                 replace_binary_constant(graph, id, crate::son::BinaryOp::LShr, 1, shift);
             }
+            crate::son::BinaryOp::URem => {
+                let Some(divisor) = node_const(graph, data[1]) else {
+                    continue;
+                };
+                if power_of_two_shift(divisor).is_none() {
+                    continue;
+                }
+                replace_binary_constant(
+                    graph,
+                    id,
+                    crate::son::BinaryOp::And,
+                    1,
+                    divisor.wrapping_sub(1),
+                );
+            }
             _ => continue,
         }
         reduced += 1;
@@ -175,13 +190,9 @@ fn replace_binary_constant(
     index: usize,
     value: i64,
 ) {
-    let node = graph.node_mut(id).expect("reduced node exists");
-    node.kind = NodeKind::Binary(operation);
-    let constant = node.data[index];
-    graph
-        .node_mut(constant)
-        .expect("shift constant exists")
-        .kind = NodeKind::Const(value);
+    graph.node_mut(id).expect("reduced node exists").kind = NodeKind::Binary(operation);
+    let constant = graph.constant(value);
+    graph.node_mut(id).expect("reduced node exists").data[index] = constant;
 }
 
 fn node_const(graph: &Graph, id: crate::son::NodeId) -> Option<i64> {
@@ -192,7 +203,7 @@ fn node_const(graph: &Graph, id: crate::son::NodeId) -> Option<i64> {
 }
 
 fn power_of_two_shift(value: i64) -> Option<i64> {
-    (value > 0 && value.count_ones() == 1).then_some(value.trailing_zeros() as i64)
+    (value != 0 && value.count_ones() == 1).then_some(value.trailing_zeros() as i64)
 }
 
 fn simplify_control_graph(graph: &mut Graph) -> usize {

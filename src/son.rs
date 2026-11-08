@@ -1,3 +1,4 @@
+use std::collections::{BTreeMap, HashSet};
 use std::error::Error;
 use std::fmt;
 
@@ -279,13 +280,65 @@ impl Graph {
     }
 
     pub fn function_graph(&self, function: &FunctionMetadata) -> Graph {
-        let mut graph = self.clone();
-        let outside = graph
+        let in_range: HashSet<NodeId> = self
             .ids()
-            .filter(|id| id.0 < function.start.0 || id.0 > function.return_node.0)
-            .collect::<Vec<_>>();
-        for id in outside {
-            graph.remove(id);
+            .filter(|id| id.0 >= function.start.0 && id.0 <= function.return_node.0)
+            .collect();
+        let mut retained = in_range.clone();
+        let mut stack = retained.iter().copied().collect::<Vec<_>>();
+        while let Some(id) = stack.pop() {
+            let node = self.node(id).expect("retained node exists");
+            for channel in [
+                InputChannel::Control,
+                InputChannel::Data,
+                InputChannel::Memory,
+            ] {
+                for &input in node.inputs(channel) {
+                    if self.node(input).is_some() && retained.insert(input) {
+                        stack.push(input);
+                    }
+                }
+            }
+        }
+
+        let mut ordered = vec![function.start];
+        ordered.extend(
+            self.ids()
+                .filter(|id| retained.contains(id) && !in_range.contains(id)),
+        );
+        ordered.extend(
+            self.ids()
+                .filter(|id| in_range.contains(id) && *id != function.start),
+        );
+        let mapping: BTreeMap<NodeId, NodeId> = ordered
+            .iter()
+            .enumerate()
+            .map(|(index, id)| (*id, NodeId(index as u32)))
+            .collect();
+        let mut graph = Graph::new();
+        for old_id in ordered {
+            let mut node = self.node(old_id).expect("ordered node exists").clone();
+            for channel in [
+                InputChannel::Control,
+                InputChannel::Data,
+                InputChannel::Memory,
+            ] {
+                for input in node.inputs_mut(channel) {
+                    if let Some(mapped) = mapping.get(input) {
+                        *input = *mapped;
+                    }
+                }
+            }
+            graph.push(node);
+        }
+        graph.functions = self.functions.clone();
+        for metadata in &mut graph.functions {
+            if let Some(mapped) = mapping.get(&metadata.start) {
+                metadata.start = *mapped;
+            }
+            if let Some(mapped) = mapping.get(&metadata.return_node) {
+                metadata.return_node = *mapped;
+            }
         }
         graph
     }

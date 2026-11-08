@@ -9,8 +9,8 @@ use std::error::Error;
 use std::fmt;
 
 use crate::regalloc::{
-    AllocationResult, LiveInterval, Location, PhysicalRegister, RegAllocError, RegisterAllocator,
-    SpillSlot, VirtualReg as AllocVirtualReg,
+    AllocationResult, LiveInterval, Location, MoveHint, PhysicalRegister, RegAllocError,
+    RegisterAllocator, SpillSlot, VirtualReg as AllocVirtualReg,
 };
 use crate::son::{BinaryOp, CompareOp, Graph, NodeId, NodeKind, ValidationError};
 use crate::x86::{
@@ -530,8 +530,9 @@ pub fn compile_graph(
 ) -> Result<MachineFunction, CompileError> {
     let virtual_instructions = lower_graph(graph)?;
     let intervals = live_intervals(&virtual_instructions)?;
+    let move_hints = collect_move_hints(&virtual_instructions)?;
     let allocator = RegisterAllocator::new(GENERAL_REGISTERS.len() as u16);
-    let allocation = allocator.allocate(&intervals)?;
+    let allocation = allocator.allocate_with_move_hints(&intervals, &move_hints)?;
     let argument_homes = required_argument_homes(&virtual_instructions, &allocation);
     let spill_slot_offset = argument_homes.len() as u32;
     let call_slots = virtual_instructions
@@ -741,6 +742,26 @@ fn invert_condition(condition: Condition) -> Condition {
         Condition::UnsignedAbove => Condition::UnsignedBelowEq,
         Condition::UnsignedAboveEq => Condition::UnsignedBelow,
     }
+}
+
+fn collect_move_hints(instructions: &[VirtualInstr]) -> Result<Vec<MoveHint>, CompileError> {
+    let mut hints = Vec::new();
+    for (index, instruction) in instructions.iter().enumerate() {
+        let VirtualInstr::Mov {
+            dst,
+            src: VirtualValue::Reg(src),
+        } = *instruction
+        else {
+            continue;
+        };
+        let position = u32::try_from(index).map_err(|_| CompileError::TooManyInstructions)?;
+        hints.push(MoveHint::new(
+            position,
+            AllocVirtualReg(dst.0),
+            AllocVirtualReg(src.0),
+        ));
+    }
+    Ok(hints)
 }
 
 fn live_intervals(instructions: &[VirtualInstr]) -> Result<Vec<LiveInterval>, CompileError> {
@@ -1169,11 +1190,7 @@ impl Emitter<'_> {
             return self.store_definition(dst, SCRATCH0);
         }
         self.load_value(lhs, SCRATCH0)?;
-        self.load_value(rhs, SCRATCH1)?;
-        self.instructions.push(MachineInstr::Mov {
-            dst: Reg::Rcx,
-            src: SCRATCH1,
-        });
+        self.load_value(rhs, Reg::Rcx)?;
         self.instructions.push(match kind {
             ShiftKind::Left => MachineInstr::Shl { dst: SCRATCH0 },
             ShiftKind::Right => MachineInstr::Shr { dst: SCRATCH0 },

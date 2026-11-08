@@ -65,6 +65,23 @@ impl LiveInterval {
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct MoveHint {
+    pub position: InstructionPosition,
+    pub destination: VirtualReg,
+    pub source: VirtualReg,
+}
+
+impl MoveHint {
+    pub fn new(position: u32, destination: VirtualReg, source: VirtualReg) -> Self {
+        Self {
+            position: InstructionPosition(position),
+            destination,
+            source,
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Location {
     Register(PhysicalRegister),
     Spill(SpillSlot),
@@ -188,10 +205,34 @@ impl RegisterAllocator {
     }
 
     pub fn allocate(&self, intervals: &[LiveInterval]) -> Result<AllocationResult, RegAllocError> {
+        self.allocate_with_move_hints(intervals, &[])
+    }
+
+    /// Allocates registers, coalescing moves whose interval boundaries prove that the
+    /// source dies at the move and the destination is first defined there. Coalescing
+    /// also requires the destination to be the only interval starting at that position.
+    /// Hints that do not satisfy these checks are ignored.
+    pub fn allocate_with_move_hints(
+        &self,
+        intervals: &[LiveInterval],
+        move_hints: &[MoveHint],
+    ) -> Result<AllocationResult, RegAllocError> {
         let mut intervals = intervals.to_vec();
         intervals.sort_by_key(|interval| (interval.start, interval.end, interval.virtual_reg));
 
+        let mut sorted_hints = move_hints.to_vec();
+        sorted_hints.sort_by_key(|hint| (hint.destination, hint.position, hint.source));
+        let mut hints = BTreeMap::<VirtualReg, BTreeMap<InstructionPosition, VirtualReg>>::new();
+        for hint in sorted_hints {
+            hints
+                .entry(hint.destination)
+                .or_default()
+                .entry(hint.position)
+                .or_insert(hint.source);
+        }
+
         let mut seen = BTreeSet::new();
+        let mut start_counts = BTreeMap::new();
         for interval in &intervals {
             if interval.start >= interval.end {
                 return Err(RegAllocError::EmptyInterval {
@@ -212,6 +253,7 @@ impl RegisterAllocator {
                     });
                 }
             }
+            *start_counts.entry(interval.start).or_insert(0_usize) += 1;
         }
 
         let mut result = AllocationResult {
@@ -268,6 +310,29 @@ impl RegisterAllocator {
                     .insert(interval.virtual_reg, Location::Register(register));
                 active.push(ActiveInterval { interval, register });
                 continue;
+            }
+
+            if start_counts.get(&interval.start) == Some(&1) {
+                let source = hints
+                    .get(&interval.virtual_reg)
+                    .and_then(|positions| positions.get(&interval.start))
+                    .copied();
+                if let Some(source) = source {
+                    let source_end = interval.start.0.checked_add(1).map(InstructionPosition);
+                    let source_index = source_end.and_then(|end| {
+                        active.iter().position(|entry| {
+                            entry.interval.virtual_reg == source && entry.interval.end == end
+                        })
+                    });
+                    if let Some(index) = source_index {
+                        let register = active.remove(index).register;
+                        result
+                            .allocations
+                            .insert(interval.virtual_reg, Location::Register(register));
+                        active.push(ActiveInterval { interval, register });
+                        continue;
+                    }
+                }
             }
 
             if let Some(register) = free_registers.pop_first() {
