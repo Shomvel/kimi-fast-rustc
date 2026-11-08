@@ -2,11 +2,11 @@
 
 `kfrc` is an experimental, native-only Rust compiler. It uses a sea-of-nodes IR, graph rewrites, explicit control regions, linear-scan register allocation, and x86_64 System V code generation. It does not use LLVM or Cranelift and does not perform static ILP instruction scheduling; dynamic scheduling is left to CPU out-of-order execution.
 
-The frontend currently supports a documented `i64` (`isize`), `u64` (`usize`), and `bool` Rust subset: decimal, binary, octal, and hexadecimal integer literals; mutable and immutable bindings and parameters, including `let` and loop-variable shadowing; ordinary, arithmetic, bitwise, and shift compound assignments; `as` casts between supported scalar types; arithmetic including wrapping negation; comparisons, bitwise operators and integer `!`, shifts, and logical `!`/`&&`/`||` with short-circuit evaluation; `if` expressions and statements with `else if`, plus scalar `match` with literal and inclusive-range arms, optional guards, and a required final unguarded wildcard; `while`/`loop` and exclusive/inclusive numeric `for` loops with `break`/`continue`, including unconditional `loop` expressions with valued `break`; early `return` in conditionals and loops; tail expressions and semicolon-terminated expression statements, including unit calls and discarded values; standard `fn main`; `pub`, `pub(crate)`, `pub(self)`, and `pub(super)` function visibility, top-level scalar constants with compile-time expression evaluation, and `const fn` runtime calls; and declaration-order-independent function calls, including self- and mutual recursion, with register and stack arguments. Unsupported Rust is rejected explicitly rather than falling back to another backend. Whole-workspace support for large projects such as ripgrep and cargo is not yet implemented; native measurements are limited to the workloads documented in `docs/VALIDATION.md`.
+The frontend currently supports a documented `i64` (`isize`), `u64` (`usize`), and `bool` Rust subset: decimal, binary, octal, and hexadecimal integer literals; mutable and immutable bindings and parameters, including `let` and loop-variable shadowing; ordinary, arithmetic, bitwise, and shift compound assignments; `as` casts between supported scalar types; arithmetic including wrapping negation; comparisons, bitwise operators and integer `!`, shifts, and logical `!`/`&&`/`||` with short-circuit evaluation; `if` expressions and statements with `else if`, plus scalar `match` with literal and inclusive-range arms, optional guards, and a required final unguarded wildcard; `while`/`loop` and exclusive/inclusive numeric `for` loops with `break`/`continue`, including unconditional `loop` expressions with valued `break`; early `return` in conditionals and loops; tail expressions and semicolon-terminated expression statements, including unit calls and discarded values; standard `fn main`; `pub`, `pub(crate)`, `pub(self)`, and `pub(super)` function visibility, top-level scalar constants with compile-time expression evaluation, and `const fn` runtime calls; and declaration-order-independent function calls, including self- and mutual recursion, with register and stack arguments. Unsupported Rust is rejected explicitly rather than falling back to another backend. Whole-workspace support for large projects such as ripgrep and cargo is not yet implemented; native measurements are limited to small benchmark workloads; the historical validation notes (`docs/VALIDATION.md`) are in git history at `138723c`.
 
 Legacy LLVM modules and benchmark data are retained only as historical evidence. They are not the current compiler architecture or a supported fallback.
 
-The [rustc adaptation and migration plan](docs/migration/README.md) describes the proposed path from this subset to a compiler with its own semantic model, SoN backend, and dependency pipeline. It includes staged work packages and acceptance gates; the planned capabilities are not implemented yet.
+The [rustc adaptation and migration plan](docs/README.md) describes the proposed path from this subset to a compiler with its own semantic model, SoN backend, and dependency pipeline. It includes staged work packages and acceptance gates; the planned capabilities are not implemented yet.
 
 ## Build
 
@@ -115,7 +115,7 @@ export CARGO_NET_OFFLINE=true
 
 Formal comparisons must use the same rustc, sysroot, source commit, lockfile, target, features, dependency cache, and CPU budget. Runtime and size ratios are candidate divided by baseline; a ratio at or below 1.0 is non-regression. Native results must never be presented as LLVM results or vice versa.
 
-The completed `20261107T155940Z` run met both criteria for the LLVM candidate: ripgrep's size/runtime ratios were 0.126/0.931, and cargo's were 0.583/0.988. See `docs/VALIDATION.md` for all three arms, compile-time costs, native execution evidence, and the distinction between full-project LLVM results and the native subset.
+The completed `20261107T155940Z` run met both criteria for the LLVM candidate: ripgrep's size/runtime ratios were 0.126/0.931, and cargo's were 0.583/0.988. The historical `docs/VALIDATION.md` (git history at `138723c`) records all three arms, compile-time costs, native execution evidence, and the distinction between full-project LLVM results and the native subset.
 
 ## Native design
 
@@ -132,4 +132,4 @@ Rust subset
 
 There is no machine-instruction list scheduler. The block scheduler under `scheduler.rs` is a bounded parallel task scheduler for compiler work, not an ILP scheduler.
 
-See `docs/ARCHITECTURE.md` for the track boundary and correctness rules.
+The plan for the full compiler is in [docs/](docs/README.md); the historical `docs/ARCHITECTURE.md` is in git history at `138723c`.
