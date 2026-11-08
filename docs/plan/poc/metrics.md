@@ -11,6 +11,8 @@
 | 5 | 泛型只优化一次 | 每定义 R 级优化次数；实例数 / 特化身份键数 | 恰好 1；去重比 ≥ `-Zmono-dedup` | rustc + `-Zmono-dedup`（前期补丁） |
 | 6 | 增量 | 编辑场景下机器码片段复用率；重编的定义数 | 行号移动 100% 命中；注释 0 重编；改一个非泛型函数体只重编它和内联了它的调用者 | rustc `-Cincremental` 同场景 |
 
+主张 3 只覆盖 PoC 的负载（解析器类、无 SIMD），不外推到 ripgrep 整体：ripgrep 能否 ≤ 1.0 取决于显式 SIMD 与 intrinsic 内联（[runtime-profile](../../research/runtime-profile/README.md)），不在 PoC 范围。PoC 必须做到的是跨 crate 内联（经 R 图缓存拿到 std 和上游的泛型、`#[inline]` 函数体），这是 Cargo 解析类负载的主要因素。
+
 门槛在 P0 开始前冻结。看到数据后不放宽；达不到的项如实报告并给出归因。
 
 ## 测量环境与方法

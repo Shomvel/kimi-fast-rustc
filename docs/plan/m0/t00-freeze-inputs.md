@@ -9,9 +9,9 @@
 | kfrc 基线 | `44c9d80b02ab140d7edf5348b6946d8122d842b6` | 当前 main |
 | rustc 参考源码 | 官方 1.94.1，commit `e408947bfd200af42db322daf0fadfe7e26d3bd1` | 见 [sources/](t00-freeze-inputs.md)；本地有干净 sparse checkout（compiler/、tests/ui/、rustc-dev-guide） |
 | ripgrep | 15.2.0，commit `e89fff89ac9af12e8d4ce9d5fd07beb408ca730f`，`Cargo.lock` SHA-256 `7a7d39cd…a64`，59 个包，MSRV 1.85 | 历史 benchmark 工作区 |
-| Cargo | 0.99.0，commit `797e8a9bca276c1c9f9f738d2a20f484fa4eea9d`，`Cargo.lock` SHA-256 `1f623862…e6c`，550 个包，**MSRV 1.94** | 同上 |
+| Cargo | 0.99.0，commit `797e8a9bca276c1c9f9f738d2a20f484fa4eea9d`，`Cargo.lock` SHA-256 `1f623862…e6c`，550 个包；workspace 写 MSRV 1.94，但 `cargo` 包本身要求 **1.96**，`libsqlite3-sys` 0.38.1 用了 `cfg_select!`，**rustc 1.94.1 编不过** | 同上；2026-11-08 E2B 实测 |
 
-Cargo 的 MSRV 1.94 决定了参考 rustc 至少是 1.94；1.94.1 满足，ripgrep 的 1.85 也满足。如果改用更新的版本，两个项目的 lockfile 要一起重新确认。
+**待决：** Cargo 0.99.0 与 rustc 1.94.1 不兼容。二选一：目标改为 Cargo 0.95.0（运行时画像实测用的就是它），或参考 rustc 升到 ≥ 1.96（rustc 精读笔记、`ra-ap-*` 版本、sysroot 统计都要随之更新）。ripgrep 的 MSRV 1.85 两种都满足。
 
 ## 两棵 rustc 树要分清
 

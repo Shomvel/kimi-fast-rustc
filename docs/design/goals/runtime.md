@@ -14,6 +14,21 @@
 | 闭包/迭代器 | 内联 + SROA 多轮 | S 级内联已优化的图，接缝种子化简 |
 | nounwind | FunctionAttrs 推断 | 调用摘要 |
 
+## 优先级（E2B 实测归因）
+
+去掉某项 LLVM 能力后 rustc 产物变慢多少（指令数比，[runtime-profile](../../research/runtime-profile/README.md)）：
+
+| # | 必须做到 | 不做的代价 |
+|---|---|---|
+| 1 | 显式 SIMD：`core::arch` intrinsic 逐个降成内联指令，运行时分派结果与 rustc 一致（AVX2 → SSSE3/SSE2 → 退路） | rg 单文件搜索 3.4–10.1×；只缺 AVX2 也有 1.26–2.77× |
+| 2 | intrinsic 永不成为调用：不走普通内联决策，跨编译单位、预算不够时也直接按 `Vector` 节点降低 | 内联失败时 `_mm256_movemask_epi8` 作为函数占 22% 周期 |
+| 3 | 跨 crate 的小函数内联（闭包、迭代器、集合、`Mutex::lock`） | Cargo 解析类 1.21×（周期 1.30×） |
+| 4 | 字节“比较 + 计数/查找”循环的向量化（不需要通用向量化） | rg 带行号输出 1.15–1.49× |
+| 5 | 寄存器分配接近 LLVM basic | rg ≤ 1.06×，Cargo ≤ 1.02× |
+| 6 | 展开、跳转表、GVN load/PRE、LICM 提升 | 各自 ±3% 以内，可在 T38 之后 |
+
+做到 1–3 后，剩余缺口约 1–6%，要靠 4 和中层优势（堆分配消除、move 转发）补回。做不到 1–2 就是数量级的差距，与 Cranelift 的 4–15× 同一来源。
+
 ## 必须自己做的部分
 
 | 优化 | 计划 | 风险 |
@@ -29,7 +44,7 @@
 | 指令选择 | 与窥孔共用自写规则 DSL（[规则表](../ir/optimization-pipeline.md#共同机制)）：有优先级、拒绝重叠，不另设选择 IR | 低 |
 | 归纳变量与强度削减 | L 级 | 低 |
 | 循环展开 | 小循环，体积预算内 | 中 |
-| 向量化 | 晚期，T38 之后单独验收 | **高**：ripgrep/Cargo 中依赖自动向量化的热点要先定位 |
+| 向量化 | 只需字节归约循环（上表第 4 项）；通用自动向量化不需要 | 中：没有 workload 显示需要通用向量化 |
 | 显式 SIMD（`core::arch`） | intrinsic 1:1 映射为 `Vector` 值节点；**提前做**，M0 的 profile 列出 ripgrep/Cargo 必需的 intrinsic | 中：工作量大但机械。memchr 按 AVX2→SSE2→SWAR 分派，比较时双方必须走同一条分派路径，否则这组比较无效 |
 
 ripgrep 的热路径主要在 memchr 和 regex-automata，前者大量使用显式 SIMD（按 target feature 分派），后者是状态机循环。先用 profile 确认这一点（M0 的 rustc 基线 profile），再决定向量化是否在关键路径上。

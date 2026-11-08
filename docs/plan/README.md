@@ -92,7 +92,7 @@ T09 先用 T03 runner + T08 机器入口拿到真实执行证据，T10 再接公
 - 随机程序只生成无 UB 的程序，先经 Miri 过滤（Rustlantis 式 MIR fuzz）；涉及别名分区的程序在 Miri SB/TB 两种模式下都要合法。
 - `repr(Rust)` 布局与 ABI 用 `#[rustc_layout(debug)]`/`#[rustc_abi(debug)]` 输出单独对拍（[layout-abi-mono 测试](../research/rustc/layout-abi-mono/test-cases.md)）。
 
-**性能。** 基线是固定版本的 rustc+LLVM，同源码、lockfile、features、target、配置。编译时间分冷构建、no-op、叶子修改、接口修改、缓存 hit/miss，分 4/8/16 核；运行时间和 strip 后体积的比值 `candidate / baseline ≤ 1.0`，runtime 用单侧置信上界判断，跨过 1 记“证据不足”。每个 workload 单列，不用平均数掩盖退化。各目标的指标见 [design/goals/](../design/goals/compile-time.md)。
+**性能。** 主指标是用户态 `instructions:u`（基线波动 ≤ 2% 时另报 `cycles:u`），用完整的 workload 集。只有“去掉全部 SIMD 会让 wall 变慢 ≥ 1.10×”的 workload 能单独判定 ≤ 1.0；原来的两个验收 workload 去掉 SIMD 后指令数 3.1× 而 wall 只差 1.3%，只作冒烟。M0 做归因实验（[m0-experiment](../research/runtime-profile/m0-experiment.md)），作为 T38 的排序依据。基线是固定版本的 rustc+LLVM，同源码、lockfile、features、target、配置。编译时间分冷构建、no-op、叶子修改、接口修改、缓存 hit/miss，分 4/8/16 核；运行时间和 strip 后体积的比值 `candidate / baseline ≤ 1.0`，runtime 用单侧置信上界判断，跨过 1 记“证据不足”。每个 workload 单列，不用平均数掩盖退化。各目标的指标见 [design/goals/](../design/goals/compile-time.md)。
 
 **证据。** 每次验收保存命令与输入摘要、两边编译器与产物哈希、host/target 与资源、原始日志与样本、通过/失败/跳过集合。路径用仓库相对位置。
 
