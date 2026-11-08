@@ -27,7 +27,8 @@
 | [architecture.md](architecture.md) | 外壳与三条接缝：`TypeOracle`、MIR → Body 转换器、std 的未优化 MIR |
 | [phases.md](phases.md) | P0–P4：交付物、出口、止损点 |
 | [metrics.md](metrics.md) | 指标、门槛、测量协议 |
-| [relation.md](relation.md) | 与 M0–M6 的关系：哪些代码进入产品，哪些是一次性的 |
+| [relation.md](relation.md) | 与 M0–M6 的关系：哪些代码进入产品，哪些是一次性的；契约缺口清单 |
+| [p0-status.md](p0-status.md) | P0 进度：已有部分、支持的输入、验证结果、离出口还差什么 |
 
 ## 已定的决策
 

@@ -1,0 +1,20 @@
+[package]
+name = "rustc_codegen_kfrc"
+version = "0.1.0"
+edition = "2024"
+description = "PoC shell: rustc 1.94.1 front end + kfrc middle/back end as a codegen backend"
+license = "MIT OR Apache-2.0"
+
+[lib]
+crate-type = ["dylib"]
+
+[dependencies]
+kfrc-body = { path = "../kfrc-body" }
+kfrc-son = { path = "../kfrc-son" }
+kfrc-x86 = { path = "../kfrc-x86" }
+
+[package.metadata.rust-analyzer]
+rustc_private = true
+
+# Built separately from the root workspace: it links rustc_private.
+[workspace]

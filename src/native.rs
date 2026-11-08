@@ -530,6 +530,45 @@ pub fn compile_graph(
 ) -> Result<MachineFunction, CompileError> {
     let virtual_instructions = lower_graph(graph)?;
     let intervals = live_intervals(&virtual_instructions)?;
+    compile_virtual_function(virtual_instructions, intervals, name)
+}
+
+/// Register-allocates and emits already lowered virtual instructions.
+///
+/// `intervals` gives one live range per virtual register in instruction
+/// positions; callers with arbitrary control flow must compute them from a
+/// real liveness analysis (the graph lowering above relies on structured
+/// layout instead).
+pub fn compile_virtual_function(
+    virtual_instructions: Vec<VirtualInstr>,
+    intervals: Vec<LiveInterval>,
+    name: impl Into<String>,
+) -> Result<MachineFunction, CompileError> {
+    let mut intervals = intervals;
+    // A variable shift count is loaded into `rcx`, which is also allocatable:
+    // pin `rcx` at each such shift so no value lives there across it.
+    let mut next_pin = virtual_instructions
+        .iter()
+        .flat_map(|instruction| defined_register(instruction).into_iter().chain(used_registers(instruction)))
+        .map(|register| register.0)
+        .chain(intervals.iter().map(|interval| interval.virtual_reg.0))
+        .max()
+        .map_or(0, |max| max + 1);
+    for (position, instruction) in virtual_instructions.iter().enumerate() {
+        if let VirtualInstr::Shl { rhs: VirtualValue::Reg(_), .. }
+        | VirtualInstr::Shr { rhs: VirtualValue::Reg(_), .. }
+        | VirtualInstr::LShr { rhs: VirtualValue::Reg(_), .. } = instruction
+        {
+            let position = u32::try_from(position).map_err(|_| CompileError::TooManyInstructions)?;
+            intervals.push(LiveInterval::fixed(
+                AllocVirtualReg(next_pin),
+                position,
+                position + 1,
+                physical_register(Reg::Rcx),
+            ));
+            next_pin += 1;
+        }
+    }
     let move_hints = collect_move_hints(&virtual_instructions)?;
     let allocator = RegisterAllocator::new(GENERAL_REGISTERS.len() as u16);
     let allocation = allocator.allocate_with_move_hints(&intervals, &move_hints)?;
@@ -583,6 +622,7 @@ pub fn compile_graph(
         allocation: &allocation,
         argument_homes: &argument_homes,
         spill_slot_offset,
+        call_slot_offset: spill_slot_offset + allocation.spill_slot_count,
         symbols: &function.symbols,
         instructions: Vec::with_capacity(virtual_instructions.len()),
     };
@@ -957,6 +997,9 @@ struct Emitter<'a> {
     allocation: &'a AllocationResult,
     argument_homes: &'a BTreeMap<usize, u32>,
     spill_slot_offset: u32,
+    /// First slot of the call area (caller-saved homes, then staged
+    /// arguments), after the argument homes and all spill slots.
+    call_slot_offset: u32,
     symbols: &'a [String],
     instructions: Vec<MachineInstr>,
 }
@@ -1090,12 +1133,21 @@ impl Emitter<'_> {
                 for (index, value) in args.iter().copied().enumerate() {
                     self.load_value(value, SCRATCH1)?;
                     self.instructions.push(MachineInstr::Store {
-                        slot: StackSlot(self.spill_slot_offset + CALL_HOME_COUNT + index as u32),
+                        slot: StackSlot(self.call_slot_offset + CALL_HOME_COUNT + index as u32),
                         src: SCRATCH1,
                     });
                 }
+                // Save caller-saved allocatable registers before the argument
+                // registers (a subset of them) are overwritten, so the values
+                // restored after the call are the ones live across it.
+                for (index, register) in CALL_HOME_REGISTERS.iter().copied().enumerate() {
+                    self.instructions.push(MachineInstr::Store {
+                        slot: StackSlot(self.call_slot_offset + index as u32),
+                        src: register,
+                    });
+                }
                 for index in 0..args.len() {
-                    let slot = StackSlot(self.spill_slot_offset + CALL_HOME_COUNT + index as u32);
+                    let slot = StackSlot(self.call_slot_offset + CALL_HOME_COUNT + index as u32);
                     if index < Reg::ARGUMENTS.len() {
                         self.instructions.push(MachineInstr::Load {
                             dst: Reg::ARGUMENTS[index],
@@ -1112,12 +1164,6 @@ impl Emitter<'_> {
                         });
                     }
                 }
-                for (index, register) in CALL_HOME_REGISTERS.iter().copied().enumerate() {
-                    self.instructions.push(MachineInstr::Store {
-                        slot: StackSlot(self.spill_slot_offset + index as u32),
-                        src: register,
-                    });
-                }
                 let target = self
                     .symbols
                     .iter()
@@ -1128,7 +1174,7 @@ impl Emitter<'_> {
                 for (index, register) in CALL_HOME_REGISTERS.iter().copied().enumerate() {
                     self.instructions.push(MachineInstr::Load {
                         dst: register,
-                        slot: StackSlot(self.spill_slot_offset + index as u32),
+                        slot: StackSlot(self.call_slot_offset + index as u32),
                     });
                 }
                 self.store_definition(dst, Reg::Rax)?;

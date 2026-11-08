@@ -3,3 +3,5 @@
 /bench-results
 *.profraw
 *.profdata
+crates/rustc_codegen_kfrc/target/
+crates/rustc_codegen_kfrc/rustc-ice-*.txt
