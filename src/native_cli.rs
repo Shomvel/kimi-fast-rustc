@@ -231,6 +231,15 @@ fn compile_object(
     jobs: usize,
 ) -> Result<CachedObject, NativeCliError> {
     if !graph.functions.is_empty() {
+        if let Some(directory) = cache_directory {
+            return Ok(NativeCache::new(directory).get_or_compile_program(
+                graph,
+                jobs,
+                native_cache::SUPPORTED_TARGET,
+                native_cache::SUPPORTED_ABI,
+                NATIVE_OBJECT_BACKEND_VERSION,
+            )?);
+        }
         return Ok(CachedObject {
             bytes: parallel_native::compile_graph(graph, jobs)?.emit_object()?,
             cache_hit: false,
@@ -775,6 +784,77 @@ mod tests {
                 assert_eq!(fs::read(&output).unwrap(), expected, "jobs: {jobs}");
             }
         }
+    }
+
+    #[test]
+    fn multi_function_object_cache_hits_and_preserves_parallel_bytes() {
+        let directory = TestDirectory::new();
+        let cache_directory = directory.path.join("cache");
+        let source = "fn main() -> i64 { return factorial(5); }\n\
+                      fn factorial(value: i64) -> i64 {\n\
+                          if value <= 1 { return 1; }\n\
+                          return value * factorial(value - 1);\n\
+                      }\n";
+        let mut graph = frontend::parse(source).unwrap();
+        optimizer_pipeline::optimize(&mut graph);
+        let graph = placement::place_for_native(&graph).unwrap();
+        let expected = native_program::compile_graph_to_object(&graph).unwrap();
+
+        let uncached = compile_object(&graph, None, 3).unwrap();
+        assert!(!uncached.cache_hit);
+        assert_eq!(uncached.bytes, expected);
+
+        for (run, jobs) in [1, 2, 8].into_iter().enumerate() {
+            let result = compile_object(&graph, Some(&cache_directory), jobs).unwrap();
+            assert_eq!(result.cache_hit, run != 0, "jobs: {jobs}");
+            assert_eq!(result.bytes, expected, "jobs: {jobs}");
+        }
+        let entries = cache_entries(&cache_directory);
+        assert_eq!(entries.len(), 1);
+        fs::File::open(&entries[0])
+            .unwrap()
+            .set_modified(UNIX_EPOCH)
+            .unwrap();
+        let hit = compile_object(&graph, Some(&cache_directory), 4).unwrap();
+        assert!(hit.cache_hit);
+        assert_eq!(hit.bytes, expected);
+        assert_eq!(
+            fs::metadata(&entries[0]).unwrap().modified().unwrap(),
+            UNIX_EPOCH
+        );
+    }
+
+    #[test]
+    fn multi_function_object_cache_recompiles_when_graph_changes() {
+        let directory = TestDirectory::new();
+        let cache = directory.path.join("cache");
+        let placed_graph = |source: &str| {
+            let mut graph = frontend::parse(source).unwrap();
+            optimizer_pipeline::optimize(&mut graph);
+            placement::place_for_native(&graph).unwrap()
+        };
+        let original = "fn main() -> i64 { return factorial(5); }\n\
+                        fn factorial(value: i64) -> i64 {\n\
+                            if value <= 1 { return 1; }\n\
+                            return value * factorial(value - 1);\n\
+                        }\n";
+        let changed = "fn main() -> i64 { return factorial(5); }\n\
+                       fn factorial(value: i64) -> i64 {\n\
+                           if value <= 1 { return 2; }\n\
+                           return value * factorial(value - 1);\n\
+                       }\n";
+
+        let first = compile_object(&placed_graph(original), Some(&cache), 2).unwrap();
+        assert!(!first.cache_hit);
+        let second = compile_object(&placed_graph(changed), Some(&cache), 2).unwrap();
+        assert!(!second.cache_hit);
+        assert_ne!(second.bytes, first.bytes);
+        assert_eq!(cache_entries(&cache).len(), 2);
+
+        let restored = compile_object(&placed_graph(original), Some(&cache), 4).unwrap();
+        assert!(restored.cache_hit);
+        assert_eq!(restored.bytes, first.bytes);
+        assert_eq!(cache_entries(&cache).len(), 2);
     }
 
     #[cfg(all(target_os = "linux", target_arch = "x86_64"))]

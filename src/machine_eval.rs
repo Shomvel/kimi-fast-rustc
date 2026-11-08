@@ -168,6 +168,7 @@ fn execute(function: &MachineFunction, arguments: &[i64]) -> Result<Execution, M
             MachineInstr::Neg { dst } => {
                 let value = machine.reg(dst).wrapping_neg();
                 machine.set_reg(dst, value);
+                machine.comparison = None;
             }
             MachineInstr::Not { dst } => {
                 let value = !machine.reg(dst);
@@ -178,54 +179,81 @@ fn execute(function: &MachineFunction, arguments: &[i64]) -> Result<Execution, M
                     .reg(dst)
                     .wrapping_add(machine.operand(src, function.stack_slots)?);
                 machine.set_reg(dst, value);
+                machine.comparison = None;
             }
             MachineInstr::Sub { dst, src } => {
                 let value = machine
                     .reg(dst)
                     .wrapping_sub(machine.operand(src, function.stack_slots)?);
                 machine.set_reg(dst, value);
+                machine.comparison = None;
             }
             MachineInstr::IMul { dst, src } => {
                 let value = machine
                     .reg(dst)
                     .wrapping_mul(machine.operand(src, function.stack_slots)?);
                 machine.set_reg(dst, value);
+                machine.comparison = None;
             }
             MachineInstr::And { dst, src } => {
                 let value = machine.reg(dst) & machine.operand(src, function.stack_slots)?;
                 machine.set_reg(dst, value);
+                machine.comparison = None;
             }
             MachineInstr::Or { dst, src } => {
                 let value = machine.reg(dst) | machine.operand(src, function.stack_slots)?;
                 machine.set_reg(dst, value);
+                machine.comparison = None;
             }
             MachineInstr::Xor { dst, src } => {
                 let value = machine.reg(dst) ^ machine.operand(src, function.stack_slots)?;
                 machine.set_reg(dst, value);
+                machine.comparison = None;
             }
             MachineInstr::Shl { dst } => {
-                let value = machine.reg(dst).wrapping_shl(machine.reg(Reg::Rcx) as u32);
+                let count = machine.reg(Reg::Rcx) as u32 & 63;
+                let value = machine.reg(dst).wrapping_shl(count);
                 machine.set_reg(dst, value);
+                if count != 0 {
+                    machine.comparison = None;
+                }
             }
             MachineInstr::Shr { dst } => {
-                let value = machine.reg(dst).wrapping_shr(machine.reg(Reg::Rcx) as u32);
+                let count = machine.reg(Reg::Rcx) as u32 & 63;
+                let value = machine.reg(dst).wrapping_shr(count);
                 machine.set_reg(dst, value);
+                if count != 0 {
+                    machine.comparison = None;
+                }
             }
             MachineInstr::LShr { dst } => {
-                let value = (machine.reg(dst) as u64).wrapping_shr(machine.reg(Reg::Rcx) as u32);
+                let count = machine.reg(Reg::Rcx) as u32 & 63;
+                let value = (machine.reg(dst) as u64).wrapping_shr(count);
                 machine.set_reg(dst, value as i64);
+                if count != 0 {
+                    machine.comparison = None;
+                }
             }
             MachineInstr::ShlImm { dst, count } => {
                 let value = machine.reg(dst).wrapping_shl(count as u32);
                 machine.set_reg(dst, value);
+                if count & 63 != 0 {
+                    machine.comparison = None;
+                }
             }
             MachineInstr::ShrImm { dst, count } => {
                 let value = machine.reg(dst).wrapping_shr(count as u32);
                 machine.set_reg(dst, value);
+                if count & 63 != 0 {
+                    machine.comparison = None;
+                }
             }
             MachineInstr::LShrImm { dst, count } => {
                 let value = (machine.reg(dst) as u64).wrapping_shr(count as u32);
                 machine.set_reg(dst, value as i64);
+                if count & 63 != 0 {
+                    machine.comparison = None;
+                }
             }
             MachineInstr::Cqo => {
                 let sign = if machine.reg(Reg::Rax) < 0 { -1 } else { 0 };
@@ -242,6 +270,7 @@ fn execute(function: &MachineFunction, arguments: &[i64]) -> Result<Execution, M
                 }
                 machine.set_reg(Reg::Rax, lhs / rhs);
                 machine.set_reg(Reg::Rdx, lhs % rhs);
+                machine.comparison = None;
             }
             MachineInstr::UDiv { src } => {
                 let lhs = machine.reg(Reg::Rax) as u64;
@@ -251,6 +280,7 @@ fn execute(function: &MachineFunction, arguments: &[i64]) -> Result<Execution, M
                 }
                 machine.set_reg(Reg::Rax, (lhs / rhs) as i64);
                 machine.set_reg(Reg::Rdx, (lhs % rhs) as i64);
+                machine.comparison = None;
             }
             MachineInstr::Cmp { lhs, rhs } => {
                 machine.comparison = Some((

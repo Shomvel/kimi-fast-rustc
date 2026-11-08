@@ -5,6 +5,7 @@
 //! `dst += src`. Register allocation is responsible for inserting `Load` and
 //! `Store` instructions for spill slots.
 
+use std::collections::BTreeMap;
 use std::fmt;
 
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
@@ -403,6 +404,121 @@ impl MachineFunction {
     pub fn emit_gnu_assembly(&self) -> Result<String, AsmError> {
         emit_gnu_assembly(self)
     }
+}
+
+/// Replaces zero immediates with register XORs when no later flags consumer is reachable.
+/// Returns the number of replacements; each replacement saves four encoded bytes.
+pub fn optimize_zero_idioms(instructions: &mut [MachineInstr]) -> usize {
+    let labels = instructions
+        .iter()
+        .enumerate()
+        .filter_map(|(index, instruction)| match instruction {
+            MachineInstr::Label(label) => Some((*label, index)),
+            _ => None,
+        })
+        .collect::<BTreeMap<_, _>>();
+    let loop_headers = instructions
+        .iter()
+        .enumerate()
+        .filter_map(|(index, instruction)| match instruction {
+            MachineInstr::Jmp(target) | MachineInstr::Jcc { target, .. } => labels
+                .get(target)
+                .filter(|target_index| **target_index < index)
+                .copied(),
+            _ => None,
+        })
+        .collect::<std::collections::BTreeSet<_>>();
+    let multiple_returns = instructions
+        .iter()
+        .filter(|instruction| matches!(instruction, MachineInstr::Ret))
+        .take(2)
+        .count()
+        > 1;
+
+    let mut live_in = vec![false; instructions.len()];
+    let mut live_out = vec![false; instructions.len()];
+    loop {
+        let mut changed = false;
+        for index in (0..instructions.len()).rev() {
+            let instruction = &instructions[index];
+            let fallthrough = live_in.get(index + 1).copied().unwrap_or(false);
+            let target = match instruction {
+                MachineInstr::Jmp(target) | MachineInstr::Jcc { target, .. } => labels
+                    .get(target)
+                    .and_then(|target| live_in.get(*target))
+                    .copied()
+                    .unwrap_or(false),
+                _ => false,
+            };
+            let outgoing = match instruction {
+                MachineInstr::Ret => false,
+                MachineInstr::Jmp(_) => target,
+                MachineInstr::Jcc { .. } => target || fallthrough,
+                _ => fallthrough,
+            };
+            let reads_flags = matches!(
+                instruction,
+                MachineInstr::Jcc { .. }
+                    | MachineInstr::SetCc { .. }
+                    | MachineInstr::Shl { .. }
+                    | MachineInstr::Shr { .. }
+                    | MachineInstr::LShr { .. }
+                    | MachineInstr::Call { .. }
+            ) || (multiple_returns && matches!(instruction, MachineInstr::Ret));
+            let writes_flags = matches!(
+                instruction,
+                MachineInstr::Neg { .. }
+                    | MachineInstr::Add { .. }
+                    | MachineInstr::Sub { .. }
+                    | MachineInstr::IMul { .. }
+                    | MachineInstr::And { .. }
+                    | MachineInstr::Or { .. }
+                    | MachineInstr::Xor { .. }
+                    | MachineInstr::Shl { .. }
+                    | MachineInstr::Shr { .. }
+                    | MachineInstr::LShr { .. }
+                    | MachineInstr::IDiv { .. }
+                    | MachineInstr::UDiv { .. }
+                    | MachineInstr::Cmp { .. }
+                    | MachineInstr::Test { .. }
+                    | MachineInstr::Call { .. }
+            ) || matches!(
+                instruction,
+                MachineInstr::ShlImm { count, .. }
+                    | MachineInstr::ShrImm { count, .. }
+                    | MachineInstr::LShrImm { count, .. }
+                    if count & 63 != 0
+            );
+            let incoming = if loop_headers.contains(&index) || reads_flags {
+                true
+            } else if writes_flags {
+                false
+            } else {
+                outgoing
+            };
+            changed |= live_in[index] != incoming || live_out[index] != outgoing;
+            live_in[index] = incoming;
+            live_out[index] = outgoing;
+        }
+        if !changed {
+            break;
+        }
+    }
+
+    let mut replacements = 0;
+    for (index, instruction) in instructions.iter_mut().enumerate() {
+        if live_out[index] {
+            continue;
+        }
+        if let MachineInstr::MovImm { dst, value: 0 } = *instruction {
+            *instruction = MachineInstr::Xor {
+                dst,
+                src: Operand::Reg(dst),
+            };
+            replacements += 1;
+        }
+    }
+    replacements
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]

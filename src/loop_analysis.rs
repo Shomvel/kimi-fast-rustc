@@ -1,13 +1,14 @@
 //! Dominance and natural-loop analysis for target-independent control-flow graphs.
 //!
 //! Only blocks reachable from the entry participate in dominance and loop
-//! discovery. Unreachable blocks are reported separately. This analysis does
-//! not mutate instructions, schedule code, or perform instruction-level
-//! parallelism.
+//! discovery. Unreachable blocks are reported separately. Loop-invariant motion
+//! uses stable, dominance-checked reordering without instruction-level
+//! parallelism scheduling.
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use crate::cfg::{BlockId, ControlFlowGraph};
+use crate::cfg::{BasicBlock, BlockId, ControlFlowGraph};
+use crate::son::{BinaryOp, Graph, InputChannel, NodeId, NodeKind};
 
 #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub struct BackEdge {
@@ -347,6 +348,287 @@ fn has_irreducible_region<V>(graph: &ControlFlowGraph<V>, reachable: &BTreeSet<B
     }
 
     successors.len() > 1
+}
+
+/// Hoists trap-free expressions whose inputs are invariant in a natural loop.
+///
+/// Only loops with a single, dedicated preheader are considered. Every input
+/// that stays outside the loop must dominate that preheader and be scheduled
+/// before its header. Nodes are otherwise kept in their original relative order.
+pub fn hoist_loop_invariants(graph: &mut Graph) -> usize {
+    let mut hoisted = 0;
+    while let Some((header, candidates)) = next_hoist(graph) {
+        let count = candidates.len();
+        reorder_before(graph, header, &candidates);
+        hoisted += count;
+    }
+    hoisted
+}
+
+struct SonControlFlow {
+    blocks: BTreeMap<NodeId, NodeId>,
+    successors: BTreeMap<NodeId, Vec<NodeId>>,
+    roots: Vec<NodeId>,
+}
+
+impl SonControlFlow {
+    fn new(graph: &Graph) -> Self {
+        let mut blocks = BTreeMap::new();
+        let mut roots = Vec::new();
+        let mut current_block = None;
+        for (id, node) in graph.iter() {
+            if matches!(
+                node.kind,
+                NodeKind::Start | NodeKind::Projection(_) | NodeKind::Region
+            ) {
+                current_block = Some(id);
+                if node.kind == NodeKind::Start {
+                    roots.push(id);
+                }
+            }
+            if let Some(block) = current_block {
+                blocks.insert(id, block);
+            }
+        }
+
+        let mut successors = BTreeMap::<NodeId, Vec<NodeId>>::new();
+        for (id, node) in graph.iter() {
+            if !matches!(node.kind, NodeKind::Projection(_) | NodeKind::Region) {
+                continue;
+            }
+            let block = blocks[&id];
+            for control in &node.control {
+                if let Some(predecessor) = blocks.get(control) {
+                    successors.entry(*predecessor).or_default().push(block);
+                }
+            }
+        }
+        Self {
+            blocks,
+            successors,
+            roots,
+        }
+    }
+
+    fn graph_for_root(&self, root: NodeId) -> ControlFlowGraph<()> {
+        let mut reachable = BTreeSet::new();
+        let mut pending = vec![root];
+        while let Some(block) = pending.pop() {
+            if reachable.insert(block) {
+                pending.extend(self.successors.get(&block).into_iter().flatten().copied());
+            }
+        }
+
+        ControlFlowGraph::new(
+            BlockId(root.0),
+            reachable.into_iter().map(|block| {
+                let successors = self
+                    .successors
+                    .get(&block)
+                    .into_iter()
+                    .flatten()
+                    .map(|successor| BlockId(successor.0))
+                    .collect::<BTreeSet<_>>()
+                    .into_iter()
+                    .collect();
+                BasicBlock::new(BlockId(block.0), Vec::new(), successors)
+            }),
+        )
+        .expect("SON control edges produce a valid CFG")
+    }
+}
+
+fn next_hoist(graph: &Graph) -> Option<(NodeId, BTreeSet<NodeId>)> {
+    let control = SonControlFlow::new(graph);
+    let mut plans = Vec::new();
+    for root in control.roots.iter().copied() {
+        let cfg = control.graph_for_root(root);
+        let analysis = analyze_loops(&cfg);
+        for natural_loop in &analysis.loops {
+            let header = NodeId(natural_loop.header.0);
+            let Some(preheader) = dedicated_preheader(&cfg, natural_loop) else {
+                continue;
+            };
+            let candidates = loop_invariant_candidates(
+                graph,
+                &control.blocks,
+                &analysis,
+                natural_loop,
+                preheader,
+                header,
+            );
+            let has_expression = candidates.iter().any(|id| {
+                graph
+                    .node(*id)
+                    .is_some_and(|node| !matches!(node.kind, NodeKind::Const(_)))
+            });
+            if has_expression {
+                plans.push((natural_loop.depth, header, candidates));
+            }
+        }
+    }
+    plans.sort_by(|left, right| right.0.cmp(&left.0).then_with(|| left.1.cmp(&right.1)));
+    plans
+        .into_iter()
+        .next()
+        .map(|(_, header, candidates)| (header, candidates))
+}
+
+fn dedicated_preheader(
+    graph: &ControlFlowGraph<()>,
+    natural_loop: &NaturalLoop,
+) -> Option<BlockId> {
+    let mut predecessors = graph
+        .predecessors(natural_loop.header)?
+        .iter()
+        .copied()
+        .filter(|predecessor| !natural_loop.contains(*predecessor));
+    let preheader = predecessors.next()?;
+    if predecessors.next().is_some() || graph.successors(preheader)? != [natural_loop.header] {
+        return None;
+    }
+    Some(preheader)
+}
+
+fn loop_invariant_candidates(
+    graph: &Graph,
+    blocks: &BTreeMap<NodeId, NodeId>,
+    analysis: &LoopAnalysis,
+    natural_loop: &NaturalLoop,
+    preheader: BlockId,
+    header: NodeId,
+) -> BTreeSet<NodeId> {
+    let mut selected = BTreeSet::new();
+    for id in graph.ids() {
+        if selected.contains(&id) {
+            continue;
+        }
+        let mut additional = BTreeSet::new();
+        let mut visiting = BTreeSet::new();
+        let context = InvariantContext {
+            graph,
+            blocks,
+            analysis,
+            natural_loop,
+            preheader,
+            header,
+            selected: &selected,
+        };
+        if collect_loop_invariant(&context, id, &mut additional, &mut visiting) {
+            selected.extend(additional);
+        }
+    }
+    selected
+}
+
+struct InvariantContext<'a> {
+    graph: &'a Graph,
+    blocks: &'a BTreeMap<NodeId, NodeId>,
+    analysis: &'a LoopAnalysis,
+    natural_loop: &'a NaturalLoop,
+    preheader: BlockId,
+    header: NodeId,
+    selected: &'a BTreeSet<NodeId>,
+}
+
+fn collect_loop_invariant(
+    context: &InvariantContext,
+    id: NodeId,
+    additional: &mut BTreeSet<NodeId>,
+    visiting: &mut BTreeSet<NodeId>,
+) -> bool {
+    if context.selected.contains(&id) || additional.contains(&id) {
+        return true;
+    }
+    let Some(block) = context.blocks.get(&id).copied() else {
+        return false;
+    };
+    if !context.natural_loop.contains(BlockId(block.0)) {
+        return id < context.header
+            && context
+                .analysis
+                .dominates(BlockId(block.0), context.preheader);
+    }
+    let Some(node) = context.graph.node(id) else {
+        return false;
+    };
+    if !is_hoistable(node) || !visiting.insert(id) {
+        return false;
+    }
+    for input in &node.data {
+        if !collect_loop_invariant(context, *input, additional, visiting) {
+            visiting.remove(&id);
+            return false;
+        }
+    }
+    visiting.remove(&id);
+    additional.insert(id);
+    true
+}
+
+fn is_hoistable(node: &crate::son::Node) -> bool {
+    if !node.control.is_empty() || !node.memory.is_empty() {
+        return false;
+    }
+    match node.kind {
+        NodeKind::Const(_) => node.data.is_empty(),
+        NodeKind::Unary(_) => node.data.len() == 1,
+        NodeKind::Binary(
+            BinaryOp::Add
+            | BinaryOp::Sub
+            | BinaryOp::Mul
+            | BinaryOp::And
+            | BinaryOp::Or
+            | BinaryOp::Xor
+            | BinaryOp::Shl
+            | BinaryOp::Shr
+            | BinaryOp::LShr,
+        )
+        | NodeKind::Compare(_) => node.data.len() == 2,
+        _ => false,
+    }
+}
+
+fn reorder_before(graph: &mut Graph, header: NodeId, candidates: &BTreeSet<NodeId>) {
+    let hoisted = graph
+        .ids()
+        .filter(|id| candidates.contains(id))
+        .collect::<Vec<_>>();
+    let mut ordered = graph
+        .ids()
+        .filter(|id| !candidates.contains(id))
+        .collect::<Vec<_>>();
+    let insertion = ordered
+        .iter()
+        .position(|id| *id == header)
+        .expect("loop header remains in the graph");
+    ordered.splice(insertion..insertion, hoisted);
+
+    let mapping = ordered
+        .iter()
+        .enumerate()
+        .map(|(index, id)| (*id, NodeId(index as u32)))
+        .collect::<BTreeMap<_, _>>();
+    let mut reordered = Graph::new();
+    for old_id in ordered {
+        let mut node = graph.node(old_id).expect("ordered node exists").clone();
+        for channel in [
+            InputChannel::Control,
+            InputChannel::Data,
+            InputChannel::Memory,
+        ] {
+            for input in node.inputs_mut(channel) {
+                *input = mapping[input];
+            }
+        }
+        reordered.push(node);
+    }
+    reordered.functions = graph.functions.clone();
+    for function in &mut reordered.functions {
+        function.start = mapping[&function.start];
+        function.return_node = mapping[&function.return_node];
+    }
+    *graph = reordered;
 }
 
 #[cfg(test)]

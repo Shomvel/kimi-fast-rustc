@@ -6,9 +6,9 @@ use std::fmt;
 /// Parses the explicitly supported `i64` (`isize`), `u64` (`usize`), and `bool` Rust subset.
 ///
 /// Functions and parameters retain their names and source ranges in `Graph::functions`.
-/// `if` expressions and statements merge values through explicit jumps, control regions,
-/// and Phi nodes. Mutable bindings and `while` loops use loop-header Phis, multiple back
-/// edges from `continue`, and exit Phis for `break` snapshots.
+/// `if` expressions and statements and scalar `match` expressions merge values through explicit
+/// jumps, control regions, and Phi nodes. Mutable bindings and `while` loops use loop-header Phis,
+/// multiple back edges from `continue`, and exit Phis for `break` snapshots.
 /// A pre-scan registers scalar constant declarations and function signatures, supporting forward
 /// constant references and recursive calls with checked types. Constant expressions are evaluated
 /// without emitting runtime nodes. Comparisons and logical operations produce booleans; `&&` and
@@ -71,6 +71,7 @@ enum TokenKind {
     Colon,
     Semicolon,
     Arrow,
+    FatArrow,
     Plus,
     Minus,
     Star,
@@ -364,6 +365,9 @@ impl<'a> Lexer<'a> {
                 if self.rest().starts_with('=') {
                     self.advance();
                     TokenKind::EqEq
+                } else if self.rest().starts_with('>') {
+                    self.advance();
+                    TokenKind::FatArrow
                 } else {
                     TokenKind::Eq
                 }
@@ -1608,9 +1612,18 @@ impl Parser {
         {
             return false;
         }
-        !self.tokens[self.position..]
-            .iter()
-            .any(|token| token.kind == TokenKind::Semicolon)
+        let mut brace_depth = 0usize;
+        for token in &self.tokens[self.position..] {
+            match token.kind {
+                TokenKind::LBrace => brace_depth += 1,
+                TokenKind::RBrace if brace_depth == 0 => return true,
+                TokenKind::RBrace => brace_depth -= 1,
+                TokenKind::Semicolon => return false,
+                TokenKind::Eof => return false,
+                _ => {}
+            }
+        }
+        false
     }
 
     fn parse_statement(&mut self) -> Result<Option<NodeId>, ParseError> {
@@ -2262,9 +2275,204 @@ impl Parser {
     fn parse_expression(&mut self) -> Result<NodeId, ParseError> {
         if self.peek_identifier("if") {
             self.parse_if_expression()
+        } else if self.peek_identifier("match") {
+            self.parse_match_expression()
         } else {
             self.parse_logical_or()
         }
+    }
+
+    fn parse_match_expression(&mut self) -> Result<NodeId, ParseError> {
+        let match_span = self.advance().span;
+        let scrutinee = self.parse_expression()?;
+        let scrutinee_type = self.type_of(scrutinee);
+        if scrutinee_type == ScalarType::Unit {
+            return Err(ParseError::new(
+                match_span,
+                "match scrutinee must have type `i64`/`isize`, `u64`/`usize`, or `bool`",
+            ));
+        }
+        self.expect(TokenKind::LBrace, "`{` after match scrutinee")?;
+
+        let mut seen_literals = HashSet::new();
+        let mut controls = Vec::new();
+        let mut values = Vec::new();
+        let mut has_wildcard = false;
+        while !self.check(&TokenKind::RBrace) {
+            if self.check(&TokenKind::Eof) {
+                return Err(self.error_here("unterminated match expression"));
+            }
+            if has_wildcard {
+                return Err(self.error_here("wildcard `_` arm must be last and unique"));
+            }
+
+            let pattern_span = self.peek().span;
+            let pattern = self.parse_match_pattern(scrutinee_type)?;
+            if self.peek_identifier("if") {
+                return Err(self.error_here("match guards are not supported"));
+            }
+            self.expect(TokenKind::FatArrow, "`=>` after match pattern")?;
+
+            let branch = if let Some(pattern) = pattern {
+                let NodeKind::Const(bits) = self
+                    .graph
+                    .node(pattern)
+                    .expect("match pattern is a constant")
+                    .kind
+                else {
+                    unreachable!("match patterns lower to constants")
+                };
+                if !seen_literals.insert(bits) {
+                    return Err(ParseError::new(
+                        pattern_span,
+                        "duplicate literal in match patterns",
+                    ));
+                }
+                let condition = self.graph.compare(CompareOp::Eq, scrutinee, pattern);
+                self.mark_bool(condition);
+                let branch = self.graph.if_(self.control, condition);
+                self.control = self.graph.projection(branch, 0);
+                Some(branch)
+            } else {
+                has_wildcard = true;
+                None
+            };
+
+            let value = if self.eat(TokenKind::LBrace) {
+                let value = self.parse_expression()?;
+                self.expect(TokenKind::RBrace, "`}` after match arm block")?;
+                value
+            } else {
+                self.parse_expression()?
+            };
+            values.push(value);
+            controls.push(self.graph.jump(self.control));
+
+            if let Some(branch) = branch {
+                self.control = self.graph.projection(branch, 1);
+            }
+            if !self.eat(TokenKind::Comma) && !self.check(&TokenKind::RBrace) {
+                return Err(self.error_here("expected `,` between match arms"));
+            }
+        }
+        if !has_wildcard {
+            return Err(self.error_here("match expression requires a final `_` wildcard arm"));
+        }
+        self.expect(TokenKind::RBrace, "`}` after match arms")?;
+
+        let mut result_type = self.type_of(values[0]);
+        let mut unsuffixed_values = Vec::new();
+        if self.unsuffixed_literals.contains(&values[0]) {
+            unsuffixed_values.push(values[0]);
+        }
+        for (index, value) in values.iter().copied().enumerate().skip(1) {
+            if result_type == ScalarType::I64
+                && self.type_of(value) == ScalarType::U64
+                && unsuffixed_values.len() == index
+            {
+                for previous in unsuffixed_values.drain(..) {
+                    self.require_type(previous, ScalarType::U64)?;
+                }
+                result_type = ScalarType::U64;
+            }
+            self.require_type(value, result_type)?;
+            if self.unsuffixed_literals.contains(&value) {
+                unsuffixed_values.push(value);
+            }
+        }
+
+        self.control = self.graph.region(controls.clone());
+        let phi = self.graph.phi(controls, values);
+        self.types.insert(phi, result_type);
+        Ok(phi)
+    }
+
+    fn parse_match_pattern(
+        &mut self,
+        scrutinee_type: ScalarType,
+    ) -> Result<Option<NodeId>, ParseError> {
+        let negative = self.eat(TokenKind::Minus);
+        let token = self.advance();
+        let value = match token.kind {
+            TokenKind::Integer(magnitude) => {
+                if negative {
+                    let value = if magnitude == (i64::MAX as u64) + 1 {
+                        i64::MIN
+                    } else if magnitude <= i64::MAX as u64 {
+                        -(magnitude as i64)
+                    } else {
+                        return Err(ParseError::new(
+                            token.span,
+                            "negative integer literal is outside the i64 range",
+                        ));
+                    };
+                    self.graph.constant(value)
+                } else {
+                    let value = self.graph.constant(magnitude as i64);
+                    self.unsuffixed_literals.insert(value);
+                    value
+                }
+            }
+            TokenKind::I64Integer(magnitude) => {
+                if negative {
+                    let value = if magnitude == (i64::MAX as u64) + 1 {
+                        i64::MIN
+                    } else if magnitude <= i64::MAX as u64 {
+                        -(magnitude as i64)
+                    } else {
+                        return Err(ParseError::new(
+                            token.span,
+                            "negative integer literal is outside the i64 range",
+                        ));
+                    };
+                    self.graph.constant(value)
+                } else {
+                    if magnitude > i64::MAX as u64 {
+                        return Err(ParseError::new(
+                            token.span,
+                            "integer literal is outside the positive i64 range",
+                        ));
+                    }
+                    self.graph.constant(magnitude as i64)
+                }
+            }
+            TokenKind::U64Integer(magnitude) => {
+                if negative {
+                    return Err(ParseError::new(
+                        token.span,
+                        "negative integer literal cannot have an unsigned suffix",
+                    ));
+                }
+                let value = self.graph.constant(magnitude as i64);
+                self.types.insert(value, ScalarType::U64);
+                value
+            }
+            TokenKind::Ident(identifier) if !negative && identifier == "_" => {
+                if matches!(self.peek().kind, TokenKind::DotDot | TokenKind::DotDotEq) {
+                    return Err(self.error_here("range patterns are not supported"));
+                }
+                return Ok(None);
+            }
+            TokenKind::Ident(identifier) if !negative && identifier == "true" => {
+                let value = self.graph.constant(1);
+                self.mark_bool(value)
+            }
+            TokenKind::Ident(identifier) if !negative && identifier == "false" => {
+                let value = self.graph.constant(0);
+                self.mark_bool(value)
+            }
+            _ => {
+                return Err(ParseError::new(
+                    token.span,
+                    "expected an integer, `true`, `false`, or `_` match pattern; tuple and enum patterns are not supported",
+                ));
+            }
+        };
+        if matches!(self.peek().kind, TokenKind::DotDot | TokenKind::DotDotEq) {
+            return Err(self.error_here("range patterns are not supported"));
+        }
+        self.require_type(value, scrutinee_type)?;
+        Ok(Some(value))
     }
 
     fn parse_logical_or(&mut self) -> Result<NodeId, ParseError> {

@@ -590,6 +590,7 @@ pub fn compile_graph(
         emitter.emit(instruction.clone())?;
     }
     function.instructions.extend(emitter.instructions);
+    crate::x86::optimize_zero_idioms(&mut function.instructions);
     Ok(function)
 }
 

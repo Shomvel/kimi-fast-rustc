@@ -1,4 +1,4 @@
-use std::collections::{BTreeMap, HashSet};
+use std::collections::{HashMap, HashSet};
 use std::error::Error;
 use std::fmt;
 
@@ -280,12 +280,22 @@ impl Graph {
     }
 
     pub fn function_graph(&self, function: &FunctionMetadata) -> Graph {
-        let in_range: HashSet<NodeId> = self
-            .ids()
-            .filter(|id| id.0 >= function.start.0 && id.0 <= function.return_node.0)
+        let start = function.start.index();
+        let end = function
+            .return_node
+            .index()
+            .saturating_add(1)
+            .min(self.nodes.len());
+        let in_range: Vec<NodeId> = self
+            .nodes
+            .get(start..end)
+            .unwrap_or(&[])
+            .iter()
+            .enumerate()
+            .filter_map(|(index, node)| node.as_ref().map(|_| NodeId((start + index) as u32)))
             .collect();
-        let mut retained = in_range.clone();
-        let mut stack = retained.iter().copied().collect::<Vec<_>>();
+        let mut external = HashSet::new();
+        let mut stack = in_range.clone();
         while let Some(id) = stack.pop() {
             let node = self.node(id).expect("retained node exists");
             for channel in [
@@ -294,23 +304,23 @@ impl Graph {
                 InputChannel::Memory,
             ] {
                 for &input in node.inputs(channel) {
-                    if self.node(input).is_some() && retained.insert(input) {
+                    if (input.0 < function.start.0 || input.0 > function.return_node.0)
+                        && self.node(input).is_some()
+                        && external.insert(input)
+                    {
                         stack.push(input);
                     }
                 }
             }
         }
 
-        let mut ordered = vec![function.start];
-        ordered.extend(
-            self.ids()
-                .filter(|id| retained.contains(id) && !in_range.contains(id)),
-        );
-        ordered.extend(
-            self.ids()
-                .filter(|id| in_range.contains(id) && *id != function.start),
-        );
-        let mapping: BTreeMap<NodeId, NodeId> = ordered
+        let mut ordered = Vec::with_capacity(in_range.len() + external.len() + 1);
+        ordered.push(function.start);
+        let mut external: Vec<_> = external.into_iter().collect();
+        external.sort_unstable();
+        ordered.extend(external);
+        ordered.extend(in_range.into_iter().filter(|id| *id != function.start));
+        let mapping: HashMap<NodeId, NodeId> = ordered
             .iter()
             .enumerate()
             .map(|(index, id)| (*id, NodeId(index as u32)))

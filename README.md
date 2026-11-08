@@ -2,7 +2,7 @@
 
 `kfrc` is an experimental, native-only Rust compiler. It uses a sea-of-nodes IR, graph rewrites, explicit control regions, linear-scan register allocation, and x86_64 System V code generation. It does not use LLVM or Cranelift and does not perform static ILP instruction scheduling; dynamic scheduling is left to CPU out-of-order execution.
 
-The frontend currently supports a documented `i64` (`isize`), `u64` (`usize`), and `bool` Rust subset: decimal, binary, octal, and hexadecimal integer literals; mutable and immutable bindings and parameters, including `let` and loop-variable shadowing; ordinary, arithmetic, bitwise, and shift compound assignments; `as` casts between supported scalar types; arithmetic including wrapping negation; comparisons, bitwise operators and integer `!`, shifts, and logical `!`/`&&`/`||` with short-circuit evaluation; `if` expressions and statements with `else if`; `while`/`loop` and exclusive/inclusive numeric `for` loops with `break`/`continue`; early `return` in conditionals and loops; tail expressions and semicolon-terminated expression statements, including unit calls and discarded values; standard `fn main`; `pub`, `pub(crate)`, `pub(self)`, and `pub(super)` function visibility, top-level scalar constants with compile-time expression evaluation, and `const fn` runtime calls; and declaration-order-independent function calls, including self- and mutual recursion, with register and stack arguments. Unsupported Rust is rejected explicitly rather than falling back to another backend. Whole-workspace support for large projects such as ripgrep and cargo is not yet implemented; native measurements are limited to the workloads documented in `docs/VALIDATION.md`.
+The frontend currently supports a documented `i64` (`isize`), `u64` (`usize`), and `bool` Rust subset: decimal, binary, octal, and hexadecimal integer literals; mutable and immutable bindings and parameters, including `let` and loop-variable shadowing; ordinary, arithmetic, bitwise, and shift compound assignments; `as` casts between supported scalar types; arithmetic including wrapping negation; comparisons, bitwise operators and integer `!`, shifts, and logical `!`/`&&`/`||` with short-circuit evaluation; `if` expressions and statements with `else if`, plus scalar `match` with literal arms and a required final wildcard; `while`/`loop` and exclusive/inclusive numeric `for` loops with `break`/`continue`; early `return` in conditionals and loops; tail expressions and semicolon-terminated expression statements, including unit calls and discarded values; standard `fn main`; `pub`, `pub(crate)`, `pub(self)`, and `pub(super)` function visibility, top-level scalar constants with compile-time expression evaluation, and `const fn` runtime calls; and declaration-order-independent function calls, including self- and mutual recursion, with register and stack arguments. Unsupported Rust is rejected explicitly rather than falling back to another backend. Whole-workspace support for large projects such as ripgrep and cargo is not yet implemented; native measurements are limited to the workloads documented in `docs/VALIDATION.md`.
 
 Legacy LLVM modules and benchmark data are retained only as historical evidence. They are not the current compiler architecture or a supported fallback.
 
@@ -78,6 +78,16 @@ Compile multiple independent inputs with bounded parallelism:
 ```
 
 The CLI performs sea-of-nodes optimization, dependency placement, linear-scan allocation, and native code generation. Executables are linked from the in-tree ELF object with system `gcc`, without an assembler; GNU assembly output still uses `as` and `gcc` when assembling or linking that representation. Neither path invokes rustc, LLVM, or Cranelift. The subset supports explicit returns and tail expressions, mutable and immutable `let` bindings, assignments, `while` loops, arithmetic, and comparisons. Its `fn main() -> i64` convention is intentionally a compiler test format, not a claim that standard Rust accepts this `main` signature. Direct ELF output supports local labels and branches as well as external call relocations.
+
+## Native microbenchmark
+
+`native_microbench.py` generates deterministic four-function inputs, checks object hashes across jobs, links and executes each result, and reports JSON timing and host fingerprints:
+
+```sh
+python3 scripts/native_microbench.py --compiler /root/kimi-fast-rustc/target/release/kfrc --jobs 1,2,4 --samples 7 --inputs 8
+```
+
+Use `--skip-run` only on hosts that cannot execute Linux x86_64 output. The workload is a small native-subset benchmark, not a whole-project performance claim.
 
 ## Benchmark on yicloud
 

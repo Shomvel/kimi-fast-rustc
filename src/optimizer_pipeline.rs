@@ -1,5 +1,5 @@
 use crate::son::{Graph, NodeKind};
-use crate::{son_optimize, value_numbering};
+use crate::{loop_analysis, son_optimize, value_numbering};
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub struct OptimizeStats {
@@ -7,11 +7,15 @@ pub struct OptimizeStats {
     pub constants_folded: usize,
     pub algebraic_simplifications: usize,
     pub dead_nodes_removed: usize,
+    pub loop_invariant_hoists: usize,
 }
 
 impl OptimizeStats {
     pub fn total_rewrites(self) -> usize {
-        self.value_numbering_merges + self.constants_folded + self.algebraic_simplifications
+        self.value_numbering_merges
+            + self.constants_folded
+            + self.algebraic_simplifications
+            + self.loop_invariant_hoists
     }
 
     pub fn rewrites(self) -> usize {
@@ -66,11 +70,13 @@ fn optimize_control_flow(graph: &mut Graph) -> OptimizeStats {
         let folded = fold_control_constants(graph);
         let simplified = simplify_control_graph(graph) + strength_reduce_control_graph(graph);
         let removed = eliminate_control_dead_nodes(graph);
+        let hoisted = loop_analysis::hoist_loop_invariants(graph);
         total.value_numbering_merges += merges;
         total.constants_folded += folded;
         total.algebraic_simplifications += simplified;
         total.dead_nodes_removed += removed;
-        if merges == 0 && folded == 0 && simplified == 0 && removed == 0 {
+        total.loop_invariant_hoists += hoisted;
+        if merges == 0 && folded == 0 && simplified == 0 && removed == 0 && hoisted == 0 {
             return total;
         }
     }

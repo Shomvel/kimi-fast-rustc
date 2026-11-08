@@ -2,7 +2,7 @@
 //!
 //! Cache failures are non-fatal: missing, unreadable, oversized and corrupt
 //! entries are misses, and a failed cache write still returns the compiled object.
-//! Only objects produced by `native_object::compile_graph_to_object` are stored.
+//! Only objects produced by the in-tree native object backends are stored.
 
 use std::error::Error;
 use std::fmt;
@@ -12,6 +12,8 @@ use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 
 use crate::native_object::{NativeObjectError, compile_graph_to_object};
+use crate::native_program::ProgramError;
+use crate::parallel_native::{self, ParallelCompileError};
 use crate::son::{BinaryOp, CompareOp, Graph, NodeId, NodeKind, UnaryOp};
 
 pub const SUPPORTED_TARGET: &str = "x86_64-unknown-linux-gnu";
@@ -43,6 +45,8 @@ pub struct CachedObject {
 pub enum NativeCacheError {
     UnsupportedTarget { target: String, abi: String },
     Object(NativeObjectError),
+    Program(ProgramError),
+    ParallelCompile(ParallelCompileError),
 }
 
 impl fmt::Display for NativeCacheError {
@@ -53,6 +57,8 @@ impl fmt::Display for NativeCacheError {
                 "native object caching supports only {SUPPORTED_TARGET}/{SUPPORTED_ABI}, not {target}/{abi}"
             ),
             Self::Object(error) => error.fmt(formatter),
+            Self::Program(error) => error.fmt(formatter),
+            Self::ParallelCompile(error) => error.fmt(formatter),
         }
     }
 }
@@ -62,6 +68,8 @@ impl Error for NativeCacheError {
         match self {
             Self::UnsupportedTarget { .. } => None,
             Self::Object(error) => Some(error),
+            Self::Program(error) => Some(error),
+            Self::ParallelCompile(error) => Some(error),
         }
     }
 }
@@ -70,6 +78,24 @@ impl From<NativeObjectError> for NativeCacheError {
     fn from(error: NativeObjectError) -> Self {
         Self::Object(error)
     }
+}
+
+impl From<ProgramError> for NativeCacheError {
+    fn from(error: ProgramError) -> Self {
+        Self::Program(error)
+    }
+}
+
+impl From<ParallelCompileError> for NativeCacheError {
+    fn from(error: ParallelCompileError) -> Self {
+        Self::ParallelCompile(error)
+    }
+}
+
+#[derive(Clone, Copy)]
+enum CacheObjectKind {
+    Function,
+    Program,
 }
 
 #[derive(Clone, Debug)]
@@ -137,12 +163,51 @@ impl NativeCache {
         decode_entry(&fs::read(path).ok()?, key).ok()
     }
 
+    fn lookup_kind(&self, key: &NativeCacheKey, kind: CacheObjectKind) -> Option<Vec<u8>> {
+        let object = self.lookup(key)?;
+        object_matches_kind(&object, kind).then_some(object)
+    }
+
     /// Compiles through the in-tree x86_64 encoder and ELF writer, never LLVM.
     /// Unsupported graphs and targets return errors and do not create entries.
     pub fn get_or_compile(
         &self,
         graph: &Graph,
         symbol: &str,
+        target: &str,
+        abi: &str,
+        backend_version: &str,
+    ) -> Result<CachedObject, NativeCacheError> {
+        if !graph.functions.is_empty() {
+            return self.get_or_compile_program(graph, 1, target, abi, backend_version);
+        }
+        if target != SUPPORTED_TARGET || abi != SUPPORTED_ABI {
+            return Err(NativeCacheError::UnsupportedTarget {
+                target: target.to_owned(),
+                abi: abi.to_owned(),
+            });
+        }
+
+        let key = Self::key(graph, symbol, target, abi, backend_version);
+        if let Some(bytes) = self.lookup_kind(&key, CacheObjectKind::Function) {
+            return Ok(CachedObject {
+                bytes,
+                cache_hit: true,
+            });
+        }
+
+        let bytes = compile_graph_to_object(graph, symbol)?;
+        let _ = self.store(&key, &bytes, CacheObjectKind::Function);
+        Ok(CachedObject {
+            bytes,
+            cache_hit: false,
+        })
+    }
+
+    pub fn get_or_compile_program(
+        &self,
+        graph: &Graph,
+        jobs: usize,
         target: &str,
         abi: &str,
         backend_version: &str,
@@ -154,24 +219,24 @@ impl NativeCache {
             });
         }
 
-        let key = Self::key(graph, symbol, target, abi, backend_version);
-        if let Some(bytes) = self.lookup(&key) {
+        let key = Self::key(graph, "main", target, abi, backend_version);
+        if let Some(bytes) = self.lookup_kind(&key, CacheObjectKind::Program) {
             return Ok(CachedObject {
                 bytes,
                 cache_hit: true,
             });
         }
 
-        let bytes = compile_graph_to_object(graph, symbol)?;
-        let _ = self.store(&key, &bytes);
+        let bytes = parallel_native::compile_graph(graph, jobs)?.emit_object()?;
+        let _ = self.store(&key, &bytes, CacheObjectKind::Program);
         Ok(CachedObject {
             bytes,
             cache_hit: false,
         })
     }
 
-    fn store(&self, key: &NativeCacheKey, object: &[u8]) -> io::Result<()> {
-        if !is_supported_object(object) {
+    fn store(&self, key: &NativeCacheKey, object: &[u8], kind: CacheObjectKind) -> io::Result<()> {
+        if !object_matches_kind(object, kind) {
             return Err(invalid_data("refusing to cache a non-native ELF object"));
         }
         let bytes = encode_entry(key, object);
@@ -284,10 +349,17 @@ fn decode_entry(bytes: &[u8], key: &NativeCacheKey) -> io::Result<Vec<u8>> {
     if !cursor.is_empty() {
         return Err(invalid_data("trailing native cache entry data"));
     }
-    if !is_supported_object(&object) {
+    if !is_supported_object(&object) && !is_supported_program_object(&object) {
         return Err(invalid_data("invalid native ELF object in cache"));
     }
     Ok(object)
+}
+
+fn object_matches_kind(object: &[u8], kind: CacheObjectKind) -> bool {
+    match kind {
+        CacheObjectKind::Function => is_supported_object(object),
+        CacheObjectKind::Program => is_supported_program_object(object),
+    }
 }
 
 fn is_supported_object(object: &[u8]) -> bool {
@@ -372,6 +444,168 @@ fn is_supported_object(object: &[u8]) -> bool {
         && elf_u16(object, function + 6) == Some(1)
         && elf_u64(object, function + 8) == Some(0)
         && elf_u64(object, function + 16) == elf_u64(object, text + 32)
+}
+
+fn is_supported_program_object(object: &[u8]) -> bool {
+    if object.len() < 64
+        || object[..16] != [0x7f, b'E', b'L', b'F', 2, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    {
+        return false;
+    }
+    if elf_u16(object, 16) != Some(1)
+        || elf_u16(object, 18) != Some(62)
+        || elf_u32(object, 20) != Some(1)
+        || elf_u64(object, 24) != Some(0)
+        || elf_u64(object, 32) != Some(0)
+        || elf_u32(object, 48) != Some(0)
+        || elf_u16(object, 52) != Some(64)
+        || elf_u16(object, 54) != Some(0)
+        || elf_u16(object, 56) != Some(0)
+        || elf_u16(object, 58) != Some(64)
+        || elf_u16(object, 60) != Some(6)
+        || elf_u16(object, 62) != Some(5)
+    {
+        return false;
+    }
+
+    let Some(section_offset) = elf_u64(object, 40).and_then(|value| usize::try_from(value).ok())
+    else {
+        return false;
+    };
+    let Some(section_end) = section_offset.checked_add(6 * 64) else {
+        return false;
+    };
+    if section_end != object.len() {
+        return false;
+    }
+
+    let expected_types = [0_u32, 1, 4, 2, 3, 3];
+    for (index, expected_type) in expected_types.into_iter().enumerate() {
+        let header = section_offset + index * 64;
+        if elf_u32(object, header + 4) != Some(expected_type) {
+            return false;
+        }
+        let Some(offset) =
+            elf_u64(object, header + 24).and_then(|value| usize::try_from(value).ok())
+        else {
+            return false;
+        };
+        let Some(size) = elf_u64(object, header + 32).and_then(|value| usize::try_from(value).ok())
+        else {
+            return false;
+        };
+        if offset
+            .checked_add(size)
+            .is_none_or(|end| end > object.len())
+        {
+            return false;
+        }
+    }
+
+    let text = section_offset + 64;
+    let relocations = section_offset + 2 * 64;
+    let symbols = section_offset + 3 * 64;
+    if elf_u64(object, text + 24) != Some(64)
+        || elf_u32(object, relocations + 40) != Some(3)
+        || elf_u32(object, relocations + 44) != Some(1)
+        || elf_u64(object, relocations + 56) != Some(24)
+        || elf_u32(object, symbols + 40) != Some(4)
+        || elf_u32(object, symbols + 44) != Some(1)
+        || elf_u64(object, symbols + 56) != Some(24)
+    {
+        return false;
+    }
+    let Some(text_size) = elf_u64(object, text + 32) else {
+        return false;
+    };
+    let Some(symbol_offset) =
+        elf_u64(object, symbols + 24).and_then(|value| usize::try_from(value).ok())
+    else {
+        return false;
+    };
+    let Some(symbol_size) =
+        elf_u64(object, symbols + 32).and_then(|value| usize::try_from(value).ok())
+    else {
+        return false;
+    };
+    if symbol_size < 48 || symbol_size % 24 != 0 {
+        return false;
+    }
+    let symbol_count = symbol_size / 24;
+    if object
+        .get(symbol_offset..symbol_offset + 24)
+        .is_none_or(|null_symbol| null_symbol.iter().any(|byte| *byte != 0))
+    {
+        return false;
+    }
+    let mut defined_symbols = 0;
+    for index in 1..symbol_count {
+        let symbol = symbol_offset + index * 24;
+        match object.get(symbol + 4..symbol + 5) {
+            Some(&[0x12]) => {
+                let Some(value) = elf_u64(object, symbol + 8) else {
+                    return false;
+                };
+                let Some(size) = elf_u64(object, symbol + 16) else {
+                    return false;
+                };
+                if elf_u16(object, symbol + 6) != Some(1)
+                    || value > text_size
+                    || size > text_size - value
+                {
+                    return false;
+                }
+                defined_symbols += 1;
+            }
+            Some(&[0x10]) => {
+                if elf_u16(object, symbol + 6) != Some(0)
+                    || elf_u64(object, symbol + 8) != Some(0)
+                    || elf_u64(object, symbol + 16) != Some(0)
+                {
+                    return false;
+                }
+            }
+            _ => return false,
+        }
+    }
+    if defined_symbols == 0 {
+        return false;
+    }
+
+    let Some(relocation_offset) =
+        elf_u64(object, relocations + 24).and_then(|value| usize::try_from(value).ok())
+    else {
+        return false;
+    };
+    let Some(relocation_size) =
+        elf_u64(object, relocations + 32).and_then(|value| usize::try_from(value).ok())
+    else {
+        return false;
+    };
+    if relocation_size % 24 != 0 {
+        return false;
+    }
+    for index in 0..relocation_size / 24 {
+        let relocation = relocation_offset + index * 24;
+        let Some(offset) = elf_u64(object, relocation) else {
+            return false;
+        };
+        let Some(info) = elf_u64(object, relocation + 8) else {
+            return false;
+        };
+        let Ok(symbol_index) = usize::try_from(info >> 32) else {
+            return false;
+        };
+        if offset > text_size
+            || text_size - offset < 4
+            || info as u32 != 4
+            || symbol_index == 0
+            || symbol_index >= symbol_count
+        {
+            return false;
+        }
+    }
+    true
 }
 
 fn elf_u16(bytes: &[u8], offset: usize) -> Option<u16> {
@@ -679,6 +913,21 @@ mod tests {
         NativeCache::key(graph, "answer", SUPPORTED_TARGET, SUPPORTED_ABI, BACKEND)
     }
 
+    fn program_graph() -> Graph {
+        crate::frontend::parse(
+            "fn main() -> i64 { return factorial(5); }\n\
+             fn factorial(value: i64) -> i64 {\n\
+                 if value <= 1 { return 1; }\n\
+                 return value * factorial(value - 1);\n\
+             }\n",
+        )
+        .unwrap()
+    }
+
+    fn program_key(graph: &Graph, backend: &str) -> NativeCacheKey {
+        NativeCache::key(graph, "main", SUPPORTED_TARGET, SUPPORTED_ABI, backend)
+    }
+
     #[test]
     fn sha256_matches_standard_vectors() {
         assert_eq!(
@@ -767,6 +1016,136 @@ mod tests {
             NativeCache::key(&graph, "other", SUPPORTED_TARGET, SUPPORTED_ABI, BACKEND),
             base
         );
+    }
+
+    #[test]
+    fn program_function_names_order_and_call_targets_change_the_key() {
+        let graph = program_graph();
+        let base = program_key(&graph, BACKEND);
+
+        let mut renamed = graph.clone();
+        renamed.functions[1].name = "recursive".to_owned();
+        assert_ne!(program_key(&renamed, BACKEND), base);
+
+        let mut reordered = graph.clone();
+        reordered.functions.swap(0, 1);
+        assert_ne!(program_key(&reordered, BACKEND), base);
+
+        let call = graph
+            .ids()
+            .find(|id| matches!(graph.node(*id).unwrap().kind, NodeKind::Call(_)))
+            .unwrap();
+        let mut changed_call = graph.clone();
+        changed_call.node_mut(call).unwrap().kind = NodeKind::Call(0);
+        assert_ne!(program_key(&changed_call, BACKEND), base);
+        assert_ne!(program_key(&graph, "native-x86_64-elf-test-v2"), base);
+    }
+
+    #[test]
+    fn program_hit_matches_every_job_count_and_isolates_backend_versions() {
+        let temp = TempDir::new();
+        let cache = NativeCache::new(temp.0.join("cache"));
+        let graph = program_graph();
+        let expected = crate::native_program::compile_graph_to_object(&graph).unwrap();
+        let first = cache
+            .get_or_compile_program(&graph, 1, SUPPORTED_TARGET, SUPPORTED_ABI, BACKEND)
+            .unwrap();
+        assert!(!first.cache_hit);
+        assert_eq!(first.bytes, expected);
+
+        for jobs in [2, 8] {
+            let hit = cache
+                .get_or_compile_program(&graph, jobs, SUPPORTED_TARGET, SUPPORTED_ABI, BACKEND)
+                .unwrap();
+            assert!(hit.cache_hit, "jobs: {jobs}");
+            assert_eq!(hit.bytes, expected, "jobs: {jobs}");
+        }
+
+        let other_backend = "native-x86_64-elf-test-v2";
+        let recompiled = cache
+            .get_or_compile_program(&graph, 4, SUPPORTED_TARGET, SUPPORTED_ABI, other_backend)
+            .unwrap();
+        assert!(!recompiled.cache_hit);
+        assert_eq!(recompiled.bytes, expected);
+        assert!(cache.lookup(&program_key(&graph, BACKEND)).is_some());
+        assert!(cache.lookup(&program_key(&graph, other_backend)).is_some());
+
+        let compatible_api = cache
+            .get_or_compile(&graph, "ignored", SUPPORTED_TARGET, SUPPORTED_ABI, BACKEND)
+            .unwrap();
+        assert!(compatible_api.cache_hit);
+        assert_eq!(compatible_api.bytes, expected);
+    }
+
+    #[test]
+    fn program_cache_never_accepts_a_single_function_object() {
+        let temp = TempDir::new();
+        let cache = NativeCache::new(temp.0.join("cache"));
+        let single_graph = graph();
+        let program_graph = program_graph();
+        let single = cache
+            .get_or_compile(
+                &single_graph,
+                "answer",
+                SUPPORTED_TARGET,
+                SUPPORTED_ABI,
+                BACKEND,
+            )
+            .unwrap();
+        let program = cache
+            .get_or_compile_program(&program_graph, 2, SUPPORTED_TARGET, SUPPORTED_ABI, BACKEND)
+            .unwrap();
+        let single_key = key(&single_graph);
+        let program_key = program_key(&program_graph, BACKEND);
+        assert_ne!(single_key, program_key);
+
+        fs::write(
+            cache.entry_path(&program_key),
+            encode_entry(&program_key, &single.bytes),
+        )
+        .unwrap();
+        let rebuilt_program = cache
+            .get_or_compile_program(&program_graph, 2, SUPPORTED_TARGET, SUPPORTED_ABI, BACKEND)
+            .unwrap();
+        assert!(!rebuilt_program.cache_hit);
+        assert_eq!(rebuilt_program.bytes, program.bytes);
+
+        fs::write(
+            cache.entry_path(&single_key),
+            encode_entry(&single_key, &program.bytes),
+        )
+        .unwrap();
+        let rebuilt_single = cache
+            .get_or_compile(
+                &single_graph,
+                "answer",
+                SUPPORTED_TARGET,
+                SUPPORTED_ABI,
+                BACKEND,
+            )
+            .unwrap();
+        assert!(!rebuilt_single.cache_hit);
+        assert_eq!(rebuilt_single.bytes, single.bytes);
+    }
+
+    #[test]
+    fn program_emit_failures_do_not_create_entries() {
+        let temp = TempDir::new();
+        let cache = NativeCache::new(temp.0.join("cache"));
+        let mut graph = program_graph();
+        graph.functions[1].name = graph.functions[0].name.clone();
+
+        let error = cache
+            .get_or_compile_program(&graph, 2, SUPPORTED_TARGET, SUPPORTED_ABI, BACKEND)
+            .unwrap_err();
+
+        assert!(matches!(
+            error,
+            NativeCacheError::Program(ProgramError::Elf(
+                crate::elf_reloc::ElfRelocError::DuplicateSymbolName { index: 1 }
+            ))
+        ));
+        assert!(cache.lookup(&program_key(&graph, BACKEND)).is_none());
     }
 
     #[test]
