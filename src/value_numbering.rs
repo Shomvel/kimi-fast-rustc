@@ -185,9 +185,10 @@ fn value_numbering_pass(
 ) -> usize {
     let ids: Vec<_> = graph.ids().collect();
     let mut expressions: BTreeMap<u64, Vec<(ExpressionKey, NodeId)>> = BTreeMap::new();
+    let mut replacements = BTreeMap::new();
     let mut merged = 0;
 
-    for id in ids {
+    for &id in &ids {
         if graph
             .node(id)
             .is_some_and(|node| node.kind == NodeKind::Start)
@@ -197,7 +198,7 @@ fn value_numbering_pass(
         if merged_ids.contains(&id) {
             continue;
         }
-        let Some(key) = expression_key(graph, id) else {
+        let Some(key) = expression_key(graph, id, &replacements) else {
             continue;
         };
         let hash = structural_hash(&key);
@@ -208,7 +209,7 @@ fn value_numbering_pass(
         });
 
         if let Some(representative) = representative {
-            graph.replace_uses(id, representative);
+            replacements.insert(id, representative);
             merged_ids.insert(id);
             merged += 1;
         } else {
@@ -216,14 +217,35 @@ fn value_numbering_pass(
         }
     }
 
+    if !replacements.is_empty() {
+        for id in ids {
+            let node = graph.node_mut(id).expect("pass retains every node");
+            for input in node
+                .control
+                .iter_mut()
+                .chain(&mut node.data)
+                .chain(&mut node.memory)
+            {
+                if let Some(&replacement) = replacements.get(input) {
+                    *input = replacement;
+                }
+            }
+        }
+    }
+
     merged
 }
 
-fn expression_key(graph: &Graph, id: NodeId) -> Option<ExpressionKey> {
+fn expression_key(
+    graph: &Graph,
+    id: NodeId,
+    replacements: &BTreeMap<NodeId, NodeId>,
+) -> Option<ExpressionKey> {
     let node = graph.node(id)?;
     if !node.control.is_empty() || !node.memory.is_empty() {
         return None;
     }
+    let input = |id| replacements.get(&id).copied().unwrap_or(id);
 
     match node.kind {
         NodeKind::Const(value) if node.data.is_empty() => Some(ExpressionKey::Const(value)),
@@ -231,17 +253,18 @@ fn expression_key(graph: &Graph, id: NodeId) -> Option<ExpressionKey> {
             Some(ExpressionKey::Parameter(index))
         }
         NodeKind::Unary(op) if node.data.len() == 1 => {
-            Some(ExpressionKey::Unary(unary_code(op), node.data[0]))
+            Some(ExpressionKey::Unary(unary_code(op), input(node.data[0])))
         }
         NodeKind::Binary(op) if node.data.len() == 2 => {
-            let (left, right) = ordered_operands(op, node.data[0], node.data[1]);
+            let (left, right) = ordered_operands(op, input(node.data[0]), input(node.data[1]));
             Some(ExpressionKey::Binary(binary_code(op), left, right))
         }
         NodeKind::Compare(op) if node.data.len() == 2 => {
-            let (left, right) = if is_commutative_compare(op) && node.data[1] < node.data[0] {
-                (node.data[1], node.data[0])
+            let (left, right) = (input(node.data[0]), input(node.data[1]));
+            let (left, right) = if is_commutative_compare(op) && right < left {
+                (right, left)
             } else {
-                (node.data[0], node.data[1])
+                (left, right)
             };
             Some(ExpressionKey::Compare(compare_code(op), left, right))
         }

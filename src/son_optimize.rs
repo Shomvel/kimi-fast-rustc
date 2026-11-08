@@ -213,7 +213,9 @@ fn algebraic_rewrite(graph: &Graph, id: NodeId) -> Option<Rewrite> {
             simplify_binary(graph, op, node.data[0], node.data[1])
         }
         NodeKind::Compare(op) if node.data.len() == 2 => {
-            if let Some(rewrite) =
+            if let Some(rewrite) = normalize_comparison(graph, op, node.data[0], node.data[1]) {
+                Some(rewrite)
+            } else if let Some(rewrite) =
                 simplify_boolean_comparison(graph, op, node.data[0], node.data[1])
             {
                 Some(rewrite)
@@ -244,6 +246,39 @@ fn algebraic_rewrite(graph: &Graph, id: NodeId) -> Option<Rewrite> {
         }
         _ => None,
     }
+}
+
+fn normalize_comparison(
+    graph: &Graph,
+    operation: CompareOp,
+    left: NodeId,
+    right: NodeId,
+) -> Option<Rewrite> {
+    if !matches!(
+        graph.node(left).map(|node| node.kind),
+        Some(NodeKind::Const(_))
+    ) || matches!(
+        graph.node(right).map(|node| node.kind),
+        Some(NodeKind::Const(_))
+    ) {
+        return None;
+    }
+    let operation = match operation {
+        CompareOp::Eq | CompareOp::Ne => operation,
+        CompareOp::Lt => CompareOp::Gt,
+        CompareOp::Le => CompareOp::Ge,
+        CompareOp::Gt => CompareOp::Lt,
+        CompareOp::Ge => CompareOp::Le,
+        CompareOp::ULt => CompareOp::UGt,
+        CompareOp::ULe => CompareOp::UGe,
+        CompareOp::UGt => CompareOp::ULt,
+        CompareOp::UGe => CompareOp::ULe,
+    };
+    Some(Rewrite::Comparison {
+        operation,
+        left: right,
+        right: left,
+    })
 }
 
 fn simplify_boolean_comparison(

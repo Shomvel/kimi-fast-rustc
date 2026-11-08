@@ -357,12 +357,17 @@ impl Encoder<'_> {
                 }
             }
             MovImm { dst, value } => {
-                self.rex(true, None, Some(dst), false);
                 if i32::try_from(value).is_ok() {
+                    self.rex(true, None, Some(dst), false);
                     self.bytes.push(0xc7);
                     self.modrm(3, Reg::Rax, dst.low_code());
                     self.i32(value as i32);
+                } else if u32::try_from(value).is_ok() {
+                    self.rex(false, None, Some(dst), false);
+                    self.bytes.push(0xb8 + dst.low_code());
+                    self.i32(value as i32);
                 } else {
+                    self.rex(true, None, Some(dst), false);
                     self.bytes.push(0xb8 + dst.low_code());
                     self.bytes.extend_from_slice(&value.to_le_bytes());
                 }

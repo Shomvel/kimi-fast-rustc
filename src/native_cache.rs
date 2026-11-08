@@ -6,10 +6,11 @@
 
 use std::error::Error;
 use std::fmt;
-use std::fs::{self, OpenOptions};
-use std::io::{self, Write};
+use std::fs::{self, File, OpenOptions};
+use std::io::{self, Read, Write};
 use std::path::{Path, PathBuf};
-use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
+use std::thread;
 
 use crate::native_object::{NativeObjectError, compile_graph_to_object};
 use crate::native_program::ProgramError;
@@ -21,6 +22,10 @@ pub const SUPPORTED_ABI: &str = "sysv64";
 
 const KEY_DOMAIN: &[u8] = b"kimi-fast-rustc native graph object key\0";
 const KEY_VERSION: u32 = 1;
+const PROGRAM_KEY_DOMAIN: &[u8] = b"kimi-fast-rustc native sharded program key\0";
+const PROGRAM_KEY_VERSION: u32 = 1;
+const PROGRAM_SHARD_DOMAIN: &[u8] = b"kimi-fast-rustc native program node shard\0";
+const PROGRAM_HASH_SHARD_SLOTS: usize = 256;
 const ENTRY_MAGIC: &[u8; 8] = b"KFRNOBJ\0";
 const ENTRY_VERSION: u32 = 1;
 const MAX_ENTRY_SIZE: u64 = 1024 * 1024 * 1024;
@@ -118,36 +123,39 @@ impl NativeCache {
         abi: &str,
         backend_version: &str,
     ) -> NativeCacheKey {
-        let mut hasher = Sha256::new();
-        hasher.update(KEY_DOMAIN);
-        put_u32_hash(&mut hasher, KEY_VERSION);
-        hash_field(&mut hasher, target.as_bytes());
-        hash_field(&mut hasher, abi.as_bytes());
-        hash_field(&mut hasher, backend_version.as_bytes());
-        hash_field(&mut hasher, symbol.as_bytes());
-        put_u64_hash(&mut hasher, graph.len() as u64);
-        put_u64_hash(&mut hasher, graph.functions.len() as u64);
-        for function in &graph.functions {
-            hash_field(&mut hasher, function.name.as_bytes());
-            put_u32_hash(&mut hasher, function.start.0);
-            put_u32_hash(&mut hasher, function.return_node.0);
-            put_u64_hash(&mut hasher, function.parameter_count as u64);
+        Self::key_with_jobs(graph, symbol, target, abi, backend_version, 1)
+    }
+
+    fn key_with_jobs(
+        graph: &Graph,
+        symbol: &str,
+        target: &str,
+        abi: &str,
+        backend_version: &str,
+        jobs: usize,
+    ) -> NativeCacheKey {
+        let slot_count = u64::from(graph.clone().start().0);
+        if graph.functions.is_empty() {
+            let mut hasher = Sha256::new();
+            hasher.update(KEY_DOMAIN);
+            put_u32_hash(&mut hasher, KEY_VERSION);
+            hash_graph_header(&mut hasher, graph, symbol, target, abi, backend_version);
+            put_u64_hash(&mut hasher, slot_count);
+            hash_node_range(&mut hasher, graph, 0, slot_count as usize);
+            return NativeCacheKey(hex(&hasher.finish()));
         }
 
-        let slot_count = u64::from(graph.clone().start().0);
+        let mut hasher = Sha256::new();
+        hasher.update(PROGRAM_KEY_DOMAIN);
+        put_u32_hash(&mut hasher, PROGRAM_KEY_VERSION);
+        hash_graph_header(&mut hasher, graph, symbol, target, abi, backend_version);
         put_u64_hash(&mut hasher, slot_count);
-        for index in 0..slot_count {
-            let id = NodeId(index as u32);
-            let Some(node) = graph.node(id) else {
-                hasher.update(&[0]);
-                continue;
-            };
-            hasher.update(&[1]);
-            put_u32_hash(&mut hasher, id.0);
-            hash_node_kind(&mut hasher, node.kind);
-            hash_inputs(&mut hasher, 1, &node.control);
-            hash_inputs(&mut hasher, 2, &node.data);
-            hash_inputs(&mut hasher, 3, &node.memory);
+        let shard_count = (slot_count as usize)
+            .div_ceil(PROGRAM_HASH_SHARD_SLOTS)
+            .max(1);
+        put_u64_hash(&mut hasher, shard_count as u64);
+        for digest in hash_program_shards(graph, slot_count as usize, shard_count, jobs) {
+            hasher.update(&digest);
         }
         NativeCacheKey(hex(&hasher.finish()))
     }
@@ -155,17 +163,25 @@ impl NativeCache {
     /// Returns a validated cached ELF object. Every cache read or validation
     /// failure is a miss so the caller can use the native compiler instead.
     pub fn lookup(&self, key: &NativeCacheKey) -> Option<Vec<u8>> {
-        let path = self.entry_path(key);
-        let metadata = fs::metadata(&path).ok()?;
-        if !metadata.is_file() || metadata.len() > MAX_ENTRY_SIZE {
-            return None;
-        }
-        decode_entry(&fs::read(path).ok()?, key).ok()
+        self.lookup_entry(key, None)
     }
 
     fn lookup_kind(&self, key: &NativeCacheKey, kind: CacheObjectKind) -> Option<Vec<u8>> {
-        let object = self.lookup(key)?;
-        object_matches_kind(&object, kind).then_some(object)
+        self.lookup_entry(key, Some(kind))
+    }
+
+    fn lookup_entry(&self, key: &NativeCacheKey, kind: Option<CacheObjectKind>) -> Option<Vec<u8>> {
+        let file = File::open(self.entry_path(key)).ok()?;
+        let metadata = file.metadata().ok()?;
+        if !metadata.is_file() || metadata.len() > MAX_ENTRY_SIZE {
+            return None;
+        }
+        let mut bytes = Vec::with_capacity(metadata.len() as usize);
+        file.take(MAX_ENTRY_SIZE + 1).read_to_end(&mut bytes).ok()?;
+        if bytes.len() as u64 > MAX_ENTRY_SIZE {
+            return None;
+        }
+        decode_entry(&bytes, key, kind).ok()
     }
 
     /// Compiles through the in-tree x86_64 encoder and ELF writer, never LLVM.
@@ -219,7 +235,7 @@ impl NativeCache {
             });
         }
 
-        let key = Self::key(graph, "main", target, abi, backend_version);
+        let key = Self::key_with_jobs(graph, "main", target, abi, backend_version, jobs);
         if let Some(bytes) = self.lookup_kind(&key, CacheObjectKind::Program) {
             return Ok(CachedObject {
                 bytes,
@@ -245,6 +261,96 @@ impl NativeCache {
 
     fn entry_path(&self, key: &NativeCacheKey) -> PathBuf {
         self.root.join(&key.0[..2]).join(format!("{}.o", key.0))
+    }
+}
+
+fn hash_graph_header(
+    hasher: &mut Sha256,
+    graph: &Graph,
+    symbol: &str,
+    target: &str,
+    abi: &str,
+    backend_version: &str,
+) {
+    hash_field(hasher, target.as_bytes());
+    hash_field(hasher, abi.as_bytes());
+    hash_field(hasher, backend_version.as_bytes());
+    hash_field(hasher, symbol.as_bytes());
+    put_u64_hash(hasher, graph.len() as u64);
+    put_u64_hash(hasher, graph.functions.len() as u64);
+    for function in &graph.functions {
+        hash_field(hasher, function.name.as_bytes());
+        put_u32_hash(hasher, function.start.0);
+        put_u32_hash(hasher, function.return_node.0);
+        put_u64_hash(hasher, function.parameter_count as u64);
+    }
+}
+
+fn hash_program_shards(
+    graph: &Graph,
+    slot_count: usize,
+    shard_count: usize,
+    jobs: usize,
+) -> Vec<[u8; 32]> {
+    let worker_count = jobs.max(1).min(shard_count);
+    if worker_count == 1 {
+        return (0..shard_count)
+            .map(|shard| hash_program_shard(graph, slot_count, shard))
+            .collect();
+    }
+
+    let next_shard = AtomicUsize::new(0);
+    thread::scope(|scope| {
+        let next_shard = &next_shard;
+        let mut handles = Vec::with_capacity(worker_count);
+        for _ in 0..worker_count {
+            handles.push(scope.spawn(move || {
+                let mut results = Vec::new();
+                loop {
+                    let shard = next_shard.fetch_add(1, Ordering::Relaxed);
+                    if shard >= shard_count {
+                        break;
+                    }
+                    results.push((shard, hash_program_shard(graph, slot_count, shard)));
+                }
+                results
+            }));
+        }
+
+        let mut digests = vec![[0_u8; 32]; shard_count];
+        for handle in handles {
+            for (shard, digest) in handle.join().expect("native cache hash worker panicked") {
+                digests[shard] = digest;
+            }
+        }
+        digests
+    })
+}
+
+fn hash_program_shard(graph: &Graph, slot_count: usize, shard: usize) -> [u8; 32] {
+    let start = shard * PROGRAM_HASH_SHARD_SLOTS;
+    let end = (start + PROGRAM_HASH_SHARD_SLOTS).min(slot_count);
+    let mut hasher = Sha256::new();
+    hasher.update(PROGRAM_SHARD_DOMAIN);
+    put_u64_hash(&mut hasher, start as u64);
+    put_u64_hash(&mut hasher, end as u64);
+    hash_node_range(&mut hasher, graph, start, end);
+    hasher.finish()
+}
+
+fn hash_node_range(hasher: &mut Sha256, graph: &Graph, start: usize, end: usize) {
+    for index in start..end {
+        let id = NodeId(index as u32);
+        let Some(node) = graph.node(id) else {
+            hasher.update(&[0]);
+            continue;
+        };
+        hasher.update(&[1]);
+        put_u32_hash(hasher, id.0);
+        hash_node_kind(hasher, node.kind);
+        hash_inputs(hasher, 1, &node.control);
+        hash_inputs(hasher, 2, &node.data);
+        hash_inputs(hasher, 3, &node.memory);
     }
 }
 
@@ -331,7 +437,11 @@ fn encode_entry(key: &NativeCacheKey, object: &[u8]) -> Vec<u8> {
     output
 }
 
-fn decode_entry(bytes: &[u8], key: &NativeCacheKey) -> io::Result<Vec<u8>> {
+fn decode_entry(
+    bytes: &[u8],
+    key: &NativeCacheKey,
+    kind: Option<CacheObjectKind>,
+) -> io::Result<Vec<u8>> {
     if bytes.len() < 32 || Sha256::digest(&bytes[..bytes.len() - 32]) != bytes[bytes.len() - 32..] {
         return Err(invalid_data("native cache checksum mismatch"));
     }
@@ -345,14 +455,18 @@ fn decode_entry(bytes: &[u8], key: &NativeCacheKey) -> io::Result<Vec<u8>> {
     if cursor.take(64)? != key.0.as_bytes() {
         return Err(invalid_data("native cache key mismatch"));
     }
-    let object = cursor.field()?.to_vec();
+    let object = cursor.field()?;
     if !cursor.is_empty() {
         return Err(invalid_data("trailing native cache entry data"));
     }
-    if !is_supported_object(&object) && !is_supported_program_object(&object) {
+    let supported = match kind {
+        Some(kind) => object_matches_kind(object, kind),
+        None => is_supported_object(object) || is_supported_program_object(object),
+    };
+    if !supported {
         return Err(invalid_data("invalid native ELF object in cache"));
     }
-    Ok(object)
+    Ok(object.to_vec())
 }
 
 fn object_matches_kind(object: &[u8], kind: CacheObjectKind) -> bool {
@@ -1039,6 +1153,51 @@ mod tests {
         changed_call.node_mut(call).unwrap().kind = NodeKind::Call(0);
         assert_ne!(program_key(&changed_call, BACKEND), base);
         assert_ne!(program_key(&graph, "native-x86_64-elf-test-v2"), base);
+    }
+
+    #[test]
+    fn program_shards_cover_boundaries_and_holes_independent_of_jobs() {
+        let mut graph = program_graph();
+        for value in 0..(2 * PROGRAM_HASH_SHARD_SLOTS + 17) {
+            graph.constant(value as i64);
+        }
+        let base = program_key(&graph, BACKEND);
+        for jobs in [1, 2, 4, 8] {
+            assert_eq!(
+                NativeCache::key_with_jobs(
+                    &graph,
+                    "main",
+                    SUPPORTED_TARGET,
+                    SUPPORTED_ABI,
+                    BACKEND,
+                    jobs,
+                ),
+                base,
+                "jobs: {jobs}"
+            );
+        }
+
+        let mut changed_boundary = graph.clone();
+        changed_boundary
+            .node_mut(NodeId(PROGRAM_HASH_SHARD_SLOTS as u32))
+            .unwrap()
+            .kind = NodeKind::Const(-1);
+        assert_ne!(program_key(&changed_boundary, BACKEND), base);
+
+        let mut changed_last_shard = graph.clone();
+        let last = graph.ids().last().unwrap();
+        changed_last_shard.node_mut(last).unwrap().kind = NodeKind::Const(-1);
+        assert_ne!(program_key(&changed_last_shard, BACKEND), base);
+
+        let mut interior_hole = graph.clone();
+        interior_hole.remove(NodeId(PROGRAM_HASH_SHARD_SLOTS as u32));
+        assert_ne!(program_key(&interior_hole, BACKEND), base);
+
+        let mut trailing_hole = graph.clone();
+        let removed = trailing_hole.constant(-1);
+        trailing_hole.remove(removed);
+        assert_eq!(trailing_hole.len(), graph.len());
+        assert_ne!(program_key(&trailing_hole, BACKEND), base);
     }
 
     #[test]

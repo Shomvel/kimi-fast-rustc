@@ -163,10 +163,6 @@ fn unsupported_patterns_and_match_as_an_identifier_are_rejected() {
             "range patterns",
         ),
         (
-            "fn main(value: i64) -> i64 { return match value { 0 if true => 1, _ => 0 }; }",
-            "guards",
-        ),
-        (
             "fn main(value: i64) -> i64 { return match value { (0) => 1, _ => 0 }; }",
             "tuple and enum patterns",
         ),

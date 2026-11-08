@@ -229,3 +229,95 @@ fn large_branch_loop_and_unreachable_graph_is_deterministic() {
     graph.validate().unwrap();
     repeated.validate().unwrap();
 }
+
+fn fingerprint_bytes(mut hash: u64, bytes: impl IntoIterator<Item = u8>) -> u64 {
+    for byte in bytes {
+        hash ^= u64::from(byte);
+        hash = hash.wrapping_mul(0x100000001b3);
+    }
+    hash
+}
+
+fn graph_fingerprint(graph: &Graph) -> u64 {
+    let mut hash = 0xcbf29ce484222325;
+    for (id, node) in graph.iter() {
+        hash = fingerprint_bytes(hash, format!("{id:?}{node:?}").bytes());
+    }
+    hash
+}
+
+#[test]
+fn many_duplicate_expressions_preserve_graph_and_machine_code() {
+    const LEVELS: usize = 1024;
+    const NATIVE_LEVELS: usize = 128;
+
+    let mut graph = Graph::new();
+    let start = graph.start();
+    let parameter = graph.parameter(0);
+    let one = graph.constant(1);
+    let mut canonical = graph.binary(BinaryOp::Add, parameter, one);
+    let mut duplicate = graph.binary(BinaryOp::Add, parameter, one);
+    let mut canonicals = vec![canonical];
+    let mut duplicates = vec![duplicate];
+    let mut returns = vec![graph.return_(start, Some(duplicate))];
+    for _ in 0..LEVELS {
+        canonical = graph.binary(BinaryOp::Add, canonical, one);
+        duplicate = graph.binary(BinaryOp::Add, duplicate, one);
+        canonicals.push(canonical);
+        duplicates.push(duplicate);
+        returns.push(graph.return_(start, Some(duplicate)));
+    }
+
+    let mut expected = graph.clone();
+    let ids_before: Vec<_> = graph.ids().collect();
+    let started = std::time::Instant::now();
+    let merged = value_numbering::value_numbering(&mut graph);
+    let elapsed = started.elapsed();
+    assert_eq!(merged, LEVELS + 1);
+    assert_eq!(graph.ids().collect::<Vec<_>>(), ids_before);
+    for index in 0..=LEVELS {
+        expected.node_mut(duplicates[index]).unwrap().data[0] = if index == 0 {
+            parameter
+        } else {
+            canonicals[index - 1]
+        };
+        expected.node_mut(returns[index]).unwrap().data[0] = canonicals[index];
+    }
+    assert_eq!(
+        graph.iter().collect::<Vec<_>>(),
+        expected.iter().collect::<Vec<_>>()
+    );
+    graph.validate().unwrap();
+
+    let mut native_graph = Graph::new();
+    let native_start = native_graph.start();
+    let native_parameter = native_graph.parameter(0);
+    let native_one = native_graph.constant(1);
+    let mut native_canonical = native_graph.binary(BinaryOp::Add, native_parameter, native_one);
+    let mut native_duplicate = native_graph.binary(BinaryOp::Add, native_parameter, native_one);
+    for _ in 0..NATIVE_LEVELS {
+        native_canonical = native_graph.binary(BinaryOp::Add, native_canonical, native_one);
+        native_duplicate = native_graph.binary(BinaryOp::Add, native_duplicate, native_one);
+    }
+    native_graph.return_(native_start, Some(native_duplicate));
+    assert_eq!(
+        value_numbering::value_numbering(&mut native_graph),
+        NATIVE_LEVELS + 1
+    );
+    native_graph.validate().unwrap();
+    let native_graph = placement::place_for_native(&native_graph).unwrap();
+    let function = native::compile_graph(&native_graph, "main").unwrap();
+    let bytes = function.emit_machine_code().unwrap();
+    assert_eq!(
+        machine_eval::evaluate(&function, &[41]),
+        Ok(41 + NATIVE_LEVELS as i64 + 1)
+    );
+    eprintln!(
+        "duplicate_levels={LEVELS} elapsed_us={} nodes={} graph_fnv={:016x} code_bytes={} code_fnv={:016x}",
+        elapsed.as_micros(),
+        graph.len(),
+        graph_fingerprint(&graph),
+        bytes.len(),
+        fingerprint_bytes(0xcbf29ce484222325, bytes.iter().copied()),
+    );
+}

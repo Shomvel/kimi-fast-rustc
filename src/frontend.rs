@@ -606,6 +606,21 @@ struct Binding {
     ty: ScalarType,
 }
 
+#[derive(Clone, Copy)]
+enum MatchPattern {
+    Literal {
+        value: NodeId,
+        bits: i64,
+    },
+    Range {
+        start: NodeId,
+        end: NodeId,
+        start_bits: i64,
+        end_bits: i64,
+    },
+    Wildcard,
+}
+
 struct LoopContext {
     header: NodeId,
     phis: Vec<(String, NodeId)>,
@@ -2295,6 +2310,7 @@ impl Parser {
         self.expect(TokenKind::LBrace, "`{` after match scrutinee")?;
 
         let mut seen_literals = HashSet::new();
+        let mut seen_ranges = Vec::new();
         let mut controls = Vec::new();
         let mut values = Vec::new();
         let mut has_wildcard = false;
@@ -2308,35 +2324,91 @@ impl Parser {
 
             let pattern_span = self.peek().span;
             let pattern = self.parse_match_pattern(scrutinee_type)?;
-            if self.peek_identifier("if") {
-                return Err(self.error_here("match guards are not supported"));
-            }
-            self.expect(TokenKind::FatArrow, "`=>` after match pattern")?;
-
-            let branch = if let Some(pattern) = pattern {
-                let NodeKind::Const(bits) = self
-                    .graph
-                    .node(pattern)
-                    .expect("match pattern is a constant")
-                    .kind
-                else {
-                    unreachable!("match patterns lower to constants")
-                };
-                if !seen_literals.insert(bits) {
+            let bounds = match pattern {
+                MatchPattern::Literal { bits, .. } => Some((bits, bits)),
+                MatchPattern::Range {
+                    start_bits,
+                    end_bits,
+                    ..
+                } => Some((start_bits, end_bits)),
+                MatchPattern::Wildcard => None,
+            };
+            if let Some((start, end)) = bounds {
+                if matches!(pattern, MatchPattern::Literal { .. }) && !seen_literals.insert(start) {
                     return Err(ParseError::new(
                         pattern_span,
                         "duplicate literal in match patterns",
                     ));
                 }
-                let condition = self.graph.compare(CompareOp::Eq, scrutinee, pattern);
-                self.mark_bool(condition);
-                let branch = self.graph.if_(self.control, condition);
+                let overlaps = seen_ranges.iter().any(|&(other_start, other_end)| {
+                    let starts_before_other = if scrutinee_type == ScalarType::U64 {
+                        (start as u64) <= other_end as u64
+                    } else {
+                        start <= other_end
+                    };
+                    let other_starts_before = if scrutinee_type == ScalarType::U64 {
+                        (other_start as u64) <= end as u64
+                    } else {
+                        other_start <= end
+                    };
+                    starts_before_other && other_starts_before
+                });
+                if overlaps {
+                    return Err(ParseError::new(
+                        pattern_span,
+                        "overlapping literal or range in match patterns",
+                    ));
+                }
+                seen_ranges.push((start, end));
+            }
+
+            let mut next_branches = Vec::new();
+            match pattern {
+                MatchPattern::Literal { value, .. } => {
+                    let condition = self.graph.compare(CompareOp::Eq, scrutinee, value);
+                    self.mark_bool(condition);
+                    let branch = self.graph.if_(self.control, condition);
+                    self.control = self.graph.projection(branch, 0);
+                    next_branches.push(branch);
+                }
+                MatchPattern::Range { start, end, .. } => {
+                    let (lower_operation, upper_operation) = if scrutinee_type == ScalarType::U64 {
+                        (CompareOp::UGe, CompareOp::ULe)
+                    } else {
+                        (CompareOp::Ge, CompareOp::Le)
+                    };
+                    let lower = self.graph.compare(lower_operation, scrutinee, start);
+                    self.mark_bool(lower);
+                    let lower_branch = self.graph.if_(self.control, lower);
+                    self.control = self.graph.projection(lower_branch, 0);
+                    next_branches.push(lower_branch);
+
+                    let upper = self.graph.compare(upper_operation, scrutinee, end);
+                    self.mark_bool(upper);
+                    let upper_branch = self.graph.if_(self.control, upper);
+                    self.control = self.graph.projection(upper_branch, 0);
+                    next_branches.push(upper_branch);
+                }
+                MatchPattern::Wildcard => has_wildcard = true,
+            }
+
+            if self.peek_identifier("if") {
+                if matches!(pattern, MatchPattern::Wildcard) {
+                    return Err(self.error_here(
+                        "a guarded wildcard arm is non-exhaustive; use a final unguarded `_` arm",
+                    ));
+                }
+                self.position += 1;
+                let guard = self.parse_expression()?;
+                self.require_type(guard, ScalarType::Bool)?;
+                let branch = self.graph.if_(self.control, guard);
                 self.control = self.graph.projection(branch, 0);
-                Some(branch)
-            } else {
-                has_wildcard = true;
-                None
-            };
+                next_branches.push(branch);
+            }
+            self.expect(
+                TokenKind::FatArrow,
+                "`=>` after match pattern and optional guard",
+            )?;
 
             let value = if self.eat(TokenKind::LBrace) {
                 let value = self.parse_expression()?;
@@ -2348,8 +2420,15 @@ impl Parser {
             values.push(value);
             controls.push(self.graph.jump(self.control));
 
-            if let Some(branch) = branch {
-                self.control = self.graph.projection(branch, 1);
+            if !next_branches.is_empty() {
+                let next_jumps = next_branches
+                    .into_iter()
+                    .map(|branch| {
+                        let control = self.graph.projection(branch, 1);
+                        self.graph.jump(control)
+                    })
+                    .collect();
+                self.control = self.graph.region(next_jumps);
             }
             if !self.eat(TokenKind::Comma) && !self.check(&TokenKind::RBrace) {
                 return Err(self.error_here("expected `,` between match arms"));
@@ -2388,6 +2467,75 @@ impl Parser {
     }
 
     fn parse_match_pattern(
+        &mut self,
+        scrutinee_type: ScalarType,
+    ) -> Result<MatchPattern, ParseError> {
+        let pattern_span = self.peek().span;
+        let Some(start) = self.parse_match_literal(scrutinee_type)? else {
+            if matches!(self.peek().kind, TokenKind::DotDot | TokenKind::DotDotEq) {
+                return Err(self.error_here("range endpoints must be integer literals"));
+            }
+            return Ok(MatchPattern::Wildcard);
+        };
+        if self.eat(TokenKind::DotDot) {
+            return Err(self.error_here("only inclusive `..=` range patterns are supported"));
+        }
+        if !self.eat(TokenKind::DotDotEq) {
+            let NodeKind::Const(bits) = self
+                .graph
+                .node(start)
+                .expect("match pattern is a constant")
+                .kind
+            else {
+                unreachable!("match patterns lower to constants")
+            };
+            return Ok(MatchPattern::Literal { value: start, bits });
+        }
+        if scrutinee_type == ScalarType::Bool {
+            return Err(ParseError::new(
+                pattern_span,
+                "range patterns require an integer scrutinee",
+            ));
+        }
+        let end = self
+            .parse_match_literal(scrutinee_type)?
+            .ok_or_else(|| self.error_here("range endpoints must be integer literals"))?;
+        let NodeKind::Const(start_bits) = self
+            .graph
+            .node(start)
+            .expect("match range start is a constant")
+            .kind
+        else {
+            unreachable!("match patterns lower to constants")
+        };
+        let NodeKind::Const(end_bits) = self
+            .graph
+            .node(end)
+            .expect("match range end is a constant")
+            .kind
+        else {
+            unreachable!("match patterns lower to constants")
+        };
+        let ordered = if scrutinee_type == ScalarType::U64 {
+            (start_bits as u64) <= end_bits as u64
+        } else {
+            start_bits <= end_bits
+        };
+        if !ordered {
+            return Err(ParseError::new(
+                pattern_span,
+                "range pattern start must be less than or equal to its end",
+            ));
+        }
+        Ok(MatchPattern::Range {
+            start,
+            end,
+            start_bits,
+            end_bits,
+        })
+    }
+
+    fn parse_match_literal(
         &mut self,
         scrutinee_type: ScalarType,
     ) -> Result<Option<NodeId>, ParseError> {
@@ -2447,12 +2595,7 @@ impl Parser {
                 self.types.insert(value, ScalarType::U64);
                 value
             }
-            TokenKind::Ident(identifier) if !negative && identifier == "_" => {
-                if matches!(self.peek().kind, TokenKind::DotDot | TokenKind::DotDotEq) {
-                    return Err(self.error_here("range patterns are not supported"));
-                }
-                return Ok(None);
-            }
+            TokenKind::Ident(identifier) if !negative && identifier == "_" => return Ok(None),
             TokenKind::Ident(identifier) if !negative && identifier == "true" => {
                 let value = self.graph.constant(1);
                 self.mark_bool(value)
@@ -2468,9 +2611,6 @@ impl Parser {
                 ));
             }
         };
-        if matches!(self.peek().kind, TokenKind::DotDot | TokenKind::DotDotEq) {
-            return Err(self.error_here("range patterns are not supported"));
-        }
         self.require_type(value, scrutinee_type)?;
         Ok(Some(value))
     }
