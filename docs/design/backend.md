@@ -34,6 +34,11 @@ pub enum RegClass { Int, Sse }
 
 命名与语义刻意对齐 rustc 的 `PassMode`，方便对照 rustc 的分类结果做差分。具体分类规则（Rust ABI 何时 Indirect、SysV 的 INTEGER/SSE/MEMORY 合并）以 [rustc/layout-abi-mono](../research/rustc/layout-abi-mono/README.md) 的笔记为准。
 
+Ignore 只表示不运输位，不表示源值不存在、已有效或可正常返回。R/S 保留源码签名、
+Return 值及其契约；普通 ZST、Never 和 MaybeUninit 分别处理。要求与证明引用在
+声明的布局边界消解，不为 ABI Ignore 补一棵整值观察树，见
+[requirements-and-facts](ir/requirements-and-facts.md)。
+
 M1 只实现 `Direct(Int)` 和 `Ignore`；其余变体在类型上存在，lowering 遇到即返回 `UnsupportedFeature`。
 
 ### 第二层：CallLayout

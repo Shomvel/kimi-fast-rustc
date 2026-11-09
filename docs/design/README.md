@@ -2,6 +2,11 @@
 
 状态：**设计草案 draft-0**，2026-11-08。依据见 [research/](../research/README.md)：10 个编译模拟（[walkthroughs](../research/walkthroughs/README.md)，60 条发现已改回本目录）和先例调研（[prior-art](../research/prior-art/README.md)）。字段级定义由 [T02](../plan/m0/t02-shared-contracts.md) 冻结。
 
+2026-11-09 修订：语义要求、证明事实、抽象状态与真实效果分开，见
+[requirements-and-facts](ir/requirements-and-facts.md) 和
+[constraints-and-effects](ir/constraints-and-effects.md)。修订是目标契约，当前代码覆盖
+与验收见 [semantic-ir-status](../plan/poc/semantic-ir-status.md)；旧 walkthrough 保留历史语境。
+
 ## 一句话
 
 rustc 先把 Rust 降到 LLVM IR 的低级形式（每个局部一个 alloca、move 是 memcpy、enum 是 tag/niche 算术、闭包和 drop glue 是独立函数），LLVM 再花大量 pass 把这些结构重建回来。kfrc 不走这条路：SoN 的前两级直接表示 Rust 语义——聚合和 enum 是值，借用是内存分区，drop 和 trait 调用是节点，泛型参数相关的操作是“孔位”——在这一层把大部分优化做完，**最后**才按布局降到机器级节点。
@@ -39,7 +44,8 @@ flowchart TD
 | 聚合、enum、宽指针在 R/S 级是 SSA 值 | alloca/memcpy/lifetime（cargo 未优化 IR 的 23.3%）及 SROA/MemCpyOpt/DSE | [ir/values-and-types.md](ir/values-and-types.md) |
 | enum 用变体操作表示，编码推迟到 L 级，按 tag 值直接分支 | niche 解码后再折叠（InstCombine/JumpThreading/CVP） | [ir/nodes.md](ir/nodes.md) |
 | 借用、`&mut`/`&Freeze` 参数是独立内存分区 | noalias 元数据推断、MemorySSA 查询 | [ir/memory-partitions.md](ir/memory-partitions.md) |
-| 事实挂在类型和 `Refine` 节点上，不发 assume | 重复 assume（2.0%） | [ir/values-and-types.md](ir/values-and-types.md) |
+| 源语义要求与作用域事实分开，证明消费者不制造执行数据需求 | 整值 Observe、逐叶 Refine 复制与无用布局展开 | [ir/requirements-and-facts.md](ir/requirements-and-facts.md) |
+| 内存版本、借用／存储寿命、分析标记和真实效果各有契约 | 不从笼统的 marker/barrier 猜执行或排序语义 | [ir/constraints-and-effects.md](ir/constraints-and-effects.md) |
 | move 是值转发；drop 是节点，`NeedsDrop=false` 时直接消失 | drop glue 薄包装、空 landingpad、nounwind 推断 | [ir/ownership-drop-unwind.md](ir/ownership-drop-unwind.md) |
 | 泛型体在 R 级优化一次；实例按答案键去重后再特化 | 每实例重复优化、LocalCopy、ThinLTO 导入体重新简化 | [ir/generics-specialization.md](ir/generics-specialization.md) |
 | 单向化简规则 + 变化驱动 worklist + elaboration 式 placement | 同一函数在 pipeline 中反复跑 InstCombine 等 | [ir/optimization-pipeline.md](ir/optimization-pipeline.md) |
@@ -50,7 +56,7 @@ flowchart TD
 |---|---|
 | [ids.md](ids.md) | 共享 ID、阶段接口、错误分类 |
 | [frontend/](frontend/overview.md) | 前端产物与交接（[overview](frontend/overview.md)）、类型表示（[types](frontend/types.md)）、Typed Body（[body](frontend/body.md)） |
-| [ir/](ir/levels.md) | 三级 SoN：[levels](ir/levels.md)、[graph](ir/graph.md)、[nodes](ir/nodes.md)、[values-and-types](ir/values-and-types.md)、[memory-partitions](ir/memory-partitions.md)、[ownership-drop-unwind](ir/ownership-drop-unwind.md)、[generics-specialization](ir/generics-specialization.md)、[optimization-pipeline](ir/optimization-pipeline.md)、[verifier](ir/verifier.md)、[semantics](ir/semantics.md) |
+| [ir/](ir/levels.md) | 三级 SoN：[levels](ir/levels.md)、[graph](ir/graph.md)、[nodes](ir/nodes.md)、[values-and-types](ir/values-and-types.md)、[requirements-and-facts](ir/requirements-and-facts.md)、[constraints-and-effects](ir/constraints-and-effects.md)、[memory-partitions](ir/memory-partitions.md)、[ownership-drop-unwind](ir/ownership-drop-unwind.md)、[generics-specialization](ir/generics-specialization.md)、[optimization-pipeline](ir/optimization-pipeline.md)、[verifier](ir/verifier.md)、[semantics](ir/semantics.md) |
 | [backend.md](backend.md) | Machine IR、FnAbi、CallLayout、对象片段 |
 | [build/](build/pipeline.md) | 任务与产物发布（[pipeline](build/pipeline.md)）、缓存（[cache](build/cache.md)）、Cargo/sysroot（[cargo-sysroot](build/cargo-sysroot.md)） |
 | [goals/](goals/compile-time.md) | 四个目标怎么保证：[编译时间](goals/compile-time.md)、[体积](goals/size.md)、[运行速度](goals/runtime.md)；缓存见 [build/cache](build/cache.md) |

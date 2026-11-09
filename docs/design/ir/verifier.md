@@ -1,6 +1,9 @@
 # SoN verifier 契约（draft-0）
 
-现在的 `Graph::validate`（[son.rs:432](../../../src/son.rs#L432)）只检查输入节点存在和各 `NodeKind` 的输入元数。T01 的探测显示错编译图能通过它（合并点后使用分支内定义的值），所以新 verifier 必须包含支配检查。
+这是目标 verifier 契约，不表示所有检查已经实现。当前入口在
+[verify.rs](../../../crates/kfrc-son/src/verify.rs)。历史 T01 中的跨分支使用说明只检查
+元数不够；现在还须区分语义要求、事实凭据、内存版本和策略提示，见
+[requirements-and-facts.md](requirements-and-facts.md)、[constraints-and-effects.md](constraints-and-effects.md)。
 
 ## 检查清单
 
@@ -28,14 +31,21 @@
 | placed | 放置后浮动 load 不晚于同分区后续的写 | `AntiDependence` |
 | placed | 放置后 Release 原子与 fence 之前的 `Unique`/`Local` 写没有被移到它之后（另需多线程 litmus 测试，顺序语义观察不到这类错误） | `ReleaseOrder` |
 | typed | 节点种类属于 [semantics.md](semantics.md#执行模型) 四类中的哪一类已登记；立即 UB 节点不浮动 | `UnclassifiedNode` |
-| full | `VariantField` 被同一变体的 `VariantSwitch` 出口或 `Refine` 支配 | `UnprovenVariant` |
-| full | `Refine` 的使用者都被它的控制支配 | `RefineEscapes` |
-| full | 需要 drop 的值在每条路径上恰好被消费一次（以 `Unreachable`/`Terminate` 结束的路径除外） | `OwnershipLinear` |
-| full | `EndBorrow` 联合后支配对应 `Reborrow`；之后不再使用子分区地址 | `BorrowScopeClosed` / `UseAfterEndBorrow` |
+| full | 利用变体匹配的消费者具有同值、同变体、同动态实例的凭据；无凭据的纯 VariantField 保持不匹配时 poison，不得据此生成无保护物理 load | `UnprovenVariant` |
+| full | 凭据来源有效且 scope 支配消费点；Phi 按前驱边，循环不能用下一轮或自身证明；内存依赖未失效 | `FactEscapes` / `StaleWitness` |
+| typed | Require 无新业务值和内存读写；Assume 的布尔条件与 Check 的真实失败行为不混同 | `BadRequirement` |
+| full | Body 指定的所有权和 drop 义务正确转移、执行或合法解除；允许 forget、ManuallyDrop、Copy 和合法泄漏 | `OwnershipObligation` |
+| full | EndBorrow 覆盖 scope 的有限正常及 unwind 出口；之后不使用其凭据，不把结束 scope 等同地址死亡 | `BorrowScopeClosed` / `ExpiredBorrowWitness` |
+| typed/full | MemMerge 是同点分区视图，效果 Phi 选择同一分区的前驱版本；逃逸并区后依赖覆盖完整 | `BadMemoryView` / `PartitionMismatch` |
+| full | SlotLive／Dead 的动态寿命与初始化分离；move 不自行结束槽寿命；跨新寿命不复用旧访问凭据 | `StorageLifetimeMismatch` |
+| placed | 证明消费者未被误当执行需求；擦除要求及 scope 前，实际访问、may-trap、原子和 fence 依赖已落实 | `LostPlacementDependency` |
 
 全量（full）检查只在级别边界运行：R 图发布前、S 级结束、L 级结束；debug 构建可以逐 pass 打开。
 
-支配检查需要先放置（或用 SoN 的 control 依赖计算最早/最晚块）。可以复用 [placement.rs](../../../src/placement.rs) 的结果和 [cfg.rs](../../../src/cfg.rs) 的支配计算。
+支配检查可用 SoN 的控制依赖计算最早／最晚块，复用
+[analysis](../../../crates/kfrc-son/src/analysis) 中的 CFG 和 dominators。
+GraphState::Verified 仅针对已检查的图版本；图、类型事实、凭据或 scope 改变要使相关
+验证和缓存失效。结构检查不应以“事实为 Assumed”为由跳过来源与作用域验证。
 
 ## 输出
 
@@ -45,6 +55,12 @@
 ## 必须有的负例测试
 
 T01 的每个形状构造成图后都要被 `DominanceViolation` 拒绝；另外手工构造：Phi 元数不对、跨图 NodeId、`If` 条件为 64 位整数、Store 缺效果输入、除法被提到守卫之前。
+
+新增契约测试：父 enum 凭据用于子 enum、循环动态值错配、nonnull 充当可访问证明、
+只读但越界的投机 load、布局引入调用后 Local 失效、不同分区直接拼效果 Phi、
+SlotLive 重用旧寿命凭据、EndBorrow 后用过期 scope。合法对照包括部分 move 后访问
+其他字段、forget、真正无限循环和外部不返回调用。Proven 失败、解释器不支持和
+执行超预算都不得归类为源 UB；相等与 refinement 测试按声明的边界分别运行。
 
 ## 其他层的 verifier
 

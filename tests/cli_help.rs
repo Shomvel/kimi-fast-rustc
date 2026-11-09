@@ -37,8 +37,10 @@ fn native_help() {
 }
 
 #[test]
-fn native_batch_help() {
-    assert_help(Some("native-batch"));
+fn removed_native_batch_does_not_run_the_old_ir() {
+    let output = kfrc(&["native-batch", "--help"]);
+    assert!(!output.status.success());
+    assert!(String::from_utf8_lossy(&output.stderr).contains("removed demonstration IR"));
 }
 
 #[test]

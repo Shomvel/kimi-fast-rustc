@@ -1,0 +1,364 @@
+{
+  "source_snapshot": "candidate03/source.tar.gz",
+  "snapshot_sha256": "c87bdcdbd707f4c37cc06dfd004327766a764698d560d484edef19b6176886f6",
+  "files": [
+    {
+      "path": "src/frontend.rs",
+      "exists": true,
+      "sha256": "07ebad3abf0266d5b3dc053a1d87a1362740fb2ec23fa764708c4141c042c83f"
+    },
+    {
+      "path": "src/mir.rs",
+      "exists": true,
+      "sha256": "6bbdc281f40e058d170dc9136eacb42d6f623856b541cc4a3f23100c4a02ac4b"
+    },
+    {
+      "path": "src/son.rs",
+      "exists": true,
+      "sha256": "2709ed16f6774904ef688a4c476b8388b09c38cb9e04a7e636e7e4431ca24564"
+    },
+    {
+      "path": "src/interpreter.rs",
+      "exists": true,
+      "sha256": "d3efe67587f1a1649423f3170c2636f6f07af5053269e5d659205f02bb866371"
+    },
+    {
+      "path": "src/son_optimize.rs",
+      "exists": true,
+      "sha256": "95afb0810917089c53ad61a69212c81d36d858c36343d0bee94945df9319d634"
+    },
+    {
+      "path": "src/optimizer_pipeline.rs",
+      "exists": true,
+      "sha256": "f543d120ba55a72c4e39c58c7ca5ac9d79641d8470aab254adab09a5a1b0d151"
+    },
+    {
+      "path": "src/placement.rs",
+      "exists": true,
+      "sha256": "f3ae0440a97231fd17196dbafac31a39adb35f194e48d8ea7ec9c52ac779000c"
+    },
+    {
+      "path": "src/loop_analysis.rs",
+      "exists": true,
+      "sha256": "3dc0c87e4edcbf1debd74882353bdc4d93c1939165d9f04d58ba5898605e7f50"
+    },
+    {
+      "path": "src/value_numbering.rs",
+      "exists": true,
+      "sha256": "fe2fa29ad0ddf1606798dfdb90c05bef9f081f1b67b267b3dba836e4a3ea8506"
+    },
+    {
+      "path": "src/native_cli.rs",
+      "exists": true,
+      "sha256": "e4cc9193a117eb56b8538abdc2a325906fcc849ce6f1a5fb9b060d41227c63ab"
+    },
+    {
+      "path": "src/native_batch.rs",
+      "exists": true,
+      "sha256": "ae5b056026ac2e2b6a51a6529718eb2954c78edeb62596f6ed7e7fc175159f40"
+    },
+    {
+      "path": "src/native_cache.rs",
+      "exists": true,
+      "sha256": "47d03a775d8987fdca44872d2e2b429d5fac6666374af76e4529ac4213aaefe7"
+    },
+    {
+      "path": "src/native_object.rs",
+      "exists": true,
+      "sha256": "c3707cbe29a9c3ad59a25599a6518a79603e1a2df5afb51bf2328eaf7b0bab1a"
+    },
+    {
+      "path": "src/native_program.rs",
+      "exists": true,
+      "sha256": "357a37ddd458ddda482f2a5b6797e355bf9aac829980043368fb54a06bc66bf9"
+    },
+    {
+      "path": "src/parallel_native.rs",
+      "exists": true,
+      "sha256": "3e0198e8a998f5a12d7199854f3ede95df144fcdbe1de866e4333089be92f306"
+    },
+    {
+      "path": "src/pipelined_native.rs",
+      "exists": true,
+      "sha256": "58f7282c9d408a3d10f9abf496f2cdbfb06c13726cda579691f7516937481533"
+    },
+    {
+      "path": "src/multi_function.rs",
+      "exists": true,
+      "sha256": "3e636adb4fc18e1278e47b6555ac8c2b0471eb20548da09c47145d5de4131f8e"
+    },
+    {
+      "path": "src/repro.rs",
+      "exists": true,
+      "sha256": "9d87a50d7c8b7cc1f9af2f773b29f33730145412aa8996d88dd3f55de87c3ddd"
+    },
+    {
+      "path": "src/cfg.rs",
+      "exists": true,
+      "sha256": "ee5a837b14b88e7d3e6e7c89cd625c539b23acb3eade20091e007b096341e784"
+    },
+    {
+      "path": "src/elf.rs",
+      "exists": true,
+      "sha256": "02141777c258f8de5b2c10029207f4723b2b41eef90aa3c54d89ec6b46b6386e"
+    },
+    {
+      "path": "src/elf_reloc.rs",
+      "exists": true,
+      "sha256": "b4dfbeff826e6f869d227819358d67aa48c74c1c4ba3f0ac61f9d2036b779f36"
+    },
+    {
+      "path": "src/call_reloc.rs",
+      "exists": true,
+      "sha256": "9f9e49ed16bd557aa9489dea0601520e2420ab111eb29543833ca9b54b1a343a"
+    },
+    {
+      "path": "src/native.rs",
+      "exists": true,
+      "sha256": "0ed58d7325e26feabfafcc103acbc8f75e9a5995757ef57b6452062555c4f64d"
+    },
+    {
+      "path": "src/x86.rs",
+      "exists": true,
+      "sha256": "19d60d80519a51d32f114091a0cb63ca31f23a65a02a8845ae85f7aedca1ae31"
+    },
+    {
+      "path": "src/x86_encode.rs",
+      "exists": true,
+      "sha256": "23297c64aca977f5ee4b03e2fe22e9a6a959f24885a512c98c76454cd179a419"
+    },
+    {
+      "path": "src/regalloc.rs",
+      "exists": true,
+      "sha256": "76513d56a6500f23ef8c9ab52b437ea74d8a004d85aa519658e03e648b7324ce"
+    },
+    {
+      "path": "src/machine_eval.rs",
+      "exists": true,
+      "sha256": "83485e590dc6f06840f31f4f08a5affa70e58b5b9fd4f136bfd93d4e1973fdff"
+    }
+  ],
+  "retired_tests": [
+    {
+      "path": "tests/assignment_syntax.rs",
+      "sha256": "8064ba6799df8332aa8470c9cf3b0d2a9f1fb5fded80174445fee428b6cdf338"
+    },
+    {
+      "path": "tests/bool_comparisons.rs",
+      "sha256": "74018e7579e996985e02a1cf80c540217ebc57a46c92af16c4b488e2e1a672f5"
+    },
+    {
+      "path": "tests/bool_ops.rs",
+      "sha256": "9a81a9c438e3b032f6b4d963ac2e092e0d0292cbb1612cb55ec3550146fc9446"
+    },
+    {
+      "path": "tests/bool_optimizer_regression.rs",
+      "sha256": "a42a5461577abb7cc28582070c64a12bb4610b761a7dfb7a6fe0dfa2f96f56ac"
+    },
+    {
+      "path": "tests/boolean_comparison_simplification.rs",
+      "sha256": "4d511e5418b5d70c1d716dd2dca739a88012d657f8ce6cc3cdc6fd64e823949c"
+    },
+    {
+      "path": "tests/branch_flags.rs",
+      "sha256": "337b0184ff5bbe4aac5e51fdf9f13cb84656ad0233618aa091e294b1dacfd2f3"
+    },
+    {
+      "path": "tests/casts.rs",
+      "sha256": "3e2bf0ba72ba9c71cafcc30419b93d30b889590ba42845faa158c579f9247973"
+    },
+    {
+      "path": "tests/commutative_immediates.rs",
+      "sha256": "d2ef24844a9b137f2de95f92ddded47434417537daea8f430b206832699915e2"
+    },
+    {
+      "path": "tests/compare_immediates.rs",
+      "sha256": "5e3290458fe3d139e1cd4ea8c26fad39643ec933a02bd1cfac974a9b582ead9a"
+    },
+    {
+      "path": "tests/const_expressions.rs",
+      "sha256": "663b903e6f9a0e9b721bd84a4819b57f8960aba79df4560909b72079ddce4fdd"
+    },
+    {
+      "path": "tests/const_functions.rs",
+      "sha256": "e380ac4e1c08e3db4dfed356c3919f33e52f803c978af1a1c307b5817e15c5dc"
+    },
+    {
+      "path": "tests/const_items.rs",
+      "sha256": "9c82e9970e63ee5408e70a2249ab02e5e013bf0c566d771fd36da397d4744172"
+    },
+    {
+      "path": "tests/control_algebra.rs",
+      "sha256": "3f50184d3ab74ba235c8808e5e0b952da6356194f96f40d8f9f981c1a9fa5285"
+    },
+    {
+      "path": "tests/control_flow.rs",
+      "sha256": "cb304ef7065108ebff5b38affe9cf8f2362488351da30beed910efc62ccf721e"
+    },
+    {
+      "path": "tests/control_optimization.rs",
+      "sha256": "292fb01b3c95a595222f29436acdce75b60f945d1bfb3dff8e09f8b884cf45ad"
+    },
+    {
+      "path": "tests/div_differential.rs",
+      "sha256": "e9a47922a6eefd380961f9fc307def890485e62e546937cc194a0103a396a396"
+    },
+    {
+      "path": "tests/early_return.rs",
+      "sha256": "867d0d1802efd63f9c0fdf90d8399d75e6cd3696b6c2de20a8d275d84d0a3416"
+    },
+    {
+      "path": "tests/expression_statements.rs",
+      "sha256": "35ae50d8b92a340b9e22c4d1a705b7537f777e724b075e4b578d831f3c003ffa"
+    },
+    {
+      "path": "tests/for_loops.rs",
+      "sha256": "b2b659f387a74a011a698716e17f5ad416293a0c5687ef03ec175227c6006bd3"
+    },
+    {
+      "path": "tests/forward_calls.rs",
+      "sha256": "2b84972d1fb60bd651d3a01ff4ae15163c8ffbf8c256e146b2daf967163090e9"
+    },
+    {
+      "path": "tests/function_calls.rs",
+      "sha256": "45291d8c303b079bf601628bd98c45b42ad1b25e997c884c128b6471047fbfe2"
+    },
+    {
+      "path": "tests/function_graph_performance.rs",
+      "sha256": "459d01589811ea919e2b7182e07e3429e94515106a0817d901b74d6c2d0947df"
+    },
+    {
+      "path": "tests/function_parallel.rs",
+      "sha256": "6d975263819d2f0b51a8871635f6fa792e267c5fd6c4dc9c70b946b237508f38"
+    },
+    {
+      "path": "tests/function_visibility.rs",
+      "sha256": "e2e04e51466c793e7dbf3367576962409f0b5c06f2fa937afaab16e7d7edfdc4"
+    },
+    {
+      "path": "tests/immediate_arithmetic.rs",
+      "sha256": "1c24cd1efe1a069bbc2a7014f8b64f8d70bf20029b1cf2a8b49e44c028a21882"
+    },
+    {
+      "path": "tests/immediate_shifts.rs",
+      "sha256": "b6c162f8725a5c1121412a055fcf49a937ba6246241831512175a3db20f93352"
+    },
+    {
+      "path": "tests/inclusive_ranges.rs",
+      "sha256": "59805daa749abce0f68c8147a454d2beae7baf486681a0ef7237b90d3237a3f4"
+    },
+    {
+      "path": "tests/integer_not.rs",
+      "sha256": "ecbab35ad0d570ee7f4353152a5e0ab37d520e14640e975d70d44ab88237f960"
+    },
+    {
+      "path": "tests/integer_ops.rs",
+      "sha256": "0e6b748c7c3237b48d9f5c114efee3485713a3913188b647cbe16392352da9dc"
+    },
+    {
+      "path": "tests/integer_syntax.rs",
+      "sha256": "ea6f113f61c49380203796ddd6446be605557e7059f2747ab20d1bb5fd3141ac"
+    },
+    {
+      "path": "tests/loop_and_tail.rs",
+      "sha256": "43e7dcd049e84650e7807f9eb0df6bb9701d4e91d0e4934d69faaed7e4f856d5"
+    },
+    {
+      "path": "tests/loop_control.rs",
+      "sha256": "ff77d9ca0b55e950d8bb3a15327cb195001a957fd15bb144e51beecf4fefd0b0"
+    },
+    {
+      "path": "tests/loop_invariant.rs",
+      "sha256": "6aba3e2aab0cdfde08d022b0ee9792fcfc00e2b5ef19dc9667a4a9759cff8017"
+    },
+    {
+      "path": "tests/loop_values.rs",
+      "sha256": "0872ebd44f3030b884030cb4cee4df39b44bff6b204ffe08b528509af6c6cb7c"
+    },
+    {
+      "path": "tests/loops.rs",
+      "sha256": "902cdf9e38680d9b498c52e1617b6dcca28ad9d689826d6ef3c027983ee0a52e"
+    },
+    {
+      "path": "tests/machine_differential.rs",
+      "sha256": "af7d245f2f33593cc8e5b93c7da236e6496f0bc3bb5faf9468a4dfe7405003d3"
+    },
+    {
+      "path": "tests/main_unit.rs",
+      "sha256": "2f65b8dec46eb3631010c95530a6dfef464a7ad006c1ff2264bce2e267e9a2a1"
+    },
+    {
+      "path": "tests/match_ranges.rs",
+      "sha256": "564f1d070e1b8362ebc3c3f180dbedbf556d59aa15fff8b4d96a2e159c6d8168"
+    },
+    {
+      "path": "tests/native_copy_elision.rs",
+      "sha256": "a6a5ff483a3529d75bc81f7f99aceffb22d9d28101790cd53121211420058e45"
+    },
+    {
+      "path": "tests/native_pipeline.rs",
+      "sha256": "fb3ea503c2cc275f6b65d3aedf988f9bf551b00686820af881391530b7e8189b"
+    },
+    {
+      "path": "tests/phi_moves.rs",
+      "sha256": "4f735de909bce574cc38be43c4cd9e67136e4bb8f6519c93ee9ae7481a3d6dba"
+    },
+    {
+      "path": "tests/redundant_moves.rs",
+      "sha256": "e22f49ade5bac708bd86cd873e37d171dd85c99fb315de9a8376a2da39c22ceb"
+    },
+    {
+      "path": "tests/repro.rs",
+      "sha256": "632f4815d6150ba4bf9d4634d33c5f58ba14511c8734530507d97d9725d16226"
+    },
+    {
+      "path": "tests/scalar_match.rs",
+      "sha256": "1de5ae9c577576f01ce556e6272943fb0e7426cebc4c26315a2dbd96e7b6dafe"
+    },
+    {
+      "path": "tests/shadowing.rs",
+      "sha256": "f651fffa300e81e0fbd9e45b6ed2c3bc1cb597753d15f70836447119b64a7d04"
+    },
+    {
+      "path": "tests/signed_division_strength.rs",
+      "sha256": "d6cdd17493c3661b40de7925b4def5ac9308f028fbd009f0e56a12994f3a5d64"
+    },
+    {
+      "path": "tests/statement_if.rs",
+      "sha256": "350fd48677de267376fda73df17bb09acc2c4796163762a6fc19b248c7737a43"
+    },
+    {
+      "path": "tests/strength_reduction.rs",
+      "sha256": "8201e063772eebdb2e60d31586141683849ff6819734fcfc079e5f10431bd001"
+    },
+    {
+      "path": "tests/u64_ops.rs",
+      "sha256": "f8dc9f6f1c137185e3279bc151fcc151d8079d1d8defbcb53925239c56e63708"
+    },
+    {
+      "path": "tests/unary_strength.rs",
+      "sha256": "128558a8f373f3b7ce3521cb43777aa7cb76e66a2b828b19b96f2c5edb547655"
+    },
+    {
+      "path": "tests/unsigned_remainder.rs",
+      "sha256": "7047918c82539484761601937fa683084c988814807b2d513c5764de426e1669"
+    },
+    {
+      "path": "tests/zero_compare.rs",
+      "sha256": "bf86f7b3855f0df40cf3a4d11d42c9e3f6482814b0cb77627647d7149139d61a"
+    },
+    {
+      "path": "tests/zero_idiom.rs",
+      "sha256": "c726d697c55beeef15b68e55d9cf04e6cb98345e86e9d8164d309c48232b4b16"
+    }
+  ],
+  "coverage_inventory": "scripts/poc-validation/fixtures/legacy-corpus/migration-status.json",
+  "status": "old IR sources removed; replacement correctness/coverage remains under validation",
+  "retired_tools": [
+    {
+      "path": "scripts/native_microbench.py",
+      "sha256": "1a33b73fee991ca682708c6e38e0be11f9746ce62c63b72a3bd740b58419a8f4",
+      "replacement": "scripts/poc-validation/semver-perf.py; real rustc semantic pipeline, not old handwritten frontend"
+    }
+  ]
+}

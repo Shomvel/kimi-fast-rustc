@@ -1,6 +1,8 @@
 //! Structural checks on a Body before SoN construction.
 
-use crate::body::{Body, BlockId, ConstantKind, Operand, Place, Rvalue, StatementKind, Terminator, UnwindAction};
+use crate::body::{
+    BlockId, Body, ConstantKind, Operand, Place, Rvalue, StatementKind, Terminator, UnwindAction,
+};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum BodyError {
@@ -12,6 +14,7 @@ pub enum BodyError {
     BadProjection { block: BlockId, projection: u32 },
     AbiArity { abi_args: usize, arg_count: usize },
     NonFunctionCallee { block: BlockId },
+    NonBooleanAssume { block: BlockId },
 }
 
 impl std::fmt::Display for BodyError {
@@ -47,7 +50,22 @@ pub fn verify_body(body: &Body) -> Result<(), BodyError> {
                     check.place(*place)?;
                     check.rvalue(rvalue)?;
                 }
-                StatementKind::StorageLive(local) | StatementKind::StorageDead(local) => check.local(local.0)?,
+                StatementKind::Assume(predicate) => {
+                    check.operand(predicate)?;
+                    if !check.boolean_operand(predicate) {
+                        return Err(BodyError::NonBooleanAssume { block: id });
+                    }
+                }
+                StatementKind::CopyNonOverlapping {
+                    src, dst, count, ..
+                } => {
+                    check.operand(src)?;
+                    check.operand(dst)?;
+                    check.operand(count)?;
+                }
+                StatementKind::StorageLive(local) | StatementKind::StorageDead(local) => {
+                    check.local(local.0)?
+                }
                 StatementKind::SetDiscriminant(place, _) => check.place(*place)?,
                 StatementKind::Nop => {}
             }
@@ -60,7 +78,12 @@ pub fn verify_body(body: &Body) -> Result<(), BodyError> {
         }
         match &block.terminator {
             Terminator::SwitchInt { discriminant, .. } => check.operand(discriminant)?,
-            Terminator::Call { callee, args, destination, .. } => {
+            Terminator::Call {
+                callee,
+                args,
+                destination,
+                ..
+            } => {
                 check.operand(callee)?;
                 for arg in args {
                     check.operand(arg)?;
@@ -70,6 +93,25 @@ pub fn verify_body(body: &Body) -> Result<(), BodyError> {
                     && !matches!(body.constant(*constant).kind, ConstantKind::Function(_))
                 {
                     return Err(BodyError::NonFunctionCallee { block: id });
+                }
+            }
+            Terminator::CallIndirect {
+                function,
+                abi,
+                args,
+                destination,
+                ..
+            } => {
+                check.operand(function)?;
+                for arg in args {
+                    check.operand(arg)?;
+                }
+                check.place(*destination)?;
+                if args.len() != abi.args.len() {
+                    return Err(BodyError::AbiArity {
+                        abi_args: abi.args.len(),
+                        arg_count: args.len(),
+                    });
                 }
             }
             Terminator::Assert { condition, .. } => check.operand(condition)?,
@@ -90,7 +132,10 @@ impl Checker<'_> {
         if (local as usize) < self.body.locals.len() {
             Ok(())
         } else {
-            Err(BodyError::BadLocal { block: self.block, local })
+            Err(BodyError::BadLocal {
+                block: self.block,
+                local,
+            })
         }
     }
 
@@ -98,14 +143,20 @@ impl Checker<'_> {
         if target.index() < self.body.blocks.len() {
             Ok(())
         } else {
-            Err(BodyError::BadBlock { block: self.block, target: target.0 })
+            Err(BodyError::BadBlock {
+                block: self.block,
+                target: target.0,
+            })
         }
     }
 
     fn place(&self, place: Place) -> Result<(), BodyError> {
         self.local(place.local.0)?;
         if place.projection.index() >= self.body.projections.len() {
-            return Err(BodyError::BadProjection { block: self.block, projection: place.projection.0 });
+            return Err(BodyError::BadProjection {
+                block: self.block,
+                projection: place.projection.0,
+            });
         }
         Ok(())
     }
@@ -117,24 +168,68 @@ impl Checker<'_> {
                 if constant.index() < self.body.constants.len() {
                     Ok(())
                 } else {
-                    Err(BodyError::BadConstant { block: self.block, constant: constant.0 })
+                    Err(BodyError::BadConstant {
+                        block: self.block,
+                        constant: constant.0,
+                    })
                 }
             }
         }
     }
 
+    fn boolean_operand(&self, operand: &Operand) -> bool {
+        use crate::body::ProjectionElem;
+        use crate::oracle::TypeOracle;
+        use crate::types::TypeShape;
+        let ty = match operand {
+            Operand::Constant(id) => self.body.constant(*id).ty,
+            Operand::Copy(place) | Operand::Move(place) => {
+                let mut ty = self.body.locals[place.local.index()].ty;
+                for projection in self.body.projection(place.projection) {
+                    ty = match projection {
+                        ProjectionElem::Field(_, field) => *field,
+                        ProjectionElem::Deref => match self.body.types.shape(ty) {
+                            TypeShape::RawPointer { pointee, .. }
+                            | TypeShape::Reference { pointee, .. } => *pointee,
+                            _ => return false,
+                        },
+                        ProjectionElem::Index(_) | ProjectionElem::ConstantIndex { .. } => {
+                            match self.body.types.shape(ty) {
+                                TypeShape::Array { element, .. } | TypeShape::Slice { element } => {
+                                    *element
+                                }
+                                _ => return false,
+                            }
+                        }
+                        ProjectionElem::Downcast(_) => ty,
+                        ProjectionElem::Subslice { result_ty, .. } => *result_ty,
+                    };
+                }
+                ty
+            }
+        };
+        matches!(self.body.types.shape(ty), TypeShape::Bool)
+    }
+
     fn rvalue(&self, rvalue: &Rvalue) -> Result<(), BodyError> {
         match rvalue {
-            Rvalue::Use(operand) | Rvalue::UnaryOp(_, operand) | Rvalue::Cast(_, operand, _) => self.operand(operand),
+            Rvalue::Use(operand)
+            | Rvalue::Opaque(operand)
+            | Rvalue::Repeat(operand, _)
+            | Rvalue::UnaryOp(_, operand)
+            | Rvalue::Cast(_, operand, _) => self.operand(operand),
             Rvalue::BinaryOp(_, lhs, rhs) => {
                 self.operand(lhs)?;
                 self.operand(rhs)
             }
-            Rvalue::Ref(_, place) | Rvalue::RawPointer(_, place) | Rvalue::Discriminant(place) | Rvalue::Len(place) => {
-                self.place(*place)
-            }
-            Rvalue::Aggregate(_, operands) => operands.iter().try_for_each(|operand| self.operand(operand)),
-            Rvalue::Unsupported(_) => Ok(()),
+            Rvalue::Ref(_, place)
+            | Rvalue::RawPointer(_, place)
+            | Rvalue::Discriminant(place)
+            | Rvalue::Len(place) => self.place(*place),
+            Rvalue::Aggregate(_, operands) => operands
+                .iter()
+                .try_for_each(|operand| self.operand(operand)),
+            Rvalue::ThreadLocalRef { .. } | Rvalue::Unsupported(_) => Ok(()),
         }
     }
 }

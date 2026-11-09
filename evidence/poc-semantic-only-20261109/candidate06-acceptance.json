@@ -1,0 +1,62 @@
+{
+  "candidate": "candidate06",
+  "source_sha256": "698c56ecd944c3ef44f4fd0a63e45748f167a1e199b7a4652899abaf85b3ed17",
+  "linux_backend_build": "pass",
+  "linux_tests": {
+    "suites": 55,
+    "passed": 494,
+    "ignored": 1
+  },
+  "semantic": {
+    "behavior": "381 identical output lines in LLVM/off/on",
+    "whole_crate_negative_probes": [
+      "union",
+      "TLS",
+      "SIMD"
+    ],
+    "initial_summarizer": "obsolete required every collected internal function to be emitted",
+    "revalidation": "PASS with independent ELF local-binding and no-definition/no-undefined-reference checks for omitted internal symbol",
+    "validator_sha256": "7b1861e6b37a7211c7a129edea9bfe624da5a8f88831e736dfb97dfcb214078c"
+  },
+  "generic_and_emission": "three arms passed; optimized choose ZST answers only SizeAlign, no dead Resolve",
+  "cli": "pass",
+  "corpus": {
+    "status": "failed",
+    "completed_arms": {
+      "arithmetic": [
+        "llvm",
+        "semantic-off",
+        "semantic-on"
+      ],
+      "calls": [
+        "llvm",
+        "semantic-off",
+        "semantic-on"
+      ],
+      "comparison": [
+        "llvm",
+        "semantic-off",
+        "semantic-on"
+      ],
+      "consts": [
+        "llvm",
+        "semantic-off",
+        "semantic-on"
+      ],
+      "control": [
+        "llvm",
+        "semantic-off",
+        "semantic-on"
+      ],
+      "examples": [
+        "llvm",
+        "semantic-off"
+      ]
+    },
+    "first_failure": "examples case_016::test_fn semantic-on; x86 lowering n241 used before definition scheduled"
+  },
+  "semver_walkthrough_performance": "not run after class failure",
+  "reserved_maybe_uninit_metadata": "API only, no producer marking or support enabled in candidate06",
+  "result_archive_sha256": "d1ae1b64c106d7c22c3c58a70f19b9f8a7f3692a9fc25e85d2a9d0bac7ca6ac6",
+  "diagnostic_archive_sha256": "2f0eba2ae2494d30f106836039efa28632e9091171f9b864dc27dcf66d8f677c"
+}

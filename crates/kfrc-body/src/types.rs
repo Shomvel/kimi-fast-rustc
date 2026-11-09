@@ -40,22 +40,60 @@ pub enum Mutability {
 /// representable now so that unsupported input is rejected by kind, not lost.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum TypeShape {
+    /// Definition-level type parameter; no layout is available until R→S.
+    Param {
+        index: u32,
+        name: String,
+    },
     Bool,
     Char,
-    Int { width: IntegerWidth, signed: bool },
-    Float { bits: u8 },
+    Int {
+        width: IntegerWidth,
+        signed: bool,
+    },
+    Float {
+        bits: u8,
+    },
     /// `()` and other zero-element tuples.
     Unit,
     Never,
     Tuple(Vec<TyId>),
-    Reference { mutability: Mutability, pointee: TyId },
-    RawPointer { mutability: Mutability, pointee: TyId },
-    /// A struct, enum or union, by display name; field types come later (P1).
-    Adt { name: String },
+    Array {
+        element: TyId,
+        length: u64,
+    },
+    Slice {
+        element: TyId,
+    },
+    Str,
+    Reference {
+        mutability: Mutability,
+        pointee: TyId,
+    },
+    RawPointer {
+        mutability: Mutability,
+        pointee: TyId,
+    },
+    /// IR storage address with a thin representation, including for DST places.
+    /// Metadata belongs to the enclosing place, not to this address value.
+    /// This is not a Rust raw pointer or reference type.
+    PlaceAddress {
+        pointee: TyId,
+    },
+    /// A struct, enum or union, by producer identity. Rustc producers include
+    /// a stable fingerprint in this diagnostic label; names alone prove no
+    /// built-in semantics. Logical fields are recorded separately.
+    Adt {
+        name: String,
+    },
     /// A function item type: zero-sized, names one function.
-    FunctionItem { name: String },
+    FunctionItem {
+        name: String,
+    },
     /// Anything the PoC does not model yet, by display name.
-    Other { name: String },
+    Other {
+        name: String,
+    },
 }
 
 /// An append-only interner from shapes to `TyId`s.
@@ -105,6 +143,7 @@ pub struct TypeDisplay<'a> {
 impl fmt::Display for TypeDisplay<'_> {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self.table.shape(self.ty) {
+            TypeShape::Param { name, .. } => formatter.write_str(name),
             TypeShape::Bool => formatter.write_str("bool"),
             TypeShape::Char => formatter.write_str("char"),
             TypeShape::Int { width, signed } => {
@@ -130,17 +169,39 @@ impl fmt::Display for TypeDisplay<'_> {
                 }
                 formatter.write_str(")")
             }
-            TypeShape::Reference { mutability, pointee } => {
-                let mutability = if *mutability == Mutability::Mut { "mut " } else { "" };
+            TypeShape::Array { element, length } => {
+                write!(formatter, "[{}; {length}]", self.table.display(*element))
+            }
+            TypeShape::Slice { element } => write!(formatter, "[{}]", self.table.display(*element)),
+            TypeShape::Str => formatter.write_str("str"),
+            TypeShape::Reference {
+                mutability,
+                pointee,
+            } => {
+                let mutability = if *mutability == Mutability::Mut {
+                    "mut "
+                } else {
+                    ""
+                };
                 write!(formatter, "&{mutability}{}", self.table.display(*pointee))
             }
-            TypeShape::RawPointer { mutability, pointee } => {
-                let mutability = if *mutability == Mutability::Mut { "mut" } else { "const" };
+            TypeShape::RawPointer {
+                mutability,
+                pointee,
+            } => {
+                let mutability = if *mutability == Mutability::Mut {
+                    "mut"
+                } else {
+                    "const"
+                };
                 write!(formatter, "*{mutability} {}", self.table.display(*pointee))
             }
-            TypeShape::Adt { name } | TypeShape::FunctionItem { name } | TypeShape::Other { name } => {
-                formatter.write_str(name)
+            TypeShape::PlaceAddress { pointee } => {
+                write!(formatter, "addr({})", self.table.display(*pointee))
             }
+            TypeShape::Adt { name }
+            | TypeShape::FunctionItem { name }
+            | TypeShape::Other { name } => formatter.write_str(name),
         }
     }
 }

@@ -1,0 +1,21 @@
+fn classify(value: i64) -> i64 {
+    if value > 40 {
+        return 42;
+    } else if value < 0 {
+        return 0;
+    }
+    return 1;
+}
+
+fn example_result() -> i64 {
+    let mut i = 0;
+    while true {
+        i += 1;
+        if i == 3 {
+            return classify(42);
+        }
+    }
+    return 0;
+}
+
+fn main() { println!("{}", example_result()); }

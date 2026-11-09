@@ -2,6 +2,9 @@
 
 一个 `FunctionGraph`（[design/ir/graph.md](graph.md)）在生命周期里经过三个级别。级别是图的状态字段，每个节点种类声明自己在哪些级别合法；verifier 按当前级别检查。
 
+这是目标设计，Observe／Refine 及其他约束的迁移契约见
+[requirements-and-facts.md](requirements-and-facts.md)、[constraints-and-effects.md](constraints-and-effects.md)。
+
 ```rust
 pub enum GraphLevel { Rust, Specialized, Layout }
 ```
@@ -17,6 +20,7 @@ pub enum GraphLevel { Rust, Specialized, Layout }
 
 - **来源：** `specialize(R 图, 答案)`。答案是孔位查询的结果（布局形状、所选 impl、`NeedsDrop` 等），见 [generics-specialization.md](generics-specialization.md)。
 - **值类型：** 不含 `Param` 的 `TyId`。孔位全部消失：`TraitCall` 变成指向实例的 `Call`，`SizeOf` 变成常量。
+- **语义签名：** 保留调用和 Return 的源码值及要求，包括 ABI Ignore 的值；ABI 不决定源值是否存在或有效。
 - **优化：** 与 R 级同一套规则，但 worklist 只从被填答案的节点开始；主要工作是内联刚解析出来的被调者（闭包、trait 方法）。调用摘要在优化**之前**用一次廉价遍历算出（[optimization-pipeline.md](optimization-pipeline.md#调用摘要)），调用者不必等被调者优化完。
 - **类型事实只经答案表读取：** S/L 级不能直接查 `TyId` 的布局、有效范围、`Freeze` 等事实，只能读答案表；这保证答案键覆盖了代码依赖的全部事实（debug 构建越权即 ICE）。
 - **身份：** S 图由 (R 图哈希, 答案向量) 唯一决定，所以它本身不需要缓存，可以随时重算。
@@ -25,13 +29,17 @@ pub enum GraphLevel { Rust, Specialized, Layout }
 
 - **来源：** `lower_layout(S 图, 布局表, TargetSpec)`，原地替换节点。
 - **值类型：** `MachineTy`：`Int{bits}`、`Float{bits}`、`Ptr`、`Vector{lanes, elem}`，以及给大聚合用的 `ValueSlot{size, align}`。
-- **降低内容：** 聚合按 `backend_repr` 和 PassMode 拆成 Scalar/ScalarPair，≤8 字节的 `Memory` 聚合是一个整数，更大的进 value slot；enum 操作变成 tag/niche 算术；`FieldAddr` 变成常量偏移；`DropValue` 变成 drop glue 调用或内联体；`Check` 变成比较 + 冷分支。
-- **保留：** 内存分区和值事实**一直保留到 Machine IR 之前**，所以机器级 GVN、LICM、load 消除仍然能用 Rust 的别名信息。这是和“降到 LLVM IR”的根本区别：降低只换表示，不丢语义。
+- **降低内容：** 先分离执行需求与证明需求。真实消费者需要的聚合按 backend_repr 和 PassMode 拆成 Scalar/ScalarPair 或 value slot；enum 操作变成 tag/niche 算术；FieldAddr 变成偏移；DropValue 变成 drop glue；Check 变成真实分支。仅证明用途不能迫使整值物化。
+- **要求擦除：** S→L 的显式步骤按 refinement 擦除 Require／Assume，导出后续仍需的范围事实及真实操作的控制／内存依赖；不能为了保持 UB 诊断生成整棵观察树。合法执行、快照和真实效果必须保持。
+- **保留：** 后续优化依赖的内存分区和事实凭据保留到其最后消费者，进入 Machine IR 前落实为实际依赖。MemMerge 不产生拷贝，分区 token 不等于 fence，Scope／Slot 标记不能未交接约束就删除。
 - **优化：** 机器级窥孔、强度削减、地址模式、循环（[optimization-pipeline.md](optimization-pipeline.md#l-级)），然后 placement → Machine IR。
 
 ## 固定与浮动
 
-有副作用或可能立即 UB 的节点（调用、store、固定 `Load`、`Div`/`Rem`、检查、`Refine`、drop）固定在控制上，构成**控制骨架**；浮动的只有全函数的纯值节点、产生 poison 的节点（`Add.nsw`、`Load.spec` 等）。哪些 load 可以写成 `Load.spec` 由 [semantics.md](semantics.md#load固定与投机) 一处规定，nodes 和 verifier 引用它。这与 Graal 的 FixedNode、Cranelift 的副作用骨架一致，也回应了 V8 的经验：内存操作本来就很少浮动，让它们全部自由反而增加调度成本（[prior-art/sea-of-nodes.md](../../research/prior-art/sea-of-nodes.md)）。
+调用、store、固定 Load、Div/Rem、Check、drop，以及尚未擦除的语义要求固定在控制上。
+Scope／Slot 操作按抽象状态转换排序；证明记录不是控制骨架中的可执行操作。
+浮动节点必须满足全函数或产生 poison 的契约；证明来源为 Proven 不自动允许上提。
+Load.spec 的准入统一见 [semantics.md](semantics.md#load固定与投机)，不能只凭只读分区放松访问条件。
 
 ## verifier 何时全量运行
 

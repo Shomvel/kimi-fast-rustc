@@ -1,3 +1,6 @@
+[profile.dev]
+debug = 1
+
 [package]
 name = "kimi-fast-rustc"
 version = "0.1.0"
@@ -11,11 +14,14 @@ license = "MIT OR Apache-2.0"
 members = [".", "crates/kfrc-body", "crates/kfrc-son", "crates/kfrc-x86"]
 # The codegen backend shell links rustc_private and is built with its own
 # pinned toolchain (rustc 1.94.1 + rustc-dev); see crates/rustc_codegen_kfrc.
-exclude = ["crates/rustc_codegen_kfrc"]
+exclude = ["crates/rustc_codegen_kfrc", "crates/rustc_codegen_llvm_profile"]
 
 [lib]
 name = "kimi_fast_rustc"
 path = "src/lib.rs"
+
+[dev-dependencies]
+kfrc-x86 = { path = "crates/kfrc-x86" }
 
 [[bin]]
 name = "kfrc"

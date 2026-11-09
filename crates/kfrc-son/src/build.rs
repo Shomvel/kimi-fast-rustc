@@ -1,4 +1,7 @@
-//! Typed Body → R-level graph: the single production entry (T09).
+//! Concrete Typed Body → Rust-value graph: the only production build entry.
+//!
+//! Values retain their logical fields and variants; physical layout is chosen
+//! by lower_layout. Definition-level polymorphic R remains a separate milestone.
 //!
 //! SSA is constructed once, here, from the Body's CFG with the algorithm of
 //! Braun et al., "Simple and Efficient Construction of Static Single
@@ -14,28 +17,41 @@
 
 use std::collections::HashMap;
 
+mod calls;
+mod control;
+mod memory;
+mod semantic;
+mod values;
+
 use kfrc_body::{
-    BinaryOp, BlockId, Body, Callee, CastKind, ConstantKind, IntegerWidth, Operand, PassMode,
-    Place, Rvalue, StatementKind, Terminator, TyId, TypeOracle, TypeShape, UnaryOp,
+    AggregateKind, BinaryOp, BlockId, Body, Callee, CastKind, ConstantKind, FunctionAbi,
+    IntegerWidth, LocalId, Operand, PassMode, Place, ProjectionElem, Rvalue, SizeAlign,
+    StatementKind, Terminator, TyId, TypeOracle, TypeShape, UnaryOp,
     verify::{BodyError, verify_body},
 };
 
 use crate::graph::{
-    CallTarget, ComparePredicate, FunctionGraph, GraphState, NodeId, Opcode, ValueType,
+    CallTarget, ComparePredicate, FunctionGraph, GraphLevel, GraphState, NodeId, Opcode, ValueType,
 };
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum BuildError {
     InvalidBody(BodyError),
     /// Valid input outside the implemented subset.
-    Unsupported { block: Option<BlockId>, what: String },
+    Unsupported {
+        block: Option<BlockId>,
+        what: String,
+    },
 }
 
 impl std::fmt::Display for BuildError {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::InvalidBody(error) => error.fmt(formatter),
-            Self::Unsupported { block: Some(block), what } => {
+            Self::Unsupported {
+                block: Some(block),
+                what,
+            } => {
                 write!(formatter, "unsupported in bb{}: {what}", block.0)
             }
             Self::Unsupported { block: None, what } => write!(formatter, "unsupported: {what}"),
@@ -45,6 +61,7 @@ impl std::fmt::Display for BuildError {
 
 impl std::error::Error for BuildError {}
 
+/// Build a monomorphic Rust-value graph, without selecting aggregate layouts.
 pub fn build_graph(body: &Body) -> Result<FunctionGraph, BuildError> {
     verify_body(body).map_err(BuildError::InvalidBody)?;
     let mut builder = Builder::new(body)?;
@@ -82,6 +99,11 @@ struct Builder<'a> {
     undefined: HashMap<Variable, NodeId>,
     effect: Variable,
     current_block: Option<BlockId>,
+    memory_locals: Vec<bool>,
+    local_slots: Vec<NodeId>,
+    /// Field extractions and their source execution anchors, before proving
+    /// any branch-local variant fact against the completed SSA control graph.
+    variant_witness_candidates: Vec<(NodeId, NodeId)>,
 }
 
 impl<'a> Builder<'a> {
@@ -95,7 +117,10 @@ impl<'a> Builder<'a> {
                 incoming[successor.index()].push(EdgeSource::Block(*block));
             }
         }
-        let graph = FunctionGraph::new(body.symbol.clone(), body.abi.clone(), body.types.clone());
+        let mut graph =
+            FunctionGraph::new(body.symbol.clone(), body.abi.clone(), body.types.clone());
+        graph.data_objects = body.data_objects.clone();
+        graph.level = GraphLevel::Specialized;
         Ok(Self {
             body,
             graph,
@@ -111,6 +136,9 @@ impl<'a> Builder<'a> {
             undefined: HashMap::new(),
             effect: body.locals.len() as Variable,
             current_block: None,
+            memory_locals: memory_locals(body),
+            local_slots: vec![NodeId::NONE; body.locals.len()],
+            variant_witness_candidates: Vec::new(),
         })
     }
 
@@ -137,21 +165,38 @@ impl<'a> Builder<'a> {
         if let Some(existing) = self.projections.get(&(source, index)) {
             return *existing;
         }
-        let node = self.graph.add_node(Opcode::Projection, NodeId::NONE, &[source], index, ty);
+        let node = self
+            .graph
+            .add_node(Opcode::Projection, NodeId::NONE, &[source], index, ty);
         self.projections.insert((source, index), node);
         node
     }
 
     fn run(&mut self) -> Result<(), BuildError> {
-        self.check_types()?;
+        if self.body.statements.iter().any(|statement| {
+            matches!(
+                statement,
+                StatementKind::Assign(_, Rvalue::ThreadLocalRef { .. })
+            )
+        }) {
+            return self.unsupported("TLS is outside the semantic path");
+        }
+        self.check_semantic_types()?;
+        self.check_abi(&self.body.abi)?;
         // Start: (Control, Effect, arguments…).
         let mut start_types = vec![ValueType::Control, ValueType::Effect];
         for index in 1..=self.body.arg_count {
             start_types.push(ValueType::Rust(self.body.locals[index].ty));
         }
-        let start = self.graph.add_node(Opcode::Start, NodeId::NONE, &[], 0, ValueType::Tuple(start_types));
+        let start = self.graph.add_node(
+            Opcode::Start,
+            NodeId::NONE,
+            &[],
+            0,
+            ValueType::Tuple(start_types),
+        );
         self.graph.start = start;
-        let start_control = self.projection(start, 0, ValueType::Control);
+        let mut start_control = self.projection(start, 0, ValueType::Control);
         let start_effect = self.projection(start, 1, ValueType::Effect);
         let entry = self.entry_pseudo_block();
         self.definitions[entry].insert(self.effect, start_effect);
@@ -161,11 +206,36 @@ impl<'a> Builder<'a> {
             self.definitions[entry].insert(index as Variable, parameter);
         }
         self.sealed[entry] = true;
+        for index in 0..self.body.locals.len() {
+            if !self.memory_locals[index] {
+                continue;
+            }
+            let ty = self.body.locals[index].ty;
+            let pointer_ty = self.pointer_type(ty);
+            let address = self.graph.add_node(
+                Opcode::LocalSlot,
+                NodeId::NONE,
+                &[],
+                index as u32,
+                ValueType::Rust(pointer_ty),
+            );
+            self.local_slots[index] = address;
+            if index > 0 && index <= self.body.arg_count {
+                let parameter = self.read_variable(index as Variable, entry);
+                self.store(address, parameter, entry, &mut start_control);
+            }
+        }
 
         for block in 0..self.body.blocks.len() {
             if self.incoming[block].len() > 1 {
                 let count = self.incoming[block].len();
-                self.region[block] = self.graph.add_growable_node(Opcode::Region, NodeId::NONE, count, 0, ValueType::Control);
+                self.region[block] = self.graph.add_growable_node(
+                    Opcode::Region,
+                    NodeId::NONE,
+                    count,
+                    0,
+                    ValueType::Control,
+                );
                 self.entry_control[block] = self.region[block];
             }
         }
@@ -176,27 +246,7 @@ impl<'a> Builder<'a> {
             self.current_block = Some(block);
             self.build_block(block)?;
         }
-        Ok(())
-    }
-
-    /// Rejects unsupported local types up front with a precise message.
-    fn check_types(&self) -> Result<(), BuildError> {
-        for (index, local) in self.body.locals.iter().enumerate() {
-            match self.body.types.shape(local.ty) {
-                TypeShape::Bool | TypeShape::Char | TypeShape::Unit | TypeShape::Never => {}
-                TypeShape::Int { width, .. } if *width != IntegerWidth::W128 => {}
-                TypeShape::FunctionItem { .. } => {}
-                _ => {
-                    return Err(BuildError::Unsupported {
-                        block: None,
-                        what: format!(
-                            "local _{index} has type `{}` (P0 supports integers up to 64 bits, bool, char and unit)",
-                            self.body.types.describe(local.ty)
-                        ),
-                    });
-                }
-            }
-        }
+        self.witness_variant_fields();
         Ok(())
     }
 
@@ -209,8 +259,13 @@ impl<'a> Builder<'a> {
             return;
         }
         let slot = self.filled[index];
-        debug_assert_eq!(self.incoming[index][slot], source, "edges arrive in incoming order");
-        let jump = self.graph.add_node(Opcode::Jump, control, &[], 0, ValueType::Control);
+        debug_assert_eq!(
+            self.incoming[index][slot], source,
+            "edges arrive in incoming order"
+        );
+        let jump = self
+            .graph
+            .add_node(Opcode::Jump, control, &[], 0, ValueType::Control);
         self.graph.set_input(self.region[index], slot, jump);
         self.filled[index] += 1;
         if self.filled[index] == self.incoming[index].len() {
@@ -243,7 +298,9 @@ impl<'a> Builder<'a> {
             return *node;
         }
         let ty = self.variable_type(variable);
-        let node = self.graph.add_node(Opcode::Undefined, NodeId::NONE, &[], 0, ty);
+        let node = self
+            .graph
+            .add_node(Opcode::Undefined, NodeId::NONE, &[], 0, ty);
         self.undefined.insert(variable, node);
         node
     }
@@ -270,7 +327,9 @@ impl<'a> Builder<'a> {
     fn new_phi(&mut self, variable: Variable, block: usize) -> NodeId {
         let ty = self.variable_type(variable);
         let count = self.incoming[block].len();
-        let phi = self.graph.add_growable_node(Opcode::Phi, NodeId::NONE, count + 1, 0, ty);
+        let phi = self
+            .graph
+            .add_growable_node(Opcode::Phi, NodeId::NONE, count + 1, 0, ty);
         self.graph.set_input(phi, 0, self.region[block]);
         phi
     }
@@ -300,7 +359,9 @@ impl<'a> Builder<'a> {
         if same.is_none() {
             // Unreachable or only self-referencing: the value is undefined.
             let ty = self.graph.value_type(phi).clone();
-            same = self.graph.add_node(Opcode::Undefined, NodeId::NONE, &[], 0, ty);
+            same = self
+                .graph
+                .add_node(Opcode::Undefined, NodeId::NONE, &[], 0, ty);
         }
         self.graph.replace(phi, same);
         same
@@ -320,127 +381,90 @@ impl<'a> Builder<'a> {
     fn build_block(&mut self, block: BlockId) -> Result<(), BuildError> {
         let index = block.index();
         let mut control = self.entry_control[index];
-        debug_assert!(!control.is_none(), "reverse postorder visits a block after an incoming edge");
+        debug_assert!(
+            !control.is_none(),
+            "reverse postorder visits a block after an incoming edge"
+        );
         for statement in self.body.block_statements(block) {
             match statement {
                 StatementKind::Assign(place, rvalue) => {
-                    let local = self.local_place(*place)?;
-                    let ty = self.body.locals[local as usize].ty;
-                    let value = self.rvalue(rvalue, ty, index, &mut control)?;
-                    self.write_variable(local, index, value);
+                    let ty = self.place_type(*place)?;
+                    let value = self.semantic_rvalue(rvalue, ty, index, &mut control)?;
+                    self.write_place(*place, value, index, &mut control)?;
                 }
-                StatementKind::StorageLive(_) | StatementKind::StorageDead(_) | StatementKind::Nop => {}
-                StatementKind::SetDiscriminant(..) => return self.unsupported("SetDiscriminant"),
+                StatementKind::Assume(predicate) => {
+                    // Operand evaluation may load memory or deinitialize a
+                    // moved place; the requirement follows those effects.
+                    let predicate = self.operand(predicate, index, &mut control)?;
+                    let effect = self.read_variable(self.effect, index);
+                    let assume = self.graph.add_node(
+                        Opcode::Assume,
+                        control,
+                        &[effect, predicate],
+                        0,
+                        ValueType::Tuple(vec![ValueType::Control, ValueType::Effect]),
+                    );
+                    control = self.projection(assume, 0, ValueType::Control);
+                    let effect = self.projection(assume, 1, ValueType::Effect);
+                    self.write_variable(self.effect, index, effect);
+                }
+                StatementKind::CopyNonOverlapping {
+                    src,
+                    dst,
+                    count,
+                    element_size,
+                } => {
+                    let source = self.operand(src, index, &mut control)?;
+                    let destination = self.operand(dst, index, &mut control)?;
+                    let count = self.operand(count, index, &mut control)?;
+                    self.copy_nonoverlapping(
+                        source,
+                        destination,
+                        count,
+                        *element_size,
+                        index,
+                        &mut control,
+                    )?;
+                }
+                StatementKind::StorageLive(local) | StatementKind::StorageDead(local) => {
+                    if self.memory_locals[local.index()] {
+                        let effect = self.read_variable(self.effect, index);
+                        let opcode = if matches!(statement, StatementKind::StorageLive(_)) {
+                            Opcode::SlotLive
+                        } else {
+                            Opcode::SlotDead
+                        };
+                        let node = self.graph.add_node(
+                            opcode,
+                            control,
+                            &[effect, self.local_slots[local.index()]],
+                            0,
+                            ValueType::Tuple(vec![ValueType::Control, ValueType::Effect]),
+                        );
+                        control = self.projection(node, 0, ValueType::Control);
+                        let effect = self.projection(node, 1, ValueType::Effect);
+                        self.write_variable(self.effect, index, effect);
+                    } else {
+                        let value = self.undefined(local.0);
+                        self.write_variable(local.0, index, value);
+                    }
+                }
+                StatementKind::Nop => {}
+                StatementKind::SetDiscriminant(place, variant) => {
+                    self.set_discriminant(*place, variant.0, index, &mut control)?
+                }
             }
         }
         let terminator = self.body.block(block).terminator.clone();
         self.terminator(&terminator, block, control)
     }
 
-    fn local_place(&self, place: Place) -> Result<Variable, BuildError> {
-        if !place.is_local() {
-            return self.unsupported(format!("place with projections `{}`", self.body.place_text(place)));
-        }
-        Ok(place.local.0)
-    }
-
-    fn operand(&mut self, operand: &Operand, block: usize) -> Result<NodeId, BuildError> {
-        match operand {
-            Operand::Copy(place) | Operand::Move(place) => {
-                let local = self.local_place(*place)?;
-                Ok(self.read_variable(local, block))
-            }
-            Operand::Constant(id) => {
-                let constant = self.body.constant(*id);
-                match &constant.kind {
-                    ConstantKind::Scalar(bits) => Ok(self.graph.add_constant(*bits, constant.ty)),
-                    ConstantKind::ZeroSized | ConstantKind::Function(_) => Ok(self.graph.add_constant(0, constant.ty)),
-                }
-            }
-        }
-    }
-
-    fn operand_type(&self, operand: &Operand) -> TyId {
-        match operand {
-            Operand::Copy(place) | Operand::Move(place) => self.body.locals[place.local.index()].ty,
-            Operand::Constant(id) => self.body.constant(*id).ty,
-        }
-    }
-
-    fn is_signed(&self, ty: TyId) -> bool {
-        matches!(self.body.types.shape(ty), TypeShape::Int { signed: true, .. })
-    }
-
-    fn rvalue(&mut self, rvalue: &Rvalue, ty: TyId, block: usize, control: &mut NodeId) -> Result<NodeId, BuildError> {
-        match rvalue {
-            Rvalue::Use(operand) => self.operand(operand, block),
-            Rvalue::BinaryOp(op, lhs, rhs) => {
-                let signed = self.is_signed(self.operand_type(lhs));
-                let left = self.operand(lhs, block)?;
-                let right = self.operand(rhs, block)?;
-                let opcode = match op {
-                    BinaryOp::Add | BinaryOp::AddUnchecked => Opcode::Add,
-                    BinaryOp::Sub | BinaryOp::SubUnchecked => Opcode::Sub,
-                    BinaryOp::Mul | BinaryOp::MulUnchecked => Opcode::Mul,
-                    BinaryOp::Div if signed => Opcode::DivSigned,
-                    BinaryOp::Div => Opcode::DivUnsigned,
-                    BinaryOp::Rem if signed => Opcode::RemSigned,
-                    BinaryOp::Rem => Opcode::RemUnsigned,
-                    BinaryOp::BitAnd => Opcode::BitAnd,
-                    BinaryOp::BitOr => Opcode::BitOr,
-                    BinaryOp::BitXor => Opcode::BitXor,
-                    BinaryOp::Shl | BinaryOp::ShlUnchecked => Opcode::ShiftLeft,
-                    BinaryOp::Shr | BinaryOp::ShrUnchecked if signed => Opcode::ShiftRightArithmetic,
-                    BinaryOp::Shr | BinaryOp::ShrUnchecked => Opcode::ShiftRightLogical,
-                    BinaryOp::Eq | BinaryOp::Ne | BinaryOp::Lt | BinaryOp::Le | BinaryOp::Gt | BinaryOp::Ge => {
-                        let predicate = compare_predicate(*op, signed);
-                        return Ok(self.graph.add_node(
-                            Opcode::Compare,
-                            NodeId::NONE,
-                            &[left, right],
-                            predicate as u32,
-                            ValueType::Rust(ty),
-                        ));
-                    }
-                    BinaryOp::AddWithOverflow | BinaryOp::SubWithOverflow | BinaryOp::MulWithOverflow => {
-                        return self.unsupported(format!("{op:?} (overflow checks produce a (value, bool) pair; build with -Coverflow-checks=off for P0)"));
-                    }
-                    BinaryOp::Cmp | BinaryOp::Offset => return self.unsupported(format!("binary operator {op:?}")),
-                };
-                // Division may trap: fix it on the control skeleton.
-                let fixed_control = if opcode.is_fixed() { *control } else { NodeId::NONE };
-                Ok(self.graph.add_node(opcode, fixed_control, &[left, right], 0, ValueType::Rust(ty)))
-            }
-            Rvalue::UnaryOp(op, operand) => {
-                let value = self.operand(operand, block)?;
-                let opcode = match op {
-                    UnaryOp::Not => Opcode::BitNot,
-                    UnaryOp::Neg => Opcode::Negate,
-                    UnaryOp::PtrMetadata => return self.unsupported("PtrMetadata"),
-                };
-                Ok(self.graph.add_node(opcode, NodeId::NONE, &[value], 0, ValueType::Rust(ty)))
-            }
-            Rvalue::Cast(CastKind::IntToInt, operand, target) => {
-                let value = self.operand(operand, block)?;
-                Ok(self.graph.add_node(Opcode::IntCast, NodeId::NONE, &[value], 0, ValueType::Rust(*target)))
-            }
-            Rvalue::Cast(kind, _, target) => self.unsupported(format!(
-                "cast {kind:?} to `{}`",
-                self.body.types.describe(*target)
-            )),
-            Rvalue::Aggregate(kind, operands) if operands.is_empty() && matches!(self.body.types.shape(ty), TypeShape::Unit) => {
-                let _ = kind;
-                Ok(self.graph.add_constant(0, ty))
-            }
-            Rvalue::Aggregate(kind, _) => self.unsupported(format!("aggregate {kind:?} (aggregates arrive in P1)")),
-            Rvalue::Ref(..) | Rvalue::RawPointer(..) => self.unsupported("borrowing a local (stack slots arrive in P1)"),
-            Rvalue::Discriminant(_) => self.unsupported("discriminant read (enums arrive in P1)"),
-            Rvalue::Len(_) => self.unsupported("Len"),
-            Rvalue::Unsupported(what) => self.unsupported(what.clone()),
-        }
-    }
-
-    fn terminator(&mut self, terminator: &Terminator, block: BlockId, control: NodeId) -> Result<(), BuildError> {
+    fn terminator(
+        &mut self,
+        terminator: &Terminator,
+        block: BlockId,
+        mut control: NodeId,
+    ) -> Result<(), BuildError> {
         let index = block.index();
         let source = EdgeSource::Block(block);
         match terminator {
@@ -450,7 +474,10 @@ impl<'a> Builder<'a> {
             }
             Terminator::SwitchInt { discriminant, targets } => {
                 let discriminant_ty = self.operand_type(discriminant);
-                let value = self.operand(discriminant, index)?;
+                let value = self.operand(discriminant, index, &mut control)?;
+                if self.variant_switch(value, discriminant_ty, targets, block, control) {
+                    return Ok(());
+                }
                 let bool_ty = self.bool_type();
                 let mut current = control;
                 for (case, target) in &targets.cases {
@@ -483,11 +510,18 @@ impl<'a> Builder<'a> {
                 Ok(())
             }
             Terminator::Return => {
-                let effect = self.read_variable(self.effect, index);
-                let mut inputs = vec![effect];
-                if self.body.abi.ret != PassMode::Ignore {
-                    inputs.push(self.read_variable(0, index));
-                }
+                // A source return always carries its Rust value. Ignore is a
+                // physical transport decision made only at layout lowering.
+                let ty = self.body.locals[LocalId::RETURN.index()].ty;
+                let value = if matches!(
+                    self.graph.oracle.shape(ty),
+                    TypeShape::Unit | TypeShape::FunctionItem { .. }
+                ) {
+                    self.semantic_empty_value(ty)?
+                } else {
+                    self.read_place(Place::local(LocalId::RETURN), index, &mut control)?
+                };
+                let inputs = [self.read_variable(self.effect, index), value];
                 self.graph.add_node(Opcode::Return, control, &inputs, 0, ValueType::Control);
                 Ok(())
             }
@@ -495,52 +529,10 @@ impl<'a> Builder<'a> {
                 self.graph.add_node(Opcode::Unreachable, control, &[], 0, ValueType::Control);
                 Ok(())
             }
-            Terminator::Call { callee, args, destination, target, .. } => {
-                let Operand::Constant(constant) = callee else {
-                    return self.unsupported("indirect call through a function pointer");
-                };
-                let (symbol, abi) = match &self.body.constant(*constant).kind {
-                    ConstantKind::Function(Callee::Function { symbol, abi }) => (symbol.clone(), abi.clone()),
-                    ConstantKind::Function(Callee::Intrinsic { name }) => {
-                        return self.unsupported(format!("call to intrinsic `{name}`"));
-                    }
-                    _ => return self.unsupported("call through a non-function constant"),
-                };
-                if abi.args.iter().chain(std::iter::once(&abi.ret)).any(|mode| !matches!(mode, PassMode::Direct | PassMode::Ignore)) {
-                    return self.unsupported(format!("call to `{symbol}` with ABI {:?} (P0 passes scalars only)", abi));
-                }
-                let destination_local = self.local_place(*destination)?;
-                let destination_ty = self.body.locals[destination_local as usize].ty;
-                let mut inputs = vec![self.read_variable(self.effect, index)];
-                for arg in args {
-                    inputs.push(self.operand(arg, index)?);
-                }
-                let ignore_return = abi.ret == PassMode::Ignore;
-                let callee_index = self.graph.add_callee(CallTarget { symbol, abi });
-                let call = self.graph.add_node(
-                    Opcode::Call,
-                    control,
-                    &inputs,
-                    callee_index,
-                    ValueType::Tuple(vec![ValueType::Control, ValueType::Effect, ValueType::Rust(destination_ty)]),
-                );
-                let after = self.projection(call, 0, ValueType::Control);
-                let effect = self.projection(call, 1, ValueType::Effect);
-                self.write_variable(self.effect, index, effect);
-                let result = if ignore_return {
-                    self.graph.add_constant(0, destination_ty)
-                } else {
-                    self.projection(call, 2, ValueType::Rust(destination_ty))
-                };
-                self.write_variable(destination_local, index, result);
-                match target {
-                    Some(target) => self.add_edge(source, *target, after),
-                    None => {
-                        self.graph.add_node(Opcode::Unreachable, after, &[], 0, ValueType::Control);
-                    }
-                }
-                Ok(())
-            }
+            Terminator::Call { callee, args, destination, target, .. } =>
+                self.build_call(*callee, None, args, *destination, *target, block, control),
+            Terminator::CallIndirect { function, abi, args, destination, target, .. } =>
+                self.build_call(*function, Some(abi), args, *destination, *target, block, control),
             Terminator::Assert { message, .. } => self.unsupported(format!(
                 "Assert ({message:?}): the panic path needs read-only data and the panic runtime (next P0 step)"
             )),
@@ -552,7 +544,10 @@ impl<'a> Builder<'a> {
     }
 
     fn bool_type(&mut self) -> TyId {
-        self.graph.oracle.intern(TypeShape::Bool, Some(kfrc_body::SizeAlign { size: 1, align: 1 }))
+        self.graph.oracle.intern(
+            TypeShape::Bool,
+            Some(kfrc_body::SizeAlign { size: 1, align: 1 }),
+        )
     }
 }
 
@@ -595,4 +590,130 @@ fn reverse_postorder(body: &Body) -> Vec<BlockId> {
     }
     postorder.reverse();
     postorder
+}
+
+/// Address-taking affects a whole local, so every access to it observes the
+/// same memory. Unborrowed scalars retain the original SSA representation.
+fn memory_locals(body: &Body) -> Vec<bool> {
+    let mut memory = vec![false; body.locals.len()];
+    let mark_address = |place: Place, memory: &mut Vec<bool>| {
+        if !body
+            .projection(place.projection)
+            .iter()
+            .any(|p| matches!(p, ProjectionElem::Deref))
+        {
+            memory[place.local.index()] = true;
+        }
+    };
+    let mark_index = |place: Place, memory: &mut Vec<bool>| {
+        let mut ty = body.locals[place.local.index()].ty;
+        let elements = body.projection(place.projection);
+        for (position, element) in elements.iter().enumerate() {
+            if matches!(element, ProjectionElem::Deref) {
+                break;
+            }
+            if let ProjectionElem::Field(_, field_ty) = element {
+                if body.types.semantic().maybe_uninit_inner(ty).is_some()
+                    && position + 1 < elements.len()
+                {
+                    // A partial union-field update must preserve untouched
+                    // raw bytes, not decode an uninitialized whole T first.
+                    memory[place.local.index()] = true;
+                    break;
+                }
+                ty = *field_ty;
+            } else if matches!(element, ProjectionElem::ConstantIndex { .. }) {
+                if let TypeShape::Array { element, .. } | TypeShape::Slice { element } =
+                    body.types.shape(ty)
+                {
+                    ty = *element;
+                }
+            }
+            if matches!(
+                element,
+                ProjectionElem::Index(_) | ProjectionElem::Subslice { .. }
+            ) {
+                memory[place.local.index()] = true;
+                break;
+            }
+        }
+    };
+    let operand = |operand: &Operand, memory: &mut Vec<bool>| {
+        if let Operand::Copy(place) | Operand::Move(place) = operand {
+            mark_index(*place, memory);
+        }
+    };
+    for statement in &body.statements {
+        match statement {
+            StatementKind::Assign(place, value) => {
+                mark_index(*place, &mut memory);
+                match value {
+                    Rvalue::Ref(_, place) | Rvalue::RawPointer(_, place) => {
+                        mark_address(*place, &mut memory)
+                    }
+                    Rvalue::Discriminant(place) | Rvalue::Len(place) => {
+                        mark_index(*place, &mut memory)
+                    }
+                    Rvalue::Use(value)
+                    | Rvalue::Opaque(value)
+                    | Rvalue::Repeat(value, _)
+                    | Rvalue::UnaryOp(_, value)
+                    | Rvalue::Cast(_, value, _) => operand(value, &mut memory),
+                    Rvalue::BinaryOp(_, left, right) => {
+                        operand(left, &mut memory);
+                        operand(right, &mut memory);
+                    }
+                    Rvalue::Aggregate(_, values) => {
+                        for value in values {
+                            operand(value, &mut memory);
+                        }
+                    }
+                    _ => {}
+                }
+            }
+            StatementKind::Assume(value) => operand(value, &mut memory),
+            StatementKind::SetDiscriminant(place, _) => mark_address(*place, &mut memory),
+            StatementKind::CopyNonOverlapping {
+                src, dst, count, ..
+            } => {
+                operand(src, &mut memory);
+                operand(dst, &mut memory);
+                operand(count, &mut memory);
+            }
+            _ => {}
+        }
+    }
+    for block in &body.blocks {
+        match &block.terminator {
+            Terminator::SwitchInt { discriminant, .. } => operand(discriminant, &mut memory),
+            Terminator::Call {
+                callee,
+                args,
+                destination,
+                ..
+            } => {
+                operand(callee, &mut memory);
+                for arg in args {
+                    operand(arg, &mut memory);
+                }
+                mark_index(*destination, &mut memory);
+            }
+            Terminator::CallIndirect {
+                function,
+                args,
+                destination,
+                ..
+            } => {
+                operand(function, &mut memory);
+                for arg in args {
+                    operand(arg, &mut memory);
+                }
+                mark_index(*destination, &mut memory);
+            }
+            Terminator::Assert { condition, .. } => operand(condition, &mut memory),
+            Terminator::Drop { place, .. } => mark_address(*place, &mut memory),
+            _ => {}
+        }
+    }
+    memory
 }

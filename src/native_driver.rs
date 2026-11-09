@@ -543,9 +543,14 @@ main:
     fn links_direct_object_and_runs_without_assembler() {
         let root = TempDirectory::create(&env::temp_dir()).unwrap();
         let output = root.path.join("program");
-        let graph = crate::frontend::parse("fn main() -> i64 { return 42; }\n").unwrap();
-        let graph = crate::placement::place_for_native(&graph).unwrap();
-        let object = crate::native_object::compile_graph_to_object(&graph, "main").unwrap();
+        let mut function = kfrc_x86::MachineFunction::new("main");
+        function.instructions = vec![
+            kfrc_x86::MachineInstr::MovImm { dst: kfrc_x86::Reg::Rax, value: 42 },
+            kfrc_x86::MachineInstr::Ret,
+        ];
+        let object = kfrc_x86::write_object(&[kfrc_x86::FunctionCode {
+            function, binding: kfrc_x86::SymbolBinding::Global { hidden: false },
+        }]).unwrap();
         let driver = NativeDriver::new()
             .with_tools(root.path.join("missing-as"), "gcc")
             .with_temp_root(&root.path);

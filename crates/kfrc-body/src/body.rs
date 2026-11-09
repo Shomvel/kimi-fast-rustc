@@ -75,8 +75,18 @@ pub enum ProjectionElem {
     Field(FieldIndex, TyId),
     Deref,
     Index(LocalId),
-    ConstantIndex { offset: u64, min_length: u64, from_end: bool },
-    Subslice { from: u64, to: u64, from_end: bool },
+    ConstantIndex {
+        offset: u64,
+        min_length: u64,
+        from_end: bool,
+    },
+    Subslice {
+        from: u64,
+        to: u64,
+        from_end: bool,
+        /// Exact projected type and layout recorded by the producer.
+        result_ty: TyId,
+    },
     Downcast(VariantIndex),
 }
 
@@ -97,10 +107,43 @@ pub struct Constant {
 pub enum ConstantKind {
     /// A scalar's bits, zero-extended from its size.
     Scalar(u128),
+    /// A relocation to a named data object or function.
+    Address { symbol: String, addend: i64 },
     /// Any zero-sized value (unit, function items used as values).
     ZeroSized,
     /// A function item used as a call target.
     Function(Callee),
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct DataRelocation {
+    pub offset: u64,
+    pub target: String,
+    pub addend: i64,
+}
+
+/// Linker identity of a data definition, independent of writable/TLS storage.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum DataBinding {
+    /// Anonymous allocations belong to this compilation unit.
+    #[default]
+    Local,
+    /// A named static with the visibility selected by its producer.
+    Global { hidden: bool },
+}
+
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct DataObject {
+    pub symbol: String,
+    pub binding: DataBinding,
+    pub bytes: Vec<u8>,
+    pub align: u64,
+    /// Writable target storage, including mutable statics and interior mutability.
+    /// The default is read-only, even when relocations require load-time fixups.
+    pub writable: bool,
+    /// Initialization template for storage instantiated separately per thread.
+    pub thread_local: bool,
+    pub relocations: Vec<DataRelocation>,
 }
 
 /// What a call resolves to.
@@ -182,7 +225,15 @@ pub enum BorrowKind {
 pub enum AggregateKind {
     Tuple,
     Array(TyId),
-    Adt { ty: TyId, variant: VariantIndex },
+    Adt {
+        ty: TyId,
+        variant: VariantIndex,
+    },
+    /// A union constructor supplies one operand for its selected field.
+    Union {
+        ty: TyId,
+        field: FieldIndex,
+    },
     Closure(TyId),
     Other,
 }
@@ -190,12 +241,19 @@ pub enum AggregateKind {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Rvalue {
     Use(Operand),
+    /// Optimization barrier used by black_box; preserves value and effects.
+    Opaque(Operand),
+    /// Resolve the current thread's instance of a TLS symbol at this point.
+    ThreadLocalRef {
+        symbol: String,
+    },
     Ref(BorrowKind, Place),
     RawPointer(Mutability, Place),
     BinaryOp(BinaryOp, Operand, Operand),
     UnaryOp(UnaryOp, Operand),
     Cast(CastKind, Operand, TyId),
     Aggregate(AggregateKind, Vec<Operand>),
+    Repeat(Operand, u64),
     Discriminant(Place),
     Len(Place),
     /// A MIR rvalue the converter recognizes but the contract does not model
@@ -206,6 +264,14 @@ pub enum Rvalue {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum StatementKind {
     Assign(Place, Rvalue),
+    /// The predicate must be defined and true; failure is source UB.
+    Assume(Operand),
+    CopyNonOverlapping {
+        src: Operand,
+        dst: Operand,
+        count: Operand,
+        element_size: u64,
+    },
     StorageLive(LocalId),
     StorageDead(LocalId),
     SetDiscriminant(Place, VariantIndex),
@@ -240,13 +306,24 @@ pub struct SwitchTargets {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Terminator {
     Goto(BlockId),
-    SwitchInt { discriminant: Operand, targets: SwitchTargets },
+    SwitchInt {
+        discriminant: Operand,
+        targets: SwitchTargets,
+    },
     Return,
     Unreachable,
     UnwindResume,
     UnwindTerminate,
     Call {
         callee: Operand,
+        args: Vec<Operand>,
+        destination: Place,
+        target: Option<BlockId>,
+        unwind: UnwindAction,
+    },
+    CallIndirect {
+        function: Operand,
+        abi: FunctionAbi,
         args: Vec<Operand>,
         destination: Place,
         target: Option<BlockId>,
@@ -272,19 +349,27 @@ impl Terminator {
         match self {
             Self::Goto(target) => vec![*target],
             Self::SwitchInt { targets, .. } => {
-                let mut successors: Vec<BlockId> = targets.cases.iter().map(|(_, target)| *target).collect();
+                let mut successors: Vec<BlockId> =
+                    targets.cases.iter().map(|(_, target)| *target).collect();
                 successors.push(targets.otherwise);
                 successors
             }
-            Self::Return | Self::Unreachable | Self::UnwindResume | Self::UnwindTerminate => Vec::new(),
-            Self::Call { target, .. } => target.iter().copied().collect(),
+            Self::Return | Self::Unreachable | Self::UnwindResume | Self::UnwindTerminate => {
+                Vec::new()
+            }
+            Self::Call { target, .. } | Self::CallIndirect { target, .. } => {
+                target.iter().copied().collect()
+            }
             Self::Assert { target, .. } | Self::Drop { target, .. } => vec![*target],
         }
     }
 
     pub fn unwind(&self) -> Option<UnwindAction> {
         match self {
-            Self::Call { unwind, .. } | Self::Assert { unwind, .. } | Self::Drop { unwind, .. } => Some(*unwind),
+            Self::Call { unwind, .. }
+            | Self::CallIndirect { unwind, .. }
+            | Self::Assert { unwind, .. }
+            | Self::Drop { unwind, .. } => Some(*unwind),
             _ => None,
         }
     }
@@ -307,6 +392,7 @@ pub struct Body {
     pub statements: Vec<StatementKind>,
     pub projections: Vec<Vec<ProjectionElem>>,
     pub constants: Vec<Constant>,
+    pub data_objects: Vec<DataObject>,
     pub abi: FunctionAbi,
     pub types: RecordedTypes,
 }
@@ -367,6 +453,7 @@ impl BodyBuilder {
                 statements: Vec::new(),
                 projections: vec![Vec::new()],
                 constants: Vec::new(),
+                data_objects: Vec::new(),
                 abi,
                 types,
             },
@@ -387,12 +474,32 @@ impl BodyBuilder {
         self.body.arg_count = count;
     }
 
+    pub fn add_data_object(&mut self, object: DataObject) {
+        if !self
+            .body
+            .data_objects
+            .iter()
+            .any(|existing| existing.symbol == object.symbol)
+        {
+            self.body.data_objects.push(object);
+        }
+    }
+
     pub fn add_constant(&mut self, constant: Constant) -> ConstantId {
-        if let Some(index) = self.body.constants.iter().position(|existing| *existing == constant) {
+        if let Some(index) = self
+            .body
+            .constants
+            .iter()
+            .position(|existing| *existing == constant)
+        {
             return ConstantId(index as u32);
         }
         self.body.constants.push(constant);
         ConstantId(self.body.constants.len() as u32 - 1)
+    }
+
+    pub fn projection(&self, id: ProjectionListId) -> &[ProjectionElem] {
+        &self.body.projections[id.index()]
     }
 
     pub fn constant(&self, id: ConstantId) -> Constant {
@@ -403,7 +510,12 @@ impl BodyBuilder {
         if elements.is_empty() {
             return ProjectionListId::EMPTY;
         }
-        if let Some(index) = self.body.projections.iter().position(|existing| *existing == elements) {
+        if let Some(index) = self
+            .body
+            .projections
+            .iter()
+            .position(|existing| *existing == elements)
+        {
             return ProjectionListId(index as u32);
         }
         self.body.projections.push(elements);
@@ -440,12 +552,24 @@ impl fmt::Display for Body {
             if index > 1 {
                 out.push_str(", ");
             }
-            let _ = write!(out, "_{index}: {}", self.types.describe(self.locals[index].ty));
+            let _ = write!(
+                out,
+                "_{index}: {}",
+                self.types.describe(self.locals[index].ty)
+            );
         }
         let _ = writeln!(out, ") -> {} {{", self.types.describe(self.return_ty()));
         for (index, local) in self.locals.iter().enumerate().skip(self.arg_count + 1) {
-            let name = local.name.as_deref().map(|name| format!(" // {name}")).unwrap_or_default();
-            let _ = writeln!(out, "    let _{index}: {};{name}", self.types.describe(local.ty));
+            let name = local
+                .name
+                .as_deref()
+                .map(|name| format!(" // {name}"))
+                .unwrap_or_default();
+            let _ = writeln!(
+                out,
+                "    let _{index}: {};{name}",
+                self.types.describe(local.ty)
+            );
         }
         for (index, block) in self.blocks.iter().enumerate() {
             let cleanup = if block.is_cleanup { " (cleanup)" } else { "" };
@@ -484,10 +608,19 @@ impl Body {
             Operand::Constant(id) => {
                 let constant = self.constant(*id);
                 match &constant.kind {
-                    ConstantKind::Scalar(bits) => format!("const {bits}_{}", self.types.describe(constant.ty)),
-                    ConstantKind::ZeroSized => format!("const ZST::{}", self.types.describe(constant.ty)),
-                    ConstantKind::Function(Callee::Function { symbol, .. }) => format!("const fn {symbol}"),
-                    ConstantKind::Function(Callee::Intrinsic { name }) => format!("const intrinsic {name}"),
+                    ConstantKind::Address { symbol, addend } => format!("&{symbol}{addend:+}"),
+                    ConstantKind::Scalar(bits) => {
+                        format!("const {bits}_{}", self.types.describe(constant.ty))
+                    }
+                    ConstantKind::ZeroSized => {
+                        format!("const ZST::{}", self.types.describe(constant.ty))
+                    }
+                    ConstantKind::Function(Callee::Function { symbol, .. }) => {
+                        format!("const fn {symbol}")
+                    }
+                    ConstantKind::Function(Callee::Intrinsic { name }) => {
+                        format!("const intrinsic {name}")
+                    }
                 }
             }
         }
@@ -498,25 +631,59 @@ impl Body {
             StatementKind::Assign(place, rvalue) => {
                 let rvalue = match rvalue {
                     Rvalue::Use(operand) => self.operand_text(operand),
+                    Rvalue::Opaque(operand) => format!("Opaque({})", self.operand_text(operand)),
                     Rvalue::Ref(kind, place) => format!("&{kind:?} {}", self.place_text(*place)),
-                    Rvalue::RawPointer(mutability, place) => format!("&raw {mutability:?} {}", self.place_text(*place)),
-                    Rvalue::BinaryOp(op, lhs, rhs) => {
-                        format!("{op:?}({}, {})", self.operand_text(lhs), self.operand_text(rhs))
+                    Rvalue::RawPointer(mutability, place) => {
+                        format!("&raw {mutability:?} {}", self.place_text(*place))
                     }
-                    Rvalue::UnaryOp(op, operand) => format!("{op:?}({})", self.operand_text(operand)),
+                    Rvalue::BinaryOp(op, lhs, rhs) => {
+                        format!(
+                            "{op:?}({}, {})",
+                            self.operand_text(lhs),
+                            self.operand_text(rhs)
+                        )
+                    }
+                    Rvalue::UnaryOp(op, operand) => {
+                        format!("{op:?}({})", self.operand_text(operand))
+                    }
                     Rvalue::Cast(kind, operand, ty) => {
-                        format!("{} as {} ({kind:?})", self.operand_text(operand), self.types.describe(*ty))
+                        format!(
+                            "{} as {} ({kind:?})",
+                            self.operand_text(operand),
+                            self.types.describe(*ty)
+                        )
+                    }
+                    Rvalue::Repeat(operand, length) => {
+                        format!("[{}; {length}]", self.operand_text(operand))
                     }
                     Rvalue::Aggregate(kind, operands) => {
-                        let operands: Vec<String> = operands.iter().map(|operand| self.operand_text(operand)).collect();
+                        let operands: Vec<String> = operands
+                            .iter()
+                            .map(|operand| self.operand_text(operand))
+                            .collect();
                         format!("{kind:?}({})", operands.join(", "))
                     }
-                    Rvalue::Discriminant(place) => format!("discriminant({})", self.place_text(*place)),
+                    Rvalue::Discriminant(place) => {
+                        format!("discriminant({})", self.place_text(*place))
+                    }
                     Rvalue::Len(place) => format!("Len({})", self.place_text(*place)),
+                    Rvalue::ThreadLocalRef { symbol } => format!("thread_local_address({symbol})"),
                     Rvalue::Unsupported(what) => format!("<unsupported {what}>"),
                 };
                 format!("{} = {rvalue}", self.place_text(*place))
             }
+            StatementKind::Assume(predicate) => format!("assume({})", self.operand_text(predicate)),
+            StatementKind::CopyNonOverlapping {
+                src,
+                dst,
+                count,
+                element_size,
+            } => format!(
+                "copy_nonoverlapping({}, {}, {}, element_size={element_size})",
+                self.operand_text(src),
+                self.operand_text(dst),
+                self.operand_text(count)
+            ),
             StatementKind::StorageLive(local) => format!("StorageLive(_{})", local.0),
             StatementKind::StorageDead(local) => format!("StorageDead(_{})", local.0),
             StatementKind::SetDiscriminant(place, variant) => {
@@ -529,8 +696,15 @@ impl Body {
     fn terminator_text(&self, terminator: &Terminator) -> String {
         match terminator {
             Terminator::Goto(target) => format!("goto -> bb{}", target.0),
-            Terminator::SwitchInt { discriminant, targets } => {
-                let cases: Vec<String> = targets.cases.iter().map(|(value, target)| format!("{value}: bb{}", target.0)).collect();
+            Terminator::SwitchInt {
+                discriminant,
+                targets,
+            } => {
+                let cases: Vec<String> = targets
+                    .cases
+                    .iter()
+                    .map(|(value, target)| format!("{value}: bb{}", target.0))
+                    .collect();
                 format!(
                     "switchInt({}) -> [{}, otherwise: bb{}]",
                     self.operand_text(discriminant),
@@ -542,9 +716,16 @@ impl Body {
             Terminator::Unreachable => "unreachable".to_owned(),
             Terminator::UnwindResume => "resume".to_owned(),
             Terminator::UnwindTerminate => "terminate".to_owned(),
-            Terminator::Call { callee, args, destination, target, unwind } => {
+            Terminator::Call {
+                callee,
+                args,
+                destination,
+                target,
+                unwind,
+            } => {
                 let args: Vec<String> = args.iter().map(|arg| self.operand_text(arg)).collect();
-                let target = target.map_or("diverges".to_owned(), |target| format!("bb{}", target.0));
+                let target =
+                    target.map_or("diverges".to_owned(), |target| format!("bb{}", target.0));
                 format!(
                     "{} = {}({}) -> [return: {target}, unwind: {unwind:?}]",
                     self.place_text(*destination),
@@ -552,14 +733,46 @@ impl Body {
                     args.join(", ")
                 )
             }
-            Terminator::Assert { condition, expected, message, target, unwind } => format!(
+            Terminator::CallIndirect {
+                function,
+                abi,
+                args,
+                destination,
+                target,
+                unwind,
+            } => {
+                let args: Vec<String> = args.iter().map(|arg| self.operand_text(arg)).collect();
+                let target =
+                    target.map_or("diverges".to_owned(), |target| format!("bb{}", target.0));
+                format!(
+                    "{} = indirect {}({}) [{abi:?}] -> [return: {target}, unwind: {unwind:?}]",
+                    self.place_text(*destination),
+                    self.operand_text(function),
+                    args.join(", ")
+                )
+            }
+            Terminator::Assert {
+                condition,
+                expected,
+                message,
+                target,
+                unwind,
+            } => format!(
                 "assert({}{}, {message:?}) -> [success: bb{}, unwind: {unwind:?}]",
                 if *expected { "" } else { "!" },
                 self.operand_text(condition),
                 target.0
             ),
-            Terminator::Drop { place, target, unwind } => {
-                format!("drop({}) -> [return: bb{}, unwind: {unwind:?}]", self.place_text(*place), target.0)
+            Terminator::Drop {
+                place,
+                target,
+                unwind,
+            } => {
+                format!(
+                    "drop({}) -> [return: bb{}, unwind: {unwind:?}]",
+                    self.place_text(*place),
+                    target.0
+                )
             }
         }
     }

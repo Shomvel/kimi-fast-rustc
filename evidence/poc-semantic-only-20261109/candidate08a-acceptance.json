@@ -1,0 +1,67 @@
+{
+  "candidate": "candidate08a",
+  "source_sha256": "6e2b2e16b7c388e58d3e1b042913a72d1b330169281022806a0e9a3d81f23f15",
+  "derivation": "immutable candidate08 plus sole IndexVec fields.iter().last API fix; candidate09 changes excluded",
+  "linux_backend_build": "pass",
+  "linux_tests": {
+    "suites": 62,
+    "passed": 543,
+    "ignored": 1
+  },
+  "semantic": {
+    "status": "pass",
+    "output_lines_per_arm": 381,
+    "arms": [
+      "LLVM",
+      "semantic-off",
+      "semantic-on"
+    ],
+    "negative_probes": [
+      "general union",
+      "TLS",
+      "SIMD"
+    ]
+  },
+  "cli": "pass",
+  "semver": {
+    "version": "1.0.28",
+    "source": "unchanged verified archive",
+    "upstream_tests_per_arm": 34,
+    "workload": "LLVM/kfrc equal",
+    "status": "pass"
+  },
+  "legacy_corpus": {
+    "status": "pass",
+    "suites": 7,
+    "fixtures": 394,
+    "vectors": 1295,
+    "traps": 19,
+    "arms": [
+      "LLVM",
+      "semantic-off",
+      "semantic-on"
+    ]
+  },
+  "features": {
+    "semantic-off": "generic definition/prepared counters, nominal identity, generic variant behavior, MaybeUninit cross-ABI/partial bytes/array iterator clone, emission roots passed",
+    "semantic-on": "basic generic and nominal/variant behavior passed; strong optimization check failed: known<T> prepared R retains two constant If nodes; MU/emission not reached"
+  },
+  "walkthroughs": {
+    "w01_w04": "unchanged original sources passed LLVM/off/on",
+    "w05": "semantic-off failed: uninhabited NeverShortCircuitResidual Ignore ABI source arg reconstructed with empty_value requiring unique inhabited variant",
+    "w06_w10": "not reached"
+  },
+  "regex": "not run after walkthrough first class failure",
+  "semver_performance": "5 alternating compile rounds, 7 post-warmup runtime samples, shared LLVM MIR0 std, checksums equal; see comparison JSON",
+  "total_instructions": {
+    "LLVM": 1668127787,
+    "kfrc": 6819119404,
+    "ratio": 4.087887904717218,
+    "scope": "codegen entry through join includes collector/MIR conversion; object bytes transparent; enabled=running"
+  },
+  "archives": {
+    "candidate08a-results.tar.gz": "c6884394520483d2d2101fc210157473c8568ff9dac2f50d926d7268cdddb500",
+    "candidate08a-attribution.tar.gz": "2368485ac9a63423aa1541fb2968561695374ccf925eeb4f7cb3d834c0db32e6",
+    "candidate08a-features.tar.gz": "caec657a29b563b3a1c1c36ca7f9bdc186d6737c4e7d7ba9aa5dd834d6b4eb2f"
+  }
+}
