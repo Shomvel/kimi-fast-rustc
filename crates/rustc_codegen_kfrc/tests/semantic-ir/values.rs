@@ -1,3 +1,6 @@
+#![feature(core_intrinsics, funnel_shifts)]
+#![allow(internal_features)]
+
 extern crate abi_reference;
 use abi_reference::{Big, Pair};
 
@@ -11,9 +14,9 @@ pub fn tuple_field(x: u64, y: u64) -> u64 {
 pub fn nested_fields(x: u64, y: u64, z: u64) -> u64 {
     let mut value = ((x, y), (z, true));
     let snapshot = value;
-    value.0 .1 = z;
-    value.1 .0 = x;
-    snapshot.0 .1 ^ value.0 .1 ^ snapshot.1 .0 ^ value.1 .0
+    value.0.1 = z;
+    value.1.0 = x;
+    snapshot.0.1 ^ value.0.1 ^ snapshot.1.0 ^ value.1.0
 }
 
 #[inline(never)]
@@ -84,11 +87,7 @@ pub fn array_roundtrip(values: [u64; 3], replacement: u64) -> [u64; 3] {
 
 #[inline(never)]
 pub fn choose_slice<'a>(a: &'a [u64], b: &'a [u64], choose: bool) -> &'a [u64] {
-    if choose {
-        a
-    } else {
-        b
-    }
+    if choose { a } else { b }
 }
 
 #[repr(u8)]
@@ -140,3 +139,45 @@ pub mod variant_probe;
 
 #[path = "dynamic.rs"]
 pub mod dynamic_probe;
+
+#[path = "support_direct_tags.rs"]
+pub mod direct_tags_probe;
+
+#[path = "support_lp3_demand.rs"]
+pub mod lp3_demand_probe;
+
+#[path = "support_rs3_conditions.rs"]
+pub mod rs3_conditions_probe;
+
+#[path = "support_rs3_arithmetic.rs"]
+pub mod rs3_arithmetic_probe;
+
+#[path = "support_rs3_loops.rs"]
+pub mod rs3_loops_probe;
+
+#[path = "support_rs3_ranges.rs"]
+pub mod rs3_ranges_probe;
+
+#[path = "support_rs1_intrinsics.rs"]
+pub mod rs1_intrinsics_probe;
+
+#[path = "support_rs3_validity.rs"]
+pub mod rs3_validity_probe;
+
+#[path = "support_rs5_permissions.rs"]
+pub mod rs5_permissions_probe;
+
+#[path = "support_compare_bytes.rs"]
+pub mod compare_bytes_probe;
+
+#[path = "support_heap_niche.rs"]
+pub mod heap_niche_probe;
+
+#[path = "support_resolved_calls.rs"]
+pub mod resolved_calls_probe;
+
+#[path = "support_loop_self_phi.rs"]
+pub mod loop_self_phi_probe;
+
+#[path = "support_array_transport.rs"]
+pub mod array_transport_probe;

@@ -1,0 +1,102 @@
+{
+  "backend": "/workspace/results/integrated-final1/backend.so",
+  "backend_sha256": "4300c5c66ded8dfa21c7b97f61519f7716d9b44801c6198ccddbb2979844c8f4",
+  "rows": [
+    {
+      "crate": "semver",
+      "arm": "total-check0",
+      "exit_code": 0,
+      "objects": 14,
+      "reference_created": true,
+      "objects_identical_to_reference": true,
+      "total_instructions": 1450426707
+    },
+    {
+      "crate": "semver",
+      "arm": "stages-check0",
+      "exit_code": 0,
+      "objects": 14,
+      "objects_identical_to_reference": true,
+      "stage_window_sum": 1291407612
+    },
+    {
+      "crate": "semver",
+      "arm": "llvm-total",
+      "exit_code": 0,
+      "objects": 14,
+      "total_instructions": 1668639394
+    },
+    {
+      "crate": "base64",
+      "arm": "total-check0",
+      "exit_code": 0,
+      "objects": 14,
+      "reference_created": true,
+      "objects_identical_to_reference": true,
+      "total_instructions": 1006315983
+    },
+    {
+      "crate": "base64",
+      "arm": "stages-check0",
+      "exit_code": 0,
+      "objects": 14,
+      "objects_identical_to_reference": true,
+      "stage_window_sum": 909865059
+    },
+    {
+      "crate": "base64",
+      "arm": "llvm-total",
+      "exit_code": 0,
+      "objects": 14,
+      "total_instructions": 1093755245
+    },
+    {
+      "crate": "unicode-segmentation",
+      "arm": "total-check0",
+      "exit_code": 0,
+      "objects": 9,
+      "reference_created": true,
+      "objects_identical_to_reference": true,
+      "total_instructions": 782383185
+    },
+    {
+      "crate": "unicode-segmentation",
+      "arm": "stages-check0",
+      "exit_code": 0,
+      "objects": 9,
+      "objects_identical_to_reference": true,
+      "stage_window_sum": 703362444
+    },
+    {
+      "crate": "unicode-segmentation",
+      "arm": "llvm-total",
+      "exit_code": 0,
+      "objects": 9,
+      "total_instructions": 1090982988
+    },
+    {
+      "crate": "humantime",
+      "arm": "total-check0",
+      "exit_code": 0,
+      "objects": 13,
+      "reference_created": true,
+      "objects_identical_to_reference": true,
+      "total_instructions": 1887646155
+    },
+    {
+      "crate": "humantime",
+      "arm": "stages-check0",
+      "exit_code": 0,
+      "objects": 13,
+      "objects_identical_to_reference": true,
+      "stage_window_sum": 1779324816
+    },
+    {
+      "crate": "humantime",
+      "arm": "llvm-total",
+      "exit_code": 0,
+      "objects": 13,
+      "total_instructions": 1069141412
+    }
+  ]
+}

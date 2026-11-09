@@ -1,28 +1,32 @@
 //! Graph → `VirtualInstr` → `MachineFunction`.
 
 mod abi;
+mod address_mode;
+mod allocated;
+mod arithmetic;
+mod branch;
 mod cast;
 mod fallthrough;
-mod memory;
-mod memory_liveness;
+mod intrinsics;
+mod known_width;
+mod private_slots;
 mod schedule;
 mod vector;
 
-use crate::analysis::liveness::live_intervals;
-use memory::compile_memory_function;
 use schedule::Schedule;
 
-use std::collections::{HashMap, HashSet};
+use kfrc_body::fx_hash::{HashMap, HashSet};
 
-use crate::machine::allocate::{CompileError, compile_virtual_function};
+use crate::machine::allocate::CompileError;
 use crate::machine::x86::{
-    Condition, MachineFunction, MachineInstr, Operand as MachineOperand, Reg, StackSlot,
+    BitWidth, Condition, MachineFunction, MachineInstr, Operand as MachineOperand, Reg, StackSlot,
     VirtualInstr, VirtualReg, VirtualValue, Xmm,
 };
 use kfrc_body::{PassMode, SizeAlign, TyId, TypeOracle, TypeShape};
 use kfrc_son::lower_layout::LayoutOptions;
 use kfrc_son::{
-    ComparePredicate, FunctionGraph, GraphLevel, GraphState, NodeId, Opcode, ValueType,
+    ArithmeticFlags, ComparePredicate, FunctionGraph, GraphLevel, GraphState, NodeId, Opcode,
+    ValueType,
 };
 
 #[derive(Debug)]
@@ -86,61 +90,24 @@ fn lower_function_inner(
     let mut lowering = Lowering {
         graph,
         schedule: &schedule,
+        branches: branch::Branches::new(graph, &schedule),
         instructions: Vec::new(),
-        emitted: HashSet::new(),
+        emitted: HashSet::default(),
         next_temporary: graph.len() as u32,
         stack_layouts: graph.stack_slots.clone(),
         return_address: None,
         options,
     };
     lowering.run()?;
+    private_slots::run(&mut lowering.instructions, &mut lowering.stack_layouts);
+    known_width::run(&mut lowering.instructions);
     let instructions = lowering.instructions;
-    if instructions
-        .iter()
-        .any(|instruction| !matches!(instruction, LowerInstr::Scalar(_)))
-    {
-        if let Ok(pattern) = std::env::var("KFRC_DUMP_MACHINE")
-            && graph.symbol.contains(&pattern)
-        {
-            eprintln!("memory machine {} {{", graph.symbol);
-            for (position, instruction) in instructions.iter().enumerate() {
-                eprintln!("  {position:5} {instruction:?}");
-            }
-            eprintln!("}}");
-        }
-        let function = compile_memory_function(
-            graph,
-            instructions,
-            lowering.next_temporary,
-            &lowering.stack_layouts,
-        )?;
-        return Ok(function);
-    }
-    let instructions: Vec<VirtualInstr> = instructions
-        .into_iter()
-        .map(|instruction| match instruction {
-            LowerInstr::Scalar(instruction) => instruction,
-            _ => unreachable!("memory instructions use the stack-machine lowering"),
-        })
-        .collect();
-    let intervals = live_intervals(&instructions);
-    if let Ok(pattern) = std::env::var("KFRC_DUMP_MACHINE")
-        && graph.symbol.contains(&pattern)
-    {
-        eprintln!("machine {} {{", graph.symbol);
-        for (position, instruction) in instructions.iter().enumerate() {
-            eprintln!("  {position:5} {instruction:?}");
-        }
-        for interval in &intervals {
-            eprintln!(
-                "  interval v{} [{}, {})",
-                interval.virtual_reg.0, interval.start.0, interval.end.0
-            );
-        }
-        eprintln!("}}");
-    }
-    compile_virtual_function(instructions, intervals, graph.symbol.clone())
-        .map_err(LowerError::Backend)
+    allocated::compile(
+        graph,
+        instructions,
+        lowering.next_temporary,
+        &lowering.stack_layouts,
+    )
 }
 
 // -- scheduling -------------------------------------------------------------------------
@@ -150,6 +117,7 @@ fn lower_function_inner(
 struct Lowering<'a> {
     graph: &'a FunctionGraph,
     schedule: &'a Schedule,
+    branches: branch::Branches,
     instructions: Vec<LowerInstr>,
     emitted: HashSet<NodeId>,
     next_temporary: u32,
@@ -160,7 +128,38 @@ struct Lowering<'a> {
 
 #[derive(Clone, Debug)]
 enum LowerInstr {
+    ParallelCopy(Vec<(VirtualReg, VirtualValue)>),
     Scalar(VirtualInstr),
+    Rotate {
+        dst: VirtualReg,
+        value: VirtualValue,
+        amount: VirtualValue,
+        width: BitWidth,
+        right: bool,
+    },
+    ByteSwap {
+        dst: VirtualReg,
+        value: VirtualValue,
+        wide: bool,
+    },
+    /// Zero- or sign-extends the low `width` bits of `value` to 64 bits.
+    Extend {
+        dst: VirtualReg,
+        value: VirtualReg,
+        width: BitWidth,
+        signed: bool,
+    },
+    BitScanZero {
+        dst: VirtualReg,
+        value: VirtualValue,
+        zero: VirtualValue,
+        reverse: bool,
+    },
+    /// Sets flags from the low byte of `value`; only an `Eq`/`NotEq` branch
+    /// reads them.
+    TestLowByte {
+        value: VirtualReg,
+    },
     StackAddress {
         dst: VirtualReg,
         slot: usize,
@@ -182,13 +181,16 @@ enum LowerInstr {
         address: VirtualValue,
         src: Xmm,
     },
+    /// Access `bytes` at `address + offset`.
     Load {
         dst: VirtualReg,
         address: VirtualValue,
+        offset: i32,
         bytes: u8,
     },
     Store {
         address: VirtualValue,
+        offset: i32,
         src: VirtualValue,
         bytes: u8,
     },
@@ -316,7 +318,31 @@ impl Lowering<'_> {
 
     /// Writes `source` into `destination` in canonical form for `kind`.
     fn canonicalize(&mut self, destination: VirtualReg, source: VirtualValue, kind: ScalarKind) {
-        if kind.bits == 0 || kind.bits >= 64 {
+        let width = match kind.bits {
+            8 => Some(BitWidth::W8),
+            16 => Some(BitWidth::W16),
+            32 => Some(BitWidth::W32),
+            _ => None,
+        };
+        if let (Some(width), VirtualValue::Reg(value)) = (width, source) {
+            self.instructions.push(LowerInstr::Extend {
+                dst: destination,
+                value,
+                width,
+                signed: kind.signed,
+            });
+        } else if let (Some(_), VirtualValue::Imm(value)) = (width, source) {
+            let shift = 64 - kind.bits;
+            let canonical = if kind.signed {
+                (value << shift) >> shift
+            } else {
+                ((value as u64) << shift >> shift) as i64
+            };
+            self.push(VirtualInstr::Mov {
+                dst: destination,
+                src: VirtualValue::Imm(canonical),
+            });
+        } else if kind.bits == 0 || kind.bits >= 64 {
             self.push(VirtualInstr::Mov {
                 dst: destination,
                 src: source,
@@ -344,21 +370,58 @@ impl Lowering<'_> {
         }
     }
 
+    /// Whether the canonical image of `source` is already the canonical image
+    /// of its integer cast to `target`. A `bool` is exactly 0 or 1.
+    fn cast_keeps_canonical_form(
+        &self,
+        source: NodeId,
+        target: ScalarKind,
+    ) -> Result<bool, LowerError> {
+        if target.bits == 0 {
+            return Ok(false);
+        }
+        let boolean = self
+            .graph
+            .rust_type(source)
+            .is_some_and(|ty| matches!(self.graph.oracle.shape(ty), TypeShape::Bool));
+        let source = if boolean {
+            ScalarKind {
+                bits: 1,
+                signed: false,
+            }
+        } else {
+            self.node_kind(source)?
+        };
+        if source.bits == 0 {
+            return Ok(false);
+        }
+        Ok(if source.signed {
+            target.signed && source.bits <= target.bits
+        } else {
+            source.bits < target.bits || (source.bits == target.bits && !target.signed)
+        })
+    }
+
+    /// The 64-bit register image of a `Const` node.
+    fn constant(&self, node: NodeId) -> Result<i64, LowerError> {
+        if self.graph.op(node) != Opcode::Const {
+            return Err(LowerError::Malformed(format!("{node} is not a constant")));
+        }
+        let bits = self.graph.constant_value(node);
+        let kind = self.node_kind(node)?;
+        Ok(if kind.signed && kind.bits < 64 && kind.bits > 0 {
+            let shift = 64 - kind.bits;
+            (((bits as u64) << shift) as i64) >> shift
+        } else {
+            bits as u64 as i64
+        })
+    }
+
     /// The operand for a value node, emitting it first if it is a pure node
     /// placed in the current block.
     fn value(&mut self, node: NodeId) -> Result<VirtualValue, LowerError> {
         match self.graph.op(node) {
-            Opcode::Const => {
-                let bits = self.graph.constant_value(node);
-                let kind = self.node_kind(node)?;
-                let value = if kind.signed && kind.bits < 64 && kind.bits > 0 {
-                    let shift = 64 - kind.bits;
-                    (((bits as u64) << shift) as i64) >> shift
-                } else {
-                    bits as u64 as i64
-                };
-                return Ok(VirtualValue::Imm(value));
-            }
+            Opcode::Const => return Ok(VirtualValue::Imm(self.constant(node)?)),
             Opcode::Undefined => return Ok(VirtualValue::Imm(0)),
             _ => {}
         }
@@ -397,6 +460,17 @@ impl Lowering<'_> {
         } else {
             self.node_kind(node)?
         };
+        if matches!(
+            op,
+            Opcode::BitCount
+                | Opcode::ByteSwap
+                | Opcode::BitReverse
+                | Opcode::FunnelShift
+                | Opcode::SaturatingAdd
+                | Opcode::SaturatingSub
+        ) {
+            return self.emit_integer_intrinsic(node, &operands);
+        }
         let raw = self.temporary();
         match op {
             Opcode::StackSlot => {
@@ -456,23 +530,63 @@ impl Lowering<'_> {
                     Opcode::BitOr => VirtualInstr::Or { dst: raw, lhs, rhs },
                     _ => VirtualInstr::Xor { dst: raw, lhs, rhs },
                 });
-                self.canonicalize(destination, VirtualValue::Reg(raw), kind);
+                let flags = ArithmeticFlags(self.graph.payload(node));
+                let canonical_result = (matches!(op, Opcode::Add | Opcode::Sub | Opcode::Mul)
+                    && ((!kind.signed && flags.contains(ArithmeticFlags::NUW))
+                        || (kind.signed && flags.contains(ArithmeticFlags::NSW))))
+                    || matches!(op, Opcode::BitAnd | Opcode::BitOr | Opcode::BitXor);
+                if canonical_result {
+                    // Inputs are already canonical. The matching no-overflow
+                    // contract keeps the 64-bit result within its narrow range;
+                    // bitwise operations combine zero- or sign-extension bits
+                    // exactly as they combine the value's top bit.
+                    self.push(VirtualInstr::Mov {
+                        dst: destination,
+                        src: VirtualValue::Reg(raw),
+                    });
+                } else {
+                    self.canonicalize(destination, VirtualValue::Reg(raw), kind);
+                }
             }
             Opcode::ShiftLeft | Opcode::ShiftRightArithmetic | Opcode::ShiftRightLogical => {
-                let amount = self.temporary();
-                let mask = i64::from(kind.bits.max(1) - 1);
-                self.push(VirtualInstr::And {
-                    dst: amount,
-                    lhs: operands[1],
-                    rhs: VirtualValue::Imm(mask),
-                });
-                let (lhs, rhs) = (operands[0], VirtualValue::Reg(amount));
+                let rhs = if ArithmeticFlags(self.graph.payload(node))
+                    .contains(ArithmeticFlags::AMOUNT_IN_RANGE)
+                {
+                    operands[1]
+                } else {
+                    let amount = self.temporary();
+                    let mask = i64::from(kind.bits.max(1) - 1);
+                    self.push(VirtualInstr::And {
+                        dst: amount,
+                        lhs: operands[1],
+                        rhs: VirtualValue::Imm(mask),
+                    });
+                    VirtualValue::Reg(amount)
+                };
+                let lhs = operands[0];
                 self.push(match op {
                     Opcode::ShiftLeft => VirtualInstr::Shl { dst: raw, lhs, rhs },
                     Opcode::ShiftRightArithmetic => VirtualInstr::Shr { dst: raw, lhs, rhs },
                     _ => VirtualInstr::LShr { dst: raw, lhs, rhs },
                 });
-                self.canonicalize(destination, VirtualValue::Reg(raw), kind);
+                // A right shift by less than the width keeps a canonical
+                // input's extension when the shift matches its signedness.
+                let input = self.node_kind(inputs[0])?;
+                let extension_kept = input.bits == kind.bits
+                    && input.signed == kind.signed
+                    && match op {
+                        Opcode::ShiftRightLogical => !kind.signed,
+                        Opcode::ShiftRightArithmetic => kind.signed,
+                        _ => false,
+                    };
+                if extension_kept {
+                    self.push(VirtualInstr::Mov {
+                        dst: destination,
+                        src: VirtualValue::Reg(raw),
+                    });
+                } else {
+                    self.canonicalize(destination, VirtualValue::Reg(raw), kind);
+                }
             }
             Opcode::Negate => {
                 self.push(VirtualInstr::Neg {
@@ -500,25 +614,30 @@ impl Lowering<'_> {
                     self.canonicalize(destination, VirtualValue::Reg(raw), kind);
                 }
             }
-            Opcode::IntCast => self.canonicalize(destination, operands[0], kind),
+            Opcode::IntCast => {
+                if self.cast_keeps_canonical_form(inputs[0], kind)? {
+                    self.push(VirtualInstr::Mov {
+                        dst: destination,
+                        src: operands[0],
+                    });
+                } else {
+                    self.canonicalize(destination, operands[0], kind);
+                }
+            }
             Opcode::Compare => {
-                let condition = match ComparePredicate::from_payload(self.graph.payload(node)) {
-                    ComparePredicate::Equal => Condition::Eq,
-                    ComparePredicate::NotEqual => Condition::NotEq,
-                    ComparePredicate::SignedLess => Condition::SignedLess,
-                    ComparePredicate::SignedLessEqual => Condition::SignedLessEq,
-                    ComparePredicate::SignedGreater => Condition::SignedGreater,
-                    ComparePredicate::SignedGreaterEqual => Condition::SignedGreaterEq,
-                    ComparePredicate::UnsignedLess => Condition::UnsignedBelow,
-                    ComparePredicate::UnsignedLessEqual => Condition::UnsignedBelowEq,
-                    ComparePredicate::UnsignedGreater => Condition::UnsignedAbove,
-                    ComparePredicate::UnsignedGreaterEqual => Condition::UnsignedAboveEq,
+                let condition =
+                    branch::condition(ComparePredicate::from_payload(self.graph.payload(node)));
+                let (lhs, rhs, condition) = match (operands[0], operands[1]) {
+                    (VirtualValue::Imm(_), VirtualValue::Reg(_)) => {
+                        (operands[1], operands[0], condition.swapped())
+                    }
+                    _ => (operands[0], operands[1], condition),
                 };
                 self.push(VirtualInstr::Compare {
                     dst: destination,
                     condition,
-                    lhs: operands[0],
-                    rhs: operands[1],
+                    lhs,
+                    rhs,
                 });
             }
             other => {
@@ -534,6 +653,7 @@ impl Lowering<'_> {
     fn run(&mut self) -> Result<(), LowerError> {
         let schedule = self.schedule;
         let order = schedule.order.clone();
+        let address_only = self.address_only_offsets();
         for block in order {
             self.push(VirtualInstr::Label(label_of(block)));
             if block == 0 {
@@ -555,7 +675,10 @@ impl Lowering<'_> {
             }
             // Pure values placed here but used elsewhere are computed before leaving.
             for node in schedule.placed[block].clone() {
-                if !self.emitted.contains(&node) {
+                if !self.emitted.contains(&node)
+                    && !self.branches.covers(node)
+                    && !address_only.contains(&node)
+                {
                     self.emit_pure(node)?;
                 }
             }
@@ -573,6 +696,10 @@ impl Lowering<'_> {
             | Opcode::RemUnsigned) => {
                 let lhs = self.value(graph.input(node, 0))?;
                 let rhs = self.value(graph.input(node, 1))?;
+                if self.emit_exact_constant_division(node, lhs, rhs)? {
+                    self.emitted.insert(node);
+                    return Ok(());
+                }
                 let raw = self.temporary();
                 self.push(match op {
                     Opcode::DivSigned => VirtualInstr::Div { dst: raw, lhs, rhs },
@@ -581,7 +708,24 @@ impl Lowering<'_> {
                     _ => VirtualInstr::URem { dst: raw, lhs, rhs },
                 });
                 let kind = self.node_kind(node)?;
-                self.canonicalize(register(node), VirtualValue::Reg(raw), kind);
+                // Unsigned quotients and remainders never exceed the dividend;
+                // a signed remainder is smaller in magnitude than the divisor.
+                let input = self.node_kind(graph.input(node, 0))?;
+                let bounded = input.bits == kind.bits
+                    && input.signed == kind.signed
+                    && match op {
+                        Opcode::DivUnsigned | Opcode::RemUnsigned => !kind.signed,
+                        Opcode::RemSigned => kind.signed,
+                        _ => false,
+                    };
+                if bounded {
+                    self.push(VirtualInstr::Mov {
+                        dst: register(node),
+                        src: VirtualValue::Reg(raw),
+                    });
+                } else {
+                    self.canonicalize(register(node), VirtualValue::Reg(raw), kind);
+                }
                 self.emitted.insert(node);
             }
             Opcode::SlotLive | Opcode::SlotDead => {
@@ -613,37 +757,52 @@ impl Lowering<'_> {
                 self.emitted.insert(node);
             }
             Opcode::Load => {
-                let address = self.value(graph.input(node, 1))?;
+                let (base, offset) = self.address_mode(graph.input(node, 1));
                 let Some(result) = self.schedule.projections.get(&(node, 2)).copied() else {
                     // A nonvolatile load with an unused value has no observable
                     // behavior; keep its control/effect order without code.
                     self.emitted.insert(node);
                     return Ok(());
                 };
+                let address = self.value(base)?;
                 let kind = self.node_kind(result)?;
                 let raw = self.temporary();
                 self.instructions.push(LowerInstr::Load {
                     dst: raw,
                     address,
+                    offset,
                     bytes: (kind.bits / 8) as u8,
                 });
-                self.canonicalize(register(result), VirtualValue::Reg(raw), kind);
+                if kind.signed {
+                    self.canonicalize(register(result), VirtualValue::Reg(raw), kind);
+                } else {
+                    // Narrow loads zero-extend, the canonical unsigned form.
+                    self.push(VirtualInstr::Mov {
+                        dst: register(result),
+                        src: VirtualValue::Reg(raw),
+                    });
+                }
                 self.emitted.insert(result);
                 self.emitted.insert(node);
             }
             Opcode::Store => {
-                let address = self.value(graph.input(node, 1))?;
+                let (base, offset) = self.address_mode(graph.input(node, 1));
+                let address = self.value(base)?;
                 let value = graph.input(node, 2);
                 let src = self.value(value)?;
                 let kind = self.node_kind(value)?;
                 self.instructions.push(LowerInstr::Store {
                     address,
+                    offset,
                     src,
                     bytes: (kind.bits / 8) as u8,
                 });
                 self.emitted.insert(node);
             }
             Opcode::Call | Opcode::CallIndirect => {
+                if self.emit_small_copy(node)? || self.emit_small_equality(node)? {
+                    return Ok(());
+                }
                 let (abi, target, first_arg) = if graph.op(node) == Opcode::Call {
                     let callee = &graph.callees[graph.payload(node) as usize];
                     (
@@ -708,6 +867,7 @@ impl Lowering<'_> {
                             self.instructions.push(LowerInstr::Load {
                                 dst,
                                 address,
+                                offset: 0,
                                 bytes,
                             });
                             args.push(VirtualValue::Reg(dst));
@@ -792,6 +952,7 @@ impl Lowering<'_> {
                             let bytes = self.direct_bits(ty)?;
                             self.instructions.push(LowerInstr::Store {
                                 address: VirtualValue::Reg(register(result)),
+                                offset: 0,
                                 src: VirtualValue::Reg(raw),
                                 bytes,
                             });
@@ -821,15 +982,33 @@ impl Lowering<'_> {
                 Err(LowerError::Malformed(format!("block ends in call {node}")))
             }
             Opcode::If => {
-                let condition = self.value(graph.input(node, 0))?;
+                let (lhs, rhs, condition) = if let Some(direct) = self.branches.get(node) {
+                    (
+                        self.value(direct.lhs)?,
+                        match direct.rhs {
+                            Some(rhs) => self.value(rhs)?,
+                            None => VirtualValue::Imm(0),
+                        },
+                        direct.condition,
+                    )
+                } else {
+                    (
+                        self.value(graph.input(node, 0))?,
+                        VirtualValue::Imm(0),
+                        Condition::NotEq,
+                    )
+                };
+                // A constant belongs in the instruction's immediate operand.
+                let (lhs, rhs, condition) = match (lhs, rhs) {
+                    (VirtualValue::Imm(_), VirtualValue::Reg(_)) => (rhs, lhs, condition.swapped()),
+                    _ => (lhs, rhs, condition),
+                };
                 let successors = &schedule.blocks[block].successors;
-                // `Test { lhs, Imm(0) }` is `test`; any other right operand is `cmp`.
-                self.push(VirtualInstr::Test {
-                    lhs: condition,
-                    rhs: VirtualValue::Imm(0),
-                });
+                // Operand setup precedes this flags producer. Allocator edge
+                // copies between Test and Jcc are flags-preserving moves.
+                self.push(VirtualInstr::Test { lhs, rhs });
                 self.push(VirtualInstr::Jcc {
-                    condition: Condition::NotEq,
+                    condition,
                     target: label_of(successors[0]),
                 });
                 self.push(VirtualInstr::Jmp(label_of(successors[1])));
@@ -843,20 +1022,14 @@ impl Lowering<'_> {
                         if matches!(graph.value_type(*phi), ValueType::Effect) {
                             continue;
                         }
-                        let source = self.value(graph.input(*phi, slot + 1))?;
-                        let staged = self.temporary();
-                        self.push(VirtualInstr::Mov {
-                            dst: staged,
-                            src: source,
-                        });
-                        moves.push((register(*phi), staged));
+                        let input = graph.resolve(graph.input(*phi, slot + 1));
+                        if graph.op(input) == Opcode::Undefined {
+                            continue;
+                        }
+                        let source = self.value(input)?;
+                        moves.push((register(*phi), source));
                     }
-                    for (phi, staged) in moves {
-                        self.push(VirtualInstr::Mov {
-                            dst: phi,
-                            src: VirtualValue::Reg(staged),
-                        });
-                    }
+                    self.instructions.push(LowerInstr::ParallelCopy(moves));
                 }
                 let target = schedule.block_of_head[&region];
                 self.push(VirtualInstr::Jmp(label_of(target)));
@@ -928,6 +1101,7 @@ impl Lowering<'_> {
                             self.instructions.push(LowerInstr::Load {
                                 dst,
                                 address,
+                                offset: 0,
                                 bytes,
                             });
                             self.push(VirtualInstr::Return(VirtualValue::Reg(dst)));

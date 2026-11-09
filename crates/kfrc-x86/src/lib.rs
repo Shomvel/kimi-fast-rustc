@@ -3,8 +3,8 @@
 //! The graph is scheduled here (blocks in reverse postorder, pure nodes at
 //! their earliest dominating block), lowered to the existing three-address
 //! `VirtualInstr` machine IR, register-allocated and encoded by the existing
-//! linear-scan allocator and encoder (`crate::machine::allocate`,
-//! `machine::x86_encode`), and written as an ELF relocatable with the `object` crate.
+//! constrained linear-scan allocator (`lower::allocated`) and encoder
+//! (`machine::x86_encode`), and written as an ELF relocatable with the `object` crate.
 //!
 //! Scalars narrower than 64 bits live in 64-bit registers in canonical form:
 //! sign-extended for signed types, zero-extended otherwise. Arguments and call
@@ -30,7 +30,6 @@ pub mod machine;
 
 mod analysis;
 mod lower;
-mod regalloc;
 mod object_file;
 
 pub use lower::{LowerError, lower_function, lower_function_with_options};

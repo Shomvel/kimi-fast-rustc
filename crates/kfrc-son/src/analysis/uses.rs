@@ -11,31 +11,59 @@ pub struct Use {
     pub user: NodeId,
     pub kind: UseKind,
 }
+/// Uses grouped by used node in one flat array (a counting sort of the
+/// graph's edges), in the order of the per-node lists it replaces: users by
+/// node id, then operand slots, then the control use.
 #[derive(Clone, Debug)]
 pub struct Uses {
-    entries: Vec<Vec<Use>>,
+    starts: Vec<u32>,
+    entries: Vec<Use>,
 }
 impl Uses {
     pub fn new(graph: &FunctionGraph) -> Self {
-        let mut entries = vec![Vec::new(); graph.len()];
+        let mut edges: Vec<(NodeId, Use)> = Vec::with_capacity(graph.len() * 2);
         for user in graph.ids() {
             for (slot, &input) in graph.inputs(user).iter().enumerate() {
-                entries[graph.resolve(input).index()].push(Use {
-                    user,
-                    kind: UseKind::Operand(slot),
-                });
+                edges.push((
+                    graph.resolve(input),
+                    Use {
+                        user,
+                        kind: UseKind::Operand(slot),
+                    },
+                ));
             }
             let control = graph.resolve(graph.control(user));
             if !control.is_none() {
-                entries[control.index()].push(Use {
-                    user,
-                    kind: UseKind::Control,
-                });
+                edges.push((
+                    control,
+                    Use {
+                        user,
+                        kind: UseKind::Control,
+                    },
+                ));
             }
         }
-        Self { entries }
+        let mut starts = vec![0u32; graph.len() + 1];
+        for (used, _) in &edges {
+            starts[used.index() + 1] += 1;
+        }
+        for index in 1..starts.len() {
+            starts[index] += starts[index - 1];
+        }
+        let mut next = starts.clone();
+        let placeholder = Use {
+            user: NodeId::NONE,
+            kind: UseKind::Control,
+        };
+        let mut entries = vec![placeholder; edges.len()];
+        for (used, entry) in edges {
+            let slot = &mut next[used.index()];
+            entries[*slot as usize] = entry;
+            *slot += 1;
+        }
+        Self { starts, entries }
     }
     pub fn of(&self, node: NodeId) -> &[Use] {
-        &self.entries[node.index()]
+        &self.entries[self.starts[node.index()] as usize..self.starts[node.index() + 1] as usize]
     }
 }

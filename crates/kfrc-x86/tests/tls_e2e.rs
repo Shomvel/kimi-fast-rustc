@@ -74,6 +74,7 @@ fn datum(symbol: &str, value: u64, writable: bool, thread_local: bool) -> DataOb
         align: 64,
         writable,
         thread_local,
+        unnamed_address: false,
         relocations: vec![],
     }
 }

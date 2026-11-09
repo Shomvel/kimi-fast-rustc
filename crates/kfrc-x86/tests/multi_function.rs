@@ -41,9 +41,7 @@ fn native_answer_object_has_correct_code_symbols_and_plt32_relocation() {
     assert_eq!(object.kind(), object::ObjectKind::Relocatable);
     let text = object.section_by_name(".text").unwrap();
     let code = text.data().unwrap();
-    let expected_answer = [
-        0x55, 0x48, 0x89, 0xe5, 0x48, 0xc7, 0xc1, 42, 0, 0, 0, 0x48, 0x89, 0xc8, 0xc9, 0xc3,
-    ];
+    let expected_answer = [0xb9, 42, 0, 0, 0, 0x48, 0x89, 0xc8, 0xc3];
     let expected_main = [0x55, 0x48, 0x89, 0xe5, 0xe8, 0, 0, 0, 0, 0xc9, 0xc3];
     let answer = object
         .symbols()

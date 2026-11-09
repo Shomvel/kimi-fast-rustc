@@ -164,7 +164,9 @@ fn known_nested_and_fieldless_dynamic_enums_do_not_build_variant_trees() {
         (false, false, 0, 1),
         (false, true, 0, 1),
         (true, true, 0, 2),
-        (true, false, 2, 2),
+        // The fieldless payload is a shared byte-offset lane: one unguarded
+        // read and one unguarded store, never a per-variant branch.
+        (true, false, 0, 2),
     ] {
         let graph = lower(&enum_body(nested, known));
         assert_eq!(

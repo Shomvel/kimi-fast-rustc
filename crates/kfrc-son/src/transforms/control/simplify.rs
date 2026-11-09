@@ -4,7 +4,7 @@
 //! operations on retained control paths, including unused Div/Rem, are roots.
 
 use kfrc_body::TypeShape;
-use std::collections::HashMap;
+use kfrc_body::fx_hash::HashMap;
 
 use crate::analysis::cfg::{ControlFlow, is_anchored_value, is_control_flow};
 use crate::transforms::utils::cfg::{CfgEditError, CfgEditor};
@@ -24,7 +24,7 @@ pub fn run(graph: &mut FunctionGraph) -> Result<ControlStats, CfgEditError> {
     // Branch folding only forwards/removes existing nodes, so one immutable
     // projection index remains valid through this loop. Avoid rescanning the
     // entire graph for every selected edge.
-    let mut projections: HashMap<(NodeId, u32), Vec<NodeId>> = HashMap::new();
+    let mut projections: HashMap<(NodeId, u32), Vec<NodeId>> = HashMap::default();
     for node in graph.ids() {
         if graph.op(node) == Opcode::Projection
             && matches!(graph.value_type(node), ValueType::Control)

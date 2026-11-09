@@ -1,12 +1,15 @@
 //! Compile-time variant witnesses. A false proof is a compiler error, never UB.
 //! Proof edges participate in graph maintenance, not in machine value demand.
+mod implication;
+
 use crate::analysis::{
     cfg::{ControlFlow, is_anchored_value, is_control_flow},
     dominators::Dominators,
     uses::{UseKind, Uses},
 };
 use crate::{ComparePredicate, FunctionGraph, NodeId, Opcode};
-use std::collections::{HashMap, HashSet};
+use kfrc_body::TypeShape;
+use kfrc_body::fx_hash::{HashMap, HashSet};
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct WitnessStats {
@@ -56,6 +59,63 @@ pub struct ScopedPredicate {
 pub enum PredicateOrigin {
     Branch,
     Assumption,
+}
+
+/// Evidence for one proposed If rewrite, valid only before that batch mutates
+/// the graph. Keeping receipts ephemeral avoids stale NodeIds after compaction.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) struct ConditionReceipt {
+    pub branch: NodeId,
+    pub condition: NodeId,
+    pub proof: NodeId,
+    pub truth: bool,
+}
+
+/// Normalize Boolean negation and equality against Boolean constants.
+/// Integer BitNot and integer comparison constants are not truth complements.
+pub(crate) fn canonical_condition(graph: &FunctionGraph, value: NodeId) -> Option<(NodeId, bool)> {
+    let mut value = graph.resolve(value);
+    let mut inverted = false;
+    let mut seen = HashSet::default();
+    loop {
+        let ty = graph.rust_type(value)?;
+        if !matches!(graph.oracle.semantic().shape(ty), TypeShape::Bool) || !seen.insert(value) {
+            return None;
+        }
+        if graph.op(value) == Opcode::BitNot {
+            value = graph.resolve(*graph.inputs(value).first()?);
+            inverted = !inverted;
+            continue;
+        }
+        if graph.op(value) == Opcode::Compare
+            && matches!(
+                ComparePredicate::from_payload(graph.payload(value)),
+                ComparePredicate::Equal | ComparePredicate::NotEqual
+            )
+        {
+            let [left, right] = graph.inputs(value) else {
+                return None;
+            };
+            let operands = [graph.resolve(*left), graph.resolve(*right)];
+            if operands.iter().all(|&operand| {
+                graph
+                    .rust_type(operand)
+                    .is_some_and(|ty| matches!(graph.oracle.semantic().shape(ty), TypeShape::Bool))
+            }) {
+                let constant = operands.iter().position(|&operand| {
+                    graph.op(operand) == Opcode::Const && graph.constant_value(operand) <= 1
+                });
+                if let Some(slot) = constant {
+                    let constant = graph.constant_value(operands[slot]) != 0;
+                    let equal = graph.payload(value) == ComparePredicate::Equal as u32;
+                    inverted ^= equal != constant;
+                    value = operands[1 - slot];
+                    continue;
+                }
+            }
+        }
+        return Some((value, inverted));
+    }
 }
 
 fn predicate_on_edge(graph: &FunctionGraph, edge: NodeId) -> Option<ScopedPredicate> {
@@ -123,8 +183,8 @@ impl<'a> PredicateFacts<'a> {
             cfg,
             dominators,
             cyclic,
-            anchors: HashMap::new(),
-            instances: HashMap::new(),
+            anchors: HashMap::default(),
+            instances: HashMap::default(),
             stats: WitnessStats {
                 node_visits: cfg.order.len(),
                 ..WitnessStats::default()
@@ -142,6 +202,21 @@ impl<'a> PredicateFacts<'a> {
         let fact = predicate_on_edge(self.graph, proof)?;
         self.same_instance(fact.predicate, proof, at)
             .then_some(fact)
+    }
+
+    /// Truth implied by an observed Boolean at an execution point.
+    /// No relation between separate loads or merely equal numeric addresses is
+    /// inferred; predicate_at retains dominance and loop-instance validation.
+    pub fn condition_at(&mut self, condition: NodeId, proof: NodeId, at: NodeId) -> Option<bool> {
+        let fact = self.predicate_at(proof, at)?;
+        let (base, inverted) = canonical_condition(self.graph, condition)?;
+        let (known_base, known_inverted) = canonical_condition(self.graph, fact.predicate)?;
+        let known_truth = fact.truth ^ known_inverted;
+        if base == known_base {
+            return Some(known_truth ^ inverted);
+        }
+        implication::compare(self.graph, known_base, known_truth, base)
+            .map(|truth| truth ^ inverted)
     }
 
     fn same_instance(&mut self, value: NodeId, proof: NodeId, at: NodeId) -> bool {
@@ -165,6 +240,41 @@ impl<'a> PredicateFacts<'a> {
     }
 }
 
+/// Debug verifier entry for a complete rewrite batch against unchanged IR.
+/// A new facts instance recomputes dominance/dynamic scope rather than trusting
+/// the optimizer's cached answer. Wrong evidence is a compiler error.
+pub(crate) fn check_conditions(
+    graph: &FunctionGraph,
+    receipts: &[ConditionReceipt],
+) -> Result<(), (NodeId, &'static str)> {
+    let cfg = ControlFlow::new(graph);
+    let dominators = Dominators::new(&cfg);
+    let mut facts = PredicateFacts::new(graph, &cfg, &dominators);
+    for receipt in receipts {
+        if graph.is_dead(receipt.branch)
+            || graph.op(receipt.branch) != Opcode::If
+            || graph.resolve(graph.input(receipt.branch, 0)) != receipt.condition
+        {
+            return Err((
+                receipt.branch,
+                "condition receipt does not match the original If",
+            ));
+        }
+        if facts.condition_at(
+            receipt.condition,
+            receipt.proof,
+            graph.control(receipt.branch),
+        ) != Some(receipt.truth)
+        {
+            return Err((
+                receipt.branch,
+                "condition receipt lacks current dominating predicate evidence",
+            ));
+        }
+    }
+    Ok(())
+}
+
 /// Dynamic definitions which can change this source value on another iteration.
 fn definition_anchors(
     graph: &FunctionGraph,
@@ -172,7 +282,7 @@ fn definition_anchors(
     stats: &mut WitnessStats,
 ) -> Vec<NodeId> {
     let mut pending = vec![source];
-    let mut seen = HashSet::new();
+    let mut seen = HashSet::default();
     let mut anchors = Vec::new();
     while let Some(node) = pending.pop() {
         let node = graph.resolve(node);
@@ -215,7 +325,7 @@ fn execution_sites(
     stats: &mut WitnessStats,
 ) -> Vec<NodeId> {
     let mut pending = vec![field];
-    let mut seen = HashSet::new();
+    let mut seen = HashSet::default();
     let mut sites = Vec::new();
     while let Some(node) = pending.pop() {
         if !seen.insert(node) {
@@ -270,7 +380,7 @@ fn unchanged_until(
         .iter()
         .map(|&node| (node, false))
         .collect();
-    let mut seen = HashSet::new();
+    let mut seen = HashSet::default();
     while let Some((node, dirty)) = pending.pop() {
         if node == proof || !seen.insert((node, dirty)) {
             continue;

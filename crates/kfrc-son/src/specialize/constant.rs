@@ -23,6 +23,29 @@ impl<O: SpecializationOracle> State<'_, O> {
         let inputs = graph.inputs(node);
         match graph.op(node) {
             Opcode::Const => Ok(Some(graph.constant_value(node))),
+            op if op.integer_intrinsic_arity().is_some() => {
+                let Some(bits) = self
+                    .bits(inputs[0])
+                    .filter(|bits| matches!(bits, 8 | 16 | 32 | 64))
+                else {
+                    return Ok(None);
+                };
+                let ty = graph.rust_type(inputs[0]).expect("typed intrinsic");
+                let signed = matches!(graph.oracle.shape(ty), TypeShape::Int { signed: true, .. });
+                let mut values = Vec::with_capacity(inputs.len());
+                for &input in inputs {
+                    let Some(value) = self.constant(input)? else {
+                        return Ok(None);
+                    };
+                    let Some(width) = self.bits(input).filter(|bits| *bits <= 64) else {
+                        return Ok(None);
+                    };
+                    values.push((value & (u128::MAX >> (128 - width))) as u64);
+                }
+                let (value, poison) =
+                    crate::intrinsic::evaluate(op, graph.payload(node), bits, signed, &values);
+                Ok((!poison).then_some(u128::from(value)))
+            }
             // A one-predecessor region adds no new choice. Do not speculate
             // through a multi-edge Phi: one arm may contain an unanswered,
             // ultimately dead question. Definition-level promotion produces
@@ -115,6 +138,13 @@ impl<O: SpecializationOracle> State<'_, O> {
                     return Ok(None);
                 };
                 let shift = (right % u128::from(bits)) as u32;
+                let flags = crate::ArithmeticFlags(graph.payload(node));
+                if flags.0 != 0
+                    && (bits > 64
+                        || flags.violated(graph.op(node), bits, left as u64, right as u64))
+                {
+                    return Ok(None);
+                }
                 let result = match graph.op(node) {
                     Opcode::Add => left.wrapping_add(right),
                     Opcode::Sub => left.wrapping_sub(right),

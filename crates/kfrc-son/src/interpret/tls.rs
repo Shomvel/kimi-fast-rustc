@@ -1,6 +1,6 @@
 //! Explicit interpreter thread identity shared across interpreted functions.
 
-use std::collections::HashMap;
+use kfrc_body::fx_hash::HashMap;
 use std::sync::atomic::{AtomicU64, Ordering};
 
 use kfrc_body::DataObject;
@@ -30,8 +30,8 @@ impl Default for InterpreterThread {
     fn default() -> Self {
         let base = NEXT_THREAD_ARENA.fetch_add(ARENA_SIZE, Ordering::Relaxed);
         Self {
-            objects: HashMap::new(),
-            memory: HashMap::new(),
+            objects: HashMap::default(),
+            memory: HashMap::default(),
             next_address: base,
             limit: base + ARENA_SIZE,
         }

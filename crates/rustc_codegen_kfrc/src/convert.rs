@@ -10,7 +10,7 @@
 //! This converter is throwaway PoC code: what it cannot express is a gap in
 //! the Body contract, recorded rather than worked around.
 
-use std::collections::HashMap;
+use kfrc_body::fx_hash::HashMap;
 
 use crate::constants::ConstantCx;
 use kfrc_body::{
@@ -40,10 +40,10 @@ pub fn convert_instance<'tcx>(tcx: TyCtxt<'tcx>, instance: Instance<'tcx>) -> Re
     let mut converter = Converter {
         tcx,
         instance,
-        types: HashMap::new(),
+        types: HashMap::default(),
         constants: ConstantCx::new(tcx, tcx.symbol_name(instance).name.to_string()),
         caller_location: None,
-        local_map: HashMap::new(),
+        local_map: HashMap::default(),
         pending_blocks: Vec::new(),
         original_blocks: mir.basic_blocks.len(),
         builder: BodyBuilder::new(

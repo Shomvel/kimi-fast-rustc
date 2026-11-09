@@ -21,7 +21,9 @@ a = p.parse_args()
 data = a.disassembly.read_bytes()
 lines = data.decode().splitlines()
 header = re.compile(r'^([0-9a-f]+) <(.+)>:$')
-instruction = re.compile(r'^\s*([0-9a-f]+):\s*((?:[0-9a-f]{2} )+)\s*\t(\S+)\s*(.*)$')
+# A full-width byte column ends directly in a tab; shorter instructions have
+# space padding before that tab. Neither form requires a trailing byte space.
+instruction = re.compile(r'^\s*([0-9a-f]+):\s*([0-9a-f]{2}(?: [0-9a-f]{2})*)[ \t]+(\S+)\s*(.*)$')
 starts = [i for i, line in enumerate(lines) if (m := header.match(line)) and m[2] == a.symbol]
 assert len(starts) == 1, f'exact symbol count: {len(starts)}'
 start = starts[0]

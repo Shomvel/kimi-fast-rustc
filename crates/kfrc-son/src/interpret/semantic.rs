@@ -7,8 +7,8 @@ use super::semantic_memory::physical_fields;
 use super::{InterpretError, Interpreter, Scalar, SemanticMemory, Value};
 use crate::analysis::cfg::is_anchored_value;
 use crate::graph::{GraphLevel, NodeId, Opcode, ValueType};
+use kfrc_body::fx_hash::HashMap;
 use kfrc_body::{TyId, TypeOracle, TypeShape};
-use std::collections::HashMap;
 use std::sync::Arc;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -111,13 +111,13 @@ impl Interpreter<'_> {
         }
         let mut frame = ValueFrame {
             arguments,
-            phis: HashMap::new(),
-            fixed: HashMap::new(),
-            cache: HashMap::new(),
+            phis: HashMap::default(),
+            fixed: HashMap::default(),
+            cache: HashMap::default(),
             active_control: NodeId::NONE,
             memory,
-            slots: HashMap::new(),
-            symbols: HashMap::new(),
+            slots: HashMap::default(),
+            symbols: HashMap::default(),
         };
         frame.memory.register_data(&graph.data_objects)?;
         for (symbol, _) in &graph.symbols {

@@ -1,0 +1,48 @@
+{
+  "toolchain": "1.94.1",
+  "target": "x86_64-unknown-linux-gnu",
+  "sysroot": "/workspace/shared-std-mir0/sysroot",
+  "perf": "/usr/lib/linux-tools/6.8.0-149-generic/perf",
+  "library_flags": ["-Cpanic=abort", "-Copt-level=3", "-Ccodegen-units=16", "-Cembed-bitcode=no", "-Cdebuginfo=0",
+                    "-Coverflow-checks=off", "-Cdebug-assertions=off", "-Zmir-opt-level=0"],
+  "driver_flags": ["-Cpanic=abort", "-Copt-level=3", "-Cdebuginfo=0", "-Zmir-opt-level=0"],
+  "crates": [
+    {
+      "name": "semver", "version": "1.0.28", "lib": "semver", "edition": "2021",
+      "sha256": "8a7852d02fc848982e0c167ef163aaff9cd91dc640ba85e263cb1ce46fae51cd",
+      "features": ["std"], "driver": "drivers/semver.rs",
+      "itest_dev_deps": [], "unit_tests": false,
+      "workloads": [["parse", 400000], ["req", 400000], ["identifier", 30000]]
+    },
+    {
+      "name": "regex-syntax", "version": "0.8.8", "lib": "regex_syntax", "edition": "2021",
+      "sha256": "7a2d987857b319362043e95f5353c0535c1f58eec5336fdfcf626430af7def58",
+      "features": ["std", "unicode", "unicode-age", "unicode-bool", "unicode-case", "unicode-gencat", "unicode-perl",
+                   "unicode-script", "unicode-segment"],
+      "driver": "drivers/regex_syntax.rs",
+      "itest_dev_deps": [], "unit_tests": true,
+      "workloads": [["hir", 20000], ["ast", 2000], ["unicode", 5000]]
+    },
+    {
+      "name": "base64", "version": "0.22.1", "lib": "base64", "edition": "2021",
+      "sha256": "72b3254f16251a8381aa12e40e3c4d2f0199f8c6508fbecb9d91f575e0fbb8c6",
+      "features": ["alloc", "std"], "driver": "drivers/base64.rs",
+      "itest_dev_deps": ["rand"], "unit_tests": true,
+      "workloads": [["encode", 10000], ["decode", 10000], ["short", 200000]]
+    },
+    {
+      "name": "unicode-segmentation", "version": "1.13.3", "lib": "unicode_segmentation", "edition": "2018",
+      "sha256": "c6f5d3c3b1bf09027a88a6bc961fc00497d651009560b5463668dc81b0fa87a8",
+      "features": [], "driver": "drivers/unicode_segmentation.rs",
+      "itest_dev_deps": ["quickcheck"], "unit_tests": true,
+      "workloads": [["graphemes-mixed", 200], ["graphemes-ascii", 200], ["graphemes-rev", 400]]
+    },
+    {
+      "name": "humantime", "version": "2.4.0", "lib": "humantime", "edition": "2021",
+      "sha256": "15cdd26707701c53297e2fa6afb323d55fbc1d0810c3aec078ae3ef0424c3c15",
+      "features": [], "driver": "drivers/humantime.rs",
+      "itest_dev_deps": [], "unit_tests": true,
+      "workloads": [["dur-parse", 500000], ["dur-format", 100000], ["ts-parse", 1000000], ["ts-format", 400000]]
+    }
+  ]
+}

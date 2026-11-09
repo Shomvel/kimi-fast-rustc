@@ -22,13 +22,13 @@ impl<'a, 'tcx> Oracle<'a, 'tcx> {
             converter: super::super::Converter {
                 tcx,
                 instance,
-                types: HashMap::new(),
+                types: HashMap::default(),
                 constants: crate::constants::ConstantCx::new(
                     tcx,
                     tcx.symbol_name(instance).name.to_string(),
                 ),
                 caller_location: None,
-                local_map: HashMap::new(),
+                local_map: HashMap::default(),
                 pending_blocks: Vec::new(),
                 original_blocks: 0,
                 builder: BodyBuilder::new(
@@ -84,23 +84,13 @@ impl SpecializationOracle for Oracle<'_, '_> {
                     .resolutions
                     .get(item)
                     .ok_or("unknown R resolution identity")?;
-                let args = self.converter.monomorphize(resolution.args);
-                let instance = Instance::try_resolve(
-                    tcx,
-                    TypingEnv::fully_monomorphized(),
-                    resolution.item,
-                    args,
-                )
-                .map_err(|_| format!("failed to resolve {item}"))?
-                .ok_or_else(|| format!("unresolved static call {item}"))?;
-                if matches!(
-                    instance.def,
-                    InstanceKind::Virtual(..) | InstanceKind::Intrinsic(_)
-                ) {
-                    return Err(format!("R static resolution cannot lower {instance:?}"));
-                }
-                if instance.def.requires_caller_location(tcx) {
-                    return Err("R resolved call needs a caller location adapter".into());
+                let instance = resolve(tcx, self.converter.instance, *resolution)
+                    .map_err(|_| format!("failed to resolve {item}"))?
+                    .ok_or_else(|| format!("unresolved static call {item}"))?;
+                // definition::instance_eligibility sends these instances to
+                // the concrete path before specialization starts.
+                if let Some(reason) = call_adapter_requirement(tcx, instance) {
+                    return Err(format!("R resolved call to {instance:?}: {reason}"));
                 }
                 let symbol = tcx.symbol_name(instance).name.to_string();
                 let abi = crate::abi::instance_abi(tcx, instance)?;
@@ -118,5 +108,36 @@ impl SpecializationOracle for Oracle<'_, '_> {
                 Err("R producer leaves variant encoding to layout lowering".into())
             }
         }
+    }
+}
+
+/// The concrete callee of an R call site in `instance`.
+pub(super) fn resolve<'tcx>(
+    tcx: TyCtxt<'tcx>,
+    instance: Instance<'tcx>,
+    resolution: super::Resolution<'tcx>,
+) -> Result<Option<Instance<'tcx>>, rustc_span::ErrorGuaranteed> {
+    let args = instance.instantiate_mir_and_normalize_erasing_regions(
+        tcx,
+        TypingEnv::fully_monomorphized(),
+        rustc_middle::ty::EarlyBinder::bind(resolution.args),
+    );
+    Instance::try_resolve(tcx, TypingEnv::fully_monomorphized(), resolution.item, args)
+}
+
+/// Why a resolved callee needs more than R's direct call with the source
+/// arguments: dynamic dispatch, an intrinsic body, or rustc's implicit
+/// `#[track_caller]` location argument. The concrete MIR path supplies each.
+pub(super) fn call_adapter_requirement<'tcx>(
+    tcx: TyCtxt<'tcx>,
+    callee: Instance<'tcx>,
+) -> Option<&'static str> {
+    match callee.def {
+        InstanceKind::Virtual(..) => Some("dynamic dispatch needs a vtable call"),
+        InstanceKind::Intrinsic(_) => Some("intrinsic needs its concrete lowering"),
+        _ if callee.def.requires_caller_location(tcx) => {
+            Some("track_caller callee needs a caller location argument")
+        }
+        _ => None,
     }
 }

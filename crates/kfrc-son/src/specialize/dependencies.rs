@@ -1,7 +1,7 @@
 //! Definition-only dependency indexing. This cost is not repeated for every T.
 use crate::{FunctionGraph, NodeId, Opcode, ValueType};
+use kfrc_body::fx_hash::HashSet;
 use kfrc_body::{TyId, TypeOracle, TypeShape};
-use std::collections::HashSet;
 
 pub(super) fn parameter_dependent_nodes(graph: &FunctionGraph) -> HashSet<NodeId> {
     // Start with direct parameters, then propagate through the structural type

@@ -53,7 +53,7 @@ fn backward_branches_accept_minus_128_and_keep_minus_129_near() {
             instructions.extend(padding(body_size));
             instructions.extend([branch(kind, 1), MachineInstr::Ret]);
             let code = function(instructions).emit_machine_code().unwrap();
-            let offset = 4 + body_size;
+            let offset = body_size;
 
             if body_size == 126 {
                 let opcode = match kind {
@@ -97,17 +97,17 @@ fn forward_branches_accept_127_and_keep_128_near() {
                     Branch::Jmp => 0xeb,
                     Branch::Jcc => 0x74,
                 };
-                assert_eq!(code[4], opcode, "{kind:?}");
-                assert_eq!(code[5], 0x7f, "{kind:?}");
+                assert_eq!(code[0], opcode, "{kind:?}");
+                assert_eq!(code[1], 0x7f, "{kind:?}");
             } else {
                 let displacement_offset = match kind {
                     Branch::Jmp => {
-                        assert_eq!(code[4], 0xe9);
-                        5
+                        assert_eq!(code[0], 0xe9);
+                        1
                     }
                     Branch::Jcc => {
-                        assert_eq!(&code[4..6], &[0x0f, 0x84]);
-                        6
+                        assert_eq!(&code[..2], &[0x0f, 0x84]);
+                        2
                     }
                 };
                 assert_eq!(read_i32(&code, displacement_offset), 128, "{kind:?}");
@@ -127,9 +127,9 @@ fn shortening_repeats_when_a_later_jump_enables_an_earlier_one() {
         MachineInstr::Ret,
     ]);
     let code = function(instructions).emit_machine_code().unwrap();
-    assert_eq!(code[4..6], [0xeb, 125]);
-    assert_eq!(code[129..131], [0xeb, 0]);
-    assert_eq!(code.len(), 133);
+    assert_eq!(code[..2], [0xeb, 125]);
+    assert_eq!(code[125..127], [0xeb, 0]);
+    assert_eq!(code.len(), 128);
 
     let mut instructions = vec![MachineInstr::Jmp(2)];
     instructions.extend(padding(122));
@@ -140,9 +140,9 @@ fn shortening_repeats_when_a_later_jump_enables_an_earlier_one() {
         MachineInstr::Ret,
     ]);
     let code = function(instructions).emit_machine_code().unwrap();
-    assert_eq!(code[4..6], [0xeb, 124]);
-    assert_eq!(code[128..130], [0x74, 0]);
-    assert_eq!(code.len(), 132);
+    assert_eq!(code[..2], [0xeb, 124]);
+    assert_eq!(code[124..126], [0x74, 0]);
+    assert_eq!(code.len(), 127);
 }
 
 #[test]
@@ -157,13 +157,13 @@ fn near_fixups_survive_shortening_elsewhere() {
         instructions.extend([MachineInstr::Label(2), MachineInstr::Ret]);
         let code = function(instructions).emit_machine_code().unwrap();
 
-        assert_eq!(code[4], 0xe9, "{kind:?}");
-        assert_eq!(read_i32(&code, 5), 132, "{kind:?}");
+        assert_eq!(code[0], 0xe9, "{kind:?}");
+        assert_eq!(read_i32(&code, 1), 132, "{kind:?}");
         let opcode = match kind {
             Branch::Jmp => 0xeb,
             Branch::Jcc => 0x74,
         };
-        assert_eq!(code[9..11], [opcode, 0], "{kind:?}");
+        assert_eq!(code[5..7], [opcode, 0], "{kind:?}");
     }
 }
 

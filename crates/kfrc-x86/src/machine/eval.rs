@@ -22,6 +22,7 @@ const CALLEE_SAVED_INITIAL: [i64; Reg::CALLEE_SAVED.len()] = [
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum MachineEvalError {
+    InvalidBitScanFallback,
     MissingReturn,
     UnsupportedMemoryInstruction,
     MissingArgument { index: usize, available: usize },
@@ -44,6 +45,9 @@ impl fmt::Display for MachineEvalError {
         match self {
             Self::UnsupportedMemoryInstruction => formatter
                 .write_str("the legacy machine evaluator does not model addressable memory"),
+            Self::InvalidBitScanFallback => {
+                formatter.write_str("bit scan fallback aliases destination")
+            }
             Self::MissingReturn => {
                 formatter.write_str("machine function has no return instruction")
             }
@@ -168,6 +172,10 @@ fn execute(function: &MachineFunction, arguments: &[i64]) -> Result<Execution, M
                 let value = machine.reg(src);
                 machine.set_reg(dst, value);
             }
+            MachineInstr::OffsetAddress { dst, base, offset } => {
+                let value = machine.reg(base).wrapping_add(i64::from(offset));
+                machine.set_reg(dst, value);
+            }
             MachineInstr::Neg { dst } => {
                 let value = machine.reg(dst).wrapping_neg();
                 machine.set_reg(dst, value);
@@ -210,6 +218,80 @@ fn execute(function: &MachineFunction, arguments: &[i64]) -> Result<Execution, M
             }
             MachineInstr::Xor { dst, src } => {
                 let value = machine.reg(dst) ^ machine.operand(src, function.stack_slots)?;
+                machine.set_reg(dst, value);
+                machine.comparison = None;
+            }
+            MachineInstr::Rotate {
+                dst,
+                width,
+                right,
+                count,
+            } => {
+                let bits = width.bits();
+                let n = u32::from(count.unwrap_or(machine.reg(Reg::Rcx) as u8)) % bits;
+                let mask = u64::MAX >> (64 - bits);
+                let original = machine.reg(dst) as u64;
+                let x = original & mask;
+                let result = if n == 0 {
+                    x
+                } else if right {
+                    (x >> n) | (x << (bits - n))
+                } else {
+                    (x << n) | (x >> (bits - n))
+                };
+                let high = if bits < 32 { original & !mask } else { 0 };
+                machine.set_reg(dst, (high | (result & mask)) as i64);
+                // Rotates preserve ZF/SF, but CF/OF no longer encode the prior
+                // comparison. The evaluator conservatively invalidates it.
+                if n != 0 {
+                    machine.comparison = None;
+                }
+            }
+            MachineInstr::Extend {
+                dst,
+                src,
+                width,
+                signed,
+            } => {
+                let x = machine.reg(src);
+                machine.set_reg(
+                    dst,
+                    match (width, signed) {
+                        (super::x86::BitWidth::W8, false) => x as u8 as i64,
+                        (super::x86::BitWidth::W16, false) => x as u16 as i64,
+                        (super::x86::BitWidth::W32, false) => x as u32 as i64,
+                        (super::x86::BitWidth::W8, true) => x as i8 as i64,
+                        (super::x86::BitWidth::W16, true) => x as i16 as i64,
+                        (super::x86::BitWidth::W32, true) => x as i32 as i64,
+                        (super::x86::BitWidth::W64, _) => x,
+                    },
+                );
+            }
+            MachineInstr::ByteSwap { dst, wide } => {
+                let x = machine.reg(dst) as u64;
+                machine.set_reg(
+                    dst,
+                    if wide {
+                        x.swap_bytes() as i64
+                    } else {
+                        (x as u32).swap_bytes() as i64
+                    },
+                );
+            }
+            MachineInstr::BitScanZero {
+                dst,
+                src,
+                zero,
+                reverse,
+            } => {
+                let x = machine.reg(src) as u64;
+                let value = if x == 0 {
+                    machine.reg(zero)
+                } else if reverse {
+                    i64::from(63 - x.leading_zeros())
+                } else {
+                    i64::from(x.trailing_zeros())
+                };
                 machine.set_reg(dst, value);
                 machine.comparison = None;
             }
@@ -294,6 +376,9 @@ fn execute(function: &MachineFunction, arguments: &[i64]) -> Result<Execution, M
             MachineInstr::Test { reg } => {
                 machine.comparison = Some((machine.reg(reg), 0));
             }
+            MachineInstr::TestByte { reg } => {
+                machine.comparison = Some((machine.reg(reg) & 0xff, 0));
+            }
             MachineInstr::SetCc { condition, dst } => {
                 let (lhs, rhs) = machine
                     .comparison
@@ -311,6 +396,7 @@ fn execute(function: &MachineFunction, arguments: &[i64]) -> Result<Execution, M
             MachineInstr::StackAddress { .. }
             | MachineInstr::LoadIndirect { .. }
             | MachineInstr::StoreIndirect { .. }
+            | MachineInstr::StoreImmediate { .. }
             | MachineInstr::SymbolAddress { .. }
             | MachineInstr::ThreadLocalAddress { .. }
             | MachineInstr::LoadVector { .. }
@@ -466,7 +552,23 @@ fn validate_instruction(
         | ShlImm { dst, .. }
         | ShrImm { dst, .. }
         | LShrImm { dst, .. }
+        | Rotate { dst, .. }
+        | ByteSwap { dst, .. }
         | SetCc { dst, .. } => validate_reg(dst),
+        Extend { dst, src, .. } | OffsetAddress { dst, base: src, .. } => {
+            validate_reg(dst)?;
+            validate_reg(src)
+        }
+        BitScanZero { dst, src, zero, .. } => {
+            validate_reg(dst)?;
+            validate_reg(src)?;
+            validate_reg(zero)?;
+            if dst == zero {
+                Err(MachineEvalError::InvalidBitScanFallback)
+            } else {
+                Ok(())
+            }
+        }
         Mov { dst, src } => {
             validate_reg(dst)?;
             validate_reg(src)
@@ -496,7 +598,7 @@ fn validate_instruction(
             validate_reg(lhs)?;
             validate_operand(rhs)
         }
-        Test { reg } => validate_reg(reg),
+        Test { reg } | TestByte { reg } => validate_reg(reg),
         Load { dst, slot } => {
             validate_reg(dst)?;
             validate_slot(slot, stack_slots)
@@ -508,6 +610,7 @@ fn validate_instruction(
         StackAddress { .. }
         | LoadIndirect { .. }
         | StoreIndirect { .. }
+        | StoreImmediate { .. }
         | SymbolAddress { .. }
         | ThreadLocalAddress { .. }
         | LoadVector { .. }

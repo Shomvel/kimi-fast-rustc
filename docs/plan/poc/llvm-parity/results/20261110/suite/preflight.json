@@ -1,0 +1,118 @@
+[
+  {
+    "crate": "semver",
+    "arm": "c12-phi",
+    "status": "ok",
+    "checker": 1,
+    "upstream_incomplete": {},
+    "corpus_equal": true,
+    "checksums_equal": true
+  },
+  {
+    "crate": "semver",
+    "arm": "integrated",
+    "status": "ok",
+    "checker": 1,
+    "upstream_incomplete": {},
+    "corpus_equal": true,
+    "checksums_equal": true
+  },
+  {
+    "crate": "regex-syntax",
+    "arm": "c12-phi",
+    "status": "compile_failed",
+    "checker": 1,
+    "expected_unsupported": [
+      "error: kfrc: cannot compile `hir::literal::Literal::exact::<std::vec::Vec<u8>>` (_RINvMs5_NtNtCsgtqDAkISWhW_12regex_syntax3hir7literalNtB6_7Literal5exactINtNtCs2o4UNGIcTtc_5alloc3vec3VechEEBa_): definition specialization: R resolved call needs a caller location adapter",
+      "error: aborting due to 1 previous error"
+    ]
+  },
+  {
+    "crate": "regex-syntax",
+    "arm": "integrated",
+    "status": "compile_failed",
+    "checker": 1,
+    "expected_unsupported": [
+      "error: kfrc: cannot compile `core::core_simd::swizzle::<impl core::simd::Simd<i8, 16>>::resize::<16>` (_RINvMNtNtCshX3mvxHm3fC_4core9core_simd7swizzleINtNtB5_6vector4SimdaKj10_E6resizeKB14_ECsgtqDAkISWhW_12regex_syntax): SoN construction: unsupported: union and SIMD values are outside the semantic path",
+      "error: aborting due to 1 previous error"
+    ]
+  },
+  {
+    "crate": "base64",
+    "arm": "c12-phi",
+    "status": "ok",
+    "checker": 1,
+    "upstream_incomplete": {
+      "unit": [
+        "error: kfrc: cannot compile `<engine::tests::DecoderReaderEngineWrapper as engine::tests::EngineWrapper>::random::<rand::prelude::SmallRng>` (_RINvXs2_NtNtCsINU7rSHes9_6base646engine5testsNtB6_26DecoderReaderEngineWrapperNtB6_13EngineWrapper6randomNtNtNtCscTDQGeQ3FOL_4rand4rngs5small8SmallRngEBa_): definition specialization: R resolved call needs a caller location adapter"
+      ]
+    },
+    "corpus_equal": true,
+    "checksums_equal": true
+  },
+  {
+    "crate": "base64",
+    "arm": "integrated",
+    "status": "ok",
+    "checker": 1,
+    "upstream_incomplete": {
+      "unit": [
+        "error: kfrc: cannot compile `std::hash::RandomState::new::KEYS::{constant#0}::{closure#1}` (_RNCNKNvNvMNtNtCskdEs339NOXv_3std4hash6randomNtB8_11RandomState3new4KEYS0s_0Csk2ZSy4bJrm1_6base64): SoN construction: unsupported: TLS is outside the semantic path"
+      ]
+    },
+    "corpus_equal": true,
+    "checksums_equal": true
+  },
+  {
+    "crate": "unicode-segmentation",
+    "arm": "c12-phi",
+    "status": "ok",
+    "checker": 1,
+    "upstream_incomplete": {
+      "unit": [
+        "error: kfrc: cannot compile `core::sync::atomic::atomic_sub::<usize, usize>` (_RINvNtNtCshX3mvxHm3fC_4core4sync6atomic10atomic_subjjECsbxH0FprOEAu_20unicode_segmentation): MIR conversion: intrinsic `atomic_xsub` is not implemented"
+      ]
+    },
+    "corpus_equal": true,
+    "checksums_equal": true
+  },
+  {
+    "crate": "unicode-segmentation",
+    "arm": "integrated",
+    "status": "ok",
+    "checker": 1,
+    "upstream_incomplete": {
+      "unit": [
+        "error: kfrc: cannot compile `core::sync::atomic::atomic_sub::<usize, usize>` (_RINvNtNtCshX3mvxHm3fC_4core4sync6atomic10atomic_subjjECshs0Jm2qIDbX_20unicode_segmentation): MIR conversion: intrinsic `atomic_xsub` is not implemented"
+      ]
+    },
+    "corpus_equal": true,
+    "checksums_equal": true
+  },
+  {
+    "crate": "humantime",
+    "arm": "c12-phi",
+    "status": "ok",
+    "checker": 1,
+    "upstream_incomplete": {
+      "unit": [
+        "error: kfrc: cannot compile `<u64 as rand::distr::utils::WideningMultiply>::wmul` (_RNvXs4_NtNtCs9WOZcrf9gIs_4rand5distr5utilsyNtB5_16WideningMultiply4wmul): SoN construction: unsupported: unsupported semantic type u128"
+      ]
+    },
+    "corpus_equal": true,
+    "checksums_equal": true
+  },
+  {
+    "crate": "humantime",
+    "arm": "integrated",
+    "status": "ok",
+    "checker": 1,
+    "upstream_incomplete": {
+      "unit": [
+        "error: kfrc: cannot compile `<u64 as rand::distr::utils::WideningMultiply>::wmul` (_RNvXs4_NtNtCs9WOZcrf9gIs_4rand5distr5utilsyNtB5_16WideningMultiply4wmul): SoN construction: unsupported: unsupported semantic type u128"
+      ]
+    },
+    "corpus_equal": true,
+    "checksums_equal": true
+  }
+]

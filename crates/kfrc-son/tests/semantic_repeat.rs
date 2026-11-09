@@ -1,3 +1,4 @@
+use kfrc_body::fx_hash::HashMap;
 use kfrc_body::{
     FunctionAbi, IntegerWidth, Mutability, PassMode, RecordedTypes, SizeAlign, TyId, TypeShape,
 };
@@ -5,7 +6,6 @@ use kfrc_son::{
     FunctionGraph, InterpretError, Interpreter, NodeId, Opcode, SemanticOutcome, Value, ValueType,
     verify_graph,
 };
-use std::collections::HashMap;
 use std::sync::Arc;
 
 struct Fixture {
@@ -249,7 +249,7 @@ fn overriding_every_poison_element_makes_only_those_elements_initialized() {
     let full = Value::Array {
         element: Arc::new(Value::Poison),
         length: 2,
-        overrides: Arc::new(HashMap::from([
+        overrides: Arc::new(HashMap::from_iter([
             (0, Value::Scalar(7)),
             (1, Value::Scalar(7)),
         ])),
@@ -264,7 +264,7 @@ fn overriding_every_poison_element_makes_only_those_elements_initialized() {
     let partial = Value::Array {
         element: Arc::new(Value::Poison),
         length: 3,
-        overrides: Arc::new(HashMap::from([
+        overrides: Arc::new(HashMap::from_iter([
             (0, Value::Scalar(7)),
             (1, Value::Scalar(7)),
         ])),

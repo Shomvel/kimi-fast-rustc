@@ -7,6 +7,9 @@
 //! Unsupported constructs are rejected with `BuildError::Unsupported`.
 
 pub mod analysis;
+pub mod arithmetic;
+pub mod intrinsic;
+pub use intrinsic::IntegerIntrinsicPayload;
 pub mod build;
 pub mod graph;
 pub mod interpret;
@@ -18,6 +21,7 @@ pub mod specialize;
 mod transforms;
 pub mod verify;
 
+pub use arithmetic::ArithmeticFlags;
 pub use build::{BuildError, build_graph};
 pub use graph::*;
 pub use interpret::{
@@ -33,4 +37,5 @@ pub use transforms::ipo::{
     GraphProvider, IdentityFoldStats, InlineBudget, InlineError, InlineSkip, InlineStats,
     fold_identity_calls, inline_calls,
 };
+pub use transforms::scalar::ranges::{RangeFoldStats, run as fold_scalar_ranges};
 pub use verify::{VerifyError, verify_graph};

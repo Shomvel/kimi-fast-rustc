@@ -5,7 +5,7 @@
 //! `Location` remains an opaque data object, including its pointer to the file
 //! name. No Rust layout is reconstructed here.
 
-use std::collections::HashSet;
+use kfrc_body::fx_hash::HashSet;
 
 use kfrc_body::{BodyBuilder, ConstantKind, DataBinding, DataObject, DataRelocation};
 use rustc_middle::mir::ConstValue;
@@ -44,8 +44,8 @@ impl<'tcx> ConstantCx<'tcx> {
         Self {
             tcx,
             namespace: namespace.into(),
-            emitted_allocs: HashSet::new(),
-            emitted_statics: HashSet::new(),
+            emitted_allocs: HashSet::default(),
+            emitted_statics: HashSet::default(),
         }
     }
 
@@ -165,6 +165,7 @@ impl<'tcx> ConstantCx<'tcx> {
                 binding,
                 self.tcx.is_mutable_static(def_id),
                 self.tcx.is_thread_local_static(def_id),
+                false,
                 builder,
             )?;
         }
@@ -189,6 +190,7 @@ impl<'tcx> ConstantCx<'tcx> {
                 DataBinding::Local,
                 false,
                 false,
+                true,
                 builder,
             )?;
         }
@@ -202,6 +204,7 @@ impl<'tcx> ConstantCx<'tcx> {
         binding: DataBinding,
         mutable_static: bool,
         thread_local: bool,
+        unnamed_address: bool,
         builder: &mut BodyBuilder,
     ) -> Result<(), String> {
         let allocation = allocation.inner();
@@ -259,6 +262,7 @@ impl<'tcx> ConstantCx<'tcx> {
             align: allocation.align.bytes(),
             writable,
             thread_local,
+            unnamed_address,
             relocations,
         });
         Ok(())

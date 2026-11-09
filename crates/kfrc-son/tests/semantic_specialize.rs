@@ -1,3 +1,4 @@
+use kfrc_body::fx_hash::HashMap;
 use kfrc_body::{
     FunctionAbi, IntegerWidth, PassMode, RecordedTypes, SizeAlign, TyId, TypeOracle, TypeShape,
 };
@@ -6,7 +7,6 @@ use kfrc_son::{
     CallTarget, ComparePredicate, FunctionGraph, GraphState, Hole, Interpreter, NodeId, Opcode,
     RustSignature, SemanticOutcome, TraitCall, Value, ValueType,
 };
-use std::collections::HashMap;
 
 fn projection(graph: &mut FunctionGraph, source: NodeId, index: u32, ty: ValueType) -> NodeId {
     graph.add_node(Opcode::Projection, NodeId::NONE, &[source], index, ty)
@@ -167,7 +167,7 @@ fn answers(source: &RecordedTypes, args: usize) -> Answers {
         signed: false,
         forbid_resolve: false,
         asked: Vec::new(),
-        mapped: HashMap::new(),
+        mapped: HashMap::default(),
     }
 }
 fn lazy_definition() -> RustDefinition {

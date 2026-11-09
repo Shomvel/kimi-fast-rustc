@@ -1,3 +1,4 @@
+use kfrc_body::fx_hash::HashMap;
 use kfrc_body::{
     FunctionAbi, IntegerWidth, PassMode, RecordedTypes, SemanticAggregate, SizeAlign, TyId,
     TypeShape,
@@ -7,7 +8,6 @@ use kfrc_son::{
     CallTarget, FunctionGraph, GraphLevel, InlineBudget, InlineSkip, InterpretError, Interpreter,
     NodeId, Opcode, ValueType, fold_identity_calls, inline_calls, verify_graph,
 };
-use std::collections::HashMap;
 
 struct Function {
     graph: FunctionGraph,
@@ -66,12 +66,15 @@ fn exact_parameter_return_folds_with_zero_inline_budget_and_independent_types() 
         let result = caller.call(&callee.graph, &caller.args.clone(), caller.int);
         caller.ret(result);
         caller.verify();
-        let functions = HashMap::from([(callee.graph.symbol.clone(), callee.graph)]);
+        let functions = HashMap::from_iter([(callee.graph.symbol.clone(), callee.graph)]);
         let before = caller.graph.clone();
         let budget = InlineBudget {
             max_depth: 0,
             max_nodes: 0,
             max_calls: 0,
+            free_nodes: 0,
+            max_callee_nodes: 0,
+            copy_anonymous_constants: false,
         };
         assert_eq!(
             inline_calls(&mut caller.graph, &functions, budget)
@@ -134,7 +137,7 @@ fn poison_in_nonreturned_or_returned_argument_traps_between_effectful_calls() {
         caller.call(&event.graph, &[], caller.int);
         caller.ret(value); // The identity result is deliberately unused.
         caller.verify();
-        let functions = HashMap::from([("identity".into(), callee.graph)]);
+        let functions = HashMap::from_iter([("identity".into(), callee.graph)]);
         for optimized in [false, true] {
             if optimized {
                 assert_eq!(
@@ -174,7 +177,7 @@ fn successful_fold_preserves_surrounding_call_order() {
     caller.call(&event.graph, &[], caller.int);
     caller.ret(result);
     caller.verify();
-    let functions = HashMap::from([("identity".into(), callee.graph)]);
+    let functions = HashMap::from_iter([("identity".into(), callee.graph)]);
     for optimized in [false, true] {
         if optimized {
             fold_identity_calls(&mut caller.graph, &functions, None).unwrap();
@@ -237,7 +240,7 @@ fn recursive_identity_looking_callee_and_type_or_abi_mismatch_are_skipped() {
                 .graph
                 .set_value_type(callee.args[0], ValueType::Rust(signed));
         }
-        let functions = HashMap::from([("identity".into(), callee.graph)]);
+        let functions = HashMap::from_iter([("identity".into(), callee.graph)]);
         let before = caller.graph.dump();
         let stats = fold_identity_calls(&mut caller.graph, &functions, None).unwrap();
         assert_eq!(stats.calls_folded, 0, "{kind}");
@@ -300,7 +303,7 @@ fn enum_identity_observes_only_the_active_payload() {
         let returned = caller.call(&callee.graph, &[value], enumeration);
         caller.ret(returned);
         caller.verify();
-        let functions = HashMap::from([("enum_identity".into(), callee.graph)]);
+        let functions = HashMap::from_iter([("enum_identity".into(), callee.graph)]);
         for optimized in [false, true] {
             if optimized {
                 assert_eq!(
@@ -345,7 +348,7 @@ fn an_actual_infinite_control_loop_is_not_an_identity() {
     let result = caller.call(&callee.graph, &caller.args.clone(), caller.int);
     caller.ret(result);
     caller.verify();
-    let functions = HashMap::from([("loop_forever".into(), callee.graph)]);
+    let functions = HashMap::from_iter([("loop_forever".into(), callee.graph)]);
     let before = caller.graph.dump();
     let stats = fold_identity_calls(&mut caller.graph, &functions, None).unwrap();
     assert_eq!(stats.calls_folded, 0);
@@ -364,7 +367,7 @@ fn only_selected_calls_are_folded_and_repeated_seeds_are_deduplicated() {
     caller.ret(second);
     caller.verify();
     let source = caller.graph.input(second, 0);
-    let functions = HashMap::from([("identity".into(), callee.graph)]);
+    let functions = HashMap::from_iter([("identity".into(), callee.graph)]);
     let stats = fold_identity_calls(
         &mut caller.graph,
         &functions,
@@ -404,7 +407,7 @@ fn a_later_invalid_summary_rolls_back_the_whole_transaction() {
     invalid
         .graph
         .set_value_type(invalid.args[0], ValueType::Rust(boolean));
-    let functions = HashMap::from([
+    let functions = HashMap::from_iter([
         ("valid".into(), valid.graph),
         ("invalid".into(), invalid.graph),
     ]);
@@ -476,7 +479,7 @@ fn ignored_abi_identity_keeps_its_source_value_and_requirement() {
             let result = caller.call(&callee.graph, &[argument], ty);
             caller.ret(result);
             caller.verify();
-            let functions = HashMap::from([("ignored_identity".into(), callee.graph.clone())]);
+            let functions = HashMap::from_iter([("ignored_identity".into(), callee.graph.clone())]);
             let before = execute(&caller.graph, &functions, &[]);
             assert_eq!(
                 fold_identity_calls(&mut caller.graph, &functions, None)

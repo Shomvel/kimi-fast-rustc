@@ -135,7 +135,7 @@ impl LayoutLowering<'_> {
 
     // Recover the incoming effect at a control point. Publish Region Phis before
     // visiting backedges; fixed raw copies are ordered by control as well.
-    fn opaque_effect_at(
+    pub(super) fn opaque_effect_at(
         &mut self,
         control: NodeId,
         cache: &mut HashMap<NodeId, NodeId>,
@@ -189,38 +189,5 @@ impl LayoutLowering<'_> {
         };
         cache.insert(control, effect);
         Ok(effect)
-    }
-
-    pub(super) fn finish_opaque_phis(&mut self) -> Result<(), LayoutError> {
-        let mut edges: BTreeMap<NodeId, Vec<OpaquePhiCopy>> = BTreeMap::new();
-        for copy in std::mem::take(&mut self.opaque_phis) {
-            let jump = self
-                .graph
-                .resolve(self.graph.input(copy.region, copy.slot - 1));
-            edges.entry(jump).or_default().push(copy);
-        }
-        let mut effects = HashMap::new();
-        for (jump, copies) in edges {
-            let mut control = self.graph.resolve(self.graph.control(jump));
-            let mut effect = self.opaque_effect_at(control, &mut effects)?;
-            let mut staged = Vec::new();
-            // All old values are captured before any Phi destination changes.
-            // This is the memory equivalent of the scalar parallel-copy rule.
-            for copy in &copies {
-                let stage = self.opaque_slot(copy.ty)?;
-                let size = self.graph.oracle.size_align(copy.ty).unwrap().size;
-                self.raw_copy(copy.source, stage, size, &mut control, &mut effect);
-                staged.push((stage, copy.destination, size));
-            }
-            for (stage, destination, size) in staged {
-                self.raw_copy(stage, destination, size, &mut control, &mut effect);
-            }
-            self.graph.set_control(jump, control);
-            for copy in copies {
-                let effect_phi = self.opaque_effect_at(copy.region, &mut effects)?;
-                self.graph.set_input(effect_phi, copy.slot, effect);
-            }
-        }
-        Ok(())
     }
 }

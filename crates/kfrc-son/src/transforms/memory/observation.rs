@@ -8,7 +8,7 @@ use crate::analysis::dominators::Dominators;
 use crate::analysis::uses::{UseKind, Uses};
 use crate::{FunctionGraph, GraphLevel, NodeId, Opcode, ValueType};
 use kfrc_body::TypeShape;
-use std::collections::{HashMap, HashSet};
+use kfrc_body::fx_hash::{HashMap, HashSet};
 
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct ObservationStats {
@@ -71,9 +71,9 @@ pub fn run(graph: &mut FunctionGraph) -> ObservationStats {
         cfg: &cfg,
         dominators: &dominators,
         facts: &facts,
-        memo: HashMap::new(),
-        active: HashSet::new(),
-        scopes: HashMap::new(),
+        memo: HashMap::default(),
+        active: HashSet::default(),
+        scopes: HashMap::default(),
         visits: 0,
     };
     let mut removed = Vec::new();
@@ -209,7 +209,7 @@ impl Proof<'_> {
     fn same_instance(&mut self, value: NodeId, fact: NodeId) -> bool {
         if !self.scopes.contains_key(&value) {
             let mut pending = vec![value];
-            let mut seen = HashSet::new();
+            let mut seen = HashSet::default();
             let mut anchors = Vec::new();
             let mut complete = true;
             while let Some(node) = pending.pop() {

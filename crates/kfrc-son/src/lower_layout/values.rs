@@ -12,6 +12,10 @@ impl LayoutLowering<'_> {
             .graph
             .rust_type(node)
             .ok_or_else(|| LayoutError::Malformed(format!("{node} is not a value")))?;
+        let demand = self.demand(node);
+        if demand.is_none() {
+            return Ok(self.omitted(ty));
+        }
         let op = self.graph.op(node);
         let inputs = self.graph.inputs(node).to_vec();
         let parts = match op {
@@ -66,15 +70,14 @@ impl LayoutLowering<'_> {
             }
             Opcode::MakeVariant => {
                 let variant = self.graph.payload(node);
-                let index_ty = self.usize_type();
-                let index = self.graph.add_constant(u128::from(variant), index_ty);
+                let scalar = self.known_variant_scalar(ty, variant)?;
                 let fields = inputs
                     .into_iter()
                     .map(|input| self.expand(input))
                     .collect::<Result<_, _>>()?;
                 Parts::KnownVariant {
                     variant,
-                    index,
+                    scalar,
                     fields,
                 }
             }
@@ -133,8 +136,8 @@ impl LayoutLowering<'_> {
                 let source = self.expand(inputs[0])?;
                 let variant = match source.parts {
                     Parts::Variant { variant, .. } | Parts::VariantTag(variant) => variant,
-                    Parts::KnownVariant { index, .. } => index,
-                    Parts::EncodedVariant(raw) => self.decode_tag_index(raw, source.ty)?,
+                    Parts::KnownVariant { scalar, .. } => scalar,
+                    Parts::EncodedVariant(raw) => self.decode_variant_scalar(raw, source.ty)?,
                     _ => {
                         return Err(LayoutError::Malformed(
                             "discriminant operand is not enum".into(),
@@ -142,6 +145,7 @@ impl LayoutLowering<'_> {
                     }
                 };
                 let value = if op == Opcode::VariantOf {
+                    let variant = self.variant_index(variant, source.ty)?;
                     self.graph.add_node(
                         Opcode::IntCast,
                         NodeId::NONE,
@@ -155,9 +159,43 @@ impl LayoutLowering<'_> {
                 Parts::Scalar(value)
             }
             Opcode::Phi if self.composite(ty) => {
+                if self.owned_transport.contains(&node) {
+                    self.stats.owned_transport_phis += 1;
+                    let pointer = self.pointer_type(ty);
+                    let address = self.graph.add_growable_node(
+                        Opcode::Phi,
+                        NodeId::NONE,
+                        inputs.len(),
+                        0,
+                        ValueType::Rust(pointer),
+                    );
+                    self.graph.set_input(address, 0, inputs[0]);
+                    let value = Value {
+                        ty,
+                        parts: Parts::OwnedStorage(address),
+                    };
+                    self.values.insert(node, value.clone());
+                    for (slot, &incoming) in inputs.iter().enumerate().skip(1) {
+                        let source = self.expand(incoming)?;
+                        let source_address = if let Parts::OwnedStorage(address) = source.parts {
+                            address
+                        } else {
+                            let destination = self.opaque_slot(ty)?;
+                            self.owned_phis.push(owned_transport::OwnedPhiInit {
+                                region: inputs[0],
+                                slot,
+                                source,
+                                destination,
+                            });
+                            destination
+                        };
+                        self.graph.set_input(address, slot, source_address);
+                    }
+                    return Ok(value);
+                }
                 let template = match self.repeat_phi_tree(node, ty, &inputs)? {
                     Some(template) => template,
-                    None => self.phi_tree(ty, inputs[0], inputs.len())?,
+                    None => self.phi_tree_demand(ty, inputs[0], inputs.len(), &demand)?,
                 };
                 // Publish placeholders before following backedges. Each field
                 // is a real Phi; no loop carries an address to reused storage.
@@ -168,10 +206,13 @@ impl LayoutLowering<'_> {
                 }
                 return Ok(template);
             }
-            Opcode::Undefined if self.composite(ty) => self.undefined(ty)?.parts,
+            Opcode::Undefined if self.composite(ty) => self.undefined_demand(ty, &demand)?.parts,
             Opcode::Projection if self.composite(ty) => {
                 return self.decode_boundary(node, ty);
             }
+            // Target-independent integer intrinsics retain their opcode,
+            // operands and poison payload through the layout boundary.
+            op if op.integer_intrinsic_arity().is_some() => Parts::Scalar(node),
             _ if !self.composite(ty) => Parts::Scalar(node),
             _ => {
                 return Err(LayoutError::Unsupported(format!(
@@ -180,6 +221,11 @@ impl LayoutLowering<'_> {
                 )));
             }
         };
+        if matches!(parts, Parts::Omitted) {
+            return Err(LayoutError::Malformed(format!(
+                "demanded value {node} was omitted"
+            )));
+        }
         let value = Value { ty, parts };
         if let Parts::Scalar(scalar) = value.parts {
             if op.is_semantic_value() {
@@ -191,6 +237,18 @@ impl LayoutLowering<'_> {
     }
 
     pub(super) fn undefined(&mut self, ty: TyId) -> Result<Value, LayoutError> {
+        self.undefined_demand(ty, &Demand::All)
+    }
+
+    pub(super) fn undefined_demand(
+        &mut self,
+        ty: TyId,
+        demand: &Demand,
+    ) -> Result<Value, LayoutError> {
+        let demand = self.demand_for_type(ty, demand.clone());
+        if demand.is_none() {
+            return Ok(self.omitted(ty));
+        }
         let parts = if self
             .graph
             .oracle
@@ -199,6 +257,33 @@ impl LayoutLowering<'_> {
             .is_some()
         {
             Parts::OpaqueStorage(self.opaque_slot(ty)?)
+        } else if let Some(plan) = self
+            .graph
+            .oracle
+            .semantic()
+            .is_enum(ty)
+            .then(|| self.lane_plan(ty))
+            .flatten()
+        {
+            let mut lanes = BTreeMap::new();
+            let variants = self.lane_variants(
+                ty,
+                &demand,
+                &plan,
+                &mut lanes,
+                |this, field, child| this.undefined_demand(field, child),
+                &mut variant_lanes::LaneSource::Undefined,
+            )?;
+            let scalar_ty = self.variant_scalar_type(ty)?;
+            let scalar = self.graph.add_node(
+                Opcode::Undefined,
+                NodeId::NONE,
+                &[],
+                0,
+                ValueType::Rust(scalar_ty),
+            );
+            let variant = self.variant_scalar(ty, scalar);
+            Parts::Variant { variant, variants }
         } else if self.graph.oracle.semantic().is_enum(ty) {
             let count = self.graph.oracle.semantic().variant_count(ty).unwrap_or(0);
             let mut variants = Vec::new();
@@ -212,18 +297,28 @@ impl LayoutLowering<'_> {
                 variants.push(
                     fields
                         .into_iter()
-                        .map(|field| self.undefined(field))
+                        .enumerate()
+                        .map(|(field_index, field)| {
+                            self.undefined_demand(
+                                field,
+                                &demand.child(DemandKey::VariantField(
+                                    index as u32,
+                                    field_index as u32,
+                                )),
+                            )
+                        })
                         .collect::<Result<_, _>>()?,
                 );
             }
-            let index_ty = self.usize_type();
-            let variant = self.graph.add_node(
+            let scalar_ty = self.variant_scalar_type(ty)?;
+            let scalar = self.graph.add_node(
                 Opcode::Undefined,
                 NodeId::NONE,
                 &[],
                 0,
-                ValueType::Rust(index_ty),
+                ValueType::Rust(scalar_ty),
             );
+            let variant = self.variant_scalar(ty, scalar);
             Parts::Variant { variant, variants }
         } else if let TypeShape::Array { element, length } = self.graph.oracle.shape(ty) {
             let (element, count) = (*element, *length);
@@ -246,7 +341,10 @@ impl LayoutLowering<'_> {
             Parts::Fields(
                 fields
                     .into_iter()
-                    .map(|field| self.undefined(field))
+                    .enumerate()
+                    .map(|(index, field)| {
+                        self.undefined_demand(field, &demand.child(DemandKey::Field(index as u32)))
+                    })
                     .collect::<Result<_, _>>()?,
             )
         } else {
@@ -267,6 +365,20 @@ impl LayoutLowering<'_> {
         region: NodeId,
         arity: usize,
     ) -> Result<Value, LayoutError> {
+        self.phi_tree_demand(ty, region, arity, &Demand::All)
+    }
+
+    pub(super) fn phi_tree_demand(
+        &mut self,
+        ty: TyId,
+        region: NodeId,
+        arity: usize,
+        demand: &Demand,
+    ) -> Result<Value, LayoutError> {
+        let demand = self.demand_for_type(ty, demand.clone());
+        if demand.is_none() {
+            return Ok(self.omitted(ty));
+        }
         let parts = if self
             .graph
             .oracle
@@ -278,11 +390,27 @@ impl LayoutLowering<'_> {
             self.opaque_phi_regions.insert(address, region);
             Parts::OpaqueStorage(address)
         } else if self.graph.oracle.semantic().is_enum(ty) {
-            let index_ty = self.usize_type();
-            let index = self.phi_tree(index_ty, region, arity)?;
-            let Parts::Scalar(variant) = index.parts else {
+            let scalar_ty = self.variant_scalar_type(ty)?;
+            let scalar = self.phi_tree(scalar_ty, region, arity)?;
+            let Parts::Scalar(node) = scalar.parts else {
                 unreachable!()
             };
+            let variant = self.variant_scalar(ty, node);
+            if let Some(plan) = self.lane_plan(ty) {
+                let mut lanes = BTreeMap::new();
+                let variants = self.lane_variants(
+                    ty,
+                    &demand,
+                    &plan,
+                    &mut lanes,
+                    |this, field, child| this.phi_tree_demand(field, region, arity, child),
+                    &mut variant_lanes::LaneSource::Phi { region, arity },
+                )?;
+                return Ok(Value {
+                    ty,
+                    parts: Parts::Variant { variant, variants },
+                });
+            }
             let count = self.graph.oracle.semantic().variant_count(ty).unwrap_or(0);
             let mut variants = Vec::new();
             for index in 0..count {
@@ -295,7 +423,18 @@ impl LayoutLowering<'_> {
                 variants.push(
                     fields
                         .into_iter()
-                        .map(|field| self.phi_tree(field, region, arity))
+                        .enumerate()
+                        .map(|(field_index, field)| {
+                            self.phi_tree_demand(
+                                field,
+                                region,
+                                arity,
+                                &demand.child(DemandKey::VariantField(
+                                    index as u32,
+                                    field_index as u32,
+                                )),
+                            )
+                        })
                         .collect::<Result<_, _>>()?,
                 );
             }
@@ -310,7 +449,15 @@ impl LayoutLowering<'_> {
             Parts::Fields(
                 fields
                     .into_iter()
-                    .map(|field| self.phi_tree(field, region, arity))
+                    .enumerate()
+                    .map(|(index, field)| {
+                        self.phi_tree_demand(
+                            field,
+                            region,
+                            arity,
+                            &demand.child(DemandKey::Field(index as u32)),
+                        )
+                    })
                     .collect::<Result<_, _>>()?,
             )
         } else {
@@ -337,7 +484,13 @@ impl LayoutLowering<'_> {
         if target.ty != source.ty {
             return Err(LayoutError::Malformed("Phi field type mismatch".into()));
         }
+        if matches!(target.parts, Parts::Variant { .. })
+            && let Some(plan) = self.lane_plan(target.ty)
+        {
+            return self.fill_lane_phi(target, source, slot, &plan);
+        }
         match (&target.parts, &source.parts) {
+            (Parts::Omitted, _) => {}
             (Parts::OpaqueStorage(destination), Parts::OpaqueStorage(source)) => {
                 let region = *self.opaque_phi_regions.get(destination).ok_or_else(|| {
                     LayoutError::Malformed("opaque Phi destination lacks region".into())
@@ -393,11 +546,12 @@ impl LayoutLowering<'_> {
                 },
                 Parts::KnownVariant {
                     variant,
-                    index,
+                    scalar,
                     fields,
                 },
             ) => {
-                self.graph.set_input(*target_index, slot, *index);
+                self.graph
+                    .set_input(target_index.node(), slot, scalar.node());
                 for (case, targets) in targets.iter().enumerate() {
                     if case == *variant as usize {
                         if targets.len() != fields.len() {
@@ -425,7 +579,8 @@ impl LayoutLowering<'_> {
                     variants: sources,
                 },
             ) if targets.len() == sources.len() => {
-                self.graph.set_input(*target_index, slot, *source_index);
+                self.graph
+                    .set_input(target_index.node(), slot, source_index.node());
                 for (target, source) in targets.iter().zip(sources) {
                     if target.len() != source.len() {
                         return Err(LayoutError::Malformed("variant Phi shape mismatch".into()));
@@ -444,8 +599,13 @@ impl LayoutLowering<'_> {
 impl LayoutLowering<'_> {
     /// Fill only leaves already required by a destination Phi. No temporary
     /// undefined aggregate tree is needed for a constructor's inactive case.
-    fn fill_phi_poison(&mut self, target: &Value, slot: usize) -> Result<(), LayoutError> {
+    pub(super) fn fill_phi_poison(
+        &mut self,
+        target: &Value,
+        slot: usize,
+    ) -> Result<(), LayoutError> {
         match &target.parts {
+            Parts::Omitted => {}
             Parts::OpaqueStorage(_) => {
                 let source = self.undefined(target.ty)?;
                 self.fill_phi(target, &source, slot)?;
@@ -476,7 +636,7 @@ impl LayoutLowering<'_> {
             Parts::Variant { variant, variants } => {
                 let ty = self
                     .graph
-                    .rust_type(*variant)
+                    .rust_type(variant.node())
                     .ok_or_else(|| LayoutError::Malformed("variant Phi lacks index type".into()))?;
                 let poison = self.graph.add_node(
                     Opcode::Undefined,
@@ -485,7 +645,7 @@ impl LayoutLowering<'_> {
                     0,
                     ValueType::Rust(ty),
                 );
-                self.graph.set_input(*variant, slot, poison);
+                self.graph.set_input(variant.node(), slot, poison);
                 for field in variants.iter().flatten() {
                     self.fill_phi_poison(field, slot)?;
                 }

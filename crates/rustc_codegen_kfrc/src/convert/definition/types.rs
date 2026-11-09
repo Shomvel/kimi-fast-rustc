@@ -61,6 +61,13 @@ impl<'tcx> DefinitionCx<'tcx> {
         let id = self.graph.oracle.intern(shape, None);
         self.types.insert(native, id);
         self.native_types.insert(id, native);
+        // Generic layout failure is unknown, never a guessed restriction.
+        if super::super::types::scalar_validity_identity_preserved(native)
+            && let Ok(layout) = self.tcx.layout_of(self.typing_env.as_query_input(native))
+            && let Some(validity) = super::super::types::scalar_validity(self.tcx, layout.backend_repr)
+        {
+            self.graph.oracle.record_scalar_validity(id, validity);
+        }
         if let ty::Adt(def, args) = native.kind() {
             if self.tcx.lang_items().ordering_enum() == Some(def.did()) {
                 self.graph.oracle.record_ordering(id);

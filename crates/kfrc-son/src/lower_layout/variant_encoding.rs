@@ -45,7 +45,10 @@ impl LayoutLowering<'_> {
                 if variant == untagged_variant {
                     None
                 } else if niche_variants.contains(&variant) {
-                    Some(niche_start.wrapping_add(u128::from(variant - niche_variants.start())))
+                    let tag = layout
+                        .tag
+                        .ok_or_else(|| LayoutError::Malformed("enum lacks tag field".into()))?;
+                    Some(self.niche_tag_bits(tag.ty, niche_start, variant - niche_variants.start()))
                 } else {
                     return Err(LayoutError::Malformed(
                         "variant outside niche encoding".into(),
@@ -75,23 +78,20 @@ impl LayoutLowering<'_> {
             variant, fields, ..
         } = &value.parts
         {
-            self.encode_variant_fields(value.ty, *variant, fields, address, control, effect)?;
+            self.encode_variant_fields(value.ty, *variant, fields, None, address, control, effect)?;
             return self.write_variant_tag(address, value.ty, *variant, control, effect);
         }
         let Parts::Variant { variant, variants } = &value.parts else {
             unreachable!()
         };
-        let variant = self.graph.resolve(*variant);
-        if self.graph.op(variant) == Opcode::Const {
-            let index = u32::try_from(self.graph.constant_value(variant))
-                .map_err(|_| LayoutError::Malformed("variant index exceeds u32".into()))?;
+        let variant = *variant;
+        if let Some(index) = self.constant_variant_index(variant, value.ty)? {
             let values = variants
                 .get(index as usize)
                 .ok_or_else(|| LayoutError::Malformed("variant index outside enum".into()))?;
-            self.encode_variant_fields(value.ty, index, values, address, control, effect)?;
+            self.encode_variant_fields(value.ty, index, values, None, address, control, effect)?;
             return self.write_variant_tag(address, value.ty, index, control, effect);
         }
-        let index_ty = self.usize_type();
         let direct = match self
             .graph
             .oracle
@@ -99,8 +99,8 @@ impl LayoutLowering<'_> {
             .get(&value.ty)
             .map(|layout| &layout.encoding)
         {
-            Some(TagEncoding::Direct { discriminants }) => Some(discriminants.clone()),
-            _ => None,
+            Some(TagEncoding::Direct { .. }) => true,
+            _ => false,
         };
         let only_variant = match self
             .graph
@@ -112,6 +112,12 @@ impl LayoutLowering<'_> {
             Some(TagEncoding::Single { variant, .. }) => Some(*variant),
             _ => None,
         };
+        // Lanes are disjoint and written first; a guarded payload field of the
+        // active variant may then overwrite bytes a lane carried as poison.
+        let plan = self.lane_plan(value.ty);
+        if let Some(plan) = &plan {
+            self.encode_lanes(value.ty, variants, plan, address, control, effect)?;
+        }
         for (index, values) in variants.iter().enumerate() {
             if only_variant.is_some_and(|inhabited| inhabited != index as u32) {
                 continue;
@@ -121,19 +127,24 @@ impl LayoutLowering<'_> {
                     value.ty,
                     index as u32,
                     values,
+                    None,
                     address,
                     control,
                     effect,
                 )?;
                 continue;
             }
-            // Direct tag storage is shared below; fieldless variants need no
-            // branch or payload work at all.
-            if values.is_empty() && direct.is_some() {
+            // Direct tag storage is shared below; variants whose payload is
+            // entirely in lanes need no branch or payload work at all.
+            if direct
+                && (0..values.len()).all(|field| {
+                    plan.as_ref()
+                        .is_some_and(|plan| plan.shares(index as u32, field))
+                })
+            {
                 continue;
             }
-            let index_node = self.graph.add_constant(index as u128, index_ty);
-            let condition = self.equal(variant, index_node);
+            let condition = self.variant_condition(variant, value.ty, index as u32)?;
             let (mut yes, no) = self.split(*control, condition);
             let original_effect = *effect;
             let mut yes_effect = original_effect;
@@ -141,41 +152,20 @@ impl LayoutLowering<'_> {
                 value.ty,
                 index as u32,
                 values,
+                plan.as_deref(),
                 address,
                 &mut yes,
                 &mut yes_effect,
             )?;
-            if direct.is_none() {
+            if !direct {
                 self.write_variant_tag(address, value.ty, index as u32, &mut yes, &mut yes_effect)?;
             }
             (*control, *effect) = self.merge(yes, no, yes_effect, original_effect);
         }
-        if let Some(discriminants) = direct {
+        if let VariantScalar::Direct(bits) = variant {
             let tag = self.graph.oracle.enums[&value.ty]
                 .tag
                 .ok_or_else(|| LayoutError::Malformed("direct enum lacks tag".into()))?;
-            let bits = if discriminants
-                .iter()
-                .enumerate()
-                .all(|(index, &bits)| bits == index as u128)
-            {
-                self.graph.add_node(
-                    Opcode::IntCast,
-                    NodeId::NONE,
-                    &[variant],
-                    0,
-                    ValueType::Rust(tag.ty),
-                )
-            } else {
-                let mut result = self.graph.add_constant(0, tag.ty);
-                for (index, bits) in discriminants.into_iter().enumerate() {
-                    let index = self.graph.add_constant(index as u128, index_ty);
-                    let condition = self.equal(variant, index);
-                    let bits = self.graph.add_constant(bits, tag.ty);
-                    result = self.select_scalar(condition, bits, result, tag.ty);
-                }
-                result
-            };
             let address = self.field_address(address, tag.offset, tag.ty);
             self.store(address, bits, control, effect);
         }
@@ -187,6 +177,7 @@ impl LayoutLowering<'_> {
         ty: TyId,
         variant: u32,
         values: &[Value],
+        lanes: Option<&variant_lanes::LanePlan>,
         address: NodeId,
         control: &mut NodeId,
         effect: &mut NodeId,
@@ -197,7 +188,10 @@ impl LayoutLowering<'_> {
                 "variant field layout mismatch".into(),
             ));
         }
-        for (field, value) in fields.into_iter().zip(values) {
+        for (index, (field, value)) in fields.into_iter().zip(values).enumerate() {
+            if lanes.is_some_and(|lanes| lanes.shares(variant, index)) {
+                continue;
+            }
             let address = self.field_address(address, field.offset, field.ty);
             self.encode_fields(value, address, control, effect)?;
         }

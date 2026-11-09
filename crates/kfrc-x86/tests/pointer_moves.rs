@@ -150,20 +150,29 @@ fn graph(offset: u64, pressure: bool) -> FunctionGraph {
 }
 
 #[test]
-fn zero_offset_retyping_selects_no_arithmetic_and_preserves_graph_types() {
+fn constant_offsets_select_no_arithmetic_and_preserve_graph_types() {
     for offset in [0, 8] {
         let graph = graph(offset, false);
         let before = graph.dump();
         let machine = lower_function(&graph).unwrap();
         assert_eq!(before, graph.dump());
-        assert_eq!(
-            machine
+        // A constant pointer offset is the load displacement, not an add.
+        assert!(
+            !machine
                 .instructions
                 .iter()
-                .filter(|instruction| matches!(instruction, MachineInstr::Add { .. }))
-                .count(),
-            usize::from(offset != 0)
+                .any(|instruction| matches!(instruction, MachineInstr::Add { .. }))
         );
+        let displacements: Vec<_> = machine
+            .instructions
+            .iter()
+            .filter_map(|instruction| match instruction {
+                MachineInstr::LoadIndirect { offset, .. } => Some(u64::try_from(*offset).unwrap()),
+                _ => None,
+            })
+            .collect();
+        assert!(!displacements.is_empty());
+        assert!(displacements.iter().all(|&d| d == offset), "{displacements:?}");
         assert!(!machine.instructions.iter().any(
             |instruction| matches!(instruction, MachineInstr::Mov { dst, src } if dst == src)
         ));

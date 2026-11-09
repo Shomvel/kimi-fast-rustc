@@ -1,26 +1,35 @@
 //! Specialized Rust values → explicit layout values in the same graph.
 //!
-//! Struct/tuple/array values are scalarized, including loop-carried Phi values.
-//! Only ABI boundaries materialize private slots. Parameter and call-result
-//! fields are captured by fixed loads at their definition, so an address never
-//! stands in for a mutable Rust value. RecordedTypes is a bootstrap layout
+//! Composite values use scalar leaves by default, including loop-carried Phi values.
+//! Certified whole-array transport uses private snapshots instead.
+//! Whole enum transport can retain private snapshots; observable fields and
+//! parameter/call-result fields are captured at their original fixed point.
+//! An address never stands in for borrowed mutable storage. RecordedTypes is a bootstrap layout
 //! provider; this does not yet implement the final MachineTy/answer-key design.
 
+mod array_transport;
+mod boundary_transport;
+mod demand;
 mod encoded;
 mod ignored_abi;
 mod maybe_uninit;
 mod memory;
 mod observation;
+mod owned_transport;
 mod projections;
 mod repeat;
 mod representation;
 mod semantic_memory;
 mod values;
 mod variant_encoding;
+mod variant_lanes;
+mod variant_scalar;
 mod variant_switch;
 mod variants;
 
-use std::collections::{BTreeMap, HashMap, HashSet};
+use demand::{Demand, Key as DemandKey};
+use kfrc_body::fx_hash::{HashMap, HashSet};
+use std::collections::BTreeMap;
 
 use kfrc_body::{IntegerWidth, SizeAlign, TyId, TypeOracle, TypeShape};
 
@@ -50,6 +59,12 @@ impl std::error::Error for LayoutError {}
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct LayoutStats {
     pub scalar_phis: usize,
+    /// Whole-value enum Phis represented by private owned snapshots.
+    pub owned_transport_phis: usize,
+    /// Dense whole arrays captured by a representation copy rather than leaves.
+    pub transported_arrays: usize,
+    /// Complete call-result fields captured without recursive typed decoding.
+    pub transported_boundary_fields: usize,
     pub abi_slots: usize,
     pub field_loads: usize,
     pub field_stores: usize,
@@ -60,6 +75,10 @@ pub struct LayoutStats {
     pub projection_cache_misses: usize,
     /// Bucket entries checked, including stale entries discarded lazily.
     pub projection_candidates_checked: usize,
+    /// Variant conditions on a decoded niche index answered by its tag.
+    pub niche_tag_conditions: usize,
+    /// Last cases of exhaustive VariantSwitches selected without a compare.
+    pub exhaustive_switch_compares_removed: usize,
 }
 
 /// Target-dependent code size policy; this does not change Rust value semantics.
@@ -97,25 +116,42 @@ pub fn lower_layout_with_options(
     ignored_abi::erase_ignored_transport(&mut candidate)?;
     let mut projections = projections::ProjectionIndex::new(&candidate);
     let tag_only_loads = tag_only_loads(&candidate, &mut projections);
+    let unreachable_switch_edges = unreachable_switch_edges(&candidate);
     let encoded_values = encoded::encoded_demands(&candidate);
+    let demands = demand::analyze(&candidate);
+    let owned_transport = owned_transport::select(&candidate, &demands);
+    let array_transport = array_transport::select(&candidate);
+    let boundary_transport =
+        boundary_transport::select(&candidate, &demands, &owned_transport, &encoded_values);
     let mut lowering = LayoutLowering {
         graph: &mut candidate,
         projections,
-        values: HashMap::new(),
+        values: HashMap::default(),
+        demands,
+        owned_transport,
+        array_transport,
+        boundary_transport,
+        owned_phis: Vec::new(),
         stats: LayoutStats::default(),
         retired: Vec::new(),
         partition: 0,
         tag_only_loads,
         options,
         encoded_values,
-        variant_tags: HashMap::new(),
+        variant_tags: HashMap::default(),
+        unreachable_switch_edges,
         opaque_phis: Vec::new(),
-        opaque_phi_regions: HashMap::new(),
+        opaque_phi_regions: HashMap::default(),
+        lane_plans: HashMap::default(),
     };
     lowering.run()?;
     lowering.projections.write_stats(&mut lowering.stats);
     let stats = lowering.stats;
     candidate.level = GraphLevel::Layout;
+    // Permissions belong to S parameters and source calls (RS5.1 erasure
+    // point). L parameters follow physical passing modes instead.
+    candidate.arg_permissions.clear();
+    candidate.callee_permissions.clear();
     // Generated calls and address materialization change escape/provenance
     // facts. Recompute labels on the completed, compact L graph; S labels
     // cannot license Local accesses after an address has reached a call.
@@ -132,9 +168,30 @@ struct Value {
     parts: Parts,
 }
 
+/// Direct encodings stay in the physical tag domain, including through Phis.
+/// Other encodings use logical variant indices; a niche's raw bytes may also
+/// carry payload, so they cannot replace the index in a general enum value.
+#[derive(Clone, Copy, Debug)]
+enum VariantScalar {
+    Direct(NodeId),
+    Index(NodeId),
+}
+
+impl VariantScalar {
+    fn node(self) -> NodeId {
+        match self {
+            Self::Direct(node) | Self::Index(node) => node,
+        }
+    }
+}
+
 #[derive(Clone, Debug)]
 enum Parts {
+    /// No execution consumer requested this subtree. Never an IR Undefined.
+    Omitted,
     OpaqueStorage(NodeId),
+    /// Private snapshot of a typed value, used only for whole-value transport.
+    OwnedStorage(NodeId),
     Scalar(NodeId),
     Fields(Vec<Value>),
     // Nonempty array; repeated elements are immutable SSA values, never aliases
@@ -145,19 +202,19 @@ enum Parts {
         overrides: BTreeMap<u32, Value>,
     },
     Variant {
-        variant: NodeId,
+        variant: VariantScalar,
         variants: Vec<Vec<Value>>,
     },
     /// A constructor owns only its active payload. Inactive fields become
     /// poison on demand; they never allocate a recursively expanded tree.
     KnownVariant {
         variant: u32,
-        index: NodeId,
+        scalar: VariantScalar,
         fields: Vec<Value>,
     },
     // Only created for loads whose original users all demand the tag. Keeping
     // this distinct prevents an incomplete enum from being materialized.
-    VariantTag(NodeId),
+    VariantTag(VariantScalar),
     // A captured physical tag, used only by semantic tag queries and proven
     // refinements of payload fields represented by those same bytes.
     EncodedVariant(NodeId),
@@ -167,6 +224,11 @@ struct LayoutLowering<'a> {
     graph: &'a mut FunctionGraph,
     projections: projections::ProjectionIndex,
     values: HashMap<NodeId, Value>,
+    demands: HashMap<NodeId, Demand>,
+    owned_transport: HashSet<NodeId>,
+    array_transport: HashSet<TyId>,
+    boundary_transport: boundary_transport::Certificates,
+    owned_phis: Vec<owned_transport::OwnedPhiInit>,
     stats: LayoutStats,
     retired: Vec<NodeId>,
     partition: u32,
@@ -174,8 +236,36 @@ struct LayoutLowering<'a> {
     options: LayoutOptions,
     encoded_values: HashSet<NodeId>,
     variant_tags: HashMap<NodeId, NodeId>,
+    /// VariantSwitch edges whose only successor is `Unreachable`, with that node.
+    unreachable_switch_edges: HashMap<NodeId, NodeId>,
     opaque_phis: Vec<maybe_uninit::OpaquePhiCopy>,
     opaque_phi_regions: HashMap<NodeId, NodeId>,
+    lane_plans: HashMap<TyId, Option<std::rc::Rc<variant_lanes::LanePlan>>>,
+}
+
+/// A VariantSwitch edge that leads only to `Unreachable` is never taken by a
+/// valid enum value: an exhaustive match's remaining tags are all covered.
+fn unreachable_switch_edges(graph: &FunctionGraph) -> HashMap<NodeId, NodeId> {
+    use crate::analysis::uses::{UseKind, Uses};
+
+    let uses = Uses::new(graph);
+    graph
+        .ids()
+        .filter(|&node| graph.op(node) == Opcode::Unreachable)
+        .filter_map(|unreachable| {
+            let edge = graph.resolve(graph.control(unreachable));
+            if edge.is_none() || graph.op(edge) != Opcode::Projection {
+                return None;
+            }
+            let source = graph.resolve(graph.input(edge, 0));
+            let only_successor = matches!(
+                uses.of(edge),
+                [only] if only.user == unreachable && only.kind == UseKind::Control
+            );
+            (graph.op(source) == Opcode::VariantSwitch && only_successor)
+                .then_some((edge, unreachable))
+        })
+        .collect()
 }
 
 fn tag_only_loads(
@@ -309,7 +399,7 @@ impl LayoutLowering<'_> {
                 self.lower_memory_effect(*node)?;
             }
         }
-        self.finish_opaque_phis()?;
+        self.finish_snapshot_phis()?;
         self.graph.resolve_edges();
         for node in self.retired.clone() {
             self.graph.remove_node(node);

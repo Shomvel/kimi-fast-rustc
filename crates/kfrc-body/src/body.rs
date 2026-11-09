@@ -143,6 +143,10 @@ pub struct DataObject {
     pub writable: bool,
     /// Initialization template for storage instantiated separately per thread.
     pub thread_local: bool,
+    /// The address carries no identity (LLVM `unnamed_addr`): anonymous
+    /// constant memory such as literals, promoted values and vtables. Read-only
+    /// local objects with this property may be duplicated into another output.
+    pub unnamed_address: bool,
     pub relocations: Vec<DataRelocation>,
 }
 
@@ -175,10 +179,14 @@ pub enum BinaryOp {
     MulUnchecked,
     MulWithOverflow,
     Div,
+    /// Division with a zero remainder; a violated contract produces poison.
+    DivExact,
     Rem,
     BitXor,
     BitAnd,
     BitOr,
+    /// Bitwise OR whose operands have no common set bits.
+    BitOrDisjoint,
     /// The shift amount is taken modulo the bit width.
     Shl,
     ShlUnchecked,
@@ -239,6 +247,45 @@ pub enum AggregateKind {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
+pub enum IntegerIntrinsic {
+    BitCount {
+        kind: BitCountKind,
+        zero_poison: bool,
+    },
+    ByteSwap,
+    BitReverse,
+    FunnelShift {
+        direction: FunnelDirection,
+        amount_in_range: bool,
+    },
+    SaturatingAdd,
+    SaturatingSub,
+}
+
+impl IntegerIntrinsic {
+    pub fn arity(&self) -> usize {
+        match self {
+            Self::BitCount { .. } | Self::ByteSwap | Self::BitReverse => 1,
+            Self::FunnelShift { .. } => 3,
+            Self::SaturatingAdd | Self::SaturatingSub => 2,
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum BitCountKind {
+    Ones,
+    LeadingZeros,
+    TrailingZeros,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum FunnelDirection {
+    Left,
+    Right,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Rvalue {
     Use(Operand),
     /// Optimization barrier used by black_box; preserves value and effects.
@@ -251,6 +298,8 @@ pub enum Rvalue {
     RawPointer(Mutability, Place),
     BinaryOp(BinaryOp, Operand, Operand),
     UnaryOp(UnaryOp, Operand),
+    /// Integer operations retained until target instruction selection.
+    IntegerIntrinsic(IntegerIntrinsic, Vec<Operand>),
     Cast(CastKind, Operand, TyId),
     Aggregate(AggregateKind, Vec<Operand>),
     Repeat(Operand, u64),
@@ -645,6 +694,13 @@ impl Body {
                     }
                     Rvalue::UnaryOp(op, operand) => {
                         format!("{op:?}({})", self.operand_text(operand))
+                    }
+                    Rvalue::IntegerIntrinsic(op, operands) => {
+                        let operands: Vec<_> = operands
+                            .iter()
+                            .map(|operand| self.operand_text(operand))
+                            .collect();
+                        format!("{op:?}({})", operands.join(", "))
                     }
                     Rvalue::Cast(kind, operand, ty) => {
                         format!(

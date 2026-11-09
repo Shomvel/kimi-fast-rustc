@@ -47,6 +47,11 @@ for arm in llvm semantic-off semantic-on; do
     readelf -Ws "$work/$arm/objects"/*.o > "$work/$arm/object-symbols.txt"
     sha256sum "$work/$arm/objects"/*.o "$work/$arm/driver" > "$work/$arm/output.sha256"
 done
+# N5.14: with optimization on, rustc computes noalias/readonly; the backend
+# checks every kfrc permission against those attributes and fails otherwise.
+mkdir "$work/permission-guard"
+guard_flags=("${flags[@]/-Copt-level=0/-Copt-level=1}")
+run permission-guard-library "${clean_env[@]}" KFRC_PERMISSION_STATS=1 rustc +"$toolchain" "${guard_flags[@]}" -Zcodegen-backend="$backend" --crate-type=rlib --crate-name=semantic_values "$here/values.rs" --extern=abi_reference="$work/reference/libabi_reference.rlib" --out-dir="$work/permission-guard"
 for probe in union tls simd; do
     mkdir "$work/reject-$probe"
     status=0

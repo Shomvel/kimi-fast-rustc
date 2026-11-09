@@ -5,6 +5,7 @@ mod emit;
 mod oracle;
 mod types;
 
+use kfrc_body::fx_hash::{HashMap, HashSet};
 use kfrc_body::{Mutability, RecordedTypes, TyId, TypeShape};
 use kfrc_son::specialize::{RustDefinition, Specialization};
 use kfrc_son::{FunctionGraph, GraphState, NodeId, Opcode, RustSignature, ValueType};
@@ -13,7 +14,7 @@ use rustc_middle::{
     ty::{self, Instance, InstanceKind, Ty, TyCtxt},
 };
 use rustc_span::def_id::DefId;
-use std::collections::{HashMap, HashSet, VecDeque};
+use std::collections::VecDeque;
 
 pub enum Eligibility<T> {
     Eligible(T),
@@ -67,13 +68,13 @@ pub fn convert_definition<'tcx>(
             },
             RecordedTypes::new(),
         ),
-        types: HashMap::new(),
-        native_types: HashMap::new(),
-        resolutions: HashMap::new(),
+        types: HashMap::default(),
+        native_types: HashMap::default(),
+        resolutions: HashMap::default(),
         slots: Vec::new(),
-        blocks: HashMap::new(),
-        effects: HashMap::new(),
-        incoming: HashMap::new(),
+        blocks: HashMap::default(),
+        effects: HashMap::default(),
+        incoming: HashMap::default(),
         control: NodeId::NONE,
         effect: NodeId::NONE,
     };
@@ -87,6 +88,41 @@ pub fn convert_definition<'tcx>(
         native_types: cx.native_types,
         resolutions: cx.resolutions,
     }))
+}
+
+/// Instance-level eligibility, decided before specialization starts. Every
+/// call site's concrete callee must be a direct call taking exactly the source
+/// arguments; any other callee sends the whole instance to the concrete path.
+/// A call site whose callee does not resolve here is left to specialization,
+/// which answers only reachable sites and reports their errors.
+pub fn instance_eligibility<'tcx>(
+    tcx: TyCtxt<'tcx>,
+    definition: &Definition<'tcx>,
+    instance: Instance<'tcx>,
+) -> Eligibility<()> {
+    let graph = definition.prepared.graph();
+    let mut keys: Vec<_> = graph
+        .ids()
+        .filter(|&node| graph.op(node) == Opcode::TraitCall)
+        .filter_map(|node| {
+            let call = &graph.trait_calls[graph.payload(node) as usize];
+            match &graph.holes[call.resolve as usize] {
+                kfrc_son::Hole::Resolve { item, .. } => Some(item),
+                _ => None,
+            }
+        })
+        .collect();
+    keys.sort_unstable();
+    keys.dedup();
+    for key in keys {
+        let Ok(Some(callee)) = oracle::resolve(tcx, instance, definition.resolutions[key]) else {
+            continue;
+        };
+        if let Some(reason) = oracle::call_adapter_requirement(tcx, callee) {
+            return Eligibility::NotEligible(format!("resolved callee: {reason}"));
+        }
+    }
+    Eligibility::Eligible(())
 }
 
 pub fn specialize<'tcx>(
@@ -167,7 +203,7 @@ impl<'tcx> DefinitionCx<'tcx> {
         }
         // Reachability is definition-level: no mono_successors or type queries.
         let mut queue = VecDeque::from([mir::START_BLOCK]);
-        let mut reachable = HashSet::new();
+        let mut reachable = HashSet::default();
         while let Some(block) = queue.pop_front() {
             if !reachable.insert(block) {
                 continue;

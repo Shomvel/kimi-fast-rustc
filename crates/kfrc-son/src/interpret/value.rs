@@ -1,6 +1,6 @@
 //! Owned semantic snapshots. Repeated arrays share their default element and
 //! sparse overrides, so cloning or projecting one never expands its length.
-use std::collections::HashMap;
+use kfrc_body::fx_hash::HashMap;
 use std::sync::Arc;
 
 #[derive(Clone, Debug, Eq)]
@@ -33,7 +33,7 @@ impl Value {
         Self::Array {
             element: Arc::new(element),
             length,
-            overrides: Arc::new(HashMap::new()),
+            overrides: Arc::new(HashMap::default()),
         }
     }
 
@@ -232,6 +232,17 @@ pub(super) fn check(
     if matches!(value, Value::Uninit { .. }) {
         return Err(bad());
     }
+    if !semantic.is_enum(ty) && let Some(validity) = types.scalar_validity(ty) {
+        for (offset, range) in validity.lanes() {
+            if let Some(bits) = scalar_lane(types, ty, value, offset, range.bits())?
+                && !range.contains(u128::from(bits))
+            {
+                return Err(super::InterpretError::UndefinedBehaviour(
+                    "scalar value outside its type's valid range".into(),
+                ));
+            }
+        }
+    }
 
     if let Value::Array {
         element: default,
@@ -288,8 +299,8 @@ pub(super) fn check(
             let width = match semantic.shape(ty) {
                 TypeShape::Bool => 1,
                 TypeShape::Char => {
-                    if char::from_u32(*bits as u32).is_none() {
-                        return Err(bad());
+                    if *bits > u64::from(u32::MAX) || char::from_u32(*bits as u32).is_none() {
+                        return Err(super::InterpretError::UndefinedBehaviour("invalid char value".into()));
                     }
                     32
                 }
@@ -301,6 +312,9 @@ pub(super) fn check(
                 _ => return Err(bad()),
             };
             if width < 64 && bits >> width != 0 {
+                if matches!(semantic.shape(ty), TypeShape::Bool) {
+                    return Err(super::InterpretError::UndefinedBehaviour("invalid bool value".into()));
+                }
                 return Err(bad());
             }
             return Ok(());
@@ -314,4 +328,47 @@ pub(super) fn check(
         check(types, ty, field)?;
     }
     Ok(())
+}
+
+/// Read a certified representation lane from a semantic snapshot without
+/// treating padding, inactive variants, or MaybeUninit storage as Rust values.
+fn scalar_lane(
+    types: &kfrc_body::RecordedTypes,
+    ty: kfrc_body::TyId,
+    value: &Value,
+    offset: u64,
+    bits: u8,
+) -> Result<Option<u64>, super::InterpretError> {
+    use kfrc_body::TypeOracle;
+    match value {
+        Value::Poison => Ok(None),
+        Value::Scalar(value) if offset == 0 && bits <= 64 => Ok(Some(*value)),
+        Value::Aggregate(values) => {
+            // R keeps semantic fields without target offsets. A transparent
+            // one-field wrapper still identifies its sole scalar lane.
+            if !types.aggregates.contains_key(&ty) && values.len() == 1 && offset == 0 {
+                let fields = types.semantic().field_types(ty, None).ok_or_else(||
+                    super::InterpretError::Malformed("scalar wrapper lacks fields".into()))?;
+                return scalar_lane(types, fields[0], &values[0], 0, bits);
+            }
+            let fields = super::semantic_memory::physical_fields(types, ty, None)?;
+            for (field, value) in fields.iter().zip(values) {
+                let size = types.size_align(field.ty).map(|layout| layout.size).unwrap_or(0);
+                if offset >= field.offset && offset - field.offset + u64::from(bits).div_ceil(8) <= size {
+                    return scalar_lane(types, field.ty, value, offset - field.offset, bits);
+                }
+            }
+            Err(super::InterpretError::Malformed("scalar validity lane has no semantic field".into()))
+        }
+        Value::WidePointer { data, metadata } => {
+            let fields = super::semantic_memory::physical_fields(types, ty, None)?;
+            for (field, value) in fields.iter().zip([data.as_ref(), metadata.as_ref()]) {
+                if field.offset == offset {
+                    return scalar_lane(types, field.ty, value, 0, bits);
+                }
+            }
+            Err(super::InterpretError::Malformed("scalar validity lane has no pointer field".into()))
+        }
+        _ => Err(super::InterpretError::Malformed("scalar validity requires a scalar lane".into())),
+    }
 }

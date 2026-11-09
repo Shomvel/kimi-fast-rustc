@@ -1,9 +1,9 @@
 //! Labels consume no instructions, so jumps to the next label are redundant.
 use super::MachineInstr;
-use std::collections::HashSet;
+use kfrc_body::fx_hash::HashSet;
 
 pub(super) fn remove_fallthrough_jumps(instructions: &mut Vec<MachineInstr>) {
-    let mut next_labels = HashSet::new();
+    let mut next_labels = HashSet::default();
     let mut retained = Vec::with_capacity(instructions.len());
     for instruction in instructions.drain(..).rev() {
         match &instruction {

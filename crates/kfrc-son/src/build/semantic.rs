@@ -25,7 +25,7 @@ impl Builder<'_> {
     pub(super) fn check_semantic_types(&self) -> Result<(), BuildError> {
         let types = self.body.types.semantic();
         let mut pending: Vec<_> = self.body.locals.iter().map(|local| local.ty).collect();
-        let mut seen = std::collections::HashSet::new();
+        let mut seen = kfrc_body::fx_hash::HashSet::default();
         while let Some(ty) = pending.pop() {
             if !seen.insert(ty) {
                 continue;

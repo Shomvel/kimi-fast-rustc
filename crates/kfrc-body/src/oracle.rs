@@ -4,8 +4,9 @@
 //! are rustc's own, so mixed linking with rustc-compiled std is sound); the
 //! product implements it on kfrc's front end.
 
+use crate::fx_hash::{HashMap, HashSet};
 use crate::types::{TyId, TypeShape, TypeTable};
-use std::collections::{HashMap, HashSet};
+use crate::{ScalarValidRange, ScalarValidity};
 
 /// How one argument or the return value crosses a call, named after
 /// rustc's `PassMode`.
@@ -330,11 +331,32 @@ pub struct RecordedTypes {
     semantic_aggregates: HashMap<TyId, SemanticAggregate>,
     semantic_discriminants: HashMap<TyId, Vec<u128>>,
     semantic_inhabited_variants: HashMap<TyId, Vec<u32>>,
+    scalar_validity: HashMap<TyId, ScalarValidity>,
 }
 
 impl RecordedTypes {
     pub fn new() -> Self {
         Self::default()
+    }
+
+    /// A producer-certified constraint, not proof that any particular node is
+    /// initialized or valid. Union/MaybeUninit representations never inherit it.
+    pub fn record_scalar_validity(&mut self, ty: TyId, validity: ScalarValidity) {
+        assert!(!self.unions.contains(&ty));
+        self.scalar_validity.insert(ty, validity);
+    }
+
+    pub fn scalar_validity(&self, ty: TyId) -> Option<ScalarValidity> {
+        (!self.unions.contains(&ty))
+            .then(|| self.scalar_validity.get(&ty).copied())
+            .flatten()
+    }
+
+    pub fn scalar_valid_range(&self, ty: TyId) -> Option<ScalarValidRange> {
+        match self.scalar_validity(ty)? {
+            ScalarValidity::Scalar(range) => Some(range),
+            ScalarValidity::Pair { .. } => None,
+        }
     }
 
     /// Mark the actual core MaybeUninit lang item after its inner type is known.

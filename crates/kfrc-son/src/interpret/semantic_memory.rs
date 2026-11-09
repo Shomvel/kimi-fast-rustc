@@ -6,7 +6,7 @@
 
 use super::{InterpretError, Value};
 use kfrc_body::{DataObject, FieldLayout, RecordedTypes, TagEncoding, TyId, TypeOracle, TypeShape};
-use std::collections::HashMap;
+use kfrc_body::fx_hash::HashMap;
 
 #[derive(Clone)]
 struct Allocation {
@@ -37,7 +37,7 @@ impl SemanticMemory {
     /// current bytes rather than resetting mutations from earlier calls.
     /// Register all callees' definitions up front when they refer to one another.
     pub fn register_data(&mut self, objects: &[DataObject]) -> Result<(), InterpretError> {
-        let mut incoming = HashMap::new();
+        let mut incoming = HashMap::default();
         for object in objects {
             if incoming
                 .insert(&object.symbol, object)
@@ -361,6 +361,19 @@ impl SemanticMemory {
             });
         }
 
+        // Check the enclosing nominal type too: a NonZero newtype's field can
+        // be an unrestricted integer. Uninitialized lanes still become poison;
+        // a validity constraint must not turn them into an initialized value.
+        if let Some(validity) = types.scalar_validity(ty) {
+            for (offset, range) in validity.lanes() {
+                if let Value::Scalar(bits) = self.scalar(address + offset, u64::from(range.bits()).div_ceil(8))?
+                    && !range.contains(u128::from(bits))
+                {
+                    return Err(ub("scalar representation outside its type's valid range"));
+                }
+            }
+        }
+
         if semantic.is_enum(ty) {
             let layout = types
                 .enums
@@ -434,7 +447,7 @@ impl SemanticMemory {
             if *length > 1_000_000 {
                 return Err(InterpretError::OutOfFuel);
             }
-            let mut overrides = HashMap::new();
+            let mut overrides = HashMap::default();
             for index in 1..*length {
                 let value = self.decode(types, address + index * stride, *element)?;
                 if value != first {

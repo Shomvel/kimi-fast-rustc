@@ -105,6 +105,21 @@ impl LayoutLowering<'_> {
         control: &mut NodeId,
         effect: &mut NodeId,
     ) -> Result<Value, LayoutError> {
+        self.decode_fields_demand(address, ty, control, effect, &Demand::All)
+    }
+
+    pub(super) fn decode_fields_demand(
+        &mut self,
+        address: NodeId,
+        ty: TyId,
+        control: &mut NodeId,
+        effect: &mut NodeId,
+        demand: &Demand,
+    ) -> Result<Value, LayoutError> {
+        let demand = self.demand_for_type(ty, demand.clone());
+        if demand.is_none() {
+            return Ok(self.omitted(ty));
+        }
         if self
             .graph
             .oracle
@@ -115,13 +130,23 @@ impl LayoutLowering<'_> {
             return self.decode_opaque(address, ty, control, effect);
         }
         if self.graph.oracle.semantic().is_enum(ty) {
-            return self.decode_variant(address, ty, control, effect);
+            return self.decode_variant_demand(address, ty, control, effect, &demand);
+        }
+        if demand == Demand::All && self.array_transport.contains(&ty) {
+            return self.snapshot_array(address, ty, control, effect);
         }
         let parts = if self.composite(ty) {
             let mut values = Vec::new();
-            for field in self.fields(ty, None)? {
-                let address = self.field_address(address, field.offset, field.ty);
-                values.push(self.decode_fields(address, field.ty, control, effect)?);
+            for (index, field) in self.fields(ty, None)?.into_iter().enumerate() {
+                let child = demand.child(DemandKey::Field(index as u32));
+                if child.is_none() {
+                    values.push(self.omitted(field.ty));
+                } else {
+                    let address = self.field_address(address, field.offset, field.ty);
+                    values.push(
+                        self.decode_fields_demand(address, field.ty, control, effect, &child)?,
+                    );
+                }
             }
             Parts::Fields(values)
         } else {
@@ -160,8 +185,17 @@ impl LayoutLowering<'_> {
         let mut effect = old_effect;
         let value = if self.encoded_values.contains(&node) {
             self.decode_encoded(node, ty, &mut control, &mut effect)?
+        } else if let Some(fields) = self.boundary_transport.get(&node).cloned() {
+            self.decode_variant_with_transport(
+                node,
+                ty,
+                &mut control,
+                &mut effect,
+                &self.demand(node),
+                &fields,
+            )?
         } else {
-            self.decode_fields(node, ty, &mut control, &mut effect)?
+            self.decode_fields_demand(node, ty, &mut control, &mut effect, &self.demand(node))?
         };
         for user in before {
             if self.graph.control(user) == old_control {
@@ -186,7 +220,12 @@ impl LayoutLowering<'_> {
         effect: &mut NodeId,
     ) -> Result<(), LayoutError> {
         match &value.parts {
-            Parts::OpaqueStorage(source) => {
+            Parts::Omitted => {
+                return Err(LayoutError::Malformed(
+                    "omitted value reached physical materialization".into(),
+                ));
+            }
+            Parts::OpaqueStorage(source) | Parts::OwnedStorage(source) => {
                 let size = self
                     .graph
                     .oracle
@@ -246,27 +285,37 @@ impl LayoutLowering<'_> {
         value: &Value,
         consumer: NodeId,
     ) -> Result<NodeId, LayoutError> {
-        let layout = self
-            .graph
-            .oracle
-            .size_align(value.ty)
-            .ok_or_else(|| LayoutError::Unsupported("unsized ABI value".into()))?;
-        let slot = self.graph.stack_slots.len() as u32;
-        self.graph.stack_slots.push(layout);
-        self.stats.abi_slots += 1;
-        let pointer = self.pointer_type(value.ty);
-        let address = self.graph.add_node(
-            Opcode::StackSlot,
-            NodeId::NONE,
-            &[],
-            slot,
-            ValueType::Rust(pointer),
-        );
-        let mut control = self.graph.control(consumer);
-        let mut effect = self.graph.input(consumer, 0);
-        self.encode_fields(value, address, &mut control, &mut effect)?;
-        self.graph.set_control(consumer, control);
-        self.graph.set_input(consumer, 0, effect);
+        // Returning consumes the immutable snapshot synchronously. The ABI
+        // reads this source (and copies to sret for indirect returns); it does
+        // not expose it as mutable by-value argument storage to another call.
+        let address = if self.graph.op(consumer) == Opcode::Return
+            && let Parts::OwnedStorage(address) = value.parts
+        {
+            address
+        } else {
+            let layout = self
+                .graph
+                .oracle
+                .size_align(value.ty)
+                .ok_or_else(|| LayoutError::Unsupported("unsized ABI value".into()))?;
+            let slot = self.graph.stack_slots.len() as u32;
+            self.graph.stack_slots.push(layout);
+            self.stats.abi_slots += 1;
+            let pointer = self.pointer_type(value.ty);
+            let address = self.graph.add_node(
+                Opcode::StackSlot,
+                NodeId::NONE,
+                &[],
+                slot,
+                ValueType::Rust(pointer),
+            );
+            let mut control = self.graph.control(consumer);
+            let mut effect = self.graph.input(consumer, 0);
+            self.encode_fields(value, address, &mut control, &mut effect)?;
+            self.graph.set_control(consumer, control);
+            self.graph.set_input(consumer, 0, effect);
+            address
+        };
         let index_ty = self.usize_type();
         let zero = self.graph.add_constant(0, index_ty);
         Ok(self.graph.add_node(

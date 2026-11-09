@@ -1,4 +1,4 @@
-//! Control scheduling and earliest placement of pure graph nodes.
+//! Control scheduling and global code motion of pure graph nodes.
 use super::*;
 
 pub(super) struct Block {
@@ -22,10 +22,10 @@ pub(super) struct Schedule {
 
 impl Schedule {
     pub(super) fn new(graph: &FunctionGraph) -> Result<Self, LowerError> {
-        let mut control_users: HashMap<NodeId, Vec<NodeId>> = HashMap::new();
-        let mut region_of_jump = HashMap::new();
-        let mut phis_of_region: HashMap<NodeId, Vec<NodeId>> = HashMap::new();
-        let mut projections = HashMap::new();
+        let mut control_users: HashMap<NodeId, Vec<NodeId>> = HashMap::default();
+        let mut region_of_jump = HashMap::default();
+        let mut phis_of_region: HashMap<NodeId, Vec<NodeId>> = HashMap::default();
+        let mut projections = HashMap::default();
         for node in graph.ids() {
             let control = graph.control(node);
             if !control.is_none() {
@@ -53,7 +53,7 @@ impl Schedule {
 
         // Discover blocks from the entry by following control.
         let mut blocks: Vec<Block> = Vec::new();
-        let mut block_of_head: HashMap<NodeId, usize> = HashMap::new();
+        let mut block_of_head: HashMap<NodeId, usize> = HashMap::default();
         let mut worklist = vec![entry];
         block_of_head.insert(entry, 0);
         blocks.push(Block {
@@ -61,7 +61,7 @@ impl Schedule {
             chain: Vec::new(),
             successors: Vec::new(),
         });
-        let mut placement: HashMap<NodeId, usize> = HashMap::new();
+        let mut placement: HashMap<NodeId, usize> = HashMap::default();
         while let Some(head) = worklist.pop() {
             let index = block_of_head[&head];
             placement.insert(head, index);
@@ -165,12 +165,14 @@ impl Schedule {
         let idom = dominators(&blocks, &order, &rank);
         let depth = dominator_depths(&order, &idom);
 
-        // Place value nodes at their earliest block.
+        // Place value nodes at their earliest block, then move each to the
+        // latest block that keeps it out of loops.
         let mut placed = vec![Vec::new(); blocks.len()];
         let ids: Vec<NodeId> = graph.ids().collect();
         for node in &ids {
             place(graph, *node, &mut placement, &mut placed, &depth)?;
         }
+        let placed = schedule_late(graph, &blocks, &order, &rank, &idom, &placement, placed);
         Ok(Self {
             blocks,
             order,
@@ -194,8 +196,8 @@ fn anchored_order(
     use kfrc_son::analysis::cfg::is_anchored_value;
 
     let mut output = Vec::new();
-    let mut finished = HashSet::new();
-    let mut active = HashSet::new();
+    let mut finished = HashSet::default();
+    let mut active = HashSet::default();
     for &root in users
         .iter()
         .filter(|&&node| is_anchored_value(graph.op(node)))
@@ -374,4 +376,191 @@ fn dominator_depths(order: &[usize], idom: &[usize]) -> HashMap<usize, usize> {
         .enumerate()
         .map(|(rank, block)| (*block, depth_by_rank[rank]))
         .collect()
+}
+
+/// Click's global code motion (PLDI 1995), late half. Every pure value moves
+/// from its earliest block to the block on the dominator path between that
+/// block and the LCA of its uses with the smallest loop depth, preferring the
+/// latest. Short live ranges keep values in registers; loop-invariant values
+/// stay hoisted. A value without uses is not placed and so never computed.
+fn schedule_late(
+    graph: &FunctionGraph,
+    blocks: &[Block],
+    order: &[usize],
+    rank: &HashMap<usize, usize>,
+    idom: &[usize],
+    placement: &HashMap<NodeId, usize>,
+    early: Vec<Vec<NodeId>>,
+) -> Vec<Vec<NodeId>> {
+    let mut early_rank = HashMap::default();
+    for (block, nodes) in early.iter().enumerate() {
+        for &node in nodes {
+            early_rank.insert(node, rank[&block]);
+        }
+    }
+    let mut users: HashMap<NodeId, Vec<(NodeId, usize)>> = HashMap::default();
+    let mut pinned = HashSet::default();
+    for node in graph.ids() {
+        for (slot, &input) in graph.inputs(node).iter().enumerate() {
+            let input = graph.resolve(input);
+            users.entry(input).or_default().push((node, slot));
+            // Tuple results keep their projections in the defining block.
+            if graph.op(node) == Opcode::Projection {
+                pinned.insert(input);
+            }
+        }
+        let control = graph.control(node);
+        if !control.is_none() {
+            pinned.insert(graph.resolve(control));
+        }
+    }
+    let late = Late {
+        graph,
+        rank,
+        idom,
+        placement,
+        early_rank: &early_rank,
+        users: &users,
+        pinned: &pinned,
+        loop_depth: loop_depths(blocks, order, rank, idom),
+    };
+    let mut decided = HashMap::default();
+    let mut placed = vec![Vec::new(); blocks.len()];
+    for node in early.iter().flatten() {
+        if let Some(block_rank) = late.block(*node, &mut decided) {
+            placed[order[block_rank]].push(*node);
+        }
+    }
+    placed
+}
+
+struct Late<'a> {
+    graph: &'a FunctionGraph,
+    rank: &'a HashMap<usize, usize>,
+    idom: &'a [usize],
+    placement: &'a HashMap<NodeId, usize>,
+    early_rank: &'a HashMap<NodeId, usize>,
+    users: &'a HashMap<NodeId, Vec<(NodeId, usize)>>,
+    pinned: &'a HashSet<NodeId>,
+    /// Loop nesting depth per block rank.
+    loop_depth: Vec<usize>,
+}
+
+impl Late<'_> {
+    /// The block rank a pure node is computed in, or `None` when nothing uses it.
+    fn block(&self, node: NodeId, decided: &mut HashMap<NodeId, Option<usize>>) -> Option<usize> {
+        if let Some(&known) = decided.get(&node) {
+            return known;
+        }
+        let early = self.early_rank[&node];
+        let result = if self.pinned.contains(&node) {
+            Some(early)
+        } else {
+            let mut lca = None;
+            for &(user, slot) in self.users.get(&node).into_iter().flatten() {
+                if let Some(used_in) = self.use_rank(user, slot, decided) {
+                    lca = Some(lca.map_or(used_in, |other| self.common_dominator(other, used_in)));
+                }
+            }
+            lca.map(|lca| self.shallowest(early, lca))
+        };
+        decided.insert(node, result);
+        result
+    }
+
+    /// Where `user` reads its input `slot`: a Phi reads at the end of the
+    /// matching predecessor. Unreachable and unused users read nowhere.
+    fn use_rank(
+        &self,
+        user: NodeId,
+        slot: usize,
+        decided: &mut HashMap<NodeId, Option<usize>>,
+    ) -> Option<usize> {
+        if self.early_rank.contains_key(&user) {
+            return self.block(user, decided);
+        }
+        let anchor = if self.graph.op(user) == Opcode::Phi {
+            let region = self.graph.input(user, 0);
+            self.graph.input(region, slot.checked_sub(1)?)
+        } else {
+            user
+        };
+        self.placement.get(&anchor).map(|block| self.rank[block])
+    }
+
+    fn common_dominator(&self, mut a: usize, mut b: usize) -> usize {
+        while a != b {
+            while a > b {
+                a = self.idom[a];
+            }
+            while b > a {
+                b = self.idom[b];
+            }
+        }
+        a
+    }
+
+    /// The shallowest-loop block on the dominator path from `late` up to `early`.
+    fn shallowest(&self, early: usize, late: usize) -> usize {
+        let mut best = late;
+        let mut cursor = late;
+        while cursor != early {
+            if cursor == 0 {
+                // `early` does not dominate the uses; keep the earliest block.
+                return early;
+            }
+            cursor = self.idom[cursor];
+            if self.loop_depth[cursor] < self.loop_depth[best] {
+                best = cursor;
+            }
+        }
+        best
+    }
+}
+
+/// Natural-loop nesting depth per block rank. A back edge targets a block
+/// that dominates its source; edges into one header form one loop.
+fn loop_depths(
+    blocks: &[Block],
+    order: &[usize],
+    rank: &HashMap<usize, usize>,
+    idom: &[usize],
+) -> Vec<usize> {
+    let mut predecessors = vec![Vec::new(); order.len()];
+    for (source, block) in order.iter().enumerate() {
+        for successor in &blocks[*block].successors {
+            predecessors[rank[successor]].push(source);
+        }
+    }
+    let dominates = |header: usize, mut block: usize| loop {
+        if block == header {
+            return true;
+        }
+        if block == 0 {
+            return false;
+        }
+        block = idom[block];
+    };
+    let mut bodies: HashMap<usize, HashSet<usize>> = HashMap::default();
+    for (header, sources) in predecessors.iter().enumerate() {
+        for &source in sources {
+            if !dominates(header, source) {
+                continue;
+            }
+            let body = bodies.entry(header).or_insert_with(|| HashSet::from_iter([header]));
+            let mut work = vec![source];
+            while let Some(block) = work.pop() {
+                if body.insert(block) {
+                    work.extend(predecessors[block].iter().copied());
+                }
+            }
+        }
+    }
+    let mut depth = vec![0; order.len()];
+    for body in bodies.values() {
+        for &block in body {
+            depth[block] += 1;
+        }
+    }
+    depth
 }

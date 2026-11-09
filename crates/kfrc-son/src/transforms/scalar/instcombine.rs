@@ -111,6 +111,22 @@ fn constant(graph: &FunctionGraph, node: NodeId) -> Option<u64> {
 fn fold(graph: &FunctionGraph, node: NodeId, result: Integer) -> Option<u64> {
     use Opcode::*;
     let op = graph.op(node);
+    if op.integer_intrinsic_arity().is_some() {
+        let inputs = graph.inputs(node);
+        let source = integer(graph, graph.rust_type(inputs[0])?)?;
+        let values = inputs
+            .iter()
+            .map(|&input| constant(graph, input))
+            .collect::<Option<Vec<_>>>()?;
+        let (value, poison) = crate::intrinsic::evaluate(
+            op,
+            graph.payload(node),
+            source.bits,
+            source.signed,
+            &values,
+        );
+        return (!poison).then_some(value);
+    }
     if !matches!(
         op,
         Add | Sub
@@ -137,6 +153,13 @@ fn fold(graph: &FunctionGraph, node: NodeId, result: Integer) -> Option<u64> {
         0
     };
     let shift = (b % u64::from(source.bits)) as u32;
+    if crate::ArithmeticFlags::allowed(op).is_some()
+        && crate::ArithmeticFlags(graph.payload(node)).violated(op, source.bits, a, b)
+    {
+        // Retain the operation: replacing poison by a constant would hide the
+        // source contract violation from the interpreter and later proofs.
+        return None;
+    }
     Some(result.normalize(match op {
         Add => a.wrapping_add(b),
         Sub => a.wrapping_sub(b),
@@ -175,6 +198,33 @@ fn fold(graph: &FunctionGraph, node: NodeId, result: Integer) -> Option<u64> {
 fn identity(graph: &FunctionGraph, node: NodeId, ty: TyId, scalar: Integer) -> Option<NodeId> {
     use Opcode::*;
     let inputs = graph.inputs(node);
+    if matches!(graph.op(node), ByteSwap | BitReverse) {
+        let inner = graph.resolve(inputs[0]);
+        if graph.op(inner) == graph.op(node) {
+            return Some(graph.resolve(graph.input(inner, 0)));
+        }
+        if graph.op(node) == ByteSwap && scalar.bits == 8 {
+            return Some(inner);
+        }
+    }
+    if graph.op(node) == FunnelShift {
+        let hi = graph.resolve(inputs[0]);
+        let lo = graph.resolve(inputs[1]);
+        // An arbitrary unused funnel half may be poison, so only rotate(x,x)
+        // may discard one data operand. Do not erase an invalid amount promise.
+        if hi == lo
+            && let Some(amount) = constant(graph, inputs[2])
+        {
+            let in_range =
+                graph.payload(node) & crate::IntegerIntrinsicPayload::AMOUNT_IN_RANGE != 0;
+            if amount % u64::from(scalar.bits) == 0
+                && (!in_range || amount < u64::from(scalar.bits))
+            {
+                return Some(hi);
+            }
+        }
+        return None;
+    }
     if inputs.len() != 2 {
         return None;
     }

@@ -2,9 +2,9 @@
 
 use super::Converter;
 use kfrc_body::{
-    BinaryOp, BlockId, Callee, CastKind, Constant, ConstantKind, FunctionAbi, LocalDecl,
-    Mutability, Operand, PassMode, Place, ProjectionElem, Rvalue, StatementKind, Terminator,
-    UnaryOp, UnwindAction,
+    BinaryOp, BitCountKind, BlockId, Callee, CastKind, Constant, ConstantKind, FunctionAbi,
+    FunnelDirection, IntegerIntrinsic, LocalDecl, Mutability, Operand, PassMode, Place,
+    ProjectionElem, Rvalue, StatementKind, SwitchTargets, Terminator, UnaryOp, UnwindAction,
 };
 use rustc_middle::mir;
 use rustc_middle::ty::layout::ValidityRequirement;
@@ -16,6 +16,40 @@ mod saturating;
 mod select;
 mod simd;
 mod swap;
+
+/// Shared by monomorphic Body and definition R producers after rustc has
+/// authenticated the callee as a compiler intrinsic (not a user-named call).
+pub(super) fn integer_operation(name: &str) -> Option<IntegerIntrinsic> {
+    Some(match name {
+        "ctpop" => IntegerIntrinsic::BitCount {
+            kind: BitCountKind::Ones,
+            zero_poison: false,
+        },
+        "ctlz" | "ctlz_nonzero" => IntegerIntrinsic::BitCount {
+            kind: BitCountKind::LeadingZeros,
+            zero_poison: name == "ctlz_nonzero",
+        },
+        "cttz" | "cttz_nonzero" => IntegerIntrinsic::BitCount {
+            kind: BitCountKind::TrailingZeros,
+            zero_poison: name == "cttz_nonzero",
+        },
+        "bswap" => IntegerIntrinsic::ByteSwap,
+        "bitreverse" => IntegerIntrinsic::BitReverse,
+        "rotate_left" | "rotate_right" | "unchecked_funnel_shl" | "unchecked_funnel_shr" => {
+            IntegerIntrinsic::FunnelShift {
+                direction: if matches!(name, "rotate_left" | "unchecked_funnel_shl") {
+                    FunnelDirection::Left
+                } else {
+                    FunnelDirection::Right
+                },
+                amount_in_range: !matches!(name, "rotate_left" | "rotate_right"),
+            }
+        }
+        "saturating_add" => IntegerIntrinsic::SaturatingAdd,
+        "saturating_sub" => IntegerIntrinsic::SaturatingSub,
+        _ => return None,
+    })
+}
 
 impl<'tcx> Converter<'tcx> {
     pub(super) fn intrinsic_call(
@@ -189,10 +223,17 @@ impl<'tcx> Converter<'tcx> {
                 }
                 let left = self.intrinsic_cast(args[0], result_ty);
                 let right = self.intrinsic_cast(args[1], result_ty);
+                // The unsigned intrinsic promises a nonnegative distance.
+                // Signed pointer subtraction has no NSW promise in rustc.
+                let subtraction = if name.ends_with("unsigned") {
+                    BinaryOp::SubUnchecked
+                } else {
+                    BinaryOp::Sub
+                };
                 let bytes =
-                    self.intrinsic_temp(result_ty, Rvalue::BinaryOp(BinaryOp::Sub, left, right));
+                    self.intrinsic_temp(result_ty, Rvalue::BinaryOp(subtraction, left, right));
                 let size = self.intrinsic_constant(result_ty, u128::from(size));
-                assign(self, Rvalue::BinaryOp(BinaryOp::Div, bytes, size));
+                assign(self, Rvalue::BinaryOp(BinaryOp::DivExact, bytes, size));
             }
             "ptr_mask" => {
                 intrinsic_arity(name, &args, 2)?;
@@ -253,9 +294,16 @@ impl<'tcx> Converter<'tcx> {
             }
             "compare_bytes" => {
                 intrinsic_arity(name, &args, 3)?;
+                // MIR may move each operand. The length switch, the byte
+                // reads and the memcmp call all use them, so consume each once
+                // into a temporary; a repeated Move reads an empty slot.
+                let byte_pointer = Ty::new_imm_ptr(self.tcx, self.tcx.types.u8);
+                let left = self.intrinsic_temp(byte_pointer, Rvalue::Use(args[0]));
+                let right = self.intrinsic_temp(byte_pointer, Rvalue::Use(args[1]));
+                let length = self.intrinsic_temp(self.tcx.types.usize, Rvalue::Use(args[2]));
                 let call = self.intrinsic_libcall(
                     "memcmp",
-                    args,
+                    vec![left, right, length],
                     Some(self.tcx.types.i32),
                     target,
                     unwind,
@@ -270,12 +318,66 @@ impl<'tcx> Converter<'tcx> {
                 else {
                     unreachable!()
                 };
-                return Ok(Terminator::Call {
-                    callee,
-                    args,
-                    destination,
-                    target,
-                    unwind,
+                let Some(continuation) = target else {
+                    return Err("compare_bytes has no successor".into());
+                };
+                // Char patterns compare one encoded byte; most slices are
+                // ASCII. A one-byte comparison is a subtraction of the bytes,
+                // a valid memcmp ordering; other lengths call memcmp. The
+                // casts only retype the pointers; bytes are read in the branch.
+                let byte = self.tcx.types.u8;
+                let left = self.intrinsic_deref(left, byte);
+                let right = self.intrinsic_deref(right, byte);
+                let int = self.ty(self.tcx.types.i32);
+                let mut widen = |this: &mut Self, place: Place| {
+                    let local = this.builder.add_local(LocalDecl {
+                        ty: int,
+                        mutability: Mutability::Mut,
+                        name: None,
+                    });
+                    (
+                        local,
+                        StatementKind::Assign(
+                            Place::local(local),
+                            Rvalue::Cast(CastKind::IntToInt, Operand::Copy(place), int),
+                        ),
+                    )
+                };
+                let (left_byte, load_left) = widen(self, left);
+                let (right_byte, load_right) = widen(self, right);
+                let single = BlockId((self.original_blocks + self.pending_blocks.len()) as u32);
+                self.pending_blocks.push((
+                    vec![
+                        load_left,
+                        load_right,
+                        StatementKind::Assign(
+                            destination,
+                            Rvalue::BinaryOp(
+                                BinaryOp::Sub,
+                                Operand::Copy(Place::local(left_byte)),
+                                Operand::Copy(Place::local(right_byte)),
+                            ),
+                        ),
+                    ],
+                    Terminator::Goto(continuation),
+                ));
+                let general = BlockId((self.original_blocks + self.pending_blocks.len()) as u32);
+                self.pending_blocks.push((
+                    Vec::new(),
+                    Terminator::Call {
+                        callee,
+                        args,
+                        destination,
+                        target,
+                        unwind,
+                    },
+                ));
+                return Ok(Terminator::SwitchInt {
+                    discriminant: length,
+                    targets: SwitchTargets {
+                        cases: vec![(1, single)],
+                        otherwise: general,
+                    },
                 });
             }
             "raw_eq" => {
@@ -287,8 +389,10 @@ impl<'tcx> Converter<'tcx> {
                 } else {
                     let target = target.ok_or("raw_eq has no successor")?;
                     let bytes = self.intrinsic_constant(self.tcx.types.usize, u128::from(size));
+                    // Equality only: `bcmp` returns zero exactly when the bytes
+                    // match, and the backend expands small constant sizes.
                     let mut call = self.intrinsic_libcall(
-                        "memcmp",
+                        "bcmp",
                         vec![args[0], args[1], bytes],
                         Some(self.tcx.types.i32),
                         None,
@@ -317,10 +421,10 @@ impl<'tcx> Converter<'tcx> {
             }
             "disjoint_bitor" => {
                 intrinsic_arity(name, &args, 2)?;
-                // For the defined domain (a & b == 0), this is ordinary OR.
-                // Keep the operation as OR without teaching optimizers that
-                // arbitrary operands are disjoint or replacing it with addition.
-                assign(self, Rvalue::BinaryOp(BinaryOp::BitOr, args[0], args[1]));
+                assign(
+                    self,
+                    Rvalue::BinaryOp(BinaryOp::BitOrDisjoint, args[0], args[1]),
+                );
             }
             "saturating_add" | "saturating_sub" => {
                 let result = self.intrinsic_saturating(name, instance.args.type_at(0), &args)?;
@@ -331,12 +435,15 @@ impl<'tcx> Converter<'tcx> {
             | "add_with_overflow" | "sub_with_overflow" | "mul_with_overflow" => {
                 intrinsic_arity(name, &args, 2)?;
                 let op = match name {
-                    "exact_div" => BinaryOp::Div,
-                    "wrapping_add" | "unchecked_add" => BinaryOp::Add,
-                    "wrapping_sub" | "unchecked_sub" => BinaryOp::Sub,
-                    "wrapping_mul" | "unchecked_mul" => BinaryOp::Mul,
-                    "unchecked_shl" => BinaryOp::Shl,
-                    "unchecked_shr" => BinaryOp::Shr,
+                    "exact_div" => BinaryOp::DivExact,
+                    "wrapping_add" => BinaryOp::Add,
+                    "wrapping_sub" => BinaryOp::Sub,
+                    "wrapping_mul" => BinaryOp::Mul,
+                    "unchecked_add" => BinaryOp::AddUnchecked,
+                    "unchecked_sub" => BinaryOp::SubUnchecked,
+                    "unchecked_mul" => BinaryOp::MulUnchecked,
+                    "unchecked_shl" => BinaryOp::ShlUnchecked,
+                    "unchecked_shr" => BinaryOp::ShrUnchecked,
                     "add_with_overflow" => BinaryOp::AddWithOverflow,
                     "sub_with_overflow" => BinaryOp::SubWithOverflow,
                     _ => BinaryOp::MulWithOverflow,

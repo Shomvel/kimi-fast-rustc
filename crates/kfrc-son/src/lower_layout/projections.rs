@@ -8,7 +8,8 @@
 
 use super::LayoutStats;
 use crate::{FunctionGraph, NodeId, Opcode};
-use std::collections::{HashMap, VecDeque};
+use kfrc_body::fx_hash::HashMap;
+use std::collections::VecDeque;
 
 #[derive(Default)]
 pub(super) struct ProjectionIndex {

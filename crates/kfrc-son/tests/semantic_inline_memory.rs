@@ -1,5 +1,5 @@
 //! Inlining is compared with executing the original callee in shared memory.
-use std::collections::HashMap;
+use kfrc_body::fx_hash::HashMap;
 
 use kfrc_body::{
     FunctionAbi, IntegerWidth, Mutability, PassMode, RecordedTypes, SizeAlign, TyId, TypeShape,

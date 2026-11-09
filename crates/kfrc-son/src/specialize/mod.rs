@@ -9,8 +9,9 @@ mod prepare_control;
 
 use crate::analysis::cfg::ControlFlow;
 use crate::{FunctionGraph, GraphLevel, GraphState, Hole, NodeId, Opcode, ValueType};
+use kfrc_body::fx_hash::{HashMap, HashSet};
 use kfrc_body::{EnumLayout, FunctionAbi, RecordedTypes, SizeAlign, TyId, TypeOracle, TypeShape};
-use std::collections::{HashMap, HashSet, VecDeque};
+use std::collections::VecDeque;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum HoleAnswer {
@@ -109,7 +110,7 @@ impl RustDefinition {
         if graph.level != GraphLevel::Rust {
             return Err("definition preparation requires an R graph".into());
         }
-        crate::verify_graph(&mut graph).map_err(|error| error.to_string())?;
+        crate::verify::verify_pipeline_step(&mut graph).map_err(|error| error.to_string())?;
         // This is definition work, performed once before any concrete answers.
         let mut preparation = PreparationStats {
             optimization_enabled: optimize,
@@ -135,9 +136,9 @@ impl RustDefinition {
             graph.compact();
         }
         preparation.nodes_after = graph.ids().count();
-        crate::verify_graph(&mut graph).map_err(|error| error.to_string())?;
+        crate::verify::verify_pipeline_step(&mut graph).map_err(|error| error.to_string())?;
         let cfg = ControlFlow::new(&graph);
-        let mut anchored: HashMap<NodeId, Vec<NodeId>> = HashMap::new();
+        let mut anchored: HashMap<NodeId, Vec<NodeId>> = HashMap::default();
         for node in graph
             .ids()
             .filter(|node| graph.op(*node).is_fixed() && !cfg.contains(*node))
@@ -179,18 +180,18 @@ impl RustDefinition {
         let mut state = State {
             source: &self.graph,
             parameter_dependent: &self.parameter_dependent,
-            dirty: HashSet::new(),
+            dirty: HashSet::default(),
             oracle,
             target: FunctionGraph::new(symbol, abi, RecordedTypes::new()),
             answers: Vec::new(),
-            answer_index: HashMap::new(),
-            constants: HashMap::new(),
-            evaluating: HashSet::new(),
-            reachable: HashSet::new(),
-            selected: HashMap::new(),
-            impossible: HashSet::new(),
-            nodes: HashMap::new(),
-            types: HashMap::new(),
+            answer_index: HashMap::default(),
+            constants: HashMap::default(),
+            evaluating: HashSet::default(),
+            reachable: HashSet::default(),
+            selected: HashMap::default(),
+            impossible: HashSet::default(),
+            nodes: HashMap::default(),
+            types: HashMap::default(),
             stats: SpecializationStats::default(),
         };
         // Discover only executable control. A folded branch does not enqueue
@@ -288,7 +289,7 @@ impl RustDefinition {
         }
         state.target.start = state.copy(self.graph.start)?;
         state.target.state = GraphState::Sealed;
-        crate::verify_graph(&mut state.target).map_err(|error| error.to_string())?;
+        crate::verify::verify_pipeline_step(&mut state.target).map_err(|error| error.to_string())?;
         // Include direct users once; the existing seam worklist propagates
         // successful replacements transitively. Never rerun every R rule on S.
         let uses = crate::analysis::uses::Uses::new(&state.target);

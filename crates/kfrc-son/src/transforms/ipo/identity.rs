@@ -1,8 +1,9 @@
 //! Summarize exact argument returns without cloning a callee or spending the
 //! general inlining budget. Logical call observations remain in source order.
 use super::{GraphProvider, InlineError, InlineSkip, splice, types::TypeImport};
-use crate::{FunctionGraph, GraphLevel, NodeId, Opcode, ValueType, verify_graph};
-use std::collections::{HashMap, HashSet};
+use crate::verify::verify_pipeline_step;
+use crate::{FunctionGraph, GraphLevel, NodeId, Opcode, ValueType};
+use kfrc_body::fx_hash::{HashMap, HashSet};
 
 #[derive(Clone, Debug, Default)]
 pub struct IdentityFoldStats {
@@ -26,7 +27,7 @@ pub fn fold_identity_calls(
     if graph.level != GraphLevel::Specialized {
         return Err(InlineError::NotSpecialized);
     }
-    verify_graph(graph).map_err(InlineError::Verification)?;
+    verify_pipeline_step(graph).map_err(InlineError::Verification)?;
     let mut calls = seeds.map_or_else(
         || graph.ids().collect::<Vec<_>>(),
         |seeds| seeds.iter().map(|&n| graph.resolve(n)).collect(),
@@ -35,7 +36,7 @@ pub fn fold_identity_calls(
     calls.sort_unstable();
     calls.dedup();
     let mut stats = IdentityFoldStats::default();
-    let mut summaries = HashMap::new();
+    let mut summaries = HashMap::default();
     let mut transaction: Option<FunctionGraph> = None;
     for call in calls {
         let current = transaction.as_ref().unwrap_or(graph);
@@ -48,10 +49,10 @@ pub fn fold_identity_calls(
         let summary = if let Some(summary) = summaries.get(&target.symbol) {
             *summary
         } else {
-            stats.summary_nodes_visited += source.ids().count();
+            stats.summary_nodes_visited += source.live_count();
             let summary = summarize(source);
             if summary.is_some() {
-                crate::verify::check(source).map_err(InlineError::Verification)?;
+                crate::verify::check_pipeline_step(source).map_err(InlineError::Verification)?;
             }
             summaries.insert(target.symbol.clone(), summary);
             summary
@@ -77,7 +78,7 @@ pub fn fold_identity_calls(
     }
     if let Some(mut candidate) = transaction {
         candidate.resolve_edges();
-        verify_graph(&mut candidate).map_err(InlineError::Verification)?;
+        verify_pipeline_step(&mut candidate).map_err(InlineError::Verification)?;
         for nodes in [&mut stats.dirty_nodes, &mut stats.argument_slots] {
             for node in nodes.iter_mut() {
                 *node = candidate.resolve(*node);
@@ -120,7 +121,7 @@ fn summarize(graph: &FunctionGraph) -> Option<usize> {
         return None;
     }
     let argument = graph.payload(value).checked_sub(2)? as usize;
-    let mut path = HashSet::new();
+    let mut path = HashSet::default();
     let mut control = graph.control(ret);
     loop {
         if !path.insert(control) {
@@ -143,7 +144,7 @@ fn summarize(graph: &FunctionGraph) -> Option<usize> {
             _ => return None,
         }
     }
-    let mut effects = HashSet::new();
+    let mut effects = HashSet::default();
     let mut effect = graph.input(ret, 0);
     loop {
         if !effects.insert(effect) {

@@ -1,6 +1,6 @@
 //! ELF relocatable objects from encoded functions.
 
-use std::collections::{HashMap, HashSet};
+use kfrc_body::fx_hash::{HashMap, HashSet};
 
 use object::write::{Object, Relocation, StandardSection, Symbol, SymbolSection};
 use object::{
@@ -83,8 +83,8 @@ pub fn write_object_with_data(
         object::SectionKind::Linker,
     );
     let mut pending_relocations = Vec::new();
-    let mut storage_kinds = HashMap::new();
-    let mut definitions = HashSet::new();
+    let mut storage_kinds = HashMap::default();
+    let mut definitions = HashSet::default();
     for datum in data {
         if !definitions.insert(datum.symbol.as_str()) {
             return Err(ObjectError::DuplicateSymbol(datum.symbol.clone()));

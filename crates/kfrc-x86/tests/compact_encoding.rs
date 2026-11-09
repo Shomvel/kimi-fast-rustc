@@ -5,7 +5,7 @@ fn encode_instruction(instruction: MachineInstr) -> Vec<u8> {
     let mut function = MachineFunction::new("compact_instruction");
     function.instructions = vec![instruction, MachineInstr::Ret];
     let code = function.emit_machine_code().unwrap();
-    code[4..code.len() - 2].to_vec()
+    code[..code.len() - 1].to_vec()
 }
 
 #[test]
@@ -116,7 +116,7 @@ fn immediate_multiply_uses_imm8_and_extended_register_rex_bits() {
 #[test]
 fn prologue_subtraction_uses_imm8_only_through_a_112_byte_frame() {
     let cases: &[(u32, &[u8])] = &[
-        (0, &[0x55, 0x48, 0x89, 0xe5, 0xc9, 0xc3]),
+        (0, &[0xc3]),
         (
             1,
             &[0x55, 0x48, 0x89, 0xe5, 0x48, 0x83, 0xec, 0x10, 0xc9, 0xc3],
@@ -292,4 +292,106 @@ fn compact_instructions_preserve_call_relocations_and_local_jump_fixups() {
     assert_eq!(relocations.len(), 1);
     assert_eq!(relocations[0].offset, 13);
     assert_eq!(relocations[0].target, "callee");
+}
+
+#[test]
+fn offset_addresses_encode_as_lea_with_base_displacements() {
+    for (dst, base, offset, expected) in [
+        (Reg::Rax, Reg::Rcx, 8, vec![0x48, 0x8d, 0x41, 0x08]),
+        (Reg::R8, Reg::R12, 0, vec![0x4d, 0x8d, 0x04, 0x24]),
+        (Reg::Rdx, Reg::R13, -1, vec![0x49, 0x8d, 0x55, 0xff]),
+        // r13 shares rbp's low code, so a zero displacement keeps disp8.
+        (Reg::Rcx, Reg::R13, 0, vec![0x49, 0x8d, 0x4d, 0x00]),
+        (
+            Reg::Rsi,
+            Reg::Rdi,
+            0x1000,
+            vec![0x48, 0x8d, 0xb7, 0x00, 0x10, 0x00, 0x00],
+        ),
+    ] {
+        assert_eq!(
+            encode_instruction(MachineInstr::OffsetAddress { dst, base, offset }),
+            expected,
+            "{dst:?} {base:?} {offset}"
+        );
+    }
+    let mut function = MachineFunction::new("offset_address");
+    function.instructions = vec![
+        MachineInstr::OffsetAddress {
+            dst: Reg::Rax,
+            base: Reg::Rcx,
+            offset: -16,
+        },
+        MachineInstr::Ret,
+    ];
+    assert!(
+        function
+            .emit_gnu_assembly()
+            .unwrap()
+            .contains("lea rax, [rcx-16]")
+    );
+}
+
+#[test]
+fn immediate_stores_encode_each_width_after_the_displacement() {
+    for (address, offset, value, bytes, expected) in [
+        (Reg::Rax, 8, 0x7f, 1, vec![0xc6, 0x40, 0x08, 0x7f]),
+        (
+            Reg::R12,
+            0,
+            -2,
+            2,
+            vec![0x66, 0x41, 0xc7, 0x04, 0x24, 0xfe, 0xff],
+        ),
+        (
+            Reg::R13,
+            0,
+            5,
+            4,
+            vec![0x41, 0xc7, 0x45, 0x00, 0x05, 0x00, 0x00, 0x00],
+        ),
+        (
+            Reg::Rcx,
+            -0x80,
+            -1,
+            8,
+            vec![0x48, 0xc7, 0x41, 0x80, 0xff, 0xff, 0xff, 0xff],
+        ),
+        (
+            Reg::Rdx,
+            0x100,
+            7,
+            8,
+            vec![
+                0x48, 0xc7, 0x82, 0x00, 0x01, 0x00, 0x00, 0x07, 0x00, 0x00, 0x00,
+            ],
+        ),
+    ] {
+        assert_eq!(
+            encode_instruction(MachineInstr::StoreImmediate {
+                address,
+                offset,
+                value,
+                bytes,
+            }),
+            expected,
+            "{address:?} {offset} {value} {bytes}"
+        );
+    }
+    let mut function = MachineFunction::new("store_immediate");
+    function.instructions = vec![
+        MachineInstr::StoreImmediate {
+            address: Reg::Rdi,
+            offset: 3,
+            value: 0x1ff,
+            bytes: 1,
+        },
+        MachineInstr::Ret,
+    ];
+    assert!(
+        function
+            .emit_gnu_assembly()
+            .unwrap()
+            .contains("mov BYTE PTR [rdi+3], -1")
+    );
 }

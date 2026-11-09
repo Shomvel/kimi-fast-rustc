@@ -24,6 +24,17 @@ impl LayoutLowering<'_> {
         index: u32,
         replacement: Value,
     ) -> Result<Value, LayoutError> {
+        if matches!(base.parts, Parts::Omitted) {
+            let fields = self
+                .graph
+                .oracle
+                .semantic()
+                .field_types(base.ty, None)
+                .ok_or_else(|| {
+                    LayoutError::Malformed("omitted InsertField base lacks fields".into())
+                })?;
+            base.parts = Parts::Fields(fields.into_iter().map(|ty| self.omitted(ty)).collect());
+        }
         match &mut base.parts {
             Parts::Fields(fields) => {
                 let field = fields.get_mut(index as usize).ok_or_else(|| {

@@ -7,7 +7,8 @@
 //! Payload writes and tag mutations stay in storage; no partial enum update
 //! operation is invented by this pass.
 
-use std::collections::{HashMap, HashSet, VecDeque};
+use kfrc_body::fx_hash::{HashMap, HashSet};
+use std::collections::VecDeque;
 
 use kfrc_body::TyId;
 
@@ -101,7 +102,7 @@ pub fn run(graph: &mut FunctionGraph, candidates: Option<&HashSet<u32>>) -> Prom
             graph,
             cfg: &cfg,
             slot: &slot,
-            values: HashMap::new(),
+            values: HashMap::default(),
             undefined,
             stats: &mut stats,
         };
@@ -172,10 +173,10 @@ fn collect_slot(
     }
     let mut slot = Slot {
         ty,
-        accesses: HashMap::new(),
+        accesses: HashMap::default(),
     };
     let mut pending = VecDeque::from([(root, Vec::<Field>::new())]);
-    let mut seen = HashSet::new();
+    let mut seen = HashSet::default();
     while let Some((address, path)) = pending.pop_front() {
         if !seen.insert(address) {
             continue;
@@ -282,7 +283,7 @@ fn accesses_are_live(
         .filter(|node| graph.op(**node) == Opcode::SlotDead)
         .flat_map(|node| cfg.successors(*node).iter().copied())
         .collect();
-    let mut seen = HashSet::new();
+    let mut seen = HashSet::default();
     while let Some(node) = pending.pop() {
         if !seen.insert(node) {
             continue;

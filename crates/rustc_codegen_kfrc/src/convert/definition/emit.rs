@@ -171,15 +171,46 @@ impl<'tcx> DefinitionCx<'tcx> {
                     self.graph.oracle.shape(left_ty),
                     TypeShape::Int { signed: true, .. }
                 );
+                use kfrc_son::ArithmeticFlags;
                 use mir::BinOp as B;
+                let unchecked = if signed {
+                    ArithmeticFlags::NSW
+                } else {
+                    ArithmeticFlags::NUW
+                };
+                if matches!(
+                    op,
+                    B::AddUnchecked
+                        | B::SubUnchecked
+                        | B::MulUnchecked
+                        | B::ShlUnchecked
+                        | B::ShrUnchecked
+                ) && !matches!(self.graph.oracle.shape(left_ty), TypeShape::Int { .. })
+                {
+                    // Signedness is not known for an unresolved generic hole.
+                    // Let the established monomorphized Body producer handle it.
+                    return Err("unchecked arithmetic needs concrete integer signedness".into());
+                }
                 let (opcode, payload) = match op {
                     B::Add => (Opcode::Add, 0),
+                    B::AddUnchecked => (Opcode::Add, unchecked),
                     B::Sub => (Opcode::Sub, 0),
+                    B::SubUnchecked => (Opcode::Sub, unchecked),
                     B::Mul => (Opcode::Mul, 0),
+                    B::MulUnchecked => (Opcode::Mul, unchecked),
                     B::BitAnd => (Opcode::BitAnd, 0),
                     B::BitOr => (Opcode::BitOr, 0),
                     B::BitXor => (Opcode::BitXor, 0),
                     B::Shl => (Opcode::ShiftLeft, 0),
+                    B::ShlUnchecked => (Opcode::ShiftLeft, ArithmeticFlags::AMOUNT_IN_RANGE),
+                    B::ShrUnchecked => (
+                        if signed {
+                            Opcode::ShiftRightArithmetic
+                        } else {
+                            Opcode::ShiftRightLogical
+                        },
+                        ArithmeticFlags::AMOUNT_IN_RANGE,
+                    ),
                     B::Shr => (
                         if signed {
                             Opcode::ShiftRightArithmetic
@@ -380,7 +411,71 @@ impl<'tcx> DefinitionCx<'tcx> {
                 if self.tcx.intrinsic(item).is_some() {
                     // The intrinsic query establishes compiler identity; an
                     // ordinary user function named `assume` is still a call.
-                    if self.tcx.item_name(item).as_str() != "assume" {
+                    let name = self.tcx.item_name(item);
+                    let name = name.as_str();
+                    if let Some(operation) = super::super::intrinsics::integer_operation(name) {
+                        let Some(target) = target else {
+                            return Err("R integer intrinsic has no normal continuation".into());
+                        };
+                        let native_data = generic_args.type_at(0);
+                        let width = match native_data.kind() {
+                            ty::Int(width) => width.bit_width(),
+                            ty::Uint(width) => width.bit_width(),
+                            _ => {
+                                return Err(
+                                    "R integer intrinsic needs a concrete integer type".into()
+                                );
+                            }
+                        };
+                        if width.is_some_and(|bits| bits > 64) {
+                            return Err("R integer intrinsic above 64 bits is unsupported".into());
+                        }
+                        let rotate = matches!(name, "rotate_left" | "rotate_right");
+                        let arity = match operation {
+                            kfrc_body::IntegerIntrinsic::BitCount { .. }
+                            | kfrc_body::IntegerIntrinsic::ByteSwap
+                            | kfrc_body::IntegerIntrinsic::BitReverse => 1,
+                            kfrc_body::IntegerIntrinsic::FunnelShift { .. } if !rotate => 3,
+                            _ => 2,
+                        };
+                        if args.len() != arity {
+                            return Err(format!(
+                                "R integer intrinsic `{name}` requires {arity} arguments"
+                            ));
+                        }
+                        let mut values = args
+                            .iter()
+                            .map(|arg| self.operand(&arg.node))
+                            .collect::<Result<Vec<_>, _>>()?;
+                        if rotate {
+                            // A rotation is the total funnel with identical
+                            // data halves. Preserve the original amount type.
+                            values.insert(1, values[0]);
+                        }
+                        let native_result = destination.ty(&self.body.local_decls, self.tcx).ty;
+                        if matches!(operation, kfrc_body::IntegerIntrinsic::BitCount { .. })
+                            && native_result != self.tcx.types.u32
+                        {
+                            return Err(
+                                "R bit-count intrinsic requires its native u32 result".into()
+                            );
+                        }
+                        let result = self.ty(native_result)?;
+                        let (opcode, payload) =
+                            kfrc_son::IntegerIntrinsicPayload::from_body(&operation);
+                        let value = self.graph.add_node(
+                            opcode,
+                            NodeId::NONE,
+                            &values,
+                            payload,
+                            ValueType::Rust(result),
+                        );
+                        let pointer = self.place(*destination)?;
+                        self.store(pointer, value);
+                        self.edge(*target);
+                        return Ok(());
+                    }
+                    if name != "assume" {
                         return Err(
                             "intrinsic call requires the established intrinsic producer".into()
                         );

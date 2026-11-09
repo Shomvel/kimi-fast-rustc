@@ -149,6 +149,7 @@ pub fn nested_tail_body(mark_tail: bool) -> (Body, TyId, TyId) {
         align: 8,
         writable: true,
         thread_local: false,
+        unnamed_address: false,
         relocations: vec![],
     });
     let data = Operand::Constant(b.add_constant(Constant {
@@ -326,6 +327,7 @@ pub fn string_tail_body() -> Body {
         align: 8,
         writable: false,
         thread_local: false,
+        unnamed_address: false,
         relocations: vec![],
     });
     let data = Operand::Constant(b.add_constant(Constant {

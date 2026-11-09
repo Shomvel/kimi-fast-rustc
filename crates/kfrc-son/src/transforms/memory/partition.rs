@@ -2,7 +2,7 @@
 //! Recompute after layout creates calls or changes allocation identities; a
 //! semantic Local proof is not automatically a proof about the resulting L.
 
-use std::collections::HashSet;
+use kfrc_body::fx_hash::HashSet;
 
 use crate::analysis::memory::MemoryFacts;
 use crate::{FunctionGraph, MemoryPartition, Opcode};
