@@ -44,7 +44,9 @@ PoC 过程中发现的 Body 契约、`TypeOracle`、答案种类的缺口记在�
 
 | 编号 | 发现于 | 缺口 | 处理 |
 |---|---|---|---|
-| G1 | P0 标量链 | `Assert` 的失败路径要调用 panic lang item，并传 `&'static Location`；Body 里没有“数据对象”（字节 + 指向其他数据的重定位），也没有源位置旁表到数据的映射 | 给 Body 加数据对象池与 `PanicLocationId`；代码只引用符号，不读内容（设计红线 2） |
-| G2 | P0 标量链 | `#[track_caller]` 被调者的 ABI 比 MIR 实参多一个隐式 `Location` | 与 G1 一起：转换器补隐式实参，`FunctionAbi` 标出隐式参数 |
-| G3 | P0 标量链 | match guard 的绑定是 `&T`（共享借用），纯标量程序也会出现引用 | P1 的 `StackSlot` + `Local` 分区；当前明确报未支持 |
-| G4 | P0 标量链 | `-Coverflow-checks=on`（cargo 默认 debug）产生 `AddWithOverflow` 等返回 `(T, bool)` 的运算 | P1 的聚合值；当前要求 `overflow-checks=off` |
+| G1 | P0 标量链 | `Assert` 的失败路径要调用 panic lang item，并传 `&'static Location`；原 Body 没有数据对象与重定位 | 2026-11-09 已加入 `DataObject`、`DataRelocation` 和符号地址常量；Location 复用 rustc CTFE 的原始 allocation；除零/越界/溢出 panic 的消息和位置已通过 E2B 差分 |
+| G2 | P0 标量链 | `#[track_caller]` 被调者的 ABI 比 MIR 实参多一个隐式 `Location` | 转换器已按真实 FnAbi 归一化参数并维护 MIR local 映射，调用时补位置，进入 tracked 函数后转发调用方位置；源位置不进入 SoN 算术优化 |
+| G3 | P0 标量链 | match guard 的绑定是 `&T`（共享借用），纯标量程序也会出现引用 | 2026-11-09 已实现 StackSlot、Load/Store 和统一效果 token；guard 与共享/可变引用通过 E2B 差分。Local/Const 的精细分区优化仍未完成 |
+| G4 | P0 标量链 | `-Coverflow-checks=on`（cargo 默认 debug）产生 `AddWithOverflow` 等返回 `(T, bool)` 的运算 | 2026-11-09 已实现聚合结果与各位宽溢出检测；开启 overflow checks 的内存负载和溢出 panic 通过 E2B 差分 |
+| G5 | P1 真实 MIR | rustc mono collector 会剪掉编译期已知分支；逐块转换会引用未采集的函数（如关闭 UB checks 时的 precondition_check） | 转换器使用 rustc 的 `mono_reachable_as_bitset` / `mono_successors`；dead 块保留编号但不转换内容。带未定义 extern 符号的恒 false 分支已通过链接回归 |
+| G6 | P3 semver | 同一个 Rust 类型在不同调用中的 Cast ABI 不能用类型级缓存表示；部分 lane、padding、扩展和寄存器分组也不能退化成普通整数 | 已在每次调用的 `PassMode::Cast(CastAbi)` 记录真实 lanes 和扩展；候选 06 的双向 C ABI 机器对照通过，包含尾字节与寄存器耗尽。浮点、向量 Cast 和 C IndirectOnStack 仍明确拒绝 |

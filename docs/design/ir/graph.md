@@ -2,9 +2,13 @@
 
 > 级别（R/S/L）、Rust 级节点、内存分区和孔位见 [levels.md](levels.md)、[nodes.md](nodes.md)。本文件是图的数据结构契约；与它们冲突时以它们为准，并回改本文件。
 
-## 从现状出发
+## 历史起点与当前边界
 
-现在的 [son.rs](../../../src/son.rs)：一个程序一个 `Graph`，`Node { kind, control: Vec, data: Vec, memory: Vec }`，节点无类型，`Phi` 的 `control` 直接列出前驱 Jump（与 Region 的 control 相同），`Call(usize)` 用声明序号，13 种 `NodeKind`。保留它的 SoN 风格和已验证的优化，改动集中在以下几点。
+最初原型使用无类型的全程序 Graph；该旧链已经移除，不再以 legacy_adapter 过渡。
+当前实现见 [graph.rs](../../../crates/kfrc-son/src/graph.rs)，下列结构仍是目标契约示意，
+不代表字段和多分区机制已经全部实现。语义要求／凭据见
+[requirements-and-facts.md](requirements-and-facts.md)，其他约束见
+[constraints-and-effects.md](constraints-and-effects.md)。
 
 ## 函数图
 
@@ -42,6 +46,8 @@ pub struct NodeRec {               // 16 字节；字段私有，经访问器读
 - **效果输入就是普通 `NodeId`**：分区写在效果 token 的类型 `Effect(P)` 里，不在每条边上带 `PartitionId`；调用和 `Return` 只收一个 `MemMerge`。
 - **不维护 use-list**：维护它每节点多约 30 字节，比节点本身还大（V8 SoN 节点大正是因为同时指向输入和使用）。替换用转发表；需要使用者的 pass 临时建反向索引，或用饱和计数（Turboshaft 只留 1 字节）。
 - **压实**：删除只打 `DEAD` 标志；在 R 图发布、`specialize`、placement 之前三处保序压实（随机顺序存放时遍历慢 2.6–4.0 倍；Graal 在存活率低于 70% 时压缩）。
+- **证明引用与执行输入分开**：事实可用紧凑旁表表示，保留 predicate、witness、scope 及必要状态依赖；重写和压实同时重映射。它们参与验证和优化依赖，但不自动产生机器数据需求或寄存器活跃区间。
+- **Verified 有版本范围**：相关图、类型或凭据变更使验证状态及依赖分析失效；Verified 不允许跳过对新图的检查。
 
 ```rust
 pub enum ValueTy {
@@ -62,7 +68,7 @@ pub enum ValueTy {
 | 阶段 | 节点 | 说明 |
 |---|---|---|
 | M1 | `Call { callee: InstanceId }` 产出 `Tuple(Control, Effect, Value)` | 取代 `Call(usize)`；即使首版无内存，也带效果输入输出 |
-| M1 | `Unreachable` | 发散分支（`loop {}` 无 break、`!` 调用） |
+| M1 | `Unreachable` | 执行到达即源 UB；实际无限循环保留 CFG，非返回调用保留效果／unwind，不用此节点替代它们 |
 | M2 | `Load { align }`、`Store { align }` | 效果输入 → 新效果输出 |
 | M2 | `Addr`（基址 + 偏移）、`StaticAddr(DataId)` | 地址计算、静态数据 |
 | M2 | `Trunc`/`ZExt`/`SExt`、浮点运算与转换 | 宽度变化 |
@@ -74,13 +80,18 @@ pub enum ValueTy {
 
 - `Region { preds: Vec<NodeId> }`：前驱是 `Jump`/`Projection`。
 - `Phi { region: NodeId, values: Vec<NodeId> }`：`values[i]` 对应 `region.preds[i]`，结构上保证一一对应。
-- 效果合并也是 Phi，`ty = Effect`。每个 Region 后至多一个效果 Phi。
+- 效果合流也是 Phi；单链时每个 Region 至多一个效果 Phi，多分区时每个 P 各一个 Phi<Effect(P)>。MemMerge 只打包同点视图，不替代 Phi。
 - 循环 header 是 Region；`Building` 阶段可以先放入口前驱，封闭时补回边（参考 Braun et al. 的 sealed block 构造，T09 使用）。
 
 ## 效果链
 
 `Start` 产出 `Tuple(Control, Effect, params…)`。所有读写内存、调用、可能 trap/unwind 的节点取一个效果输入、产出一个新效果。首版只有这一条链（保守），见 [representations.md](memory-partitions.md)。
 
-## 过渡
+链上的顺序依赖不等同“写所有内存”。Require 的迁移可以暂借效果链排序，但没有
+内存读写；Opaque 的优化策略也不自动变成全局内存屏障。Slot／借用标记改变抽象
+状态或凭据范围，消去它们的表示前仍须落实实际操作的依赖。
 
-旧 `son::Graph` 在调用者迁完前保留，由 `legacy_adapter` 转成 `FunctionGraph`（所有值 `Int{bits:64}`，bool 结果 `Int{bits:1}`），这样现有优化和后端可以先接到新图上验证。
+## 实现边界
+
+生产路径只使用 semantic FunctionGraph。目标设计的多分区链、要求节点与事实旁表
+逐项迁移和验收，不恢复旧 IR。现有实现覆盖见 [PoC 状态](../../plan/poc/semantic-ir-status.md)。

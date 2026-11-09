@@ -1,9 +1,12 @@
 # 所有权、drop 与 unwind
 
+存储寿命、初始化状态、借用作用域和真实析构是不同契约；边界定义见
+[constraints-and-effects.md](constraints-and-effects.md)。以下为目标设计，不以标记代替源操作。
+
 ## move
 
 - SSA 值的 move 就是把值节点交给新的使用者。源变成“已移出”只是 Body 层的初始化事实，图里没有节点。
-- `StackSlot` 中的值被 move：`Load` 出整值，之后槽位内容视为死（下一节的 `SlotDead`），不需要清零或拷贝。
+- StackSlot 中的值被 move：按源初始化规则转移该值，源位置变为已移出；不自动 SlotDead，不清零。该槽仍可在同一存储寿命内被重新赋值，部分 move 也不影响其余字段的存储寿命。
 - 部分 move（`let a = s.x;` 之后 `s.y` 仍有效）：值形式下是 `Field`，剩余字段照常可用；drop 显式化已在 Body 上决定剩余字段怎么析构。
 
 ## drop
@@ -25,13 +28,22 @@ drop 显式化在 Body 上完成（[design/frontend/body.md](../frontend/body.md
 
 ## 线性消费检查
 
-需要 drop 的值在每条路径上恰好被消费一次（move 给别人、`DropValue`、或作为返回值），以 `Unreachable`/`Terminate` 结束的路径除外。这是 Swift OSSA 的做法，作为 verifier 检查（`OwnershipLinear`）；`EndBorrow` 必须联合后支配它的 `Reborrow`，之后不能再用子分区的地址（`BorrowScopeClosed`、`UseAfterEndBorrow`）。
+验证 Body 指定的所有权／drop 义务是否正确转移、执行或解除，不能机械要求所有
+资源恰好析构一次。mem::forget、ManuallyDrop 及合法泄漏允许不析构，Copy 值的多个
+使用者也不违反契约；不得据此制造 UB 或补 Drop。正常、unwind、终止及不返回路径
+分别检查。EndBorrow 要覆盖 Reborrow 的有限正常和 unwind 出口，之后不能再用该
+scope 的凭据；底层地址是否仍可用取决于其他有效权限，不由 EndBorrow 一刀切决定。
 
 Rust 的 drop 时机是语义：`DropValue` 不能上移，也不能越过 `Unknown` 效果。不做 Swift 那样的 copy propagation/ASAP 析构（Swift 6.2 因此出现过 4.6 s → 2629 s 的编译时间退化）。
 
 ## 栈槽活跃区间
 
 只有 `StackSlot` 需要活跃区间（给栈帧复用）。Body 清理阶段**保留被取地址局部的 `StorageLive/StorageDead`**，在图里变成 `SlotLive`/`SlotDead` 效果节点（挂在该槽的 `Local` 分区链上）。SSA 局部的 Storage 语句照旧删除。和 LLVM 相比，lifetime 标记只出现在少数真正有地址的槽上。
+
+SlotLive 开始一次动态存储寿命，初始内容未初始化；SlotDead 结束寿命，均不执行
+析构或清零。循环中重新 SlotLive 不复活旧寿命凭据。未初始化状态、已移出状态和
+存储死亡必须分别处理；标记只在访问安全及槽复用依赖已落实后擦除。槽地址逃逸后
+相应效果依赖也可能属于 Unknown，不能永久强制使用创建时的 Local 标签。
 
 ## 大值与原地构造
 
@@ -57,10 +69,14 @@ L 级把 `Memory` 表示的值放进 value slot。槽位分配在 SSA 上做，�
 
 ## 冷区域
 
-以下控制只能到达冷区域：`Check` 的 fail 出口、unwind 出口、调用 `#[cold]` 或 `-> !` 函数前的控制、`Unreachable` 前的路径。`#[inline(never)]` 不算冷：`Vec::push` 的扩容路径（`grow_one` 只标了 `inline(never)`）不是冷区域，与 LLVM 一致（W05）。冷区域：
+Check 的 fail 出口、unwind 出口和 #[cold] 调用点可按策略标为冷；这是优化启发，
+不证明不可达或 UB。不能仅凭 -> ! 或最终接 Unreachable 把整个前缀视为冷：不返回
+函数可能是热事件循环，前缀也可能含真实调用。#[inline(never)] 也不算冷。
+被策略选中的冷区域：
 
 - 不作为内联目标的调用点（除非被调者是 `#[inline(always)]`）。
 - 只跑构建期窥孔和 DCE，不跑循环与强度削减。
 - L 级放到函数末尾；同一函数里相同 panic 调用（同一 panic 函数、实参只差常量）合并成一个尾块，实参用 Phi 传入。
 
-冷是结构事实，不依赖 profile，因此不会出现 PGO 冷函数 optnone 那种 held-out 负载变慢的问题。
+冷策略可以使用结构信息而不依赖 profile，但仍可能误估真实频率；不得以冷标记
+放松正确性检查，收益需真实负载验证。

@@ -1,9 +1,14 @@
 # 优化流水线
 
+本文描述目标设计；当前代码模块、已实现范围与并行任务归属见
+[optimization-modules.md](../../plan/poc/optimization-modules.md)。R/S/L 是执行阶段，
+分析、函数内变换、跨函数变换和机器优化按职责分别实现。
+
 ## 共同机制
 
 - **构建期窥孔：** 每建一个节点就做常量折叠、代数化简和 GVN 哈希查找（Click 的做法）。大部分“清理临时值”的工作在这里完成。规则准入条件：按固定代价**单向化简**（不加交换律、结合律这类非化简恒等式）；右侧递归重写有层数和次数上限；可标记 `subsume`（结果严格更好，直接替换）。Cranelift 的同类一遍重写在约 400 万值节点中只错过 2 次等价（[prior-art/egraph-rewrite.md](../../research/prior-art/egraph-rewrite.md)）。
 - **语义约束：** 不由 `p == q` 把 `q` 换成 `p`（provenance 可能不同）；浮点常量折叠选与 x86 硬件相同的 NaN；规则表每条带 `poison_producing`/`introduces_ub_point`/`speculates`/`float_bits` 标志（[semantics.md](semantics.md)）。
+- **规则契约：** 标明相等或 refinement；语义要求、证明凭据和执行消费者分别维护。事实替换时检查作用域、循环动态实例及内存依赖，不用通用 Refine 包装值。约束分类及擦除边界见 [requirements-and-facts.md](requirements-and-facts.md) 和 [constraints-and-effects.md](constraints-and-effects.md)。
 - **声明式规则表：** 窥孔规则和指令选择规则用 kfrc **自写的小规则 DSL**（形状参考 Cranelift ISLE，不依赖 `cranelift-isle`）：`(模式) => (结果)`，带优先级、`subsume` 和 G4 的四个语义标志；由 build.rs 生成匹配代码（经 kfrc 图的访问器读写节点），并输出规则清单与 SMT 查询。生成器负责类型检查和 overlap 检查（报告互相遮蔽、永不触发的规则）。整数规则用 SMT 证明或 ≤8 位穷举检查，CI 读缓存的证明结果，缺失即失败（Alive 在 334 条 LLVM 规则里找出 8 条错误；Arrival 已进 Cranelift CI）。不做整图翻译验证。
 - **GVN 表：** hashbrown `HashTable<(NodeId, u32)>`，表项存 32 位哈希，Fx 哈希（SipHash 慢 2.4–3.8 倍）；在表中的节点改输入前先移出。
 - **worklist 顺序：** 初始按 `NodeId` 升序（即创建顺序，局部性好），之后 LIFO；记录访问数与改动数。
@@ -25,9 +30,9 @@
 | 常量 Phi 变条件：`Phi(If c; false, true) = Not(c)`。drop flag 折叠就是这条（W04 中 O3 的结果是 `xor i1 %flag, true`），不需要专用节点 | |
 | 内联（见下文“内联策略”） | |
 | 槽位提升：引用全部消失的 `StackSlot` 退回 SSA | 借用在 Body 上显式 |
-| 分区内 load/store 转发、死 store 删除；写回已知当前值的 store 删除（借助 `Refine`，`RefCell` 的计数恢复靠它，W10） | 分区 |
+| 分区内 load/store 转发、死 store 删除；写回已知当前值的 store 删除（使用对应内存状态下的等值凭据，W10） | 分区和内容事实；不能跨相关写入复用 |
 | `Const` 分区上常量偏移的 load 折叠 | 常量内存 |
-| 检查消除：`Refine` 已证明的 `Check`、len 相关区间推理 | 宽指针 len 是值，类型有范围事实 |
+| 检查消除：使用 scope 内已证明的谓词、len 相关区间推理；单独消除冗余 Require | 真实 Check 与 UB 要求区分，未知证明不生成额外运行时检查树 |
 | DCE（含不可达控制） | |
 
 **R 级能内联谁。** 非泛型函数没有孔位，R 图就是 S 图，它调用的全是已解析的实例（包括 `Vec<u8>::push` 这种具体类型的泛型实例），内联的是被调者的 S 图。泛型函数只能内联实参全由本函数 `Param` 原样转发和具体类型组成的被调者：拼接时 `Param` 换名，被调者的孔位表和 mentioned 集合并入调用者。
@@ -63,6 +68,7 @@ pub struct CallSummary {
 
 - 冷区域不内联（`#[inline(always)]` 除外）。
 - 被调者的图已经优化好：内联是拼接图，接缝处（参数、返回、分区 `Reborrow/EndBorrow`）作为 worklist 种子，不重新跑被调者内部的优化。
+- 内联替换 Call 边界时，保留尚需的源操作要求和 protector 作用域；要求不返回新业务值。复用父内存链不等于丢弃借用作用域。正常与 unwind 出口重映射凭据，不按每个参数机械生成整值 Observe。
 - 体积准则：`size_estimate` 小于调用开销，或内联后被调者的外部副本可以删除。
 - **构建模式：** 增量/dev 构建跨 crate 只内联 `#[inline]` 和小于阈值的函数，否则改动上游的普通函数会让下游全部失效（rustc 增量模式也关闭了跨 crate 内联推断，W08）。release 构建按上面的准则。
 
@@ -70,7 +76,9 @@ pub struct CallSummary {
 
 | 步骤 | 说明 |
 |---|---|
-| 布局降低 | 聚合按 PassMode 拆分或进槽、enum 按 tag 值分支、`FieldAddr` → 偏移、`DropValue` 展开、`Check` → `If`、`Repeat` 按阈值展开或调用 memset |
+| 需求分析与要求擦除 | 区分执行和证明消费者；在明确的 refinement 边界擦除 Require／Assume，向实际操作移交必要的作用域和放置依赖；保留诊断不制造执行需求 |
+| 布局降低 | 真实消费者需要的聚合按 PassMode 拆分或进槽；enum 按实际 tag／字段需求降低；FieldAddr → 偏移、DropValue 展开、Check → If、Repeat 按阈值展开或调用 memset。保持快照时刻 |
+| 分区／寿命事实更新 | 对新调用、分配和地址派生重建或失效旧凭据；布局引入 memcpy/memmove 后不能沿用已失效的 Local 标签 |
 | 机器级窥孔与 GVN | 降低产生的地址/比较/扩展；分区仍在，load 消除继续用 |
 | 常量除法/取模 | 乘法逆元；`x % c == 0` 判定（W02） |
 | switch 降低 | 跳转表、位测试、查找表、比较树按阈值选择；查找表进只读数据并按内容去重（LLVM 的 `switch-to-lookup` 与 SelectionDAG 承担这部分） |

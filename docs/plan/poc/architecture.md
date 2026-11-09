@@ -1,5 +1,10 @@
 # 架构：外壳与三条接缝
 
+以下描述目标架构，范围由 [scope.md](scope.md) 固定。2026-11-09 当前代码
+仍逐具体 Instance 转换；旧链提前布局，新链已建立首个单态语义值→布局接缝，
+见 [semantic-ir-status.md](semantic-ir-status.md)。目标与现状的差距、实施顺序见
+[semantic-ir-migration.md](semantic-ir-migration.md)。
+
 ## 外壳
 
 ```text
@@ -12,7 +17,7 @@ cargo（profile 按包选 codegen-backend）
                  └─ .o ──→ 系统链接器 ←── rustc 编译的 std/alloc（接缝 3）
 ```
 
-- 外壳实现 `CodegenBackend`：在 `codegen_crate` 里自己从根做可达性（不用 rustc 的 CGU 划分），对每个可达定义取多态 MIR，建 R 图，回答孔位，按特化身份键去重，特化、降低、编码，输出目标文件。
+- 外壳实现 `CodegenBackend`，复用 rustc mono collector/CGU、required-const 与 mentioned-item 的诊断契约。对需要的真实 MIR 定义构建并缓存多态 R 图，再回答孔位，按特化身份键去重，特化、降低、编码；多个 InstanceKey 可映射到同一份机器码，符号归属和链接仍需遵守 CGU 契约。普通定义、闭包体和 shim 按实际 body 身份区分，不按共用 typeck root 错误合并。当前两个入口都仍逐 Instance 转换，上述定义级流程待实现。
 - 工具链固定为 rustc 1.94.1 + `rustc-dev` 组件，用 `RUSTC_BOOTSTRAP=1` 打开 `-Z` 选项；P0 先核实 cargo 的 `codegen-backend` profile 选项（不稳定）能按包选择后端。
 - 只有外壳依赖 `rustc_*`。`kfrc-son` 和 `kfrc-x86` 是产品代码，CI 检查它们的依赖树里没有 `rustc_*`。
 
@@ -32,11 +37,13 @@ pub trait TypeOracle {
 - **PoC 实现**：`layout_of`、`fn_abi_of_instance`、`Instance::resolve`、`needs_drop`、`is_freeze`；`Ty<'tcx>` 驻留成 `TyId`。答案自然与 rustc 位级一致，所以能和 rustc 编译的 std 混链。
 - **产品实现**：自有前端 + `KfrcInterner` + next-solver + `rustc_abi`。
 - 为什么不直接在 SoN 里用 `rustc_type_ir`：外壳必须链接 rustc 内部那一份（rustc_private），产品依赖 crates.io 上的 `ra-ap-rustc_type_ir`，两者源码相同但对编译器来说是两个 crate，trait 和类型互不兼容；`Ty<'tcx>` 的生命周期也会传染整个 IR。
-- 这同时强制执行设计里“S/L 级只经答案表读类型事实”（F01）：SoN 没有别的途径拿到类型信息。
+- 目标接口必须区分语义形状与布局答案，并机械检查“S/L 级只经答案表读类型事实”（F01）。当前 `RecordedTypes` 可直接返回具体布局，尚不能保证该约束；迁移时所有被读取的布局/有效范围/调用解析事实都必须登记答案依赖。
 
 ## 接缝 2：MIR → kfrc Body
 
-R 级 builder 只认 [Body 契约](../../design/frontend/body.md)。PoC 写一个转换器（估计 1–2 千行，一次性代码）：
+R 级 builder 只认 [Body 契约](../../design/frontend/body.md)。PoC 的定义级转换器
+须保留 Param、const 参数、关联类型和 typing environment/where-clause，
+语义签名不预先依赖物理 FnAbi；当前 `convert_instance` 仅作迁移对照：
 
 - 1:1 映射：基本块、`Place` 与投影、`Rvalue`、`Call`/`Assert`/`Drop`、cleanup 边、被取地址局部的 `StorageLive/Dead`。
 - 需要改写：`CopyForDeref`、`ShallowInitBox`、`NullaryOp`、以调用形式出现的 intrinsic、`Repeat`。

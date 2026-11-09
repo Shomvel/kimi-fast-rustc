@@ -1,0 +1,74 @@
+{
+  "candidate": "candidate10",
+  "source_sha256": "e706d171426f1e6bd3010f06fa9df732992bbdc637ca1fae08603953961f771f",
+  "linux_tests": {
+    "suites": 62,
+    "passed": 571,
+    "ignored": 1
+  },
+  "semantic": "381 output lines equal in 3 arms and scope negatives rejected",
+  "features": "all three arms pass strict generic/prepared-once/dead-target/known-no-branch, nominal, MaybeUninit opaque/partial/invalid-bool raw-byte, array iterator clone, static callback/recursive emission roots",
+  "cli": "pass",
+  "semver": "unchanged1.0.28 34 upstream tests per arm and workload passed",
+  "legacy_corpus": {
+    "suites": 7,
+    "fixtures": 394,
+    "vectors": 1295,
+    "traps": 19,
+    "arms": "LLVM/off/on pass"
+  },
+  "walkthroughs": {
+    "passed_three_arms": [
+      "W01",
+      "W02",
+      "W03",
+      "W04",
+      "W05",
+      "W08",
+      "W09"
+    ],
+    "W06": "original source f64+NaN unsupported",
+    "W07": "original std::io stdout chain atomic_store intrinsic unsupported",
+    "W10": "original atomics chain atomic_load intrinsic unsupported",
+    "inputs": "unchanged source hashes; no narrowed substitute used"
+  },
+  "regex": "unchanged regex-syntax0.8.8 fails Literal::exact::<Vec<u8>> R resolved call needs a caller location adapter; former union blocker passed; no regex acceptance claimed",
+  "semver_performance": {
+    "compile_wall_seconds": 0.65,
+    "text_bytes": 1057726,
+    "runtime_ns_medians": {
+      "parse": 141190757,
+      "req": 352154773,
+      "identifier": 141969767
+    },
+    "compile_rounds": 5,
+    "runtime_rounds": 7,
+    "shared_std_mir0": true,
+    "checksum_equal": true
+  },
+  "total_profile": {
+    "LLVM_instructions": 1668287251,
+    "kfrc_instructions": 5192455564,
+    "ratio": 3.1124469487419226,
+    "rounds": 3,
+    "enabled_equals_running": true,
+    "object_bytes_unchanged": true,
+    "scope": "codegen_crate through join, includes collector/MIR conversion, excludes link"
+  },
+  "from_str": {
+    "S_input_nodes": 532,
+    "S_after_opt_nodes": 851,
+    "S_ObserveValue": 18,
+    "L_nodes": 7753,
+    "If": 267,
+    "ObserveValue": 31,
+    "Load": 258,
+    "Store": 158,
+    "Refine": 280,
+    "text_bytes": 63455
+  },
+  "archives": {
+    "candidate10-results.tar.gz": "bd94d2ba102c3a888486a89ac0266184a5802e1e814f59a0ebce028f7daf371c",
+    "candidate10-attribution.tar.gz": "9a3c1ba4294ea2e8a4b82ca8f21b5f2f0ce923a7a2f1f0a5c78bd4cf6408dd81"
+  }
+}

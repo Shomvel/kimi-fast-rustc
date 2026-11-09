@@ -1,5 +1,10 @@
 # 内存分区：把借用变成独立的效果链
 
+本文是目标设计；当前 Local／Const 标签不等于已经实现独立分区效果链。
+token、MemMerge、借用作用域和 Escape 的精确定义见
+[constraints-and-effects.md](constraints-and-effects.md)，值事实和访问条件的区别见
+[requirements-and-facts.md](requirements-and-facts.md)。
+
 ## 问题
 
 首版 SoN（[representations.md](memory-partitions.md)）只有一条保守效果链：任何 load 都排在之前所有 store 和调用之后。正确，但会把 LLVM 的 noalias 推断推迟成“没有”。Rust 的借用规则给出了更细的结构：一个 `&mut` 在 protector 期间是唯一访问路径，一个 `&T`（`T: Freeze`）指向的内存在 protector 期间不变。
@@ -23,11 +28,11 @@
 ## 规则
 
 1. **根集合：** 每个指针值的根是一个**集合**，沿 `FieldAddr`/`IndexAddr`/`AddrAdd`/`Reborrow`/指针 `Cast` 向上找，经过 `Phi`/`Select` 时取并集，从聚合值中 `Field` 出来的指针取聚合构造时的根。根来自 load、int→ptr、调用返回值时是 `{Unknown}`。访问取根集合里**每个**分区的 token；verifier 检查（`PartitionMismatch`）。
-2. **读：** `Frozen`、`Const` 的 token 在函数内从不被写，它们的 load 只依赖指针：可以 CSE、外提出循环、跨任意调用。**投机执行**（上提出条件）只允许落在 sized pointee 的静态大小之内：`&[T]`、`&str`、`&dyn` 的内容没有 `dereferenceable`，越过长度检查读会越界（W05）。
+2. **读：** Frozen、Const 的内容不变可支持 CSE 和移动，但 load 仍依赖访问凭据：分配在目标位置存活、地址及范围有效、对齐成立，Frozen 的 protector 也必须有效。不能仅由只读或 sized 推出投机安全。不得越过相关寿命边界；切片等动态范围必须有独立长度／访问证明（W05）。
 3. **调用：** 调用接收 `Unknown`，以及**沿实参的值字段可达的全部指针**（包括 `IterMut`、闭包环境里的指针）的根分区，产出它们的新 token；其他分区原样穿过。被调者摘要（[optimization-pipeline.md](optimization-pipeline.md#调用摘要)）可以把“写”缩小为“读”或“无”，把 `captures` 缩小为空。`&T`（`T: Freeze`）实参即使没有摘要，也按 rustc 已有的事实视为只读、只捕获 read_provenance，槽位留在 `Local`。
 3a. **激活写：** `Unique(p)` 上新增或上移的写，必须被原程序中同一分区的某个写支配，不能在分区第一次写之前推测性地写（Tree Borrows §5：Reserved → Unique 的激活写不能移动）。循环 store 外提、条件 store 合并都受此约束。
-4. **逃逸是数据流状态：** 派生指针被存进内存、传给无 no-capture 摘要的调用、转成整数时，该分区在**此控制点之后**变为已逃逸。分区状态 `{未逃逸, 已逃逸}` 沿控制流传播，汇合处取“已逃逸”，并把该分区与 `Unknown` 的 token 合并成一个 Phi。只在冷路径逃逸时，热路径保持独立（W05 的扩容调用）。首版可以先用“函数内任一处逃逸则整函数视为 `Unknown`”，再做流敏感版本。`Frozen`、`Const` 不需要逃逸处理。
-5. **内联：** 对根集合是 `{Unknown}` 的 `&T`/`&mut T` 实参，调用点做 `Reborrow{Frozen|Unique}`，被调者体内用新分区；实参根已是 `Unique`/`Local`/`Heap` 时直接沿用父分区，不建子分区（不带来新信息）。每个内联出口（正常和 unwind）做 `EndBorrow`：把子分区的最终 token 合回父分区，**并把子分区的逃逸状态传给父分区**。
+4. **逃逸是数据流状态：** 派生指针被存入可能由外部访问的内存、传给无足够 captures 摘要的调用或暴露给整数访问路径等，导致该点之后不再能证明独立访问。首版可保守使用整函数逃逸；流敏感版本在汇合处取“已逃逸”，先逐前驱将相关精确分区依赖并入 Unknown 视图，再按同一分区做 Phi，不能把不同分区 token 直接当作控制前驱合并。Escape 是知识保守化，不是独立运行时效果或 UB。Frozen、Const 的内容不变资格与寿命仍须另外验证。
+5. **内联：** 对满足 producer 参数契约的实参建立 Reborrow 作用域和访问凭据；根为 Unknown 时可按契约分出 Frozen／Unique，已是 Unique／Local／Heap 时可复用父链，但不得丢失契约范围。每个有限的正常和 unwind 出口 EndBorrow 关闭该 scope，将子链依赖及逃逸状态交回父视图。不写回、不 drop，不自动令原地址失效；之后不能使用该 scope 的旧凭据。
 6. **不能用的情况：** `T: !Freeze` → 不建 `Frozen`，也没有 `dereferenceable`；`&mut T` 且 `T: !Unpin` → 不建 `Unique`，也没有 `dereferenceable`（rustc `abi.rs` 对这两类和 `Box` 都给 0，#98017）。泛型 `&T` 在 R 级按 `Unknown`；`IsFreeze(T)`/`IsUnpin(T)` 是孔位，S 级得到答案后拆出分区，并以该根上的全部内存节点为种子。
 7. **原子与 fence：** 原子访问用地址所属的分区（栈上原子是 `Local`，`&mut AtomicU32` 是 `Unique`）。排序：
    - Acquire 加载、Acquire fence：只排序 `Unknown`（之后的访问不能上移越过它；`Local`/`Unique` 别人看不到）。
@@ -36,7 +41,11 @@
 
 ## 分区的两类地位
 
-`Local`、`Heap`、`Const` 是**分析结果**：违反即编译器 bug。`Frozen`、`Unique` 和 `Reborrow` 出的分区是 **UB 条件**：违反即程序 UB，证明义务是“kfrc 认定的分区 UB ⊆ Miri 在 SB 和 TB 下都报的 UB”（[semantics.md](semantics.md#分区的两类地位)）。
+Local、Heap、Const 的资格是分析结果；Frozen、Unique 还依赖已确认的源语言
+protector 契约。源程序违反该契约才是源 UB；错误地建立或使用分区、缺失凭据、
+跨 scope 移动都是编译器错误，不能通过标为 Assumed 转嫁给用户。
+别名规则仍遵守“kfrc 认定的源分区 UB ⊆ Miri 在 SB 和 TB 下都报的 UB”的验证要求。
+布局引入新调用后必须重新验证或失效旧标签，不能按 memcpy/memmove 名字绕过逃逸分析。
 
 ## 字段级不相交
 
@@ -55,3 +64,7 @@
 - M6（T38），按顺序逐个开关：流敏感逃逸 → 参数 `Frozen` → 局部 `Frozen`（只读复用，rustc MIR GVN 已在用，#123602）→ 参数 `Unique`（带激活写规则）→ 内联 `Reborrow`。每加一种都用含 unsafe 的 std 代码和 Miri 可运行的用例在 SB 与 TB 两种模式下对拍，W05/W10 的程序进差分集。
 
 **实现形式（Simple 第 11 章的 `MemMerge`）：** 分区不预先全部展开。调用、`Return`、`Resume` 的效果输入是一个 `MemMerge`（默认内存 + 精确访问过的分区），只有被精确访问的分区单独出现，效果输入保持稀疏。
+
+MemMerge 只是同一控制点的分区版本打包，不选择分支、不同步线程、不搬运数据；
+控制合流由各分区的效果 Phi 完成。token 进入机器层前可消去表示，但真实访问与
+同步依赖必须保留。当前单链实现不得以标签数量宣称已经获得多链并行度。

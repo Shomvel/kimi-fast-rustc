@@ -1,0 +1,2218 @@
+{
+  "candidate": "candidate01",
+  "source_sha256": "c15a798ff880775d1eb234dccca7ec6f92fcb2d8842e228ad58cdb3afe80c500",
+  "results_sha256": "cad577ce8bbfa6992420f67b3569aea00fbd5f415b6de58e1bc9323bd9164cee",
+  "workspace": {
+    "suites": 96,
+    "passed": 837,
+    "ignored": 5
+  },
+  "semantic": {
+    "scope": "Rust frontend -> sole kfrc semantic library pipeline -> x86; LLVM ABI provider and driver",
+    "arms": {
+      "llvm": {
+        "output_lines": 378,
+        "kfrc_object_writer": false
+      },
+      "semantic-off": {
+        "output_lines": 378,
+        "kfrc_object_writer": true,
+        "semantic_functions": 21,
+        "input_symbols": [
+          "_RNvCs6QBJXeMU2CH_15semantic_values10tuple_loop:",
+          "_RNvCs6QBJXeMU2CH_15semantic_values11known_empty:",
+          "_RNvCs6QBJXeMU2CH_15semantic_values11tuple_field:",
+          "_RNvCs6QBJXeMU2CH_15semantic_values12choose_slice:",
+          "_RNvCs6QBJXeMU2CH_15semantic_values12tuple_branch:",
+          "_RNvCs6QBJXeMU2CH_15semantic_values13big_roundtrip:",
+          "_RNvCs6QBJXeMU2CH_15semantic_values13inline_caller:",
+          "_RNvCs6QBJXeMU2CH_15semantic_values13inline_helper:",
+          "_RNvCs6QBJXeMU2CH_15semantic_values13known_payload:",
+          "_RNvCs6QBJXeMU2CH_15semantic_values13nested_fields:",
+          "_RNvCs6QBJXeMU2CH_15semantic_values14pair_roundtrip:",
+          "_RNvCs6QBJXeMU2CH_15semantic_values15array_roundtrip:",
+          "_RNvCs6QBJXeMU2CH_15semantic_values19local_call_snapshot:",
+          "_RNvNtCs6QBJXeMU2CH_15semantic_values11index_probe13dynamic_index:",
+          "_RNvNtCs6QBJXeMU2CH_15semantic_values11index_probe9supported:",
+          "_RNvNtCs6QBJXeMU2CH_15semantic_values11niche_probe5relay:",
+          "_RNvNtCs6QBJXeMU2CH_15semantic_values11niche_probe9supported:",
+          "_RNvNtCs6QBJXeMU2CH_15semantic_values12borrow_probe16requires_address:",
+          "_RNvNtCs6QBJXeMU2CH_15semantic_values12borrow_probe9supported:",
+          "_RNvNtCs6QBJXeMU2CH_15semantic_values13variant_probe15decode_argument:",
+          "_RNvNtCs6QBJXeMU2CH_15semantic_values13variant_probe9supported:"
+        ],
+        "graphs": {
+          "_RNvCs6QBJXeMU2CH_15semantic_values10tuple_loop": [
+            {
+              "level": "Specialized",
+              "nodes": 26,
+              "opcodes": {
+                "Add": 2,
+                "Aggregate": 2,
+                "Compare": 1,
+                "Const": 2,
+                "Field": 3,
+                "If": 1,
+                "Jump": 2,
+                "Not": 1,
+                "Phi": 2,
+                "Projection": 7,
+                "Region": 1,
+                "Return": 1,
+                "Start": 1
+              }
+            },
+            {
+              "level": "Specialized",
+              "nodes": 26,
+              "opcodes": {
+                "Add": 2,
+                "Aggregate": 2,
+                "Compare": 1,
+                "Const": 2,
+                "Field": 3,
+                "If": 1,
+                "Jump": 2,
+                "Not": 1,
+                "Phi": 2,
+                "Projection": 7,
+                "Region": 1,
+                "Return": 1,
+                "Start": 1
+              }
+            },
+            {
+              "level": "Layout",
+              "nodes": 35,
+              "opcodes": {
+                "Add": 2,
+                "Compare": 1,
+                "Const": 5,
+                "If": 1,
+                "Jump": 2,
+                "Not": 1,
+                "Phi": 3,
+                "Projection": 11,
+                "PtrOffset": 3,
+                "Region": 1,
+                "Return": 1,
+                "StackSlot": 1,
+                "Start": 1,
+                "Store": 2
+              }
+            }
+          ],
+          "_RNvCs6QBJXeMU2CH_15semantic_values11known_empty": [
+            {
+              "level": "Specialized",
+              "nodes": 25,
+              "opcodes": {
+                "Add": 1,
+                "Compare": 2,
+                "Const": 4,
+                "Discriminant": 1,
+                "If": 2,
+                "Jump": 2,
+                "MakeVariant": 1,
+                "Phi": 1,
+                "Projection": 6,
+                "Region": 1,
+                "Return": 1,
+                "Start": 1,
+                "Unreachable": 1,
+                "VariantField": 1
+              }
+            },
+            {
+              "level": "Specialized",
+              "nodes": 25,
+              "opcodes": {
+                "Add": 1,
+                "Compare": 2,
+                "Const": 4,
+                "Discriminant": 1,
+                "If": 2,
+                "Jump": 2,
+                "MakeVariant": 1,
+                "Phi": 1,
+                "Projection": 6,
+                "Region": 1,
+                "Return": 1,
+                "Start": 1,
+                "Unreachable": 1,
+                "VariantField": 1
+              }
+            },
+            {
+              "level": "Layout",
+              "nodes": 43,
+              "opcodes": {
+                "Add": 1,
+                "BitAnd": 4,
+                "BitOr": 2,
+                "Cast": 2,
+                "Compare": 4,
+                "Const": 10,
+                "If": 2,
+                "Jump": 2,
+                "Neg": 2,
+                "Not": 2,
+                "Phi": 1,
+                "Projection": 6,
+                "Region": 1,
+                "Return": 1,
+                "Start": 1,
+                "Undefined": 1,
+                "Unreachable": 1
+              }
+            }
+          ],
+          "_RNvCs6QBJXeMU2CH_15semantic_values11tuple_field": [
+            {
+              "level": "Specialized",
+              "nodes": 8,
+              "opcodes": {
+                "Aggregate": 1,
+                "Field": 1,
+                "Projection": 4,
+                "Return": 1,
+                "Start": 1
+              }
+            },
+            {
+              "level": "Specialized",
+              "nodes": 8,
+              "opcodes": {
+                "Aggregate": 1,
+                "Field": 1,
+                "Projection": 4,
+                "Return": 1,
+                "Start": 1
+              }
+            },
+            {
+              "level": "Layout",
+              "nodes": 5,
+              "opcodes": {
+                "Projection": 3,
+                "Return": 1,
+                "Start": 1
+              }
+            }
+          ],
+          "_RNvCs6QBJXeMU2CH_15semantic_values12choose_slice": [
+            {
+              "level": "Specialized",
+              "nodes": 15,
+              "opcodes": {
+                "If": 1,
+                "Jump": 2,
+                "Not": 1,
+                "Phi": 1,
+                "Projection": 7,
+                "Region": 1,
+                "Return": 1,
+                "Start": 1
+              }
+            },
+            {
+              "level": "Specialized",
+              "nodes": 15,
+              "opcodes": {
+                "If": 1,
+                "Jump": 2,
+                "Not": 1,
+                "Phi": 1,
+                "Projection": 7,
+                "Region": 1,
+                "Return": 1,
+                "Start": 1
+              }
+            },
+            {
+              "level": "Layout",
+              "nodes": 53,
+              "opcodes": {
+                "Const": 7,
+                "If": 1,
+                "Jump": 2,
+                "Load": 4,
+                "Not": 1,
+                "Phi": 2,
+                "Projection": 23,
+                "PtrOffset": 7,
+                "Region": 1,
+                "Return": 1,
+                "StackSlot": 1,
+                "Start": 1,
+                "Store": 2
+              }
+            }
+          ],
+          "_RNvCs6QBJXeMU2CH_15semantic_values12tuple_branch": [
+            {
+              "level": "Specialized",
+              "nodes": 21,
+              "opcodes": {
+                "Add": 1,
+                "Aggregate": 2,
+                "Field": 2,
+                "If": 1,
+                "InsertField": 1,
+                "Jump": 2,
+                "Not": 1,
+                "Phi": 1,
+                "Projection": 7,
+                "Region": 1,
+                "Return": 1,
+                "Start": 1
+              }
+            },
+            {
+              "level": "Specialized",
+              "nodes": 21,
+              "opcodes": {
+                "Add": 1,
+                "Aggregate": 2,
+                "Field": 2,
+                "If": 1,
+                "InsertField": 1,
+                "Jump": 2,
+                "Not": 1,
+                "Phi": 1,
+                "Projection": 7,
+                "Region": 1,
+                "Return": 1,
+                "Start": 1
+              }
+            },
+            {
+              "level": "Layout",
+              "nodes": 30,
+              "opcodes": {
+                "Add": 1,
+                "Const": 3,
+                "If": 1,
+                "Jump": 2,
+                "Not": 1,
+                "Phi": 2,
+                "Projection": 11,
+                "PtrOffset": 3,
+                "Region": 1,
+                "Return": 1,
+                "StackSlot": 1,
+                "Start": 1,
+                "Store": 2
+              }
+            }
+          ],
+          "_RNvCs6QBJXeMU2CH_15semantic_values13big_roundtrip": [
+            {
+              "level": "Specialized",
+              "nodes": 38,
+              "opcodes": {
+                "Add": 1,
+                "Aggregate": 5,
+                "BitXor": 2,
+                "Call": 1,
+                "Field": 20,
+                "Projection": 7,
+                "Return": 1,
+                "Start": 1
+              }
+            },
+            {
+              "level": "Specialized",
+              "nodes": 38,
+              "opcodes": {
+                "Add": 1,
+                "Aggregate": 5,
+                "BitXor": 2,
+                "Call": 1,
+                "Field": 20,
+                "Projection": 7,
+                "Return": 1,
+                "Start": 1
+              }
+            },
+            {
+              "level": "Layout",
+              "nodes": 145,
+              "opcodes": {
+                "Add": 1,
+                "BitXor": 2,
+                "Call": 1,
+                "Const": 30,
+                "Load": 10,
+                "Projection": 57,
+                "PtrOffset": 30,
+                "Return": 1,
+                "StackSlot": 2,
+                "Start": 1,
+                "Store": 10
+              }
+            }
+          ],
+          "_RNvCs6QBJXeMU2CH_15semantic_values13inline_caller": [
+            {
+              "level": "Specialized",
+              "nodes": 15,
+              "opcodes": {
+                "Add": 2,
+                "Call": 1,
+                "Field": 2,
+                "Projection": 8,
+                "Return": 1,
+                "Start": 1
+              }
+            },
+            {
+              "level": "Specialized",
+              "nodes": 15,
+              "opcodes": {
+                "Add": 2,
+                "Call": 1,
+                "Field": 2,
+                "Projection": 8,
+                "Return": 1,
+                "Start": 1
+              }
+            },
+            {
+              "level": "Layout",
+              "nodes": 25,
+              "opcodes": {
+                "Add": 2,
+                "Call": 1,
+                "Const": 2,
+                "Load": 2,
+                "Projection": 14,
+                "PtrOffset": 2,
+                "Return": 1,
+                "Start": 1
+              }
+            }
+          ],
+          "_RNvCs6QBJXeMU2CH_15semantic_values13inline_helper": [
+            {
+              "level": "Specialized",
+              "nodes": 21,
+              "opcodes": {
+                "Add": 2,
+                "Aggregate": 2,
+                "BitXor": 2,
+                "If": 1,
+                "Jump": 2,
+                "Not": 1,
+                "Phi": 1,
+                "Projection": 7,
+                "Region": 1,
+                "Return": 1,
+                "Start": 1
+              }
+            },
+            {
+              "level": "Specialized",
+              "nodes": 21,
+              "opcodes": {
+                "Add": 2,
+                "Aggregate": 2,
+                "BitXor": 2,
+                "If": 1,
+                "Jump": 2,
+                "Not": 1,
+                "Phi": 1,
+                "Projection": 7,
+                "Region": 1,
+                "Return": 1,
+                "Start": 1
+              }
+            },
+            {
+              "level": "Layout",
+              "nodes": 33,
+              "opcodes": {
+                "Add": 2,
+                "BitXor": 2,
+                "Const": 3,
+                "If": 1,
+                "Jump": 2,
+                "Not": 1,
+                "Phi": 2,
+                "Projection": 11,
+                "PtrOffset": 3,
+                "Region": 1,
+                "Return": 1,
+                "StackSlot": 1,
+                "Start": 1,
+                "Store": 2
+              }
+            }
+          ],
+          "_RNvCs6QBJXeMU2CH_15semantic_values13known_payload": [
+            {
+              "level": "Specialized",
+              "nodes": 26,
+              "opcodes": {
+                "Add": 1,
+                "Compare": 2,
+                "Const": 4,
+                "Discriminant": 1,
+                "If": 2,
+                "Jump": 2,
+                "MakeVariant": 1,
+                "Phi": 1,
+                "Projection": 7,
+                "Region": 1,
+                "Return": 1,
+                "Start": 1,
+                "Unreachable": 1,
+                "VariantField": 1
+              }
+            },
+            {
+              "level": "Specialized",
+              "nodes": 26,
+              "opcodes": {
+                "Add": 1,
+                "Compare": 2,
+                "Const": 4,
+                "Discriminant": 1,
+                "If": 2,
+                "Jump": 2,
+                "MakeVariant": 1,
+                "Phi": 1,
+                "Projection": 7,
+                "Region": 1,
+                "Return": 1,
+                "Start": 1,
+                "Unreachable": 1,
+                "VariantField": 1
+              }
+            },
+            {
+              "level": "Layout",
+              "nodes": 43,
+              "opcodes": {
+                "Add": 1,
+                "BitAnd": 4,
+                "BitOr": 2,
+                "Cast": 2,
+                "Compare": 4,
+                "Const": 10,
+                "If": 2,
+                "Jump": 2,
+                "Neg": 2,
+                "Not": 2,
+                "Phi": 1,
+                "Projection": 7,
+                "Region": 1,
+                "Return": 1,
+                "Start": 1,
+                "Unreachable": 1
+              }
+            }
+          ],
+          "_RNvCs6QBJXeMU2CH_15semantic_values13nested_fields": [
+            {
+              "level": "Specialized",
+              "nodes": 28,
+              "opcodes": {
+                "Aggregate": 3,
+                "BitXor": 3,
+                "Const": 1,
+                "Field": 10,
+                "InsertField": 4,
+                "Projection": 5,
+                "Return": 1,
+                "Start": 1
+              }
+            },
+            {
+              "level": "Specialized",
+              "nodes": 28,
+              "opcodes": {
+                "Aggregate": 3,
+                "BitXor": 3,
+                "Const": 1,
+                "Field": 10,
+                "InsertField": 4,
+                "Projection": 5,
+                "Return": 1,
+                "Start": 1
+              }
+            },
+            {
+              "level": "Layout",
+              "nodes": 10,
+              "opcodes": {
+                "BitXor": 3,
+                "Projection": 5,
+                "Return": 1,
+                "Start": 1
+              }
+            }
+          ],
+          "_RNvCs6QBJXeMU2CH_15semantic_values14pair_roundtrip": [
+            {
+              "level": "Specialized",
+              "nodes": 20,
+              "opcodes": {
+                "Add": 1,
+                "Aggregate": 2,
+                "BitXor": 1,
+                "Call": 1,
+                "Field": 6,
+                "Projection": 7,
+                "Return": 1,
+                "Start": 1
+              }
+            },
+            {
+              "level": "Specialized",
+              "nodes": 20,
+              "opcodes": {
+                "Add": 1,
+                "Aggregate": 2,
+                "BitXor": 1,
+                "Call": 1,
+                "Field": 6,
+                "Projection": 7,
+                "Return": 1,
+                "Start": 1
+              }
+            },
+            {
+              "level": "Layout",
+              "nodes": 62,
+              "opcodes": {
+                "Add": 1,
+                "BitXor": 1,
+                "Call": 1,
+                "Const": 10,
+                "Load": 4,
+                "Projection": 27,
+                "PtrOffset": 10,
+                "Return": 1,
+                "StackSlot": 2,
+                "Start": 1,
+                "Store": 4
+              }
+            }
+          ],
+          "_RNvCs6QBJXeMU2CH_15semantic_values15array_roundtrip": [
+            {
+              "level": "Specialized",
+              "nodes": 12,
+              "opcodes": {
+                "Add": 1,
+                "Aggregate": 1,
+                "BitXor": 1,
+                "Field": 3,
+                "Projection": 4,
+                "Return": 1,
+                "Start": 1
+              }
+            },
+            {
+              "level": "Specialized",
+              "nodes": 12,
+              "opcodes": {
+                "Add": 1,
+                "Aggregate": 1,
+                "BitXor": 1,
+                "Field": 3,
+                "Projection": 4,
+                "Return": 1,
+                "Start": 1
+              }
+            },
+            {
+              "level": "Layout",
+              "nodes": 44,
+              "opcodes": {
+                "Add": 1,
+                "BitXor": 1,
+                "Const": 7,
+                "Load": 3,
+                "Projection": 19,
+                "PtrOffset": 7,
+                "Return": 1,
+                "StackSlot": 1,
+                "Start": 1,
+                "Store": 3
+              }
+            }
+          ],
+          "_RNvCs6QBJXeMU2CH_15semantic_values19local_call_snapshot": [
+            {
+              "level": "Specialized",
+              "nodes": 20,
+              "opcodes": {
+                "Aggregate": 1,
+                "BitXor": 2,
+                "Call": 1,
+                "Const": 1,
+                "Field": 5,
+                "InsertField": 1,
+                "Projection": 7,
+                "Return": 1,
+                "Start": 1
+              }
+            },
+            {
+              "level": "Specialized",
+              "nodes": 20,
+              "opcodes": {
+                "Aggregate": 1,
+                "BitXor": 2,
+                "Call": 1,
+                "Const": 1,
+                "Field": 5,
+                "InsertField": 1,
+                "Projection": 7,
+                "Return": 1,
+                "Start": 1
+              }
+            },
+            {
+              "level": "Layout",
+              "nodes": 25,
+              "opcodes": {
+                "BitXor": 2,
+                "Call": 1,
+                "Const": 3,
+                "Load": 2,
+                "Projection": 13,
+                "PtrOffset": 2,
+                "Return": 1,
+                "Start": 1
+              }
+            }
+          ],
+          "_RNvNtCs6QBJXeMU2CH_15semantic_values11index_probe13dynamic_index": [
+            {
+              "level": "Specialized",
+              "nodes": 25,
+              "opcodes": {
+                "Call": 1,
+                "Compare": 1,
+                "Const": 2,
+                "If": 1,
+                "IndexAddr": 1,
+                "LoadValue": 1,
+                "LocalSlot": 1,
+                "Projection": 12,
+                "Return": 1,
+                "Start": 1,
+                "StoreValue": 1,
+                "SymbolAddress": 1,
+                "Unreachable": 1
+              }
+            },
+            {
+              "level": "Specialized",
+              "nodes": 25,
+              "opcodes": {
+                "Call": 1,
+                "Compare": 1,
+                "Const": 2,
+                "If": 1,
+                "IndexAddr": 1,
+                "LoadValue": 1,
+                "LocalSlot": 1,
+                "Projection": 12,
+                "Return": 1,
+                "Start": 1,
+                "StoreValue": 1,
+                "SymbolAddress": 1,
+                "Unreachable": 1
+              }
+            },
+            {
+              "level": "Layout",
+              "nodes": 57,
+              "opcodes": {
+                "Call": 1,
+                "Compare": 1,
+                "Const": 9,
+                "If": 1,
+                "Load": 4,
+                "Mul": 1,
+                "Projection": 25,
+                "PtrOffset": 7,
+                "Return": 1,
+                "StackSlot": 1,
+                "Start": 1,
+                "Store": 3,
+                "SymbolAddress": 1,
+                "Unreachable": 1
+              }
+            }
+          ],
+          "_RNvNtCs6QBJXeMU2CH_15semantic_values11index_probe9supported": [
+            {
+              "level": "Specialized",
+              "nodes": 8,
+              "opcodes": {
+                "Aggregate": 1,
+                "Const": 1,
+                "Field": 1,
+                "Projection": 3,
+                "Return": 1,
+                "Start": 1
+              }
+            },
+            {
+              "level": "Specialized",
+              "nodes": 8,
+              "opcodes": {
+                "Aggregate": 1,
+                "Const": 1,
+                "Field": 1,
+                "Projection": 3,
+                "Return": 1,
+                "Start": 1
+              }
+            },
+            {
+              "level": "Layout",
+              "nodes": 5,
+              "opcodes": {
+                "Projection": 3,
+                "Return": 1,
+                "Start": 1
+              }
+            }
+          ],
+          "_RNvNtCs6QBJXeMU2CH_15semantic_values11niche_probe5relay": [
+            {
+              "level": "Specialized",
+              "nodes": 5,
+              "opcodes": {
+                "Projection": 3,
+                "Return": 1,
+                "Start": 1
+              }
+            },
+            {
+              "level": "Specialized",
+              "nodes": 5,
+              "opcodes": {
+                "Projection": 3,
+                "Return": 1,
+                "Start": 1
+              }
+            },
+            {
+              "level": "Layout",
+              "nodes": 84,
+              "opcodes": {
+                "Add": 1,
+                "BitAnd": 2,
+                "BitOr": 1,
+                "Cast": 3,
+                "Compare": 5,
+                "Const": 14,
+                "If": 4,
+                "Jump": 8,
+                "Load": 2,
+                "Neg": 1,
+                "Not": 1,
+                "Phi": 5,
+                "Projection": 21,
+                "PtrOffset": 5,
+                "Region": 4,
+                "Return": 1,
+                "StackSlot": 1,
+                "Start": 1,
+                "Store": 2,
+                "Sub": 1,
+                "Undefined": 1
+              }
+            }
+          ],
+          "_RNvNtCs6QBJXeMU2CH_15semantic_values11niche_probe9supported": [
+            {
+              "level": "Specialized",
+              "nodes": 8,
+              "opcodes": {
+                "Aggregate": 1,
+                "Const": 1,
+                "Field": 1,
+                "Projection": 3,
+                "Return": 1,
+                "Start": 1
+              }
+            },
+            {
+              "level": "Specialized",
+              "nodes": 8,
+              "opcodes": {
+                "Aggregate": 1,
+                "Const": 1,
+                "Field": 1,
+                "Projection": 3,
+                "Return": 1,
+                "Start": 1
+              }
+            },
+            {
+              "level": "Layout",
+              "nodes": 5,
+              "opcodes": {
+                "Projection": 3,
+                "Return": 1,
+                "Start": 1
+              }
+            }
+          ],
+          "_RNvNtCs6QBJXeMU2CH_15semantic_values12borrow_probe16requires_address": [
+            {
+              "level": "Specialized",
+              "nodes": 37,
+              "opcodes": {
+                "Add": 1,
+                "Aggregate": 1,
+                "Const": 2,
+                "FieldAddr": 3,
+                "LoadValue": 2,
+                "LocalSlot": 1,
+                "PointerCast": 4,
+                "Projection": 17,
+                "Return": 1,
+                "SlotDead": 1,
+                "SlotLive": 1,
+                "Start": 1,
+                "StoreValue": 2
+              }
+            },
+            {
+              "level": "Specialized",
+              "nodes": 37,
+              "opcodes": {
+                "Add": 1,
+                "Aggregate": 1,
+                "Const": 2,
+                "FieldAddr": 3,
+                "LoadValue": 2,
+                "LocalSlot": 1,
+                "PointerCast": 4,
+                "Projection": 17,
+                "Return": 1,
+                "SlotDead": 1,
+                "SlotLive": 1,
+                "Start": 1,
+                "StoreValue": 2
+              }
+            },
+            {
+              "level": "Layout",
+              "nodes": 50,
+              "opcodes": {
+                "Add": 1,
+                "Const": 11,
+                "Load": 2,
+                "Projection": 19,
+                "PtrOffset": 9,
+                "Return": 1,
+                "SlotDead": 1,
+                "SlotLive": 1,
+                "StackSlot": 1,
+                "Start": 1,
+                "Store": 3
+              }
+            }
+          ],
+          "_RNvNtCs6QBJXeMU2CH_15semantic_values12borrow_probe9supported": [
+            {
+              "level": "Specialized",
+              "nodes": 8,
+              "opcodes": {
+                "Aggregate": 1,
+                "Const": 1,
+                "Field": 1,
+                "Projection": 3,
+                "Return": 1,
+                "Start": 1
+              }
+            },
+            {
+              "level": "Specialized",
+              "nodes": 8,
+              "opcodes": {
+                "Aggregate": 1,
+                "Const": 1,
+                "Field": 1,
+                "Projection": 3,
+                "Return": 1,
+                "Start": 1
+              }
+            },
+            {
+              "level": "Layout",
+              "nodes": 5,
+              "opcodes": {
+                "Projection": 3,
+                "Return": 1,
+                "Start": 1
+              }
+            }
+          ],
+          "_RNvNtCs6QBJXeMU2CH_15semantic_values13variant_probe15decode_argument": [
+            {
+              "level": "Specialized",
+              "nodes": 23,
+              "opcodes": {
+                "Compare": 2,
+                "Const": 3,
+                "Discriminant": 1,
+                "If": 2,
+                "Jump": 2,
+                "Phi": 1,
+                "Projection": 7,
+                "Region": 1,
+                "Return": 1,
+                "Start": 1,
+                "Unreachable": 1,
+                "VariantField": 1
+              }
+            },
+            {
+              "level": "Specialized",
+              "nodes": 23,
+              "opcodes": {
+                "Compare": 2,
+                "Const": 3,
+                "Discriminant": 1,
+                "If": 2,
+                "Jump": 2,
+                "Phi": 1,
+                "Projection": 7,
+                "Region": 1,
+                "Return": 1,
+                "Start": 1,
+                "Unreachable": 1,
+                "VariantField": 1
+              }
+            },
+            {
+              "level": "Layout",
+              "nodes": 91,
+              "opcodes": {
+                "BitAnd": 8,
+                "BitOr": 4,
+                "Cast": 4,
+                "Compare": 8,
+                "Const": 17,
+                "If": 4,
+                "Jump": 6,
+                "Load": 2,
+                "Neg": 4,
+                "Not": 4,
+                "Phi": 4,
+                "Projection": 17,
+                "PtrOffset": 2,
+                "Region": 3,
+                "Return": 1,
+                "Start": 1,
+                "Undefined": 1,
+                "Unreachable": 1
+              }
+            }
+          ],
+          "_RNvNtCs6QBJXeMU2CH_15semantic_values13variant_probe9supported": [
+            {
+              "level": "Specialized",
+              "nodes": 8,
+              "opcodes": {
+                "Aggregate": 1,
+                "Const": 1,
+                "Field": 1,
+                "Projection": 3,
+                "Return": 1,
+                "Start": 1
+              }
+            },
+            {
+              "level": "Specialized",
+              "nodes": 8,
+              "opcodes": {
+                "Aggregate": 1,
+                "Const": 1,
+                "Field": 1,
+                "Projection": 3,
+                "Return": 1,
+                "Start": 1
+              }
+            },
+            {
+              "level": "Layout",
+              "nodes": 5,
+              "opcodes": {
+                "Projection": 3,
+                "Return": 1,
+                "Start": 1
+              }
+            }
+          ]
+        },
+        "stage_totals": {
+          "semantic_input": {
+            "nodes": 397,
+            "opcodes": {
+              "Aggregate": 24,
+              "Discriminant": 3,
+              "Field": 56,
+              "InsertField": 6,
+              "Load": 0,
+              "MakeVariant": 2,
+              "Phi": 8,
+              "PtrOffset": 0,
+              "StackSlot": 0,
+              "Store": 0,
+              "VariantField": 3,
+              "VariantOf": 0,
+              "WidePtr": 0
+            }
+          },
+          "semantic_after_passes": {
+            "nodes": 397,
+            "opcodes": {
+              "Aggregate": 24,
+              "Discriminant": 3,
+              "Field": 56,
+              "InsertField": 6,
+              "Load": 0,
+              "MakeVariant": 2,
+              "Phi": 8,
+              "PtrOffset": 0,
+              "StackSlot": 0,
+              "Store": 0,
+              "VariantField": 3,
+              "VariantOf": 0,
+              "WidePtr": 0
+            }
+          },
+          "layout_output": {
+            "nodes": 855,
+            "opcodes": {
+              "Aggregate": 0,
+              "Discriminant": 0,
+              "Field": 0,
+              "InsertField": 0,
+              "Load": 35,
+              "MakeVariant": 0,
+              "Phi": 20,
+              "PtrOffset": 90,
+              "StackSlot": 12,
+              "Store": 33,
+              "VariantField": 0,
+              "VariantOf": 0,
+              "WidePtr": 0
+            }
+          }
+        }
+      },
+      "semantic-on": {
+        "output_lines": 378,
+        "kfrc_object_writer": true,
+        "calls_inlined": 1,
+        "semantic_functions": 21,
+        "input_symbols": [
+          "_RNvCs6QBJXeMU2CH_15semantic_values10tuple_loop:",
+          "_RNvCs6QBJXeMU2CH_15semantic_values11known_empty:",
+          "_RNvCs6QBJXeMU2CH_15semantic_values11tuple_field:",
+          "_RNvCs6QBJXeMU2CH_15semantic_values12choose_slice:",
+          "_RNvCs6QBJXeMU2CH_15semantic_values12tuple_branch:",
+          "_RNvCs6QBJXeMU2CH_15semantic_values13big_roundtrip:",
+          "_RNvCs6QBJXeMU2CH_15semantic_values13inline_caller:",
+          "_RNvCs6QBJXeMU2CH_15semantic_values13inline_helper:",
+          "_RNvCs6QBJXeMU2CH_15semantic_values13known_payload:",
+          "_RNvCs6QBJXeMU2CH_15semantic_values13nested_fields:",
+          "_RNvCs6QBJXeMU2CH_15semantic_values14pair_roundtrip:",
+          "_RNvCs6QBJXeMU2CH_15semantic_values15array_roundtrip:",
+          "_RNvCs6QBJXeMU2CH_15semantic_values19local_call_snapshot:",
+          "_RNvNtCs6QBJXeMU2CH_15semantic_values11index_probe13dynamic_index:",
+          "_RNvNtCs6QBJXeMU2CH_15semantic_values11index_probe9supported:",
+          "_RNvNtCs6QBJXeMU2CH_15semantic_values11niche_probe5relay:",
+          "_RNvNtCs6QBJXeMU2CH_15semantic_values11niche_probe9supported:",
+          "_RNvNtCs6QBJXeMU2CH_15semantic_values12borrow_probe16requires_address:",
+          "_RNvNtCs6QBJXeMU2CH_15semantic_values12borrow_probe9supported:",
+          "_RNvNtCs6QBJXeMU2CH_15semantic_values13variant_probe15decode_argument:",
+          "_RNvNtCs6QBJXeMU2CH_15semantic_values13variant_probe9supported:"
+        ],
+        "graphs": {
+          "_RNvCs6QBJXeMU2CH_15semantic_values10tuple_loop": [
+            {
+              "level": "Specialized",
+              "nodes": 26,
+              "opcodes": {
+                "Add": 2,
+                "Aggregate": 2,
+                "Compare": 1,
+                "Const": 2,
+                "Field": 3,
+                "If": 1,
+                "Jump": 2,
+                "Not": 1,
+                "Phi": 2,
+                "Projection": 7,
+                "Region": 1,
+                "Return": 1,
+                "Start": 1
+              }
+            },
+            {
+              "level": "Specialized",
+              "nodes": 25,
+              "opcodes": {
+                "Add": 2,
+                "Aggregate": 2,
+                "Compare": 1,
+                "Const": 2,
+                "Field": 2,
+                "If": 1,
+                "Jump": 2,
+                "Not": 1,
+                "Phi": 2,
+                "Projection": 7,
+                "Region": 1,
+                "Return": 1,
+                "Start": 1
+              }
+            },
+            {
+              "level": "Layout",
+              "nodes": 35,
+              "opcodes": {
+                "Add": 2,
+                "Compare": 1,
+                "Const": 5,
+                "If": 1,
+                "Jump": 2,
+                "Not": 1,
+                "Phi": 3,
+                "Projection": 11,
+                "PtrOffset": 3,
+                "Region": 1,
+                "Return": 1,
+                "StackSlot": 1,
+                "Start": 1,
+                "Store": 2
+              }
+            }
+          ],
+          "_RNvCs6QBJXeMU2CH_15semantic_values11known_empty": [
+            {
+              "level": "Specialized",
+              "nodes": 25,
+              "opcodes": {
+                "Add": 1,
+                "Compare": 2,
+                "Const": 4,
+                "Discriminant": 1,
+                "If": 2,
+                "Jump": 2,
+                "MakeVariant": 1,
+                "Phi": 1,
+                "Projection": 6,
+                "Region": 1,
+                "Return": 1,
+                "Start": 1,
+                "Unreachable": 1,
+                "VariantField": 1
+              }
+            },
+            {
+              "level": "Specialized",
+              "nodes": 7,
+              "opcodes": {
+                "Const": 1,
+                "Jump": 1,
+                "Projection": 2,
+                "Region": 1,
+                "Return": 1,
+                "Start": 1
+              }
+            },
+            {
+              "level": "Layout",
+              "nodes": 7,
+              "opcodes": {
+                "Const": 1,
+                "Jump": 1,
+                "Projection": 2,
+                "Region": 1,
+                "Return": 1,
+                "Start": 1
+              }
+            }
+          ],
+          "_RNvCs6QBJXeMU2CH_15semantic_values11tuple_field": [
+            {
+              "level": "Specialized",
+              "nodes": 8,
+              "opcodes": {
+                "Aggregate": 1,
+                "Field": 1,
+                "Projection": 4,
+                "Return": 1,
+                "Start": 1
+              }
+            },
+            {
+              "level": "Specialized",
+              "nodes": 5,
+              "opcodes": {
+                "Projection": 3,
+                "Return": 1,
+                "Start": 1
+              }
+            },
+            {
+              "level": "Layout",
+              "nodes": 5,
+              "opcodes": {
+                "Projection": 3,
+                "Return": 1,
+                "Start": 1
+              }
+            }
+          ],
+          "_RNvCs6QBJXeMU2CH_15semantic_values12choose_slice": [
+            {
+              "level": "Specialized",
+              "nodes": 15,
+              "opcodes": {
+                "If": 1,
+                "Jump": 2,
+                "Not": 1,
+                "Phi": 1,
+                "Projection": 7,
+                "Region": 1,
+                "Return": 1,
+                "Start": 1
+              }
+            },
+            {
+              "level": "Specialized",
+              "nodes": 15,
+              "opcodes": {
+                "If": 1,
+                "Jump": 2,
+                "Not": 1,
+                "Phi": 1,
+                "Projection": 7,
+                "Region": 1,
+                "Return": 1,
+                "Start": 1
+              }
+            },
+            {
+              "level": "Layout",
+              "nodes": 53,
+              "opcodes": {
+                "Const": 7,
+                "If": 1,
+                "Jump": 2,
+                "Load": 4,
+                "Not": 1,
+                "Phi": 2,
+                "Projection": 23,
+                "PtrOffset": 7,
+                "Region": 1,
+                "Return": 1,
+                "StackSlot": 1,
+                "Start": 1,
+                "Store": 2
+              }
+            }
+          ],
+          "_RNvCs6QBJXeMU2CH_15semantic_values12tuple_branch": [
+            {
+              "level": "Specialized",
+              "nodes": 21,
+              "opcodes": {
+                "Add": 1,
+                "Aggregate": 2,
+                "Field": 2,
+                "If": 1,
+                "InsertField": 1,
+                "Jump": 2,
+                "Not": 1,
+                "Phi": 1,
+                "Projection": 7,
+                "Region": 1,
+                "Return": 1,
+                "Start": 1
+              }
+            },
+            {
+              "level": "Specialized",
+              "nodes": 21,
+              "opcodes": {
+                "Add": 1,
+                "Aggregate": 2,
+                "Field": 2,
+                "If": 1,
+                "InsertField": 1,
+                "Jump": 2,
+                "Not": 1,
+                "Phi": 1,
+                "Projection": 7,
+                "Region": 1,
+                "Return": 1,
+                "Start": 1
+              }
+            },
+            {
+              "level": "Layout",
+              "nodes": 30,
+              "opcodes": {
+                "Add": 1,
+                "Const": 3,
+                "If": 1,
+                "Jump": 2,
+                "Not": 1,
+                "Phi": 2,
+                "Projection": 11,
+                "PtrOffset": 3,
+                "Region": 1,
+                "Return": 1,
+                "StackSlot": 1,
+                "Start": 1,
+                "Store": 2
+              }
+            }
+          ],
+          "_RNvCs6QBJXeMU2CH_15semantic_values13big_roundtrip": [
+            {
+              "level": "Specialized",
+              "nodes": 38,
+              "opcodes": {
+                "Add": 1,
+                "Aggregate": 5,
+                "BitXor": 2,
+                "Call": 1,
+                "Field": 20,
+                "Projection": 7,
+                "Return": 1,
+                "Start": 1
+              }
+            },
+            {
+              "level": "Specialized",
+              "nodes": 31,
+              "opcodes": {
+                "Add": 1,
+                "Aggregate": 5,
+                "BitXor": 2,
+                "Call": 1,
+                "Field": 13,
+                "Projection": 7,
+                "Return": 1,
+                "Start": 1
+              }
+            },
+            {
+              "level": "Layout",
+              "nodes": 145,
+              "opcodes": {
+                "Add": 1,
+                "BitXor": 2,
+                "Call": 1,
+                "Const": 30,
+                "Load": 10,
+                "Projection": 57,
+                "PtrOffset": 30,
+                "Return": 1,
+                "StackSlot": 2,
+                "Start": 1,
+                "Store": 10
+              }
+            }
+          ],
+          "_RNvCs6QBJXeMU2CH_15semantic_values13inline_caller": [
+            {
+              "level": "Specialized",
+              "nodes": 15,
+              "opcodes": {
+                "Add": 2,
+                "Call": 1,
+                "Field": 2,
+                "Projection": 8,
+                "Return": 1,
+                "Start": 1
+              }
+            },
+            {
+              "level": "Specialized",
+              "nodes": 39,
+              "opcodes": {
+                "Add": 3,
+                "Aggregate": 2,
+                "BitXor": 1,
+                "Field": 2,
+                "If": 1,
+                "Jump": 2,
+                "Not": 1,
+                "ObserveValue": 4,
+                "Phi": 1,
+                "Projection": 19,
+                "Region": 1,
+                "Return": 1,
+                "Start": 1
+              }
+            },
+            {
+              "level": "Layout",
+              "nodes": 61,
+              "opcodes": {
+                "Add": 3,
+                "BitXor": 1,
+                "Const": 5,
+                "If": 1,
+                "Jump": 2,
+                "Load": 2,
+                "Not": 1,
+                "ObserveValue": 4,
+                "Phi": 2,
+                "Projection": 29,
+                "PtrOffset": 5,
+                "Region": 1,
+                "Return": 1,
+                "StackSlot": 1,
+                "Start": 1,
+                "Store": 2
+              }
+            }
+          ],
+          "_RNvCs6QBJXeMU2CH_15semantic_values13inline_helper": [
+            {
+              "level": "Specialized",
+              "nodes": 21,
+              "opcodes": {
+                "Add": 2,
+                "Aggregate": 2,
+                "BitXor": 2,
+                "If": 1,
+                "Jump": 2,
+                "Not": 1,
+                "Phi": 1,
+                "Projection": 7,
+                "Region": 1,
+                "Return": 1,
+                "Start": 1
+              }
+            },
+            {
+              "level": "Specialized",
+              "nodes": 19,
+              "opcodes": {
+                "Add": 1,
+                "Aggregate": 2,
+                "BitXor": 1,
+                "If": 1,
+                "Jump": 2,
+                "Not": 1,
+                "Phi": 1,
+                "Projection": 7,
+                "Region": 1,
+                "Return": 1,
+                "Start": 1
+              }
+            },
+            {
+              "level": "Layout",
+              "nodes": 31,
+              "opcodes": {
+                "Add": 1,
+                "BitXor": 1,
+                "Const": 3,
+                "If": 1,
+                "Jump": 2,
+                "Not": 1,
+                "Phi": 2,
+                "Projection": 11,
+                "PtrOffset": 3,
+                "Region": 1,
+                "Return": 1,
+                "StackSlot": 1,
+                "Start": 1,
+                "Store": 2
+              }
+            }
+          ],
+          "_RNvCs6QBJXeMU2CH_15semantic_values13known_payload": [
+            {
+              "level": "Specialized",
+              "nodes": 26,
+              "opcodes": {
+                "Add": 1,
+                "Compare": 2,
+                "Const": 4,
+                "Discriminant": 1,
+                "If": 2,
+                "Jump": 2,
+                "MakeVariant": 1,
+                "Phi": 1,
+                "Projection": 7,
+                "Region": 1,
+                "Return": 1,
+                "Start": 1,
+                "Unreachable": 1,
+                "VariantField": 1
+              }
+            },
+            {
+              "level": "Specialized",
+              "nodes": 9,
+              "opcodes": {
+                "Add": 1,
+                "Const": 1,
+                "Jump": 1,
+                "Projection": 3,
+                "Region": 1,
+                "Return": 1,
+                "Start": 1
+              }
+            },
+            {
+              "level": "Layout",
+              "nodes": 9,
+              "opcodes": {
+                "Add": 1,
+                "Const": 1,
+                "Jump": 1,
+                "Projection": 3,
+                "Region": 1,
+                "Return": 1,
+                "Start": 1
+              }
+            }
+          ],
+          "_RNvCs6QBJXeMU2CH_15semantic_values13nested_fields": [
+            {
+              "level": "Specialized",
+              "nodes": 28,
+              "opcodes": {
+                "Aggregate": 3,
+                "BitXor": 3,
+                "Const": 1,
+                "Field": 10,
+                "InsertField": 4,
+                "Projection": 5,
+                "Return": 1,
+                "Start": 1
+              }
+            },
+            {
+              "level": "Specialized",
+              "nodes": 10,
+              "opcodes": {
+                "BitXor": 3,
+                "Projection": 5,
+                "Return": 1,
+                "Start": 1
+              }
+            },
+            {
+              "level": "Layout",
+              "nodes": 10,
+              "opcodes": {
+                "BitXor": 3,
+                "Projection": 5,
+                "Return": 1,
+                "Start": 1
+              }
+            }
+          ],
+          "_RNvCs6QBJXeMU2CH_15semantic_values14pair_roundtrip": [
+            {
+              "level": "Specialized",
+              "nodes": 20,
+              "opcodes": {
+                "Add": 1,
+                "Aggregate": 2,
+                "BitXor": 1,
+                "Call": 1,
+                "Field": 6,
+                "Projection": 7,
+                "Return": 1,
+                "Start": 1
+              }
+            },
+            {
+              "level": "Specialized",
+              "nodes": 18,
+              "opcodes": {
+                "Add": 1,
+                "Aggregate": 2,
+                "BitXor": 1,
+                "Call": 1,
+                "Field": 4,
+                "Projection": 7,
+                "Return": 1,
+                "Start": 1
+              }
+            },
+            {
+              "level": "Layout",
+              "nodes": 62,
+              "opcodes": {
+                "Add": 1,
+                "BitXor": 1,
+                "Call": 1,
+                "Const": 10,
+                "Load": 4,
+                "Projection": 27,
+                "PtrOffset": 10,
+                "Return": 1,
+                "StackSlot": 2,
+                "Start": 1,
+                "Store": 4
+              }
+            }
+          ],
+          "_RNvCs6QBJXeMU2CH_15semantic_values15array_roundtrip": [
+            {
+              "level": "Specialized",
+              "nodes": 12,
+              "opcodes": {
+                "Add": 1,
+                "Aggregate": 1,
+                "BitXor": 1,
+                "Field": 3,
+                "Projection": 4,
+                "Return": 1,
+                "Start": 1
+              }
+            },
+            {
+              "level": "Specialized",
+              "nodes": 12,
+              "opcodes": {
+                "Add": 1,
+                "Aggregate": 1,
+                "BitXor": 1,
+                "Field": 3,
+                "Projection": 4,
+                "Return": 1,
+                "Start": 1
+              }
+            },
+            {
+              "level": "Layout",
+              "nodes": 44,
+              "opcodes": {
+                "Add": 1,
+                "BitXor": 1,
+                "Const": 7,
+                "Load": 3,
+                "Projection": 19,
+                "PtrOffset": 7,
+                "Return": 1,
+                "StackSlot": 1,
+                "Start": 1,
+                "Store": 3
+              }
+            }
+          ],
+          "_RNvCs6QBJXeMU2CH_15semantic_values19local_call_snapshot": [
+            {
+              "level": "Specialized",
+              "nodes": 20,
+              "opcodes": {
+                "Aggregate": 1,
+                "BitXor": 2,
+                "Call": 1,
+                "Const": 1,
+                "Field": 5,
+                "InsertField": 1,
+                "Projection": 7,
+                "Return": 1,
+                "Start": 1
+              }
+            },
+            {
+              "level": "Specialized",
+              "nodes": 15,
+              "opcodes": {
+                "BitXor": 2,
+                "Call": 1,
+                "Const": 1,
+                "Field": 2,
+                "Projection": 7,
+                "Return": 1,
+                "Start": 1
+              }
+            },
+            {
+              "level": "Layout",
+              "nodes": 25,
+              "opcodes": {
+                "BitXor": 2,
+                "Call": 1,
+                "Const": 3,
+                "Load": 2,
+                "Projection": 13,
+                "PtrOffset": 2,
+                "Return": 1,
+                "Start": 1
+              }
+            }
+          ],
+          "_RNvNtCs6QBJXeMU2CH_15semantic_values11index_probe13dynamic_index": [
+            {
+              "level": "Specialized",
+              "nodes": 25,
+              "opcodes": {
+                "Call": 1,
+                "Compare": 1,
+                "Const": 2,
+                "If": 1,
+                "IndexAddr": 1,
+                "LoadValue": 1,
+                "LocalSlot": 1,
+                "Projection": 12,
+                "Return": 1,
+                "Start": 1,
+                "StoreValue": 1,
+                "SymbolAddress": 1,
+                "Unreachable": 1
+              }
+            },
+            {
+              "level": "Specialized",
+              "nodes": 24,
+              "opcodes": {
+                "Call": 1,
+                "Compare": 1,
+                "Const": 1,
+                "If": 1,
+                "IndexAddr": 1,
+                "LoadValue": 1,
+                "LocalSlot": 1,
+                "Projection": 12,
+                "Return": 1,
+                "Start": 1,
+                "StoreValue": 1,
+                "SymbolAddress": 1,
+                "Unreachable": 1
+              }
+            },
+            {
+              "level": "Layout",
+              "nodes": 56,
+              "opcodes": {
+                "Call": 1,
+                "Compare": 1,
+                "Const": 8,
+                "If": 1,
+                "Load": 4,
+                "Mul": 1,
+                "Projection": 25,
+                "PtrOffset": 7,
+                "Return": 1,
+                "StackSlot": 1,
+                "Start": 1,
+                "Store": 3,
+                "SymbolAddress": 1,
+                "Unreachable": 1
+              }
+            }
+          ],
+          "_RNvNtCs6QBJXeMU2CH_15semantic_values11index_probe9supported": [
+            {
+              "level": "Specialized",
+              "nodes": 8,
+              "opcodes": {
+                "Aggregate": 1,
+                "Const": 1,
+                "Field": 1,
+                "Projection": 3,
+                "Return": 1,
+                "Start": 1
+              }
+            },
+            {
+              "level": "Specialized",
+              "nodes": 5,
+              "opcodes": {
+                "Projection": 3,
+                "Return": 1,
+                "Start": 1
+              }
+            },
+            {
+              "level": "Layout",
+              "nodes": 5,
+              "opcodes": {
+                "Projection": 3,
+                "Return": 1,
+                "Start": 1
+              }
+            }
+          ],
+          "_RNvNtCs6QBJXeMU2CH_15semantic_values11niche_probe5relay": [
+            {
+              "level": "Specialized",
+              "nodes": 5,
+              "opcodes": {
+                "Projection": 3,
+                "Return": 1,
+                "Start": 1
+              }
+            },
+            {
+              "level": "Specialized",
+              "nodes": 5,
+              "opcodes": {
+                "Projection": 3,
+                "Return": 1,
+                "Start": 1
+              }
+            },
+            {
+              "level": "Layout",
+              "nodes": 84,
+              "opcodes": {
+                "Add": 1,
+                "BitAnd": 2,
+                "BitOr": 1,
+                "Cast": 3,
+                "Compare": 5,
+                "Const": 14,
+                "If": 4,
+                "Jump": 8,
+                "Load": 2,
+                "Neg": 1,
+                "Not": 1,
+                "Phi": 5,
+                "Projection": 21,
+                "PtrOffset": 5,
+                "Region": 4,
+                "Return": 1,
+                "StackSlot": 1,
+                "Start": 1,
+                "Store": 2,
+                "Sub": 1,
+                "Undefined": 1
+              }
+            }
+          ],
+          "_RNvNtCs6QBJXeMU2CH_15semantic_values11niche_probe9supported": [
+            {
+              "level": "Specialized",
+              "nodes": 8,
+              "opcodes": {
+                "Aggregate": 1,
+                "Const": 1,
+                "Field": 1,
+                "Projection": 3,
+                "Return": 1,
+                "Start": 1
+              }
+            },
+            {
+              "level": "Specialized",
+              "nodes": 5,
+              "opcodes": {
+                "Projection": 3,
+                "Return": 1,
+                "Start": 1
+              }
+            },
+            {
+              "level": "Layout",
+              "nodes": 5,
+              "opcodes": {
+                "Projection": 3,
+                "Return": 1,
+                "Start": 1
+              }
+            }
+          ],
+          "_RNvNtCs6QBJXeMU2CH_15semantic_values12borrow_probe16requires_address": [
+            {
+              "level": "Specialized",
+              "nodes": 37,
+              "opcodes": {
+                "Add": 1,
+                "Aggregate": 1,
+                "Const": 2,
+                "FieldAddr": 3,
+                "LoadValue": 2,
+                "LocalSlot": 1,
+                "PointerCast": 4,
+                "Projection": 17,
+                "Return": 1,
+                "SlotDead": 1,
+                "SlotLive": 1,
+                "Start": 1,
+                "StoreValue": 2
+              }
+            },
+            {
+              "level": "Specialized",
+              "nodes": 37,
+              "opcodes": {
+                "Add": 1,
+                "Aggregate": 1,
+                "Const": 2,
+                "FieldAddr": 3,
+                "LoadValue": 2,
+                "LocalSlot": 1,
+                "PointerCast": 4,
+                "Projection": 17,
+                "Return": 1,
+                "SlotDead": 1,
+                "SlotLive": 1,
+                "Start": 1,
+                "StoreValue": 2
+              }
+            },
+            {
+              "level": "Layout",
+              "nodes": 50,
+              "opcodes": {
+                "Add": 1,
+                "Const": 11,
+                "Load": 2,
+                "Projection": 19,
+                "PtrOffset": 9,
+                "Return": 1,
+                "SlotDead": 1,
+                "SlotLive": 1,
+                "StackSlot": 1,
+                "Start": 1,
+                "Store": 3
+              }
+            }
+          ],
+          "_RNvNtCs6QBJXeMU2CH_15semantic_values12borrow_probe9supported": [
+            {
+              "level": "Specialized",
+              "nodes": 8,
+              "opcodes": {
+                "Aggregate": 1,
+                "Const": 1,
+                "Field": 1,
+                "Projection": 3,
+                "Return": 1,
+                "Start": 1
+              }
+            },
+            {
+              "level": "Specialized",
+              "nodes": 5,
+              "opcodes": {
+                "Projection": 3,
+                "Return": 1,
+                "Start": 1
+              }
+            },
+            {
+              "level": "Layout",
+              "nodes": 5,
+              "opcodes": {
+                "Projection": 3,
+                "Return": 1,
+                "Start": 1
+              }
+            }
+          ],
+          "_RNvNtCs6QBJXeMU2CH_15semantic_values13variant_probe15decode_argument": [
+            {
+              "level": "Specialized",
+              "nodes": 23,
+              "opcodes": {
+                "Compare": 2,
+                "Const": 3,
+                "Discriminant": 1,
+                "If": 2,
+                "Jump": 2,
+                "Phi": 1,
+                "Projection": 7,
+                "Region": 1,
+                "Return": 1,
+                "Start": 1,
+                "Unreachable": 1,
+                "VariantField": 1
+              }
+            },
+            {
+              "level": "Specialized",
+              "nodes": 23,
+              "opcodes": {
+                "Compare": 2,
+                "Const": 3,
+                "Discriminant": 1,
+                "If": 2,
+                "Jump": 2,
+                "Phi": 1,
+                "Projection": 7,
+                "Region": 1,
+                "Return": 1,
+                "Start": 1,
+                "Unreachable": 1,
+                "VariantField": 1
+              }
+            },
+            {
+              "level": "Layout",
+              "nodes": 91,
+              "opcodes": {
+                "BitAnd": 8,
+                "BitOr": 4,
+                "Cast": 4,
+                "Compare": 8,
+                "Const": 17,
+                "If": 4,
+                "Jump": 6,
+                "Load": 2,
+                "Neg": 4,
+                "Not": 4,
+                "Phi": 4,
+                "Projection": 17,
+                "PtrOffset": 2,
+                "Region": 3,
+                "Return": 1,
+                "Start": 1,
+                "Undefined": 1,
+                "Unreachable": 1
+              }
+            }
+          ],
+          "_RNvNtCs6QBJXeMU2CH_15semantic_values13variant_probe9supported": [
+            {
+              "level": "Specialized",
+              "nodes": 8,
+              "opcodes": {
+                "Aggregate": 1,
+                "Const": 1,
+                "Field": 1,
+                "Projection": 3,
+                "Return": 1,
+                "Start": 1
+              }
+            },
+            {
+              "level": "Specialized",
+              "nodes": 5,
+              "opcodes": {
+                "Projection": 3,
+                "Return": 1,
+                "Start": 1
+              }
+            },
+            {
+              "level": "Layout",
+              "nodes": 5,
+              "opcodes": {
+                "Projection": 3,
+                "Return": 1,
+                "Start": 1
+              }
+            }
+          ]
+        },
+        "stage_totals": {
+          "semantic_input": {
+            "nodes": 397,
+            "opcodes": {
+              "Aggregate": 24,
+              "Discriminant": 3,
+              "Field": 56,
+              "InsertField": 6,
+              "Load": 0,
+              "MakeVariant": 2,
+              "Phi": 8,
+              "PtrOffset": 0,
+              "StackSlot": 0,
+              "Store": 0,
+              "VariantField": 3,
+              "VariantOf": 0,
+              "WidePtr": 0
+            }
+          },
+          "semantic_after_passes": {
+            "nodes": 335,
+            "opcodes": {
+              "Aggregate": 17,
+              "Discriminant": 1,
+              "Field": 28,
+              "InsertField": 1,
+              "Load": 0,
+              "MakeVariant": 0,
+              "Phi": 7,
+              "PtrOffset": 0,
+              "StackSlot": 0,
+              "Store": 0,
+              "VariantField": 1,
+              "VariantOf": 0,
+              "WidePtr": 0
+            }
+          },
+          "layout_output": {
+            "nodes": 818,
+            "opcodes": {
+              "Aggregate": 0,
+              "Discriminant": 0,
+              "Field": 0,
+              "InsertField": 0,
+              "Load": 35,
+              "MakeVariant": 0,
+              "Phi": 20,
+              "PtrOffset": 93,
+              "StackSlot": 13,
+              "Store": 35,
+              "VariantField": 0,
+              "VariantOf": 0,
+              "WidePtr": 0
+            }
+          }
+        }
+      }
+    },
+    "negative_probes": {
+      "union": {
+        "exit_code": 1,
+        "rlib_emitted": false
+      },
+      "tls": {
+        "exit_code": 1,
+        "rlib_emitted": false
+      },
+      "simd": {
+        "exit_code": 1,
+        "rlib_emitted": false
+      }
+    },
+    "performance_measured": false
+  },
+  "other_passes": [
+    "scalar 565 lines",
+    "generated 5 programs x 40 functions",
+    "Cargo package selection 5 lines",
+    "no_main exit37",
+    "main exit0",
+    "alloc_main exit0",
+    "alloc_fail_main exit134"
+  ],
+  "semver": {
+    "status": "blocked_compile",
+    "cause": "pointer wrapping_add usize arithmetic reconstructed with PointerCast instead of integer-to-pointer cast",
+    "tests_executed_with_candidate": false
+  },
+  "regex": {
+    "status": "not_run_due_to_semver_failure"
+  },
+  "llvm_instruction_measurement": {
+    "status": "unavailable",
+    "reason": "measureme instructions:u reads only creating thread; LLVM worker-thread events zero even with no-parallel-backend; rejected as invalid evidence"
+  },
+  "sandbox_released": false,
+  "formal_performance_complete": false
+}

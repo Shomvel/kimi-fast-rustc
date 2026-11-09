@@ -20,6 +20,7 @@ R 图的 `holes: Vec<Hole>` 记录图对 `Param` 问的每一个问题，按首�
 ```rust
 pub enum Hole {
     SizeAlign(TyId), ScalarShape(TyId), ValidRange(TyId),   // ScalarShape 不含符号位，见下
+    ValidityContract(TyId),                        // 语义有效性规则；不是布局或运行时检查
     FieldOffsets(TyId), VariantEncoding(TyId), PassMode(TyId),
     NeedsDrop(TyId), IsFreeze(TyId), IsUnpin(TyId), IsCopy(TyId),
     Resolve { item: DefKey, args: ArgsId },          // TraitCall、drop glue、比较等运算符 trait
@@ -29,7 +30,18 @@ pub enum Hole {
 }
 ```
 
-**标量答案拆两半（W06）。** 照搬 rustc 的 `BackendRepr` 会把符号位和有效范围带进答案，`Vec<u32>::push` 与 `Vec<i32>::push` 就成了两个键。`ScalarShape` 只含宽度和整数/浮点/指针类别；`ValidRange` 只在 `T` 的值流入比较、switch、cast、算术或调用实参时登记，只经过 Load/Store/Phi/Return 时不登记。比较本身是 `Resolve`（`PartialOrd::gt` 等），所以有符号/无符号/浮点的差别通过递归答案键进入。S/L 级只能经答案表读类型事实；debug 构建下读到未登记的事实就 ICE——这相当于 `-Zmono-dedup` 对 codegen 中 `ty.kind()` 用法的审计，把它变成机械检查。
+**标量答案拆两半（W06）。** ScalarShape 只含宽度和整数／浮点／指针类别，
+ValidRange 按实际使用的范围事实登记，不因类型在图中出现就读取全部性质。
+只运输位而不利用范围时可不问 ValidRange；但类型化解码、转换、返回或优化一旦
+利用有效性，必须登记所读规则，不能一概豁免 Load／Store／Return。
+ValidityContract 是目标设计中对此类语义规则的独立查询，具体 schema 随 producer
+已支持规则冻结；未知规则不允许猜测。它不同于 SizeAlign／VariantEncoding，
+不意味着要生成运行时有效性检查。比较的实现仍经 Resolve 进入递归答案键。
+S/L 只能经答案表读依赖的类型事实，未登记的读取在 debug 构建报错。
+
+语义要求及事实的读取依赖、可达性和擦除规则见
+[requirements-and-facts.md](requirements-and-facts.md)。上述新增查询为目标契约，
+不是已实现功能声明；只有实际消费的答案进入相应身份／缓存依赖，诊断源位置不进入。
 
 **闭合孔位。** 非泛型函数和泛型函数中的具体类型也会被问布局（例如 `Option<CrateType>` 的 niche 编码取决于 std `String` 的私有字段）。这些查询同样登记为孔位，只是答案在 R 级就已确定：R 图哈希里的具体类型按与答案相同的规范描述哈希，不按类型名。这样 newtype 和底层类型能共享代码，上游只改私有布局时机器码键也会变。
 

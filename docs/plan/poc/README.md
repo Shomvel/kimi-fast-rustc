@@ -2,6 +2,13 @@
 
 状态：**计划**，2026-11-08。完整计划（M0–M6）的工作量主要在自有前端和原生 sysroot（光 sysroot 的 hello world 一档就估计 32–48 人周，见 [research/sysroot](../../research/sysroot/README.md)），这两块与“在带 Rust 语义的 IR 上优化”这一理念无关。PoC 只验证理念：前端和标准库借用 rustc，中后端完整实现，在真实 crate 上与 rustc+LLVM 对比。
 
+2026-11-09 实施状态：旧链已通过 semver 的 34 项原版集成测试。新增显式选择的
+语义值图→布局降低链及首批语义优化，支持范围与验收见
+[semantic-ir-status.md](semantic-ir-status.md)。输入仍按具体 Instance 转换，
+完整多态 R/S、范围内其余优化、分区与缓存仍按
+[语义 IR 迁移](semantic-ir-migration.md)交付，单态切片不代替完整范围。
+当前代码和证据见 [implementation.md](implementation.md) 与 [p0-status.md](p0-status.md)。
+
 ## 一句话
 
 做一个 rustc 的外部 codegen backend（`-Zcodegen-backend`，形态同 cg_clif），把 rustc 的多态 MIR 转成 kfrc Body，经 R/S/L 三级 SoN 和自写 x86 后端生成目标文件，与 rustc 编译的 std 混链，用 regex-syntax 和 semver 的测试与负载证明正确性、编译工作量、运行时间、体积和增量。
@@ -27,6 +34,9 @@
 | [architecture.md](architecture.md) | 外壳与三条接缝：`TypeOracle`、MIR → Body 转换器、std 的未优化 MIR |
 | [phases.md](phases.md) | P0–P4：交付物、出口、止损点 |
 | [metrics.md](metrics.md) | 指标、门槛、测量协议 |
+| [semantic-ir-migration.md](semantic-ir-migration.md) | 当前优先级：值语义、布局降低与真实 R/S 迁移 |
+| [semantic-ir-status.md](semantic-ir-status.md) | 已落盘的单态值语义切片、优化、明确边界与验证入口 |
+| [optimization-modules.md](optimization-modules.md) | 当前优化模块、LLVM 对应、后续接口及任务分工 |
 | [relation.md](relation.md) | 与 M0–M6 的关系：哪些代码进入产品，哪些是一次性的；契约缺口清单 |
 | [p0-status.md](p0-status.md) | P0 进度：已有部分、支持的输入、验证结果、离出口还差什么 |
 

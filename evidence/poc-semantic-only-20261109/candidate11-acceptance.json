@@ -1,0 +1,64 @@
+{
+  "candidate": "candidate11",
+  "contract": "frozen pre-redesign ObserveValue/Refine identity-folding candidate; not the new requirement/witness implementation",
+  "source_sha256": "b69fb91feeaf0db7776a0da5b21fd5325123aca5903ec6dc1000feed7216d356",
+  "linux_tests": {
+    "suites": 63,
+    "passed": 579,
+    "ignored": 1
+  },
+  "semantic": "381 output lines equal in 3 arms and scope negatives rejected",
+  "features": "all three arms pass strict generic/prepared-once/dead-target/known-no-branch, nominal, MaybeUninit opaque/partial/invalid-bool raw-byte, array iterator clone, static callback/recursive emission roots",
+  "cli": "pass",
+  "semver": "unchanged 1.0.28: 34 upstream tests per arm and workload passed",
+  "not_rerun": [
+    "full legacy corpus",
+    "W01-W10 original walkthroughs",
+    "regex-syntax"
+  ],
+  "previous_coverage": "candidate10 receipts remain the latest evidence for corpus, walkthroughs and regex; not attributed to candidate11",
+  "semver_performance": {
+    "compile_wall_seconds": 0.64,
+    "text_bytes": 1030574,
+    "runtime_ns_medians": {
+      "parse": 150178035,
+      "req": 351744843,
+      "identifier": 142567721
+    },
+    "compile_rounds": 5,
+    "runtime_rounds": 7,
+    "shared_std_mir0": true,
+    "checksum_equal": true
+  },
+  "total_profile": {
+    "LLVM_instructions": 1668150398,
+    "kfrc_instructions": 5223361663,
+    "ratio": 3.1312294558467024,
+    "rounds": 3,
+    "enabled_equals_running": true,
+    "object_bytes_unchanged": true,
+    "scope": "codegen_crate entry through join_codegen; user instructions for initial process threads and descendants; includes collector and kfrc MIR conversion, excludes linking; not a MIR-conversion-excluded metric",
+    "backend_sha256": {
+      "kfrc": "4eadd82145f5db0c8041b2b9790ac028136a2358e21b34762c3f0378fe8fe37f",
+      "llvm-wrapper": "42f3cd58254bfc549c83011cee19bc50c548ae4ab05e025c1c15fcc007dac7dd"
+    }
+  },
+  "from_str": {
+    "S_input_nodes": 532,
+    "S_after_opt_nodes": 845,
+    "S_Call": 31,
+    "S_ObserveValue": 24,
+    "L_nodes": 6133,
+    "If": 213,
+    "ObserveValue": 109,
+    "Load": 180,
+    "Store": 80,
+    "Refine": 280,
+    "text_bytes": 51116
+  },
+  "interpretation": "vs candidate10: smaller text and fewer L nodes, but parse runtime regresses 6.37% and total kfrc instructions increase 0.60%; not an overall runtime win",
+  "archives": {
+    "candidate11-results.tar.gz": "b7da8a9068267a47c252502f2a3f48564280dc8dec28654c4f9ed0557f120606",
+    "candidate11-attribution.tar.gz": "aa37f2d8c04bf69d68660199c8332fa2d89962795a35707918fcba9bbdc03502"
+  }
+}
