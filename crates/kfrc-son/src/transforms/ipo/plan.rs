@@ -2,12 +2,17 @@
 
 use super::{InlineSkip, types::TypeImport};
 use crate::{FunctionGraph, NodeId, Opcode, ValueType};
-use std::collections::HashMap;
+use kfrc_body::fx_hash::HashMap;
+
+/// Callee node types in the caller's type table.
+pub(super) type ImportedTypes = std::rc::Rc<HashMap<NodeId, ValueType>>;
 
 pub(super) struct Plan {
     pub(super) ids: Vec<NodeId>,
-    pub(super) imported: HashMap<NodeId, ValueType>,
-    pub(super) oracle: kfrc_body::RecordedTypes,
+    pub(super) imported: ImportedTypes,
+    /// The caller's oracle after importing the callee's types; `None` when an
+    /// earlier splice of the same callee already imported them.
+    pub(super) oracle: Option<kfrc_body::RecordedTypes>,
     pub(super) expected_result: Option<ValueType>,
     pub(super) locals: HashMap<u32, u32>,
 }
@@ -17,6 +22,7 @@ pub(super) fn plan(
     source: &FunctionGraph,
     remaining: usize,
     copy_anonymous_constants: bool,
+    previous_import: Option<&ImportedTypes>,
 ) -> Result<Plan, InlineSkip> {
     let ids: Vec<_> = source.ids().collect();
     for data in &source.data_objects {
@@ -65,7 +71,7 @@ pub(super) fn plan(
             .map_or(Some(0), |id| id.checked_add(1))
             .ok_or(InlineSkip::Budget)?
     };
-    let mut locals = HashMap::new();
+    let mut locals = HashMap::default();
     for (index, node) in local_nodes.iter().enumerate() {
         let local = next_local
             .checked_add(u32::try_from(index).map_err(|_| InlineSkip::Budget)?)
@@ -91,13 +97,23 @@ pub(super) fn plan(
     if cloned.saturating_add(extra) > remaining {
         return Err(InlineSkip::Budget);
     }
-    let mut oracle = graph.oracle.clone();
-    let mut types = TypeImport::new(&source.oracle, &mut oracle);
-    let imported: HashMap<_, _> = ids
-        .iter()
-        .map(|&id| Ok((id, types.value_type(source.value_type(id))?)))
-        .collect::<Result<_, InlineSkip>>()?;
-    types.finish()?;
+    // The caller's oracle only grows by successful imports in this inlining
+    // transaction. Re-importing a callee whose import already succeeded
+    // interns no new type, records only the facts it recorded before, and
+    // maps every node to the same type, so that import is reused as is.
+    let (imported, oracle) = match previous_import {
+        Some(imported) => (imported.clone(), None),
+        None => {
+            let mut oracle = graph.oracle.clone();
+            let mut types = TypeImport::new(&source.oracle, &mut oracle);
+            let imported: HashMap<_, _> = ids
+                .iter()
+                .map(|&id| Ok((id, types.value_type(source.value_type(id))?)))
+                .collect::<Result<_, InlineSkip>>()?;
+            types.finish()?;
+            (std::rc::Rc::new(imported), Some(oracle))
+        }
+    };
     let ValueType::Tuple(start_types) = &imported[&source.start] else {
         return Err(InlineSkip::Unsupported);
     };

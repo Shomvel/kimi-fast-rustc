@@ -6,7 +6,7 @@
 
 use super::{InterpretError, Value};
 use kfrc_body::{DataObject, FieldLayout, RecordedTypes, TagEncoding, TyId, TypeOracle, TypeShape};
-use std::collections::HashMap;
+use kfrc_body::fx_hash::HashMap;
 
 #[derive(Clone)]
 struct Allocation {
@@ -37,7 +37,7 @@ impl SemanticMemory {
     /// current bytes rather than resetting mutations from earlier calls.
     /// Register all callees' definitions up front when they refer to one another.
     pub fn register_data(&mut self, objects: &[DataObject]) -> Result<(), InterpretError> {
-        let mut incoming = HashMap::new();
+        let mut incoming = HashMap::default();
         for object in objects {
             if incoming
                 .insert(&object.symbol, object)
@@ -447,7 +447,7 @@ impl SemanticMemory {
             if *length > 1_000_000 {
                 return Err(InterpretError::OutOfFuel);
             }
-            let mut overrides = HashMap::new();
+            let mut overrides = HashMap::default();
             for index in 1..*length {
                 let value = self.decode(types, address + index * stride, *element)?;
                 if value != first {

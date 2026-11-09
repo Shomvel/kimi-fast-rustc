@@ -547,6 +547,13 @@ pub struct FunctionGraph {
     types: Vec<ValueTypeId>,
     extra: Vec<NodeId>,
     forward: Vec<NodeId>,
+    /// Some live input or control edge may name a forwarded node. Cleared by
+    /// `resolve_edges`/`compact`; set by `replace` and by any edit that adds
+    /// an edge to an already forwarded node, so an unchanged graph skips the
+    /// full edge rewrite.
+    unresolved_edges: bool,
+    /// Number of records flagged dead, so `ids().count()` needs no scan.
+    dead_nodes: u32,
     value_types: Vec<ValueType>,
     pub constants: Vec<u128>,
     pub callees: Vec<CallTarget>,
@@ -562,7 +569,7 @@ pub struct FunctionGraph {
     pub stack_slots: Vec<kfrc_body::SizeAlign>,
     /// L-level physical slot index -> source LocalSlot identity. ABI temporary
     /// slots are absent; lowering preserves this evidence for Local partitions.
-    pub stack_slot_locals: std::collections::HashMap<u32, u32>,
+    pub stack_slot_locals: kfrc_body::fx_hash::HashMap<u32, u32>,
     pub symbols: Vec<(String, i64)>,
     pub data_objects: Vec<kfrc_body::DataObject>,
     /// Full-width logical (variant,field) indices for VariantField nodes.
@@ -595,6 +602,8 @@ impl FunctionGraph {
             types: Vec::new(),
             extra: Vec::new(),
             forward: Vec::new(),
+            unresolved_edges: false,
+            dead_nodes: 0,
             value_types: Vec::new(),
             constants: Vec::new(),
             callees: Vec::new(),
@@ -602,7 +611,7 @@ impl FunctionGraph {
             callee_permissions: std::collections::BTreeMap::new(),
             call_abis: Vec::new(),
             stack_slots: Vec::new(),
-            stack_slot_locals: std::collections::HashMap::new(),
+            stack_slot_locals: kfrc_body::fx_hash::HashMap::default(),
             symbols: Vec::new(),
             data_objects: Vec::new(),
             variant_fields: Vec::new(),
@@ -676,6 +685,10 @@ impl FunctionGraph {
         ty: ValueType,
     ) -> NodeId {
         self.invalidate();
+        for &input in inputs {
+            self.note_edge(input);
+        }
+        self.note_edge(control);
         let id = NodeId(self.records.len() as u32);
         let (flags, in0, in1) = if inputs.len() <= 2 {
             (
@@ -719,6 +732,7 @@ impl FunctionGraph {
         ty: ValueType,
     ) -> NodeId {
         self.invalidate();
+        self.note_edge(control);
         let id = NodeId(self.records.len() as u32);
         let start = self.extra.len() as u32;
         self.extra.extend(std::iter::repeat_n(NodeId::NONE, count));
@@ -833,7 +847,13 @@ impl FunctionGraph {
 
     pub fn set_input(&mut self, node: NodeId, index: usize, value: NodeId) {
         self.invalidate();
+        self.note_edge(value);
         let record = self.records[node.index()];
+        if record.flags & FLAG_POOLED_INPUTS == 0 {
+            // Setting the first inline input can expose a second one.
+            self.note_edge(record.in0);
+            self.note_edge(record.in1);
+        }
         if record.flags & FLAG_POOLED_INPUTS != 0 {
             assert!(
                 index < record.in1.index(),
@@ -853,6 +873,9 @@ impl FunctionGraph {
     /// Structural editors must update related nodes together before verification.
     pub fn set_inputs(&mut self, node: NodeId, inputs: &[NodeId]) {
         self.invalidate();
+        for &input in inputs {
+            self.note_edge(input);
+        }
         let start = self.extra.len();
         self.extra.extend_from_slice(inputs);
         let record = &mut self.records[node.index()];
@@ -863,7 +886,21 @@ impl FunctionGraph {
 
     pub fn set_control(&mut self, node: NodeId, control: NodeId) {
         self.invalidate();
+        self.note_edge(control);
         self.control[node.index()] = control;
+    }
+
+    /// Records that an edge to `target` exists; a forwarded target leaves an
+    /// edge for the next `resolve_edges` to rewrite.
+    fn note_edge(&mut self, target: NodeId) {
+        if !target.is_none()
+            && self
+                .forward
+                .get(target.index())
+                .is_some_and(|next| !next.is_none())
+        {
+            self.unresolved_edges = true;
+        }
     }
 
     pub fn constant_value(&self, node: NodeId) -> u128 {
@@ -927,8 +964,17 @@ impl FunctionGraph {
         let replacement = self.resolve(replacement);
         if node != replacement {
             self.invalidate();
+            self.unresolved_edges = true;
             self.forward[node.index()] = replacement;
-            self.records[node.index()].flags |= FLAG_DEAD;
+            self.mark_dead(node);
+        }
+    }
+
+    fn mark_dead(&mut self, node: NodeId) {
+        let flags = &mut self.records[node.index()].flags;
+        if *flags & FLAG_DEAD == 0 {
+            *flags |= FLAG_DEAD;
+            self.dead_nodes += 1;
         }
     }
 
@@ -936,29 +982,70 @@ impl FunctionGraph {
     /// not erase or renumber its storage; editors own the surrounding invariant.
     pub fn remove_node(&mut self, node: NodeId) {
         self.invalidate();
-        self.records[node.index()].flags |= FLAG_DEAD;
+        self.mark_dead(node);
     }
 
     /// Applies forwarding without renumbering NodeIds. Analyses still need to be
     /// rebuilt after mutations; only pipeline finalization calls `compact`.
+    /// Rewrites, in place, every live node's visible inputs and control; a
+    /// graph with no forwarded edge since the last call is left untouched.
     pub fn resolve_edges(&mut self) {
-        let nodes: Vec<_> = self.ids().collect();
-        for node in nodes {
-            let inputs: Vec<_> = self
-                .inputs(node)
-                .iter()
-                .map(|input| self.resolve(*input))
-                .collect();
-            for (slot, input) in inputs.into_iter().enumerate() {
-                if self.input(node, slot) != input {
-                    self.set_input(node, slot, input);
+        if !self.unresolved_edges {
+            debug_assert!(
+                self.edges_resolved(),
+                "an edge to a forwarded node escaped edge tracking"
+            );
+            return;
+        }
+        let mut changed = false;
+        for index in 0..self.records.len() {
+            let record = self.records[index];
+            if record.flags & FLAG_DEAD != 0 {
+                continue;
+            }
+            if record.flags & FLAG_POOLED_INPUTS != 0 {
+                let start = record.in0.index();
+                for slot in start..start + record.in1.index() {
+                    let resolved = self.resolve(self.extra[slot]);
+                    if self.extra[slot] != resolved {
+                        self.extra[slot] = resolved;
+                        changed = true;
+                    }
+                }
+            } else if !record.in0.is_none() {
+                // Same visible inputs as `inputs`: in1 only after a present in0.
+                let in0 = self.resolve(record.in0);
+                let in1 = if record.in1.is_none() {
+                    record.in1
+                } else {
+                    self.resolve(record.in1)
+                };
+                if in0 != record.in0 || in1 != record.in1 {
+                    self.records[index].in0 = in0;
+                    self.records[index].in1 = in1;
+                    changed = true;
                 }
             }
-            let control = self.resolve(self.control(node));
-            if self.control(node) != control {
-                self.set_control(node, control);
+            let control = self.resolve(self.control[index]);
+            if self.control[index] != control {
+                self.control[index] = control;
+                changed = true;
             }
         }
+        if changed {
+            self.invalidate();
+        }
+        self.unresolved_edges = false;
+    }
+
+    /// Whether no live node's visible input or control names a forwarded node.
+    fn edges_resolved(&self) -> bool {
+        self.ids().all(|node| {
+            self.inputs(node)
+                .iter()
+                .chain(std::iter::once(&self.control[node.index()]))
+                .all(|&edge| self.resolve(edge) == edge)
+        })
     }
 
     pub fn resolve(&self, mut node: NodeId) -> NodeId {
@@ -976,6 +1063,15 @@ impl FunctionGraph {
         (0..self.records.len() as u32)
             .map(NodeId)
             .filter(|node| !self.is_dead(*node))
+    }
+
+    /// `ids().count()` without the scan: records minus those flagged dead.
+    pub fn live_count(&self) -> usize {
+        debug_assert_eq!(
+            self.records.len() - self.dead_nodes as usize,
+            self.ids().count()
+        );
+        self.records.len() - self.dead_nodes as usize
     }
 
     /// Rewrites every input through the forwarding table, removes nodes not
@@ -1046,6 +1142,8 @@ impl FunctionGraph {
         }
         self.start = remap(self.start);
         self.forward = vec![NodeId::NONE; records.len()];
+        self.unresolved_edges = false;
+        self.dead_nodes = 0;
         self.records = records;
         self.control = control;
         self.types = types;
@@ -1155,5 +1253,91 @@ impl FunctionGraph {
         }
         out.push('}');
         out
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn graph_with_values() -> (FunctionGraph, NodeId, NodeId, NodeId) {
+        let mut graph = FunctionGraph::new(
+            "edges",
+            kfrc_body::FunctionAbi {
+                args: Vec::new(),
+                ret: kfrc_body::PassMode::Ignore,
+                c_variadic: false,
+            },
+            RecordedTypes::new(),
+        );
+        let a = graph.add_node(Opcode::Undefined, NodeId::NONE, &[], 0, ValueType::Control);
+        let b = graph.add_node(Opcode::Undefined, NodeId::NONE, &[], 1, ValueType::Control);
+        let user = graph.add_node(Opcode::Add, NodeId::NONE, &[a, a], 0, ValueType::Control);
+        (graph, a, b, user)
+    }
+
+    #[test]
+    fn resolve_edges_rewrites_forwarded_inputs_and_skips_resolved_graphs() {
+        let (mut graph, a, b, user) = graph_with_values();
+        graph.state = GraphState::Verified;
+        graph.resolve_edges();
+        assert_eq!(graph.state, GraphState::Verified, "no forwarding, no edit");
+        graph.replace(a, b);
+        graph.resolve_edges();
+        assert_eq!(graph.inputs(user), &[b, b]);
+        assert!(graph.edges_resolved());
+    }
+
+    #[test]
+    fn edges_added_to_forwarded_nodes_are_resolved() {
+        let (mut graph, a, b, user) = graph_with_values();
+        graph.replace(a, b);
+        graph.resolve_edges();
+        // A later edit may still name the forwarded node directly.
+        let late = graph.add_node(Opcode::Add, a, &[a], 0, ValueType::Control);
+        graph.set_input(user, 1, a);
+        graph.resolve_edges();
+        assert_eq!(graph.inputs(late), &[b]);
+        assert_eq!(graph.control(late), b);
+        assert_eq!(graph.inputs(user), &[b, b]);
+    }
+
+    #[test]
+    fn interned_value_types_keep_their_ids_across_clones() {
+        let (mut graph, ..) = graph_with_values();
+        let types: Vec<ValueType> = (0..40u32)
+            .map(|index| ValueType::Tuple(vec![ValueType::Rust(kfrc_body::TyId(index))]))
+            .collect();
+        let ids: Vec<_> = types
+            .iter()
+            .map(|ty| graph.intern_type(ty.clone()))
+            .collect();
+        let mut copy = graph.clone();
+        for (ty, id) in types.iter().zip(&ids) {
+            assert_eq!(graph.intern_type(ty.clone()), *id);
+            assert_eq!(copy.intern_type(ty.clone()), *id);
+        }
+        let fresh = ValueType::Tuple(Vec::new());
+        assert_eq!(
+            copy.intern_type(fresh.clone()).0 as usize,
+            copy.value_types.len() - 1
+        );
+        assert_eq!(
+            copy.intern_type(fresh),
+            ValueTypeId(copy.value_types.len() as u32 - 1)
+        );
+        assert_eq!(ids.iter().map(|id| id.0).collect::<Vec<_>>().len(), 40);
+    }
+
+    #[test]
+    fn setting_a_first_inline_input_exposes_a_tracked_second_input() {
+        let (mut graph, a, b, _) = graph_with_values();
+        let hidden = graph.add_node(Opcode::Add, NodeId::NONE, &[], 0, ValueType::Control);
+        graph.set_input(hidden, 1, a);
+        graph.replace(a, b);
+        graph.resolve_edges();
+        graph.set_input(hidden, 0, b);
+        graph.resolve_edges();
+        assert_eq!(graph.inputs(hidden), &[b, b]);
     }
 }

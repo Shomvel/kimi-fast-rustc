@@ -4,7 +4,8 @@
 //! are split together, and only pure values are cloned. Unknown or poison
 //! decisions, loop-carried dependencies and unplaceable uses reject the edit.
 
-use std::collections::{HashMap, HashSet, VecDeque};
+use kfrc_body::fx_hash::{HashMap, HashSet};
+use std::collections::VecDeque;
 
 use kfrc_body::{TypeOracle, TypeShape};
 
@@ -274,7 +275,7 @@ impl Plan {
         // Retire proof edges with their branch. Every routed predecessor
         // constructs the witnessed variant; cloned fields can conservatively
         // use their original total (inactive -> poison) one-input semantics.
-        let mut witnesses = HashSet::new();
+        let mut witnesses = HashSet::default();
         for (side, &leaf) in leaves.iter().enumerate() {
             for usage in uses.of(leaf) {
                 let witness = usage.user;
@@ -388,7 +389,7 @@ impl Plan {
     }
 
     fn apply(self, graph: &mut FunctionGraph) -> (usize, Vec<NodeId>, Vec<NodeId>) {
-        let mut maps = vec![HashMap::new(); self.leaves.len()];
+        let mut maps = vec![HashMap::default(); self.leaves.len()];
         let mut cloned = 0;
         let mut regions = Vec::new();
         let consumers = self.rewrites.iter().map(|r| r.user).collect();

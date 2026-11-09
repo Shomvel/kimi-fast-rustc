@@ -542,7 +542,7 @@ fn seeded_promotion_only_visits_requested_local_identity() {
     );
     f.ret(sum);
     verify_graph(&mut f.graph).unwrap();
-    let stats = run(&mut f.graph, Some(&HashSet::from([29])));
+    let stats = run(&mut f.graph, Some(&HashSet::from_iter([29])));
     verify_graph(&mut f.graph).unwrap();
     assert_eq!(
         (
@@ -705,7 +705,7 @@ fn empty_seed_set_skips_provenance_and_control_setup() {
     let value = f.load(slot, f.word);
     f.ret(value);
     let before = f.graph.dump();
-    let stats = run(&mut f.graph, Some(&HashSet::new()));
+    let stats = run(&mut f.graph, Some(&HashSet::default()));
     assert_eq!(
         (stats.node_visits, stats.edge_visits, stats.slots_promoted),
         (0, 0, 0)

@@ -1,7 +1,7 @@
 //! Ranges of definitely initialized values in S. Nominal validity alone is
 //! never enough: raw loads, ConstRepr, Undefined and flagged arithmetic do not
 //! enter this analysis. No path fact is cached across dynamic loop instances.
-use std::collections::{HashMap, HashSet};
+use kfrc_body::fx_hash::{HashMap, HashSet};
 
 use crate::{ComparePredicate, FunctionGraph, GraphLevel, NodeId, Opcode};
 use kfrc_body::{ScalarValidRange, TyId, TypeOracle, TypeShape};
@@ -81,9 +81,9 @@ impl<'a> RangeFacts<'a> {
     pub fn new(graph: &'a FunctionGraph) -> Self {
         Self {
             graph,
-            memo: HashMap::new(),
-            active: HashSet::new(),
-            validated: HashMap::new(),
+            memo: HashMap::default(),
+            active: HashSet::default(),
+            validated: HashMap::default(),
             queries: 0,
             node_visits: 0,
         }

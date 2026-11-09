@@ -10,7 +10,7 @@
 //! whose proof point is dominated by an equal proof's point is that proof:
 //! the subject is an immutable SSA value, so the dominating proof holds there.
 
-use std::collections::HashMap;
+use kfrc_body::fx_hash::HashMap;
 
 use crate::analysis::cfg::ControlFlow;
 use crate::analysis::dominators::Dominators;
@@ -33,7 +33,7 @@ struct Expression {
 pub(crate) fn run(graph: &mut FunctionGraph) -> GvnStats {
     let mut stats = GvnStats::default();
     stats.values_merged += merge_dominated_witnesses(graph);
-    let mut expressions = HashMap::new();
+    let mut expressions = HashMap::default();
     let nodes: Vec<_> = graph.ids().collect();
     for node in nodes {
         if !graph.control(node).is_none()
@@ -71,7 +71,7 @@ pub(crate) fn run(graph: &mut FunctionGraph) -> GvnStats {
 /// Replaces each `VariantWitness` with an equal witness (same subject and
 /// variant) whose proof control dominates its own.
 fn merge_dominated_witnesses(graph: &mut FunctionGraph) -> usize {
-    let mut groups: HashMap<(NodeId, u32), Vec<NodeId>> = HashMap::new();
+    let mut groups: HashMap<(NodeId, u32), Vec<NodeId>> = HashMap::default();
     for node in graph.ids() {
         if graph.op(node) == Opcode::VariantWitness && !graph.is_dead(node) {
             let subject = graph.resolve(graph.input(node, 0));

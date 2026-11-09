@@ -3,7 +3,7 @@
 
 mod invariant;
 
-use std::collections::HashMap;
+use kfrc_body::fx_hash::HashMap;
 
 use crate::{FunctionGraph, NodeId, Opcode, ValueType};
 

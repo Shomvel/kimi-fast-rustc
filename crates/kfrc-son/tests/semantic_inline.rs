@@ -7,7 +7,7 @@ use kfrc_son::{
     CallTarget, ComparePredicate, FunctionGraph, GraphLevel, InlineBudget, InlineSkip,
     InterpretError, Interpreter, NodeId, Opcode, ValueType, inline_calls, verify_graph,
 };
-use std::collections::HashMap;
+use kfrc_body::fx_hash::HashMap;
 
 struct Function {
     graph: FunctionGraph,
@@ -142,6 +142,45 @@ fn run(graph: &FunctionGraph, args: &[u64]) -> Result<SemanticOutcome, Interpret
 }
 
 #[test]
+fn repeated_callee_import_preserves_types_added_by_an_intervening_callee() {
+    let mut first = Function::new("first", 1, true);
+    let nine = first.graph.add_constant(9, first.int);
+    let sum = first.node(Opcode::Add, &[first.args[0], nine], 0, first.int);
+    first.ret(sum);
+    first.verify();
+
+    let mut second = Function::new("second", 1, false);
+    // Importing this source extends the caller's oracle even though its ABI
+    // still uses u64. Reusing the first import must retain that extension.
+    let extra_shape = TypeShape::Int { width: IntegerWidth::W32, signed: true };
+    second.graph.oracle.intern(extra_shape.clone(), Some(SizeAlign { size: 4, align: 4 }));
+    let eleven = second.graph.add_constant(11, second.int);
+    let sum = second.node(Opcode::Add, &[second.args[0], eleven], 0, second.int);
+    second.ret(sum);
+    second.verify();
+
+    let mut caller = Function::new("caller", 1, false);
+    let a = caller.call(&first.graph, &[caller.args[0]], caller.int);
+    let b = caller.call(&second.graph, &[a], caller.int);
+    let c = caller.call(&first.graph, &[b], caller.int);
+    caller.ret(c);
+    caller.verify();
+    let sources = HashMap::from_iter([
+        (first.graph.symbol.clone(), first.graph),
+        (second.graph.symbol.clone(), second.graph),
+    ]);
+    let stats = inline_calls(&mut caller.graph, &sources, InlineBudget::default()).unwrap();
+    assert_eq!(stats.calls_inlined, 3);
+    assert!((0..caller.graph.oracle.table.len()).any(|index| {
+        caller.graph.oracle.table.shape(TyId(index as u32)) == &extra_shape
+    }));
+    caller.verify();
+    for input in [0, 1, 17, u64::MAX] {
+        assert_eq!(run(&caller.graph, &[input]).unwrap(), SemanticOutcome::Return(Value::Scalar(input.wrapping_add(29))));
+    }
+}
+
+#[test]
 fn multiblock_callee_return_phi_remaps_independent_type_tables() {
     let mut callee = Function::new("choose", 1, true);
     let zero = callee.graph.add_constant(0, callee.int);
@@ -179,7 +218,7 @@ fn multiblock_callee_return_phi_remaps_independent_type_tables() {
     let result = caller.call(&callee.graph, &caller.args.clone(), caller.int);
     caller.ret(result);
     caller.verify();
-    let provider = HashMap::from([(callee.graph.symbol.clone(), callee.graph)]);
+    let provider = HashMap::from_iter([(callee.graph.symbol.clone(), callee.graph)]);
     let stats = inline_calls(&mut caller.graph, &provider, InlineBudget::default()).unwrap();
     assert_eq!(stats.calls_inlined, 1);
     assert!(stats.skipped.is_empty());
@@ -215,7 +254,7 @@ fn unused_poison_argument_is_still_observed_after_inlining() {
     let result = caller.call(&callee.graph, &[poison], caller.int);
     caller.ret(result);
     caller.verify();
-    let provider = HashMap::from([(callee.graph.symbol.clone(), callee.graph)]);
+    let provider = HashMap::from_iter([(callee.graph.symbol.clone(), callee.graph)]);
     let stats = inline_calls(&mut caller.graph, &provider, InlineBudget::default()).unwrap();
     assert_eq!(stats.calls_inlined, 1);
     assert!(matches!(
@@ -246,7 +285,7 @@ fn partially_poison_return_is_observed_before_the_caller_projects_a_good_field()
     let result = caller.node(Opcode::Field, &[value], 0, caller.int);
     caller.ret(result);
     caller.verify();
-    let provider = HashMap::from([(callee.graph.symbol.clone(), callee.graph)]);
+    let provider = HashMap::from_iter([(callee.graph.symbol.clone(), callee.graph)]);
     assert_eq!(
         inline_calls(&mut caller.graph, &provider, InlineBudget::default())
             .unwrap()
@@ -270,7 +309,7 @@ fn recursive_scc_and_budget_leave_calls_unchanged() {
     let result = caller.call(&recursive.graph, &caller.args.clone(), caller.int);
     caller.ret(result);
     caller.verify();
-    let provider = HashMap::from([(recursive.graph.symbol.clone(), recursive.graph)]);
+    let provider = HashMap::from_iter([(recursive.graph.symbol.clone(), recursive.graph)]);
     let before = caller.graph.dump();
     let stats = inline_calls(&mut caller.graph, &provider, InlineBudget::default()).unwrap();
     assert_eq!(stats.calls_inlined, 0);
@@ -332,7 +371,7 @@ fn conflicting_nominal_field_types_skip_atomically() {
     let result = caller.node(Opcode::Field, &[record], 0, boolean);
     caller.ret(result);
     caller.verify();
-    let provider = HashMap::from([(callee.graph.symbol.clone(), callee.graph)]);
+    let provider = HashMap::from_iter([(callee.graph.symbol.clone(), callee.graph)]);
     let before = caller.graph.dump();
     let stats = inline_calls(&mut caller.graph, &provider, InlineBudget::default()).unwrap();
     assert_eq!(stats.calls_inlined, 0);
@@ -377,7 +416,7 @@ fn inline_local_object(unnamed_address: bool, writable: bool) -> (usize, Vec<Inl
     let result = caller.call(&callee.graph, &[], pointer);
     caller.ret(result);
     caller.verify();
-    let provider = HashMap::from([(callee.graph.symbol.clone(), callee.graph)]);
+    let provider = HashMap::from_iter([(callee.graph.symbol.clone(), callee.graph)]);
     let budget = InlineBudget {
         copy_anonymous_constants: true,
         ..InlineBudget::default()
@@ -428,7 +467,7 @@ fn local_data_identity_is_not_duplicated_into_another_cgu() {
     let result = caller.call(&callee.graph, &[], pointer);
     caller.ret(result);
     caller.verify();
-    let provider = HashMap::from([(callee.graph.symbol.clone(), callee.graph)]);
+    let provider = HashMap::from_iter([(callee.graph.symbol.clone(), callee.graph)]);
     let before = caller.graph.dump();
     let stats = inline_calls(&mut caller.graph, &provider, InlineBudget::default()).unwrap();
     assert_eq!(stats.calls_inlined, 0);
@@ -480,7 +519,7 @@ fn inline_seeds_expose_aggregate_fields_without_resweeping_unrelated_values() {
     let result = caller.node(Opcode::Add, &[result, unrelated], 0, caller.int);
     caller.ret(result);
     caller.verify();
-    let provider = HashMap::from([(callee.graph.symbol.clone(), callee.graph)]);
+    let provider = HashMap::from_iter([(callee.graph.symbol.clone(), callee.graph)]);
     let inline = inline_calls(&mut caller.graph, &provider, InlineBudget::default()).unwrap();
     assert_eq!(inline.calls_inlined, 1);
     assert!(!inline.dirty_nodes.is_empty());
@@ -528,7 +567,7 @@ fn inline_repeat_return_imports_length_and_exposes_projection_seam() {
     let result = caller.node(Opcode::Field, &[repeated], 4095, caller.int);
     caller.ret(result);
     caller.verify();
-    let provider = HashMap::from([(callee.graph.symbol.clone(), callee.graph)]);
+    let provider = HashMap::from_iter([(callee.graph.symbol.clone(), callee.graph)]);
     let inline = inline_calls(&mut caller.graph, &provider, InlineBudget::default()).unwrap();
     assert_eq!(inline.calls_inlined, 1);
     assert!(caller.graph.len() < 40);
@@ -622,7 +661,7 @@ fn variant_switch_and_witness_keep_proof_edges_when_inlined() {
     let result = caller.call(&callee.graph, &[caller.args[0]], caller.int);
     caller.ret(result);
     caller.verify();
-    let provider = HashMap::from([(callee.graph.symbol.clone(), callee.graph)]);
+    let provider = HashMap::from_iter([(callee.graph.symbol.clone(), callee.graph)]);
     let stats = inline_calls(&mut caller.graph, &provider, InlineBudget::default()).unwrap();
     assert_eq!(stats.calls_inlined, 1, "{stats:?}");
     assert_eq!(
@@ -664,7 +703,7 @@ fn scalar_inline_does_not_require_an_unused_local_identity() {
     let result = caller.call(&callee.graph, &[caller.args[0]], caller.int);
     caller.ret(result);
     caller.verify();
-    let provider = HashMap::from([(callee.graph.symbol.clone(), callee.graph)]);
+    let provider = HashMap::from_iter([(callee.graph.symbol.clone(), callee.graph)]);
     let stats = inline_calls(&mut caller.graph, &provider, InlineBudget::default()).unwrap();
     assert_eq!(stats.calls_inlined, 1, "{stats:?}");
     assert_eq!(
@@ -686,7 +725,7 @@ fn later_invalid_source_rolls_back_earlier_successful_splice() {
     let second = caller.call(&invalid.graph, &[first], caller.int);
     caller.ret(second);
     caller.verify();
-    let provider = HashMap::from([
+    let provider = HashMap::from_iter([
         (valid.graph.symbol.clone(), valid.graph),
         (invalid.graph.symbol.clone(), invalid.graph),
     ]);
@@ -737,7 +776,7 @@ fn inlining_retains_fixed_assumption_even_when_its_value_is_unused() {
     let value = caller.graph.add_constant(42, caller.int);
     caller.ret(value);
     caller.verify();
-    let functions = HashMap::from([("assumption_then_identity".into(), callee.graph)]);
+    let functions = HashMap::from_iter([("assumption_then_identity".into(), callee.graph)]);
     assert_eq!(
         kfrc_son::fold_identity_calls(&mut caller.graph, &functions, None)
             .unwrap()
@@ -805,7 +844,7 @@ fn remaining_calls(graph: &FunctionGraph) -> Vec<String> {
 fn smallest_callee_is_inlined_first_and_large_callees_stay_calls() {
     let big = chain("big", 60);
     let small = chain("small", 3);
-    let provider = HashMap::from([
+    let provider = HashMap::from_iter([
         (big.graph.symbol.clone(), big.graph.clone()),
         (small.graph.symbol.clone(), small.graph.clone()),
     ]);
@@ -845,7 +884,7 @@ impl kfrc_son::GraphProvider for SoleCaller {
 fn a_sole_call_site_inlines_regardless_of_callee_size() {
     let big = chain("big", 60);
     let small = chain("small", 3);
-    let provider = SoleCaller(HashMap::from([
+    let provider = SoleCaller(HashMap::from_iter([
         (big.graph.symbol.clone(), big.graph.clone()),
         (small.graph.symbol.clone(), small.graph.clone()),
     ]));

@@ -116,7 +116,7 @@ fn initial(
 ) -> Result<(State, Vec<VirtualReg>), LowerError> {
     let facts = inst.facts();
     let live = allocation.live_through(position, &facts.definitions);
-    let mut state = State::new();
+    let mut state = State::default();
     for v in live.iter().chain(&facts.uses) {
         insert_all(allocation, &mut state, *v, position, Symbol::Before(*v))?;
     }
@@ -187,7 +187,7 @@ pub(super) fn entry(
     if !enabled() {
         return Ok(());
     }
-    let mut state = State::new();
+    let mut state = State::default();
     for (_, index) in args {
         state.insert(
             Location::Reg(Reg::ARGUMENTS[*index]),
@@ -236,7 +236,7 @@ pub(super) fn edge(
     if !enabled() {
         return Ok(());
     }
-    let mut state = State::new();
+    let mut state = State::default();
     let values = allocation.edge_values(source, target);
     for &v in &values {
         insert_all(allocation, &mut state, v, source, Symbol::Before(v))?;

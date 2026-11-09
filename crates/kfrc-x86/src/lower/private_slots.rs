@@ -278,17 +278,17 @@ pub(super) fn run(stream: &mut Vec<LowerInstr>, layouts: &mut Vec<SizeAlign>) ->
         return stats;
     }
     let all_facts: Vec<_> = stream.iter().map(facts).collect();
-    let mut definitions = HashMap::<VirtualReg, Vec<usize>>::new();
+    let mut definitions = HashMap::<VirtualReg, Vec<usize>>::default();
     for (index, f) in all_facts.iter().enumerate() {
         for &reg in &f.defs {
             definitions.entry(reg).or_default().push(index);
         }
     }
     let mut slots: Vec<Slot> = (0..layouts.len()).map(|_| Slot::default()).collect();
-    let mut addresses = HashMap::new();
+    let mut addresses = HashMap::default();
     // A small worklist, rather than textual-order assumptions, also handles a
     // pure address whose single definition was scheduled in another block.
-    let mut users = HashMap::<VirtualReg, Vec<usize>>::new();
+    let mut users = HashMap::<VirtualReg, Vec<usize>>::default();
     for (index, f) in all_facts.iter().enumerate() {
         for &reg in &f.uses {
             users.entry(reg).or_default().push(index);
@@ -385,7 +385,7 @@ pub(super) fn run(stream: &mut Vec<LowerInstr>, layouts: &mut Vec<SizeAlign>) ->
             }
         }
     }
-    let mut versions = HashMap::<VirtualReg, usize>::new();
+    let mut versions = HashMap::<VirtualReg, usize>::default();
     let mut at_use = vec![None; stream.len()];
     for (index, i) in stream.iter().enumerate() {
         if let LowerInstr::Store {
@@ -555,8 +555,8 @@ pub(super) fn clean_dead_values(
     mut pending: Vec<VirtualReg>,
 ) {
     let all_facts: Vec<_> = stream.iter().map(facts).collect();
-    let mut definitions = HashMap::<VirtualReg, Vec<usize>>::new();
-    let mut uses = HashMap::<VirtualReg, usize>::new();
+    let mut definitions = HashMap::<VirtualReg, Vec<usize>>::default();
+    let mut uses = HashMap::<VirtualReg, usize>::default();
     for (index, f) in all_facts.iter().enumerate().filter(|(i, _)| !removed[*i]) {
         for &reg in &f.defs {
             definitions.entry(reg).or_default().push(index);

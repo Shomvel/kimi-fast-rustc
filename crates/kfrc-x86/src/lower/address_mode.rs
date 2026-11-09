@@ -31,8 +31,8 @@ impl Lowering<'_> {
     /// past them, directly or through another folded `PtrOffset`.
     pub(super) fn address_only_offsets(&self) -> HashSet<NodeId> {
         let graph = self.graph;
-        let mut users: HashMap<NodeId, Vec<(NodeId, usize)>> = HashMap::new();
-        let mut control_users = HashSet::new();
+        let mut users: HashMap<NodeId, Vec<(NodeId, usize)>> = HashMap::default();
+        let mut control_users = HashSet::default();
         for node in graph.ids() {
             for (slot, &input) in graph.inputs(node).iter().enumerate() {
                 users.entry(graph.resolve(input)).or_default().push((node, slot));
@@ -42,8 +42,8 @@ impl Lowering<'_> {
                 control_users.insert(graph.resolve(control));
             }
         }
-        let mut memo = HashMap::new();
-        let mut folded = HashSet::new();
+        let mut memo = HashMap::default();
+        let mut folded = HashSet::default();
         for node in graph.ids() {
             if graph.op(node) == Opcode::PtrOffset
                 && self.folds_away(node, &users, &control_users, &mut memo)

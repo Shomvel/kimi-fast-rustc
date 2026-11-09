@@ -18,7 +18,7 @@
 //! paths provides the value once it dominates the load. Lifetime changes,
 //! requirements and other writes stop the walk for every other place.
 
-use std::collections::HashSet;
+use kfrc_body::fx_hash::HashSet;
 
 use crate::analysis::cfg::ControlFlow;
 use crate::analysis::dominators::Dominators;
@@ -441,7 +441,7 @@ fn same_address(graph: &FunctionGraph, a: NodeId, b: NodeId) -> bool {
 fn same_place(graph: &FunctionGraph, a: NodeId, b: NodeId) -> bool {
     let strip = |mut node: NodeId| {
         node = graph.resolve(node);
-        let mut seen = HashSet::new();
+        let mut seen = HashSet::default();
         while graph.op(node) == Opcode::PointerCast && seen.insert(node) {
             node = graph.resolve(graph.input(node, 0));
         }

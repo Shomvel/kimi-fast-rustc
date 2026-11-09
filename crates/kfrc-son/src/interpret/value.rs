@@ -1,6 +1,6 @@
 //! Owned semantic snapshots. Repeated arrays share their default element and
 //! sparse overrides, so cloning or projecting one never expands its length.
-use std::collections::HashMap;
+use kfrc_body::fx_hash::HashMap;
 use std::sync::Arc;
 
 #[derive(Clone, Debug, Eq)]
@@ -33,7 +33,7 @@ impl Value {
         Self::Array {
             element: Arc::new(element),
             length,
-            overrides: Arc::new(HashMap::new()),
+            overrides: Arc::new(HashMap::default()),
         }
     }
 

@@ -2,7 +2,7 @@
 //! Proofs belong to one immutable CFG snapshot. Receipts are verified before
 //! committing the batch; no condition value is replaced outside its If use.
 
-use std::collections::{HashMap, HashSet};
+use kfrc_body::fx_hash::{HashMap, HashSet};
 
 use crate::analysis::cfg::ControlFlow;
 use crate::analysis::dominators::Dominators;
@@ -27,7 +27,7 @@ pub(crate) fn run(graph: &mut FunctionGraph) -> Result<ConditionStats, VerifyErr
     // Without an If there is no rewrite, even when Assume facts are present.
     // Do not build a CFG or dominators just to establish that empty result.
     let mut has_branch = false;
-    let mut protected = HashSet::new();
+    let mut protected = HashSet::default();
     for node in graph.ids() {
         stats.fact_node_visits += 1;
         match graph.op(node) {
@@ -50,8 +50,8 @@ pub(crate) fn run(graph: &mut FunctionGraph) -> Result<ConditionStats, VerifyErr
     graph.resolve_edges();
     let cfg = ControlFlow::new(graph);
     let dominators = Dominators::new(&cfg);
-    let mut evidence: HashMap<NodeId, Vec<NodeId>> = HashMap::new();
-    let mut comparisons: HashMap<NodeId, Vec<NodeId>> = HashMap::new();
+    let mut evidence: HashMap<NodeId, Vec<NodeId>> = HashMap::default();
+    let mut comparisons: HashMap<NodeId, Vec<NodeId>> = HashMap::default();
     for &node in &cfg.order {
         if graph.op(node) != Opcode::Projection || graph.value_type(node) != &ValueType::Control {
             continue;
@@ -101,7 +101,7 @@ pub(crate) fn run(graph: &mut FunctionGraph) -> Result<ConditionStats, VerifyErr
                 );
             }
         }
-        let mut tried = HashSet::new();
+        let mut tried = HashSet::default();
         for proof in candidates {
             if !tried.insert(proof) {
                 continue;

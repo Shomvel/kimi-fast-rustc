@@ -46,7 +46,7 @@ fn scalar_leaves(graph: &FunctionGraph, ty: TyId) -> Option<u64> {
 
 fn cyclic_region(graph: &FunctionGraph, region: NodeId) -> bool {
     let mut pending = graph.inputs(region).to_vec();
-    let mut seen = HashSet::new();
+    let mut seen = HashSet::default();
     while let Some(node) = pending.pop() {
         let node = graph.resolve(node);
         if node == region {
@@ -153,7 +153,7 @@ impl LayoutLowering<'_> {
             edge.incoming.push((copy.region, copy.slot));
             edge.opaque.push(copy);
         }
-        let mut effects = HashMap::new();
+        let mut effects = HashMap::default();
         for (jump, edge) in edges {
             let mut control = self.graph.resolve(self.graph.control(jump));
             let mut effect = self.opaque_effect_at(control, &mut effects)?;

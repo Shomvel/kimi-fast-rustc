@@ -7,7 +7,7 @@
 //! dominance check is what rejects the T01 miscompile shape, where a value
 //! defined in one branch is used after the merge.
 
-use std::collections::{HashMap, HashSet};
+use kfrc_body::fx_hash::{HashMap, HashSet};
 
 use kfrc_body::{Mutability, PassMode, TypeOracle, TypeShape};
 
@@ -76,6 +76,38 @@ pub fn verify_graph(graph: &mut FunctionGraph) -> Result<(), VerifyError> {
     check(graph)?;
     graph.state = GraphState::Verified;
     Ok(())
+}
+
+/// Whether pipeline-internal verification runs: always in debug builds (so
+/// the whole test suite verifies every step), and in release builds when
+/// `KFRC_VERIFY=full`. Driver boundaries call [`verify_graph`] regardless,
+/// following rustc's `-Zverify-llvm-ir`, HotSpot C2's `ASSERT`-only
+/// `verify_optimize` and Cranelift's `enable_verifier`.
+pub fn full_verification() -> bool {
+    static FULL: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+    cfg!(debug_assertions)
+        || *FULL.get_or_init(|| std::env::var("KFRC_VERIFY").as_deref() == Ok("full"))
+}
+
+/// Verification between two steps of one pipeline. A step failure stops
+/// compilation, so the result never steers code generation; the driver's
+/// boundary [`verify_graph`] covers the pipeline's combined result.
+pub fn verify_pipeline_step(graph: &mut FunctionGraph) -> Result<(), VerifyError> {
+    if full_verification() {
+        verify_graph(graph)
+    } else {
+        Ok(())
+    }
+}
+
+/// [`check`] for a graph a pipeline step reads but does not own, such as an
+/// inline or identity source that the driver already verified once.
+pub fn check_pipeline_step(graph: &FunctionGraph) -> Result<(), VerifyError> {
+    if full_verification() {
+        check(graph)
+    } else {
+        Ok(())
+    }
 }
 
 pub fn check(graph: &FunctionGraph) -> Result<(), VerifyError> {
@@ -630,7 +662,7 @@ fn root_type_has_param(
     // intermediate false answer must never become a reusable type fact.
     *roots
         .entry(ty)
-        .or_insert_with(|| type_has_param(graph, ty, &mut HashSet::new()))
+        .or_insert_with(|| type_has_param(graph, ty, &mut HashSet::default()))
 }
 
 fn typed(graph: &FunctionGraph) -> Result<(), VerifyError> {
@@ -793,7 +825,7 @@ fn typed(graph: &FunctionGraph) -> Result<(), VerifyError> {
                     .variant_count(ty)
                     .ok_or_else(|| mismatch(node, "VariantSwitch input is not an enum"))?;
                 let cases = &graph.variant_switches[graph.payload(node) as usize];
-                let mut seen = HashSet::new();
+                let mut seen = HashSet::default();
                 if cases
                     .iter()
                     .any(|variant| *variant as usize >= count || !seen.insert(*variant))
@@ -1309,7 +1341,7 @@ fn stage(graph: &FunctionGraph) -> Result<(), VerifyError> {
     }
     // This memo belongs to one read-only verification, never to GraphState:
     // later oracle or graph edits must be checked from scratch.
-    let mut type_parameters = HashMap::new();
+    let mut type_parameters = HashMap::default();
     for node in graph.ids() {
         let op = graph.op(node);
         if graph.level != GraphLevel::Rust && matches!(op, Opcode::Hole | Opcode::TraitCall) {
@@ -1796,12 +1828,11 @@ fn dominance(graph: &FunctionGraph) -> Result<(), VerifyError> {
         .map_err(|(node, detail)| mismatch(node, detail))?;
     let dominates = |a: usize, b: usize| dominators.dominates_position(a, b);
     // Earliest placement of every node, as a position in the control order.
-    let mut placement: HashMap<NodeId, usize> = HashMap::new();
+    let mut placement = Placement::new(graph.len());
     let ids: Vec<NodeId> = graph.ids().collect();
-    let place =
-        |node: NodeId, placement: &mut HashMap<NodeId, usize>| -> Result<usize, VerifyError> {
-            place_node(graph, node, &position, &dominates, placement)
-        };
+    let place = |node: NodeId, placement: &mut Placement| -> Result<usize, VerifyError> {
+        place_node(graph, node, position, &dominates, placement)
+    };
     for node in &ids {
         place(*node, &mut placement)?;
     }
@@ -1844,12 +1875,40 @@ fn dominance(graph: &FunctionGraph) -> Result<(), VerifyError> {
     Ok(())
 }
 
+/// Earliest placement per node id; indexing an unplaced node panics like the
+/// map it replaces.
+struct Placement(Vec<usize>);
+
+impl Placement {
+    const UNPLACED: usize = usize::MAX;
+
+    fn new(nodes: usize) -> Self {
+        Self(vec![Self::UNPLACED; nodes])
+    }
+
+    fn get(&self, node: &NodeId) -> Option<&usize> {
+        self.0.get(node.index()).filter(|at| **at != Self::UNPLACED)
+    }
+
+    fn insert(&mut self, node: NodeId, at: usize) {
+        self.0[node.index()] = at;
+    }
+}
+
+impl std::ops::Index<&NodeId> for Placement {
+    type Output = usize;
+
+    fn index(&self, node: &NodeId) -> &usize {
+        self.get(node).expect("node has no placement")
+    }
+}
+
 fn place_node(
     graph: &FunctionGraph,
     node: NodeId,
-    position: &HashMap<NodeId, usize>,
+    position: &crate::analysis::cfg::NodePositions,
     dominates: &dyn Fn(usize, usize) -> bool,
-    placement: &mut HashMap<NodeId, usize>,
+    placement: &mut Placement,
 ) -> Result<usize, VerifyError> {
     if let Some(at) = placement.get(&node) {
         return Ok(*at);
@@ -1881,7 +1940,7 @@ fn place_node(
                 // dominator chain.
                 let mut deepest = 0usize;
                 let mut deepest_input = NodeId::NONE;
-                for input in graph.inputs(node).to_vec() {
+                for &input in graph.inputs(node) {
                     let input_at = place_node(graph, input, position, dominates, placement)?;
                     if dominates(deepest, input_at) {
                         deepest = input_at;

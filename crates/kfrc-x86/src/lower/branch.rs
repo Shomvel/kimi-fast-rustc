@@ -39,8 +39,8 @@ impl Branches {
             }
         }
         let mut result = Self {
-            direct: HashMap::new(),
-            covered: HashSet::new(),
+            direct: HashMap::default(),
+            covered: HashSet::default(),
         };
         for (block, info) in schedule.blocks.iter().enumerate() {
             let Some(&branch) = info.chain.last() else {

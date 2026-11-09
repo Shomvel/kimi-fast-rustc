@@ -169,3 +169,15 @@ pub mod rs5_permissions_probe;
 
 #[path = "support_compare_bytes.rs"]
 pub mod compare_bytes_probe;
+
+#[path = "support_heap_niche.rs"]
+pub mod heap_niche_probe;
+
+#[path = "support_resolved_calls.rs"]
+pub mod resolved_calls_probe;
+
+#[path = "support_loop_self_phi.rs"]
+pub mod loop_self_phi_probe;
+
+#[path = "support_array_transport.rs"]
+pub mod array_transport_probe;

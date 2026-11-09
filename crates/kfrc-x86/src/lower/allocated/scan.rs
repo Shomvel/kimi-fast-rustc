@@ -35,11 +35,11 @@ pub(super) fn scan(
     let mut segments = vec![Vec::<Segment>::new(); count as usize];
     let mut uses = vec![Vec::new(); count as usize];
     let mut pins = vec![Vec::new(); Reg::ALLOCATABLE.len()];
-    let mut hints = HashMap::new();
+    let mut hints = HashMap::default();
     // Registers a value must occupy at a later use or at its definition.
     // Allocating there directly saves the copy the constraint would need.
     let mut fixed_uses = vec![Vec::new(); count as usize];
-    let mut definition_registers = HashMap::new();
+    let mut definition_registers = HashMap::default();
     for (position, instruction) in instructions.iter().enumerate() {
         for input in &instruction.inputs {
             if let (VirtualValue::Reg(v), Constraint::Fixed(reg)) = (input.value, input.constraint)
@@ -170,11 +170,13 @@ pub(super) fn scan(
         // so a value defined here may take over the register of an input that
         // dies here. Later values starting here still see that register held.
         let mut shared = Vec::new();
-        if instructions[start]
-            .facts()
-            .definitions
-            .contains(&current.value)
-        {
+        let facts = instructions[start].facts();
+        // A Phi destination can also be an input of the same parallel copy
+        // (including v <- v on a loop back edge). Its old value must already
+        // be in its home before this instruction. Sharing a dying input's
+        // register would make the incoming edge copy overwrite that input
+        // before the parallel copy reads it.
+        if facts.definitions.contains(&current.value) && !facts.uses.contains(&current.value) {
             for &(v, part, reg) in &active {
                 if segments[v.0 as usize][part].end == start + 1
                     && active.iter().filter(|&&(_, _, r)| r == reg).count() == 1

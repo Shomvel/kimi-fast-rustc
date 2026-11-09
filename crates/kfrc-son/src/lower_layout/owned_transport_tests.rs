@@ -86,22 +86,23 @@ fn typed_snapshot_captures_old_raw_bytes_before_same_edge_overwrite() {
     let mut lower = LayoutLowering {
         projections: projections::ProjectionIndex::new(&graph),
         graph: &mut graph,
-        values: HashMap::new(),
-        demands: HashMap::new(),
-        owned_transport: HashSet::new(),
-        boundary_transport: HashMap::new(),
+        values: HashMap::default(),
+        demands: HashMap::default(),
+        owned_transport: HashSet::default(),
+        array_transport: HashSet::default(),
+        boundary_transport: HashMap::default(),
         owned_phis: Vec::new(),
         stats: LayoutStats::default(),
         retired: Vec::new(),
         partition: 0,
-        tag_only_loads: HashSet::new(),
+        tag_only_loads: HashSet::default(),
         options: LayoutOptions::default(),
-        encoded_values: HashSet::new(),
-        variant_tags: HashMap::new(),
-        unreachable_switch_edges: HashMap::new(),
+        encoded_values: HashSet::default(),
+        variant_tags: HashMap::default(),
+        unreachable_switch_edges: HashMap::default(),
         opaque_phis: Vec::new(),
-        opaque_phi_regions: HashMap::new(),
-        lane_plans: HashMap::new(),
+        opaque_phi_regions: HashMap::default(),
+        lane_plans: HashMap::default(),
     };
     // Only the first word is initialized. Whole representation copies must not
     // observe or initialize the second word while transporting this snapshot.
@@ -144,7 +145,7 @@ fn typed_snapshot_captures_old_raw_bytes_before_same_edge_overwrite() {
     });
     lower.finish_snapshot_phis().unwrap();
     control = region;
-    effect = lower.opaque_effect_at(region, &mut HashMap::new()).unwrap();
+    effect = lower.opaque_effect_at(region, &mut HashMap::default()).unwrap();
     let captured_first = lower.field_address(captured, 0, word);
     let before = lower.load(captured_first, word, &mut control, &mut effect);
     let after = lower.load(old_first, word, &mut control, &mut effect);

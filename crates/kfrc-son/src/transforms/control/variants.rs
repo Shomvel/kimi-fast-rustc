@@ -6,8 +6,8 @@ use crate::analysis::cfg::ControlFlow;
 use crate::analysis::dominators::Dominators;
 use crate::analysis::uses::{UseKind, Uses};
 use crate::{ComparePredicate, FunctionGraph, GraphLevel, NodeId, Opcode, ValueType};
+use kfrc_body::fx_hash::{HashMap, HashSet};
 use kfrc_body::{TyId, TypeOracle, TypeShape};
-use std::collections::{HashMap, HashSet};
 
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct VariantNormalizeStats {
@@ -169,7 +169,7 @@ pub(crate) fn witness_candidates(
 
 type Proofs = HashMap<(NodeId, u32), Vec<NodeId>>;
 fn variant_proofs(graph: &FunctionGraph) -> Proofs {
-    let mut proofs = HashMap::new();
+    let mut proofs = HashMap::default();
     for projection in graph.ids() {
         if graph.op(projection) != Opcode::Projection
             || graph.value_type(projection) != &ValueType::Control
@@ -217,7 +217,7 @@ fn insert_witnesses(
     proofs: &Proofs,
     candidates: &[(NodeId, NodeId)],
 ) -> usize {
-    let mut cache = HashMap::new();
+    let mut cache = HashMap::default();
     for &(field, anchor) in candidates {
         let field = graph.resolve(field);
         let anchor = graph.resolve(anchor);
@@ -262,7 +262,7 @@ fn execution_uses(
     visits: &mut usize,
 ) -> Option<Vec<NodeId>> {
     let mut pending = vec![value];
-    let mut seen = HashSet::new();
+    let mut seen = HashSet::default();
     let mut controls = Vec::new();
     while let Some(node) = pending.pop() {
         if !seen.insert(node) {

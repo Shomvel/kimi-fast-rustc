@@ -5,7 +5,7 @@
 //! it. It locates miscompiles (run a graph before and after a pass on the
 //! same input); correctness is still judged by real execution.
 
-use std::collections::{HashMap, HashSet};
+use kfrc_body::fx_hash::{HashMap, HashSet};
 
 mod rust;
 mod semantic;
@@ -101,9 +101,9 @@ struct Frame {
 
 impl<'a> Interpreter<'a> {
     pub fn new(graph: &'a FunctionGraph) -> Self {
-        let mut control_users: HashMap<NodeId, Vec<NodeId>> = HashMap::new();
-        let mut region_of_jump = HashMap::new();
-        let mut phis_of_region: HashMap<NodeId, Vec<NodeId>> = HashMap::new();
+        let mut control_users: HashMap<NodeId, Vec<NodeId>> = HashMap::default();
+        let mut region_of_jump = HashMap::default();
+        let mut phis_of_region: HashMap<NodeId, Vec<NodeId>> = HashMap::default();
         for node in graph.ids() {
             let control = graph.control(node);
             if !control.is_none() {
@@ -158,15 +158,15 @@ impl<'a> Interpreter<'a> {
         }
         let graph = self.graph;
         let mut frame = Frame {
-            phi_values: HashMap::new(),
-            fixed_values: HashMap::new(),
-            cache: HashMap::new(),
+            phi_values: HashMap::default(),
+            fixed_values: HashMap::default(),
+            cache: HashMap::default(),
             active_control: NodeId::NONE,
             arguments: arguments.to_vec(),
             slots: Vec::new(),
-            memory: HashMap::new(),
-            symbols: HashMap::new(),
-            dead_slots: HashSet::new(),
+            memory: HashMap::default(),
+            symbols: HashMap::default(),
+            dead_slots: HashSet::default(),
         };
         let mut next_address = 0x1000u64;
         for slot in &graph.stack_slots {
@@ -186,7 +186,7 @@ impl<'a> Interpreter<'a> {
                     .map(|object| object.symbol.clone()),
             )
             .collect();
-        let mut new_tls = HashSet::new();
+        let mut new_tls = HashSet::default();
         for object in &graph.data_objects {
             if object.thread_local {
                 let (address, fresh) = thread.ensure(object)?;

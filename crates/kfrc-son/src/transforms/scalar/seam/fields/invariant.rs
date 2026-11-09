@@ -1,7 +1,7 @@
 //! Resolve one demanded field through aggregate Phi cycles. Every dependency
 //! must reach the same entry value; a closed, ungrounded subcycle is unknown.
 
-use std::collections::{HashMap, HashSet};
+use kfrc_body::fx_hash::{HashMap, HashSet};
 
 use crate::{FunctionGraph, NodeId, Opcode, ValueType};
 
@@ -15,9 +15,9 @@ pub(super) fn find(
         return None;
     }
     let mut pending = vec![source];
-    let mut seen = HashSet::new();
-    let mut parents: HashMap<NodeId, Vec<NodeId>> = HashMap::new();
-    let mut anchored = HashSet::new();
+    let mut seen = HashSet::default();
+    let mut parents: HashMap<NodeId, Vec<NodeId>> = HashMap::default();
+    let mut anchored = HashSet::default();
     let mut anchor = None;
     while let Some(node) = pending.pop() {
         let node = graph.resolve(node);
@@ -79,7 +79,7 @@ pub(super) fn find(
 
 fn entry_value(graph: &FunctionGraph, mut node: NodeId) -> bool {
     let original = node;
-    let mut seen = HashSet::new();
+    let mut seen = HashSet::default();
     while seen.insert(node) {
         if !graph.control(node).is_none() {
             return false;

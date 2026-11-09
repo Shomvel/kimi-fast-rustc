@@ -2,7 +2,7 @@
 
 use super::plan::Plan;
 use crate::{FunctionGraph, MemoryPartition, NodeId, Opcode, ValueType};
-use std::collections::HashSet;
+use kfrc_body::fx_hash::HashSet;
 
 pub(super) struct Spliced {
     pub(super) nested: Vec<NodeId>,
@@ -23,7 +23,9 @@ pub(super) fn splice(
         expected_result,
         locals,
     } = plan;
-    graph.oracle = oracle;
+    if let Some(oracle) = oracle {
+        graph.oracle = oracle;
+    }
     for data in &source.data_objects {
         if !graph.data_objects.iter().any(|d| d.symbol == data.symbol) {
             graph.data_objects.push(data.clone());
@@ -313,7 +315,7 @@ fn lifetime(
 pub(super) fn argument_slots(graph: &FunctionGraph, arguments: &[NodeId]) -> Vec<NodeId> {
     let mut slots = Vec::new();
     let mut pending = arguments.to_vec();
-    let mut seen = HashSet::new();
+    let mut seen = HashSet::default();
     while let Some(node) = pending.pop() {
         let node = graph.resolve(node);
         if !seen.insert(node) {

@@ -9,7 +9,7 @@ use crate::analysis::{
 };
 use crate::{ComparePredicate, FunctionGraph, NodeId, Opcode};
 use kfrc_body::TypeShape;
-use std::collections::{HashMap, HashSet};
+use kfrc_body::fx_hash::{HashMap, HashSet};
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct WitnessStats {
@@ -76,7 +76,7 @@ pub(crate) struct ConditionReceipt {
 pub(crate) fn canonical_condition(graph: &FunctionGraph, value: NodeId) -> Option<(NodeId, bool)> {
     let mut value = graph.resolve(value);
     let mut inverted = false;
-    let mut seen = HashSet::new();
+    let mut seen = HashSet::default();
     loop {
         let ty = graph.rust_type(value)?;
         if !matches!(graph.oracle.semantic().shape(ty), TypeShape::Bool) || !seen.insert(value) {
@@ -183,8 +183,8 @@ impl<'a> PredicateFacts<'a> {
             cfg,
             dominators,
             cyclic,
-            anchors: HashMap::new(),
-            instances: HashMap::new(),
+            anchors: HashMap::default(),
+            instances: HashMap::default(),
             stats: WitnessStats {
                 node_visits: cfg.order.len(),
                 ..WitnessStats::default()
@@ -282,7 +282,7 @@ fn definition_anchors(
     stats: &mut WitnessStats,
 ) -> Vec<NodeId> {
     let mut pending = vec![source];
-    let mut seen = HashSet::new();
+    let mut seen = HashSet::default();
     let mut anchors = Vec::new();
     while let Some(node) = pending.pop() {
         let node = graph.resolve(node);
@@ -325,7 +325,7 @@ fn execution_sites(
     stats: &mut WitnessStats,
 ) -> Vec<NodeId> {
     let mut pending = vec![field];
-    let mut seen = HashSet::new();
+    let mut seen = HashSet::default();
     let mut sites = Vec::new();
     while let Some(node) = pending.pop() {
         if !seen.insert(node) {
@@ -380,7 +380,7 @@ fn unchanged_until(
         .iter()
         .map(|&node| (node, false))
         .collect();
-    let mut seen = HashSet::new();
+    let mut seen = HashSet::default();
     while let Some((node, dirty)) = pending.pop() {
         if node == proof || !seen.insert((node, dirty)) {
             continue;

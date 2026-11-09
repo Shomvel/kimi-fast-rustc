@@ -232,3 +232,55 @@ fn input_pin_queries_distinguish_owner_live_through_dead_and_new_values() {
         usize::MAX
     );
 }
+
+#[test]
+fn redefined_phi_input_cannot_take_a_dying_inputs_home_before_the_read() {
+    // At a split-range boundary, v1 resumes exactly where it is both read
+    // and defined. v0 dies in this parallel copy. Both must have distinct
+    // incoming homes even though v1 is an output; the edge into this point
+    // must first restore v1 without destroying v0.
+    let instructions = constraints::select(vec![
+        scalar(VirtualInstr::LoadArg {
+            dst: VirtualReg(1),
+            index: 0,
+        }),
+        scalar(VirtualInstr::Add {
+            dst: VirtualReg(0),
+            lhs: VirtualValue::Imm(20),
+            rhs: VirtualValue::Imm(30),
+        }),
+        LowerInstr::ParallelCopy(vec![(VirtualReg(1), v(1)), (VirtualReg(2), v(0))]),
+        scalar(VirtualInstr::Add {
+            dst: VirtualReg(3),
+            lhs: v(1),
+            rhs: v(2),
+        }),
+        scalar(VirtualInstr::Return(v(3))),
+    ]);
+    let position = instructions
+        .iter()
+        .position(|i| matches!(i.operation, Operation::Parallel(_)))
+        .unwrap();
+    // Isolate the resumed fragment supplied by liveness to linear scan. The
+    // earlier part of v1 is in a different CFG range; its incoming edge is
+    // responsible for restoring the old v1 to this fragment's home.
+    let mut liveness = liveness::analyze(
+        &instructions
+            .iter()
+            .map(Instruction::facts)
+            .collect::<Vec<_>>(),
+    );
+    liveness.intervals.retain(|range| range.virtual_reg.0 != 1);
+    liveness.intervals.push(LiveInterval::new(
+        regalloc::VirtualReg(1),
+        position as u32,
+        (position + 2) as u32,
+    ));
+    let allocated = scan(&instructions, &liveness, 4).unwrap();
+    let at = |value: usize| fragment_location(&allocated.segments[value], position).unwrap();
+    assert_ne!(
+        at(0),
+        at(1),
+        "the old v1 is an input, not a new early-clobber result"
+    );
+}

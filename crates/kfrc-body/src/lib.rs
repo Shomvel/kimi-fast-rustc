@@ -7,6 +7,7 @@
 //! `TypeOracle`.
 
 pub mod body;
+pub mod fx_hash;
 pub mod oracle;
 pub mod scalar_range;
 pub mod types;

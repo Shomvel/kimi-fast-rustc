@@ -1,11 +1,11 @@
 //! The Body builder synthesizes Bool for MIR's three-way comparison even when
 //! the source type table contains no Bool. Its facts must match rustc's Bool.
+use kfrc_body::fx_hash::HashMap;
 use kfrc_body::*;
 use kfrc_son::{
     CallTarget, FunctionGraph, GraphLevel, InlineBudget, InlineSkip, InterpretError, Interpreter,
     NodeId, Opcode, SemanticOutcome, Value, ValueType, build_graph, inline_calls, verify_graph,
 };
-use std::collections::HashMap;
 
 fn abi() -> FunctionAbi {
     FunctionAbi {
@@ -196,7 +196,7 @@ fn body_cmp_synthesizes_bool_facts_compatible_with_a_rustc_style_caller() {
     let range = ScalarValidRange::new(8, 0, 1).unwrap();
     assert_eq!(callee.oracle.scalar_valid_range(boolean), Some(range));
     let mut caller = caller(range);
-    let provider = HashMap::from([(callee.symbol.clone(), callee)]);
+    let provider = HashMap::from_iter([(callee.symbol.clone(), callee)]);
     let stats = inline_calls(&mut caller, &provider, InlineBudget::default()).unwrap();
     assert_eq!(stats.calls_inlined, 1, "{:?}", stats.skipped);
     assert!(!caller.ids().any(|node| caller.op(node) == Opcode::Call));
@@ -231,7 +231,7 @@ fn body_cmp_synthesizes_bool_facts_compatible_with_a_rustc_style_caller() {
 fn a_real_bool_range_conflict_still_rejects_inlining() {
     let callee = cmp_callee();
     let mut caller = caller(ScalarValidRange::new(8, 0, 0).unwrap());
-    let provider = HashMap::from([(callee.symbol.clone(), callee)]);
+    let provider = HashMap::from_iter([(callee.symbol.clone(), callee)]);
     let stats = inline_calls(&mut caller, &provider, InlineBudget::default()).unwrap();
     assert_eq!(stats.calls_inlined, 0);
     assert_eq!(

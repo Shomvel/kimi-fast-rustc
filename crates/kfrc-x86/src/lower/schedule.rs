@@ -22,10 +22,10 @@ pub(super) struct Schedule {
 
 impl Schedule {
     pub(super) fn new(graph: &FunctionGraph) -> Result<Self, LowerError> {
-        let mut control_users: HashMap<NodeId, Vec<NodeId>> = HashMap::new();
-        let mut region_of_jump = HashMap::new();
-        let mut phis_of_region: HashMap<NodeId, Vec<NodeId>> = HashMap::new();
-        let mut projections = HashMap::new();
+        let mut control_users: HashMap<NodeId, Vec<NodeId>> = HashMap::default();
+        let mut region_of_jump = HashMap::default();
+        let mut phis_of_region: HashMap<NodeId, Vec<NodeId>> = HashMap::default();
+        let mut projections = HashMap::default();
         for node in graph.ids() {
             let control = graph.control(node);
             if !control.is_none() {
@@ -53,7 +53,7 @@ impl Schedule {
 
         // Discover blocks from the entry by following control.
         let mut blocks: Vec<Block> = Vec::new();
-        let mut block_of_head: HashMap<NodeId, usize> = HashMap::new();
+        let mut block_of_head: HashMap<NodeId, usize> = HashMap::default();
         let mut worklist = vec![entry];
         block_of_head.insert(entry, 0);
         blocks.push(Block {
@@ -61,7 +61,7 @@ impl Schedule {
             chain: Vec::new(),
             successors: Vec::new(),
         });
-        let mut placement: HashMap<NodeId, usize> = HashMap::new();
+        let mut placement: HashMap<NodeId, usize> = HashMap::default();
         while let Some(head) = worklist.pop() {
             let index = block_of_head[&head];
             placement.insert(head, index);
@@ -196,8 +196,8 @@ fn anchored_order(
     use kfrc_son::analysis::cfg::is_anchored_value;
 
     let mut output = Vec::new();
-    let mut finished = HashSet::new();
-    let mut active = HashSet::new();
+    let mut finished = HashSet::default();
+    let mut active = HashSet::default();
     for &root in users
         .iter()
         .filter(|&&node| is_anchored_value(graph.op(node)))
@@ -392,14 +392,14 @@ fn schedule_late(
     placement: &HashMap<NodeId, usize>,
     early: Vec<Vec<NodeId>>,
 ) -> Vec<Vec<NodeId>> {
-    let mut early_rank = HashMap::new();
+    let mut early_rank = HashMap::default();
     for (block, nodes) in early.iter().enumerate() {
         for &node in nodes {
             early_rank.insert(node, rank[&block]);
         }
     }
-    let mut users: HashMap<NodeId, Vec<(NodeId, usize)>> = HashMap::new();
-    let mut pinned = HashSet::new();
+    let mut users: HashMap<NodeId, Vec<(NodeId, usize)>> = HashMap::default();
+    let mut pinned = HashSet::default();
     for node in graph.ids() {
         for (slot, &input) in graph.inputs(node).iter().enumerate() {
             let input = graph.resolve(input);
@@ -424,7 +424,7 @@ fn schedule_late(
         pinned: &pinned,
         loop_depth: loop_depths(blocks, order, rank, idom),
     };
-    let mut decided = HashMap::new();
+    let mut decided = HashMap::default();
     let mut placed = vec![Vec::new(); blocks.len()];
     for node in early.iter().flatten() {
         if let Some(block_rank) = late.block(*node, &mut decided) {
@@ -541,13 +541,13 @@ fn loop_depths(
         }
         block = idom[block];
     };
-    let mut bodies: HashMap<usize, HashSet<usize>> = HashMap::new();
+    let mut bodies: HashMap<usize, HashSet<usize>> = HashMap::default();
     for (header, sources) in predecessors.iter().enumerate() {
         for &source in sources {
             if !dominates(header, source) {
                 continue;
             }
-            let body = bodies.entry(header).or_insert_with(|| HashSet::from([header]));
+            let body = bodies.entry(header).or_insert_with(|| HashSet::from_iter([header]));
             let mut work = vec![source];
             while let Some(block) = work.pop() {
                 if body.insert(block) {

@@ -1,6 +1,6 @@
 //! Fold comparisons only when both operands have non-poison range proofs.
 use crate::{FunctionGraph, Opcode, analysis::ranges::RangeFacts};
-use std::collections::HashSet;
+use kfrc_body::fx_hash::HashSet;
 
 #[derive(Clone, Debug, Default)]
 pub struct RangeFoldStats {

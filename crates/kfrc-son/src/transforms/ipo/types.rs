@@ -4,7 +4,7 @@ use crate::ValueType;
 use kfrc_body::{
     AggregateLayout, FieldLayout, RecordedTypes, SemanticAggregate, TyId, TypeOracle, TypeShape,
 };
-use std::collections::HashMap;
+use kfrc_body::fx_hash::HashMap;
 
 pub(super) struct TypeImport<'a> {
     source: &'a RecordedTypes,
@@ -15,7 +15,7 @@ pub(super) struct TypeImport<'a> {
 }
 impl<'a> TypeImport<'a> {
     pub fn new(source: &'a RecordedTypes, target: &'a mut RecordedTypes) -> Self {
-        let mut mapped = HashMap::new();
+        let mut mapped = HashMap::default();
         let existing_types = target.table.len();
         // Nominal shells break recursive ADT -> pointer -> ADT cycles. Facts
         // are validated below; the name is not considered sufficient proof.

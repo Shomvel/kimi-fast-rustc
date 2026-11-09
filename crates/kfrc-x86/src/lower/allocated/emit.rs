@@ -76,7 +76,7 @@ impl<'a> Emitter<'a> {
             allocation,
             function,
             addresses,
-            saved: HashMap::new(),
+            saved: HashMap::default(),
             scratch: None,
             cycle: None,
             stats: (std::env::var("KFRC_REGALLOC_STATS").as_deref() == Ok("1"))
@@ -418,7 +418,14 @@ impl<'a> Emitter<'a> {
             outputs,
             &self.function.instructions[start..op_start],
             &self.function.instructions[op_end..],
-        )?;
+        )
+        .map_err(|error| match error {
+            LowerError::Malformed(message) => LowerError::Malformed(format!(
+                "{message} at instruction {position} {:?}",
+                inst.operation
+            )),
+            other => other,
+        })?;
         Ok(())
     }
     fn symbol(&mut self, symbol: &str) -> u32 {

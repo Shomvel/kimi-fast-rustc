@@ -11,7 +11,7 @@ use crate::transforms::control::{conditions, simplify, thread_variants, variants
 use crate::transforms::memory::{forward, observation, partition, promotion};
 use crate::transforms::scalar::{aggregate, division, gvn, instcombine, ranges, seam};
 pub use crate::transforms::utils::cfg::CfgEditError;
-use crate::verify::{VerifyError, verify_graph};
+use crate::verify::{VerifyError, verify_pipeline_step};
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct OptimizeStats {
@@ -148,9 +148,9 @@ pub fn optimize_specialized_graph(
     if graph.level != GraphLevel::Specialized {
         return Err(PipelineError::NotSpecialized);
     }
-    verify_graph(graph).map_err(PipelineError::Verification)?;
+    verify_pipeline_step(graph).map_err(PipelineError::Verification)?;
     let mut stats = optimize_graph(graph);
-    verify_graph(graph).map_err(PipelineError::Verification)?;
+    verify_pipeline_step(graph).map_err(PipelineError::Verification)?;
     promote(graph, None, &mut stats);
     remove_redundant_observations(graph, &mut stats);
     let threaded = thread_variants::run(graph).map_err(PipelineError::Control)?;
@@ -162,7 +162,7 @@ pub fn optimize_specialized_graph(
     fold_scoped_conditions(graph, &mut stats)?;
     let control = simplify::run(graph).map_err(PipelineError::Control)?;
     // Check the atomic CFG mutation before allowing another value transform.
-    verify_graph(graph).map_err(PipelineError::Verification)?;
+    verify_pipeline_step(graph).map_err(PipelineError::Verification)?;
     let after_control = optimize_graph(graph);
     stats.constants_folded += after_control.constants_folded;
     stats.identities_simplified += after_control.identities_simplified;
@@ -186,7 +186,7 @@ pub fn optimize_specialized_graph(
     stats.nodes_removed = control.nodes_removed;
     stats.nodes_after = graph.len();
     partition_memory(graph, &mut stats);
-    verify_graph(graph).map_err(PipelineError::Verification)?;
+    verify_pipeline_step(graph).map_err(PipelineError::Verification)?;
     Ok(stats)
 }
 
@@ -201,7 +201,7 @@ pub fn optimize_specialized_seams(
     if graph.level != GraphLevel::Specialized {
         return Err(PipelineError::NotSpecialized);
     }
-    verify_graph(graph).map_err(PipelineError::Verification)?;
+    verify_pipeline_step(graph).map_err(PipelineError::Verification)?;
     graph.state = GraphState::Sealed;
     let mut stats = OptimizeStats {
         nodes_before: graph.len(),
@@ -237,7 +237,7 @@ pub fn optimize_specialized_seams(
         optimize_seeds(graph, &range_dirty, &mut stats);
         // Capture users before CFG pruning forwards a one-input Phi, so those
         // consumers remain seeds even after their input is no longer a Phi.
-        let phis: std::collections::HashSet<_> = graph
+        let phis: kfrc_body::fx_hash::HashSet<_> = graph
             .ids()
             .filter(|node| graph.op(*node) == Opcode::Phi)
             .collect();
@@ -275,7 +275,7 @@ pub fn optimize_specialized_seams(
     graph.compact();
     stats.nodes_after = graph.len();
     partition_memory(graph, &mut stats);
-    verify_graph(graph).map_err(PipelineError::Verification)?;
+    verify_pipeline_step(graph).map_err(PipelineError::Verification)?;
     Ok(stats)
 }
 
@@ -327,7 +327,7 @@ fn remove_redundant_observations(
 
 fn promote(
     graph: &mut FunctionGraph,
-    candidates: Option<&std::collections::HashSet<u32>>,
+    candidates: Option<&kfrc_body::fx_hash::HashSet<u32>>,
     stats: &mut OptimizeStats,
 ) -> Vec<NodeId> {
     if candidates.is_some_and(|candidates| candidates.is_empty()) {

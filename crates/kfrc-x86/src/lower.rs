@@ -15,7 +15,7 @@ mod vector;
 
 use schedule::Schedule;
 
-use std::collections::{HashMap, HashSet};
+use kfrc_body::fx_hash::{HashMap, HashSet};
 
 use crate::machine::allocate::CompileError;
 use crate::machine::x86::{
@@ -92,7 +92,7 @@ fn lower_function_inner(
         schedule: &schedule,
         branches: branch::Branches::new(graph, &schedule),
         instructions: Vec::new(),
-        emitted: HashSet::new(),
+        emitted: HashSet::default(),
         next_temporary: graph.len() as u32,
         stack_layouts: graph.stack_slots.clone(),
         return_address: None,

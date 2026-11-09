@@ -15,7 +15,7 @@
 //! Unwind edges are not followed: the PoC only compiles crates with
 //! `-Cpanic=abort` (`docs/plan/poc/scope.md`), where they are never taken.
 
-use std::collections::HashMap;
+use kfrc_body::fx_hash::HashMap;
 
 mod calls;
 mod control;
@@ -130,10 +130,10 @@ impl<'a> Builder<'a> {
             entry_control: vec![NodeId::NONE; block_count],
             filled: vec![0; block_count],
             sealed: vec![false; block_count + 1],
-            definitions: vec![HashMap::new(); block_count + 1],
+            definitions: vec![HashMap::default(); block_count + 1],
             incomplete: vec![Vec::new(); block_count],
-            projections: HashMap::new(),
-            undefined: HashMap::new(),
+            projections: HashMap::default(),
+            undefined: HashMap::default(),
             effect: body.locals.len() as Variable,
             current_block: None,
             memory_locals: memory_locals(body),

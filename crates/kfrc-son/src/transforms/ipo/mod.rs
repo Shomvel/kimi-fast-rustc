@@ -11,11 +11,13 @@ mod types;
 
 pub use identity::{IdentityFoldStats, fold_identity_calls};
 
-use crate::{FunctionGraph, GraphLevel, NodeId, Opcode, VerifyError, verify_graph};
+use crate::verify::verify_pipeline_step;
+use crate::{FunctionGraph, GraphLevel, NodeId, Opcode, VerifyError};
 use plan::plan;
 use splice::splice;
 use std::cmp::Reverse;
-use std::collections::{BTreeMap, BinaryHeap, HashMap, HashSet};
+use kfrc_body::fx_hash::{HashMap, HashSet};
+use std::collections::{BTreeMap, BinaryHeap};
 
 pub trait GraphProvider {
     fn graph(&self, symbol: &str) -> Option<&FunctionGraph>;
@@ -110,17 +112,18 @@ pub fn inline_calls(
     if caller.level != GraphLevel::Specialized {
         return Err(InlineError::NotSpecialized);
     }
-    verify_graph(caller).map_err(InlineError::Verification)?;
+    verify_pipeline_step(caller).map_err(InlineError::Verification)?;
     let mut stats = InlineStats::default();
     // One transaction per function, not a complete caller copy per call site.
     let original = caller;
     let mut candidate = None;
-    let mut source_checks = HashMap::new();
-    let mut recursion = HashMap::new();
-    let mut callees = HashMap::new();
+    let mut source_checks = HashMap::default();
+    let mut recursion = HashMap::default();
+    let mut callees = HashMap::default();
+    let mut imports: HashMap<String, plan::ImportedTypes> = HashMap::default();
     let size_of = |graph: &FunctionGraph, call: NodeId| {
         let symbol = &graph.callees[graph.payload(call) as usize].symbol;
-        provider.graph(symbol).map_or(0, |source| source.ids().count())
+        provider.graph(symbol).map_or(0, FunctionGraph::live_count)
     };
     let mut sequence = 0usize;
     let mut pending: BinaryHeap<Reverse<(usize, usize, NodeId, usize)>> = BinaryHeap::new();
@@ -154,10 +157,10 @@ pub fn inline_calls(
         let source_eligible = if let Some(&eligible) = source_checks.get(&target.symbol) {
             eligible
         } else {
-            stats.nodes_visited += source.ids().count();
+            stats.nodes_visited += source.live_count();
             let eligible = source.level == GraphLevel::Specialized && eligible(source);
             if eligible {
-                crate::verify::check(source).map_err(InlineError::Verification)?;
+                crate::verify::check_pipeline_step(source).map_err(InlineError::Verification)?;
             }
             source_checks.insert(target.symbol.clone(), eligible);
             eligible
@@ -166,7 +169,7 @@ pub fn inline_calls(
             stats.skipped.push((target.symbol, InlineSkip::Unsupported));
             continue;
         }
-        if source.ids().count() > budget.max_nodes.saturating_sub(stats.nodes_added) {
+        if source.live_count() > budget.max_nodes.saturating_sub(stats.nodes_added) {
             stats.skipped.push((target.symbol, InlineSkip::Budget));
             continue;
         }
@@ -193,6 +196,7 @@ pub fn inline_calls(
             source,
             budget.max_nodes.saturating_sub(stats.nodes_added),
             budget.copy_anonymous_constants,
+            imports.get(&target.symbol),
         ) {
             Ok(plan) => plan,
             Err(reason) => {
@@ -201,6 +205,10 @@ pub fn inline_calls(
             }
         };
         stats.nodes_visited += plan.ids.len();
+        // Every successful plan is spliced, so its import is now in the oracle.
+        imports
+            .entry(target.symbol.clone())
+            .or_insert_with(|| plan.imported.clone());
         let caller = candidate.get_or_insert_with(|| original.clone());
         let spliced = splice(caller, call, source, plan);
         stats.calls_inlined += 1;
@@ -219,7 +227,7 @@ pub fn inline_calls(
     };
     let caller = &mut candidate;
     caller.resolve_edges();
-    verify_graph(caller).map_err(InlineError::Verification)?;
+    verify_pipeline_step(caller).map_err(InlineError::Verification)?;
     for nodes in [&mut stats.dirty_nodes, &mut stats.argument_slots] {
         for node in nodes.iter_mut() {
             *node = caller.resolve(*node);
@@ -242,7 +250,7 @@ fn recursive(
     if target == caller {
         return true;
     }
-    let mut seen = HashSet::new();
+    let mut seen = HashSet::default();
     let mut pending = vec![target.to_owned()];
     while let Some(symbol) = pending.pop() {
         if !seen.insert(symbol.clone()) {
@@ -252,7 +260,7 @@ fn recursive(
             let Some(graph) = provider.graph(&symbol) else {
                 return Vec::new();
             };
-            *visited += graph.ids().count();
+            *visited += graph.live_count();
             graph
                 .ids()
                 .filter(|&n| graph.op(n) == Opcode::Call)

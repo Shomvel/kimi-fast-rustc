@@ -127,10 +127,10 @@ pub(super) fn select(
         .enumerate()
         .any(|(index, preds)| preds.iter().any(|&pred| pred >= index))
     {
-        return HashMap::new();
+        return HashMap::default();
     }
     let uses = Uses::new(graph);
-    let mut selected = HashMap::new();
+    let mut selected = HashMap::default();
     for root in graph.ids() {
         if encoded.contains(&root)
             || graph.op(root) != Opcode::Projection
@@ -193,7 +193,7 @@ pub(super) fn select(
                 if !(graph.oracle.semantic().is_enum(field_ty)
                     || graph.oracle.semantic().is_product(field_ty))
                     || graph.oracle.size_align(field_ty)?.size == 0
-                    || !supported_type(graph, field_ty, &mut HashSet::new())
+                    || !supported_type(graph, field_ty, &mut HashSet::default())
                     || demands
                         .get(&root)?
                         .child(DemandKey::VariantField(key.0, key.1))

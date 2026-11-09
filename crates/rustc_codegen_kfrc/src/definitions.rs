@@ -1,8 +1,10 @@
 //! One immutable R graph per eligible definition, shared by its instances.
-//! Eligibility is explicit and cached. Once R construction succeeds, an error
-//! in preparation or specialization is fatal; it never retries the mono path.
+//! Definition eligibility is explicit and cached; instance eligibility (the
+//! concrete callees of its call sites) is decided before specialization. Once
+//! specialization starts, an error is fatal; it never retries the mono path.
 
-use std::collections::{BTreeMap, HashMap};
+use kfrc_body::fx_hash::HashMap;
+use std::collections::BTreeMap;
 
 use rustc_middle::ty::{Instance, InstanceKind, TyCtxt};
 use rustc_span::def_id::DefId;
@@ -63,6 +65,12 @@ impl<'tcx> Definitions<'tcx> {
                 return Ok(None);
             }
         };
+        if let Eligibility::NotEligible(reason) =
+            definition::instance_eligibility(tcx, definition, instance)
+        {
+            *self.mono_reasons.entry(reason).or_default() += 1;
+            return Ok(None);
+        }
         let symbol = tcx.symbol_name(instance).name.to_string();
         let specialized = profile::measure("specialize_r", &symbol, || {
             definition::specialize(tcx, definition, instance)

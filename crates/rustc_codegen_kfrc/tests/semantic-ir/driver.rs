@@ -27,6 +27,18 @@ mod rs5_permissions;
 #[path = "driver_compare_bytes.rs"]
 mod compare_bytes;
 
+#[path = "driver_heap_niche.rs"]
+mod heap_niche;
+
+#[path = "driver_resolved_calls.rs"]
+mod resolved_calls;
+
+#[path = "driver_loop_self_phi.rs"]
+mod loop_self_phi;
+
+#[path = "driver_array_transport.rs"]
+mod array_transport;
+
 static DROPPED: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
 #[repr(C, align(32))]
 struct DynamicValue(u64);
@@ -50,6 +62,10 @@ fn main() {
     rs3_validity::check();
     rs5_permissions::check();
     compare_bytes::check();
+    heap_niche::check();
+    resolved_calls::check();
+    loop_self_phi::check();
+    array_transport::check();
     check_direct_tags();
     check_lp3_demand();
     check_lp3_transport();

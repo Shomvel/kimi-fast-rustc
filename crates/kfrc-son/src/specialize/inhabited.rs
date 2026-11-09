@@ -1,8 +1,8 @@
 //! Boundary-only proof that no valid value can cross a source signature.
 //! Unknown validity stays unknown; pointers and opaque MaybeUninit do not
 //! inherit the validity of their pointee/inner storage.
+use kfrc_body::fx_hash::HashSet;
 use kfrc_body::{RecordedTypes, TyId, TypeOracle, TypeShape};
-use std::collections::HashSet;
 
 pub(super) fn impossible(types: &RecordedTypes, ty: TyId) -> bool {
     fn visit(types: &RecordedTypes, ty: TyId, active: &mut HashSet<TyId>) -> bool {
@@ -33,7 +33,7 @@ pub(super) fn impossible(types: &RecordedTypes, ty: TyId) -> bool {
         active.remove(&ty);
         answer
     }
-    visit(types, ty, &mut HashSet::new())
+    visit(types, ty, &mut HashSet::default())
 }
 
 #[cfg(test)]

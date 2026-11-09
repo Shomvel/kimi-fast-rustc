@@ -132,6 +132,9 @@ impl LayoutLowering<'_> {
         if self.graph.oracle.semantic().is_enum(ty) {
             return self.decode_variant_demand(address, ty, control, effect, &demand);
         }
+        if demand == Demand::All && self.array_transport.contains(&ty) {
+            return self.snapshot_array(address, ty, control, effect);
+        }
         let parts = if self.composite(ty) {
             let mut values = Vec::new();
             for (index, field) in self.fields(ty, None)?.into_iter().enumerate() {

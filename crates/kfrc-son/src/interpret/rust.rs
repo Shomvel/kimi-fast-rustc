@@ -2,7 +2,7 @@
 //! it does not call specialization or manufacture an S graph for comparison.
 //! Dynamic storage, representation reinterpretation and indirect calls are
 //! deliberately outside this first R interpreter subset.
-use std::collections::HashMap;
+use kfrc_body::fx_hash::HashMap;
 use std::sync::Arc;
 
 use super::{
@@ -39,11 +39,11 @@ impl Interpreter<'_> {
             calls,
             arguments,
             runtime_types: RecordedTypes::new(),
-            types: HashMap::new(),
-            answers: HashMap::new(),
-            phis: HashMap::new(),
-            fixed: HashMap::new(),
-            cache: HashMap::new(),
+            types: HashMap::default(),
+            answers: HashMap::default(),
+            phis: HashMap::default(),
+            fixed: HashMap::default(),
+            cache: HashMap::default(),
             memory: SemanticMemory::new(),
             active: NodeId::NONE,
             fuel,

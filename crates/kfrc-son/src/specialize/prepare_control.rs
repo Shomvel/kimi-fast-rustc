@@ -5,7 +5,8 @@ use super::PreparationStats;
 use crate::analysis::uses::{UseKind, Uses};
 use crate::transforms::{control::simplify, scalar::seam};
 use crate::{FunctionGraph, NodeId, Opcode, ValueType};
-use std::collections::{HashSet, VecDeque};
+use kfrc_body::fx_hash::HashSet;
+use std::collections::VecDeque;
 
 pub(super) fn run(graph: &mut FunctionGraph, stats: &mut PreparationStats) -> Result<(), String> {
     loop {
@@ -27,7 +28,7 @@ pub(super) fn run(graph: &mut FunctionGraph, stats: &mut PreparationStats) -> Re
         stats.control_nodes_removed += control.nodes_removed;
 
         let mut changed = Vec::new();
-        let mut seeds = HashSet::new();
+        let mut seeds = HashSet::default();
         for (phi, before) in phis {
             let replacement = graph.resolve(phi);
             if graph.is_dead(replacement) {
@@ -81,7 +82,7 @@ fn affected_branches(
     stats: &mut PreparationStats,
 ) -> Vec<NodeId> {
     let mut pending: VecDeque<_> = changed.iter().copied().collect();
-    let mut visited = HashSet::new();
+    let mut visited = HashSet::default();
     let mut branches = Vec::new();
     while let Some(node) = pending.pop_front() {
         if !visited.insert(node) {

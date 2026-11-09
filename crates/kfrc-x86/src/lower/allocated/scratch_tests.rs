@@ -20,7 +20,7 @@ fn mask(registers: impl IntoIterator<Item = Reg>) -> Protected {
 fn seed(emitter: &mut Emitter<'_>, slots: u32) -> HashMap<Location, i64> {
     emitter.function.stack_slots = slots;
     emitter.stats = Some(ScratchStats::default());
-    let mut values = HashMap::new();
+    let mut values = HashMap::default();
     for index in 0..slots {
         let value = 1000 + i64::from(index);
         emitter.push(MachineInstr::MovImm {

@@ -4,7 +4,8 @@
 //! Rebuild after every CFG edit or compaction, just like `Dominators`.
 use super::{cfg::ControlFlow, dominators::Dominators};
 use crate::NodeId;
-use std::collections::{BTreeSet, HashMap};
+use kfrc_body::fx_hash::HashMap;
+use std::collections::BTreeSet;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct ControlEdge {
@@ -155,7 +156,7 @@ impl LoopInfo {
             .enumerate()
             .map(|(index, loop_)| (loop_.header, index))
             .collect();
-        let mut innermost: HashMap<NodeId, usize> = HashMap::new();
+        let mut innermost: HashMap<NodeId, usize> = HashMap::default();
         for (index, loop_) in loops.iter().enumerate() {
             for &node in &loop_.members {
                 let current = innermost.entry(node).or_insert(index);

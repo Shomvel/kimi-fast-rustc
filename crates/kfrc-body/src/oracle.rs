@@ -4,9 +4,9 @@
 //! are rustc's own, so mixed linking with rustc-compiled std is sound); the
 //! product implements it on kfrc's front end.
 
+use crate::fx_hash::{HashMap, HashSet};
 use crate::types::{TyId, TypeShape, TypeTable};
 use crate::{ScalarValidRange, ScalarValidity};
-use std::collections::{HashMap, HashSet};
 
 /// How one argument or the return value crosses a call, named after
 /// rustc's `PassMode`.

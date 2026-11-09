@@ -1,11 +1,13 @@
 //! Specialized Rust values → explicit layout values in the same graph.
 //!
-//! Struct/tuple/array values are scalarized, including loop-carried Phi values.
+//! Composite values use scalar leaves by default, including loop-carried Phi values.
+//! Certified whole-array transport uses private snapshots instead.
 //! Whole enum transport can retain private snapshots; observable fields and
 //! parameter/call-result fields are captured at their original fixed point.
 //! An address never stands in for borrowed mutable storage. RecordedTypes is a bootstrap layout
 //! provider; this does not yet implement the final MachineTy/answer-key design.
 
+mod array_transport;
 mod boundary_transport;
 mod demand;
 mod encoded;
@@ -26,7 +28,8 @@ mod variant_switch;
 mod variants;
 
 use demand::{Demand, Key as DemandKey};
-use std::collections::{BTreeMap, HashMap, HashSet};
+use kfrc_body::fx_hash::{HashMap, HashSet};
+use std::collections::BTreeMap;
 
 use kfrc_body::{IntegerWidth, SizeAlign, TyId, TypeOracle, TypeShape};
 
@@ -58,6 +61,8 @@ pub struct LayoutStats {
     pub scalar_phis: usize,
     /// Whole-value enum Phis represented by private owned snapshots.
     pub owned_transport_phis: usize,
+    /// Dense whole arrays captured by a representation copy rather than leaves.
+    pub transported_arrays: usize,
     /// Complete call-result fields captured without recursive typed decoding.
     pub transported_boundary_fields: usize,
     pub abi_slots: usize,
@@ -115,14 +120,16 @@ pub fn lower_layout_with_options(
     let encoded_values = encoded::encoded_demands(&candidate);
     let demands = demand::analyze(&candidate);
     let owned_transport = owned_transport::select(&candidate, &demands);
+    let array_transport = array_transport::select(&candidate);
     let boundary_transport =
         boundary_transport::select(&candidate, &demands, &owned_transport, &encoded_values);
     let mut lowering = LayoutLowering {
         graph: &mut candidate,
         projections,
-        values: HashMap::new(),
+        values: HashMap::default(),
         demands,
         owned_transport,
+        array_transport,
         boundary_transport,
         owned_phis: Vec::new(),
         stats: LayoutStats::default(),
@@ -131,11 +138,11 @@ pub fn lower_layout_with_options(
         tag_only_loads,
         options,
         encoded_values,
-        variant_tags: HashMap::new(),
+        variant_tags: HashMap::default(),
         unreachable_switch_edges,
         opaque_phis: Vec::new(),
-        opaque_phi_regions: HashMap::new(),
-        lane_plans: HashMap::new(),
+        opaque_phi_regions: HashMap::default(),
+        lane_plans: HashMap::default(),
     };
     lowering.run()?;
     lowering.projections.write_stats(&mut lowering.stats);
@@ -219,6 +226,7 @@ struct LayoutLowering<'a> {
     values: HashMap<NodeId, Value>,
     demands: HashMap<NodeId, Demand>,
     owned_transport: HashSet<NodeId>,
+    array_transport: HashSet<TyId>,
     boundary_transport: boundary_transport::Certificates,
     owned_phis: Vec<owned_transport::OwnedPhiInit>,
     stats: LayoutStats,

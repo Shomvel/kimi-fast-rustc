@@ -569,11 +569,9 @@ fn call(
 fn replace_undefined_uses(mut instructions: Vec<Instruction>) -> Vec<Instruction> {
     loop {
         let facts: Vec<_> = instructions.iter().map(Instruction::facts).collect();
-        let defined = liveness::defined_before(&facts);
+        let defined = liveness::DefinedBefore::new(&facts);
         let is_defined = |position: usize, value: VirtualValue| match value {
-            VirtualValue::Reg(v) => defined[position]
-                .binary_search_by_key(&v.0, |d| d.0)
-                .is_ok(),
+            VirtualValue::Reg(v) => defined.contains(position, v),
             VirtualValue::Imm(_) => true,
         };
         let mut removed = false;
@@ -599,7 +597,7 @@ fn replace_undefined_uses(mut instructions: Vec<Instruction>) -> Vec<Instruction
 // their SSA identity by rewriting uses before liveness, rather than allocating
 // two overlapping intervals and paying a machine move for the same value.
 fn eliminate_copies(mut instructions: Vec<Instruction>) -> Vec<Instruction> {
-    let mut definitions = HashMap::<VirtualReg, usize>::new();
+    let mut definitions = HashMap::<VirtualReg, usize>::default();
     for instruction in &instructions {
         for v in instruction.facts().definitions {
             *definitions.entry(v).or_default() += 1;
@@ -616,7 +614,7 @@ fn eliminate_copies(mut instructions: Vec<Instruction>) -> Vec<Instruction> {
         })
         .collect();
     let resolve = |mut value: VirtualValue| {
-        let mut visited = HashSet::new();
+        let mut visited = HashSet::default();
         while let VirtualValue::Reg(v) = value {
             let Some(&next) = aliases.get(&v) else { break };
             if !visited.insert(v) {

@@ -95,8 +95,8 @@ impl Widths<'_> {
 pub(super) fn run(stream: &mut Vec<LowerInstr>) -> Stats {
     let mut stats = Stats::default();
     let all_facts: Vec<_> = stream.iter().map(facts).collect();
-    let mut definitions = HashMap::<VirtualReg, Vec<usize>>::new();
-    let mut uses = HashMap::<VirtualReg, usize>::new();
+    let mut definitions = HashMap::<VirtualReg, Vec<usize>>::default();
+    let mut uses = HashMap::<VirtualReg, usize>::default();
     for (index, f) in all_facts.iter().enumerate() {
         for &reg in &f.defs {
             definitions.entry(reg).or_default().push(index);
@@ -115,7 +115,7 @@ pub(super) fn run(stream: &mut Vec<LowerInstr>) -> Stats {
     let mut widths = Widths {
         stream: stream.as_slice(),
         definition: definition.clone(),
-        memo: HashMap::new(),
+        memo: HashMap::default(),
     };
     let mut replacements = Vec::new();
     for (index, instruction) in stream.iter().enumerate() {
@@ -221,8 +221,8 @@ fn replace(
 /// register's low byte directly.
 fn narrow_zero_tests(stream: &mut Vec<LowerInstr>) -> usize {
     let all_facts: Vec<_> = stream.iter().map(facts).collect();
-    let mut definitions = HashMap::<VirtualReg, Vec<usize>>::new();
-    let mut uses = HashMap::<VirtualReg, usize>::new();
+    let mut definitions = HashMap::<VirtualReg, Vec<usize>>::default();
+    let mut uses = HashMap::<VirtualReg, usize>::default();
     for (index, f) in all_facts.iter().enumerate() {
         for &reg in &f.defs {
             definitions.entry(reg).or_default().push(index);

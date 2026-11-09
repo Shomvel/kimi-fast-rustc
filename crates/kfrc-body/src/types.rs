@@ -1,6 +1,6 @@
 //! Types as the SoN sees them: interned `TyId`s with a structural shape.
 
-use std::collections::HashMap;
+use crate::fx_hash::HashMap;
 use std::fmt;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]

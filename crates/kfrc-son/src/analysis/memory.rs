@@ -4,7 +4,8 @@
 //! of its address or pointer-to-integer conversion escapes for the whole
 //! function (W05/F46/F49/F50). No facts come from &T or &mut T alone.
 
-use std::collections::{HashMap, HashSet, VecDeque};
+use kfrc_body::fx_hash::{HashMap, HashSet};
+use std::collections::VecDeque;
 
 use crate::analysis::uses::{UseKind, Uses};
 use crate::{FunctionGraph, GraphLevel, NodeId, Opcode, ValueType};
@@ -24,9 +25,9 @@ impl MemoryFacts {
         let uses = Uses::new(graph);
         let mut facts = Self {
             roots: vec![None; graph.len()],
-            locals: HashMap::new(),
-            identities: HashMap::new(),
-            escaped: HashSet::new(),
+            locals: HashMap::default(),
+            identities: HashMap::default(),
+            escaped: HashSet::default(),
             node_visits: 0,
             edge_visits: 0,
         };
@@ -139,7 +140,7 @@ pub fn is_frozen_parameter_address(graph: &FunctionGraph, address: NodeId) -> bo
     if !graph.arg_permissions.iter().any(|permission| permission.is_frozen()) {
         return false;
     }
-    let mut on_stack = HashSet::new();
+    let mut on_stack = HashSet::default();
     let mut budget = 32usize;
     frozen_parameter_based(graph, address, &mut on_stack, &mut budget)
 }
