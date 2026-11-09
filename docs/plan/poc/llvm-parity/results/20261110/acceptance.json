@@ -1,0 +1,39 @@
+{
+  "correctness_accepted": true,
+  "scope": "full compiler chain plus all executable library corpora/checksums; unsupported upstream unit builds remain incomplete",
+  "unit": {
+    "passed": 824,
+    "ignored": 1
+  },
+  "semantic": {
+    "arms": 3,
+    "lines_each": 824,
+    "byte_identical": true
+  },
+  "real_unicode_bidi": {
+    "checker": 1,
+    "arms": 3,
+    "lines_each": 768,
+    "byte_identical": true
+  },
+  "upstream_integration": {
+    "semver": 34,
+    "base64": 13,
+    "unicode-segmentation": 8
+  },
+  "limits": [
+    "regex-syntax: union/SIMD unsupported",
+    "base64 upstream unit: TLS unsupported",
+    "unicode-segmentation upstream unit: atomic_xsub unsupported",
+    "humantime upstream unit: u128 unsupported",
+    "LLVM size/runtime/3x-fewer-compile-work gates not reached"
+  ],
+  "baseline": "c12 plus same self-Phi allocator correctness guard",
+  "source_sha256": "421716c1198dfd95d975a8167b47582dbc4abfce8fd62f338b3a48c1a65d00eb",
+  "backend_sha256": "4300c5c66ded8dfa21c7b97f61519f7716d9b44801c6198ccddbb2979844c8f4",
+  "evidence_sha256": "d326f1f054319fedc4da57b064d671dabb17a52f178d3945ca456aac8e92d36e",
+  "whole_process_instruction_geomean_reduction": 0.6525124158605631,
+  "exact_codegen_instruction_geomean_reduction": 0.7321033177007168,
+  "runtime_vs_baseline_paired_geomean": 0.9991839431994278,
+  "return_factoring": "excluded: repeatable runtime regressions"
+}

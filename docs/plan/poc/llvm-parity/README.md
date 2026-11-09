@@ -1,5 +1,7 @@
 # 追平 LLVM：交接与任务（LP0–LP9）
 
+最新已验收实现与基准结果：[2026-11-10 E2B acceptance](results/20261110/README.md)。体积、运行和 3× 编译成本目标仍未全部达到；具体支持缺口见报告。
+
 日期：2026-11-09。起点：main `37cea66`（PR #3，语义 IR 成为唯一生产链，
 ObserveValue／Refine 已按 [requirements-migration](../requirements-migration.md) 拆分）。
 六项门槛不变，见 [metrics.md](../metrics.md)；本目录只写下一阶段做什么、按什么顺序、怎么验收。
