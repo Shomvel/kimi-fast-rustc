@@ -39,6 +39,7 @@
 | [optimization-modules.md](optimization-modules.md) | 当前优化模块、LLVM 对应、后续接口及任务分工 |
 | [relation.md](relation.md) | 与 M0–M6 的关系：哪些代码进入产品，哪些是一次性的；契约缺口清单 |
 | [p0-status.md](p0-status.md) | P0 进度：已有部分、支持的输入、验证结果、离出口还差什么 |
+| [rust-semantics/](rust-semantics/README.md) | issue #5：Rust 语义事实账本与 RS1–RS7 计划（intrinsic、聚合表示、标量事实、内存与调用摘要、借用权限、泛型复用、存储寿命/Drop/冷路径） |
 
 ## 已定的决策
 
