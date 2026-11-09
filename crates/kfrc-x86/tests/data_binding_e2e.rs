@@ -19,6 +19,7 @@ fn read(symbol: &str, target: &str, indirections: usize) -> FunctionCode {
         function.instructions.push(MachineInstr::LoadIndirect {
             dst: Reg::Rax,
             address: Reg::Rax,
+            offset: 0,
             bytes: 8,
         });
     }
@@ -38,6 +39,7 @@ fn local_constants(value: u64) -> Vec<DataObject> {
             binding: DataBinding::Local,
             writable: false,
             thread_local: false,
+            unnamed_address: false,
             relocations: vec![],
         },
         DataObject {
@@ -47,6 +49,7 @@ fn local_constants(value: u64) -> Vec<DataObject> {
             binding: DataBinding::Local,
             writable: false,
             thread_local: false,
+            unnamed_address: false,
             relocations: vec![DataRelocation {
                 offset: 0,
                 target: ".Lkfrc_alloc0".into(),
@@ -67,6 +70,7 @@ fn repeated_private_constants_link_independently_and_global_statics_cross_object
             binding: DataBinding::Global { hidden: true },
             writable: true,
             thread_local: false,
+            unnamed_address: false,
             relocations: vec![],
         },
         DataObject {
@@ -76,6 +80,7 @@ fn repeated_private_constants_link_independently_and_global_statics_cross_object
             binding: DataBinding::Global { hidden: false },
             writable: false,
             thread_local: false,
+            unnamed_address: false,
             relocations: vec![],
         },
     ]);

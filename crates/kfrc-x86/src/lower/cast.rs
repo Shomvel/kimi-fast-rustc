@@ -40,10 +40,11 @@ impl Lowering<'_> {
                 _ => 1,
             };
             let part = self.temporary();
-            let source = self.offset_address(address, offset + u64::from(copied));
+            let (source, displacement) = self.displaced(address, offset + u64::from(copied));
             self.instructions.push(LowerInstr::Load {
                 dst: part,
                 address: source,
+                offset: displacement,
                 bytes,
             });
             let part = if copied == 0 {
@@ -93,9 +94,10 @@ impl Lowering<'_> {
                 });
                 VirtualValue::Reg(shifted)
             };
-            let destination = self.offset_address(address, offset + u64::from(copied));
+            let (destination, displacement) = self.displaced(address, offset + u64::from(copied));
             self.instructions.push(LowerInstr::Store {
                 address: destination,
+                offset: displacement,
                 src: source,
                 bytes,
             });

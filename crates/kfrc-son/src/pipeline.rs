@@ -7,9 +7,9 @@
 
 use crate::analysis::memory::MemoryFacts;
 use crate::graph::{FunctionGraph, GraphLevel, GraphState, NodeId, Opcode};
-use crate::transforms::control::{simplify, thread_variants, variants};
+use crate::transforms::control::{conditions, simplify, thread_variants, variants};
 use crate::transforms::memory::{forward, observation, partition, promotion};
-use crate::transforms::scalar::{aggregate, division, gvn, instcombine, seam};
+use crate::transforms::scalar::{aggregate, division, gvn, instcombine, ranges, seam};
 pub use crate::transforms::utils::cfg::CfgEditError;
 use crate::verify::{VerifyError, verify_graph};
 
@@ -22,6 +22,12 @@ pub struct OptimizeStats {
     pub aggregates_simplified: usize,
     pub values_merged: usize,
     pub loads_forwarded: usize,
+    pub frozen_loads_reused: usize,
+    pub calls_crossed_by_forwarding: usize,
+    pub call_permissions_used: usize,
+    pub effect_phis_crossed: usize,
+    pub forward_walk_steps: usize,
+    pub forward_budget_bailouts: usize,
     pub observations_removed: usize,
     pub observation_nodes_indexed: usize,
     pub observation_node_visits: usize,
@@ -35,6 +41,7 @@ pub struct OptimizeStats {
     pub local_accesses: usize,
     pub const_loads: usize,
     pub variant_regions_threaded: usize,
+    pub variant_control_spines_collapsed: usize,
     pub variant_values_cloned: usize,
     pub branches_normalized: usize,
     pub witnesses_added: usize,
@@ -45,6 +52,13 @@ pub struct OptimizeStats {
     pub division_node_visits: usize,
     pub division_proof_visits: usize,
     pub branches_folded: usize,
+    pub conditions_folded: usize,
+    pub fact_queries: usize,
+    pub fact_node_visits: usize,
+    pub condition_receipts_checked: usize,
+    pub range_comparisons_folded: usize,
+    pub range_fact_queries: usize,
+    pub range_node_visits: usize,
     pub predecessor_edges_removed: usize,
     pub nodes_removed: usize,
     pub nodes_before: usize,
@@ -89,6 +103,12 @@ pub fn optimize_graph(graph: &mut FunctionGraph) -> OptimizeStats {
         aggregates_simplified: aggregate_stats.aggregates_simplified,
         values_merged: gvn_stats.values_merged,
         loads_forwarded: memory_stats.loads_forwarded,
+        frozen_loads_reused: memory_stats.frozen_loads_reused,
+        calls_crossed_by_forwarding: memory_stats.calls_crossed_by_forwarding,
+        call_permissions_used: memory_stats.call_permissions_used,
+        effect_phis_crossed: memory_stats.effect_phis_crossed,
+        forward_walk_steps: memory_stats.walk_steps,
+        forward_budget_bailouts: memory_stats.budget_bailouts,
         divisions_reduced: division_stats.divisions_reduced,
         remainders_reduced: division_stats.remainders_reduced,
         division_node_visits: division_stats.nodes_visited,
@@ -135,7 +155,11 @@ pub fn optimize_specialized_graph(
     remove_redundant_observations(graph, &mut stats);
     let threaded = thread_variants::run(graph).map_err(PipelineError::Control)?;
     stats.variant_regions_threaded += threaded.regions_threaded;
+    stats.variant_control_spines_collapsed += threaded.control_spines_collapsed;
     stats.variant_values_cloned += threaded.values_cloned;
+    let range_dirty = fold_range_conditions(graph, &mut stats);
+    optimize_seeds(graph, &range_dirty, &mut stats);
+    fold_scoped_conditions(graph, &mut stats)?;
     let control = simplify::run(graph).map_err(PipelineError::Control)?;
     // Check the atomic CFG mutation before allowing another value transform.
     verify_graph(graph).map_err(PipelineError::Verification)?;
@@ -147,6 +171,12 @@ pub fn optimize_specialized_graph(
     stats.aggregates_simplified += after_control.aggregates_simplified;
     stats.values_merged += after_control.values_merged;
     stats.loads_forwarded += after_control.loads_forwarded;
+    stats.frozen_loads_reused += after_control.frozen_loads_reused;
+    stats.calls_crossed_by_forwarding += after_control.calls_crossed_by_forwarding;
+    stats.call_permissions_used += after_control.call_permissions_used;
+    stats.effect_phis_crossed += after_control.effect_phis_crossed;
+    stats.forward_walk_steps += after_control.forward_walk_steps;
+    stats.forward_budget_bailouts += after_control.forward_budget_bailouts;
     stats.divisions_reduced += after_control.divisions_reduced;
     stats.remainders_reduced += after_control.remainders_reduced;
     stats.division_node_visits += after_control.division_node_visits;
@@ -196,12 +226,15 @@ pub fn optimize_specialized_seams(
     pending = remove_redundant_observations(graph, &mut stats);
     let threaded = thread_variants::run(graph).map_err(PipelineError::Control)?;
     stats.variant_regions_threaded += threaded.regions_threaded;
+    stats.variant_control_spines_collapsed += threaded.control_spines_collapsed;
     stats.variant_values_cloned += threaded.values_cloned;
     pending.extend(threaded.dirty_nodes);
     // A bounded number of seam/CFG exchanges handles freshly constant Phi
     // conditions. No unchanged function interior is sent through scalar rules.
     for _ in 0..4 {
         optimize_seeds(graph, &pending, &mut stats);
+        let range_dirty = fold_range_conditions(graph, &mut stats);
+        optimize_seeds(graph, &range_dirty, &mut stats);
         // Capture users before CFG pruning forwards a one-input Phi, so those
         // consumers remain seeds even after their input is no longer a Phi.
         let phis: std::collections::HashSet<_> = graph
@@ -214,6 +247,7 @@ pub fn optimize_specialized_seams(
                 phis.contains(node) || graph.inputs(*node).iter().any(|input| phis.contains(input))
             })
             .collect();
+        fold_scoped_conditions(graph, &mut stats)?;
         let control = simplify::run(graph).map_err(PipelineError::Control)?;
         stats.branches_folded += control.branches_folded;
         stats.predecessor_edges_removed += control.predecessor_edges_removed;
@@ -225,11 +259,45 @@ pub fn optimize_specialized_seams(
         // the scalar worklist propagates only successful replacements.
         pending = phi_users;
     }
+    // Seeds cover splice seams. A spliced body can still hold a constant
+    // condition no seed reaches (a substituted runtime-check flag), so one
+    // linear sweep folds it and removes the dead branch, as LLVM runs
+    // InstCombine/SimplifyCFG after its inliner.
+    let swept = instcombine::run(graph);
+    if swept.constants_folded > 0 {
+        stats.constants_folded += swept.constants_folded;
+        stats.identities_simplified += swept.identities_simplified;
+        let control = simplify::run(graph).map_err(PipelineError::Control)?;
+        stats.branches_folded += control.branches_folded;
+        stats.predecessor_edges_removed += control.predecessor_edges_removed;
+        stats.nodes_removed += control.nodes_removed;
+    }
     graph.compact();
     stats.nodes_after = graph.len();
     partition_memory(graph, &mut stats);
     verify_graph(graph).map_err(PipelineError::Verification)?;
     Ok(stats)
+}
+
+fn fold_range_conditions(graph: &mut FunctionGraph, stats: &mut OptimizeStats) -> Vec<NodeId> {
+    graph.resolve_edges();
+    let folded = ranges::run(graph);
+    stats.range_comparisons_folded += folded.comparisons_folded;
+    stats.range_fact_queries += folded.fact_queries;
+    stats.range_node_visits += folded.node_visits;
+    folded.dirty_nodes
+}
+
+fn fold_scoped_conditions(
+    graph: &mut FunctionGraph,
+    stats: &mut OptimizeStats,
+) -> Result<(), PipelineError> {
+    let folded = conditions::run(graph).map_err(PipelineError::Verification)?;
+    stats.conditions_folded += folded.conditions_folded;
+    stats.fact_queries += folded.fact_queries;
+    stats.fact_node_visits += folded.fact_node_visits;
+    stats.condition_receipts_checked += folded.receipts_checked;
+    Ok(())
 }
 
 fn optimize_seeds(graph: &mut FunctionGraph, pending: &[NodeId], stats: &mut OptimizeStats) {

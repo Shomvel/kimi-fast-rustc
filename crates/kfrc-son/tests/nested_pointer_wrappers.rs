@@ -139,6 +139,7 @@ fn nested_wrappers_preserve_unsized_pointer_lanes_and_zst_fields() {
         align: 8,
         writable: false,
         thread_local: false,
+        unnamed_address: false,
         relocations: vec![],
     });
     let address = Operand::Constant(builder.add_constant(Constant {

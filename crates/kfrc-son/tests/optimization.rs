@@ -102,7 +102,11 @@ fn folded_integer_graphs_preserve_width_sign_shifts_and_comparisons() {
                         op,
                         NodeId::NONE,
                         &inputs,
-                        predicate as u32,
+                        if op == Opcode::Compare {
+                            predicate as u32
+                        } else {
+                            0
+                        },
                         ValueType::Rust(result_ty),
                     );
                     graph.add_node(

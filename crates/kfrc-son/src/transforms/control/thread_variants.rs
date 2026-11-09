@@ -16,6 +16,7 @@ use crate::{ComparePredicate, FunctionGraph, NodeId, Opcode, ValueType};
 
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct VariantThreadStats {
+    pub control_spines_collapsed: usize,
     pub regions_threaded: usize,
     pub branches_removed: usize,
     pub predecessors_threaded: usize,
@@ -53,6 +54,19 @@ pub fn run(graph: &mut FunctionGraph) -> Result<VariantThreadStats, CfgEditError
             analysis = Some((uses, cfg, dominators));
         }
         let (uses, cfg, dominators) = analysis.as_ref().unwrap();
+        if let Some(spine) = TransparentSpine::new(graph, region, uses) {
+            stats.dirty_nodes.extend(
+                spine
+                    .phis
+                    .iter()
+                    .flat_map(|phi| uses.of(*phi).iter().map(|usage| usage.user)),
+            );
+            spine.apply(graph, region);
+            stats.control_spines_collapsed += 1;
+            analysis = None;
+            pending.push_front((region, depth));
+            continue;
+        }
         let Some(plan) = Plan::new(graph, region, uses, cfg, dominators, &mut stats.node_visits)
         else {
             continue;
@@ -75,6 +89,103 @@ pub fn run(graph: &mut FunctionGraph) -> Result<VariantThreadStats, CfgEditError
     stats.dirty_nodes.sort_unstable();
     stats.dirty_nodes.dedup();
     Ok(stats)
+}
+
+// Inlining leaves Jump -> single-entry Region wrappers between a merge and
+// its test. Remove only an entirely transparent chain, then rebuild analyses
+// and let the original threading plan prove all value/edge placements.
+struct TransparentSpine {
+    controls: Vec<NodeId>,
+    phis: Vec<NodeId>,
+    branch: NodeId,
+}
+
+impl TransparentSpine {
+    fn new(graph: &FunctionGraph, root: NodeId, uses: &Uses) -> Option<Self> {
+        let (phis, mut exit) = region_exit(graph, root, uses)?;
+        if phis.is_empty() || graph.op(exit) != Opcode::Jump {
+            return None;
+        }
+        let mut spine = Self {
+            controls: Vec::new(),
+            phis: Vec::new(),
+            branch: NodeId::NONE,
+        };
+        for _ in 0..8 {
+            if !graph.inputs(exit).is_empty() {
+                return None;
+            }
+            let [usage] = uses.of(exit) else {
+                return None;
+            };
+            let region = usage.user;
+            if usage.kind != UseKind::Operand(0)
+                || graph.op(region) != Opcode::Region
+                || graph.inputs(region) != [exit]
+            {
+                return None;
+            }
+            let (phis, successor) = region_exit(graph, region, uses)?;
+            // Identity phis must not define a cycle within this wrapper.
+            if phis.iter().any(|phi| phis.contains(&graph.input(*phi, 1))) {
+                return None;
+            }
+            spine.controls.extend([exit, region]);
+            spine.phis.extend(phis);
+            if matches!(graph.op(successor), Opcode::If | Opcode::VariantSwitch) {
+                spine.branch = successor;
+                return Some(spine);
+            }
+            exit = successor;
+        }
+        None
+    }
+
+    fn apply(self, graph: &mut FunctionGraph, root: NodeId) {
+        for phi in self.phis {
+            graph.replace(phi, graph.input(phi, 1));
+        }
+        graph.set_control(self.branch, root);
+        for control in self.controls {
+            graph.remove_node(control);
+        }
+        graph.resolve_edges();
+    }
+}
+
+/// All non-phi uses must be the one terminator. An anchored pure operation,
+/// fixed observation, extra exit or other use makes the region nontransparent.
+fn region_exit(
+    graph: &FunctionGraph,
+    region: NodeId,
+    uses: &Uses,
+) -> Option<(Vec<NodeId>, NodeId)> {
+    let count = graph.inputs(region).len();
+    let mut phis = Vec::new();
+    let mut exit = None;
+    for usage in uses.of(region) {
+        match usage.kind {
+            UseKind::Operand(0) if graph.op(usage.user) == Opcode::Phi => {
+                if graph.inputs(usage.user).len() != count + 1 {
+                    return None;
+                }
+                phis.push(usage.user);
+            }
+            UseKind::Control
+                if graph.op(usage.user) == Opcode::Phi
+                    && graph.inputs(usage.user).first() == Some(&region) => {}
+            UseKind::Control
+                if matches!(
+                    graph.op(usage.user),
+                    Opcode::Jump | Opcode::If | Opcode::VariantSwitch
+                ) && exit.is_none() =>
+            {
+                exit = Some(usage.user);
+            }
+            _ => return None,
+        }
+    }
+    Some((phis, exit?))
 }
 
 struct Rewrite {
@@ -108,27 +219,8 @@ impl Plan {
         if !(2..=64).contains(&count) {
             return None;
         }
-        let mut branch = None;
-        let mut phis = Vec::new();
-        for usage in uses.of(region) {
-            match usage.kind {
-                UseKind::Operand(0) if graph.op(usage.user) == Opcode::Phi => {
-                    if graph.inputs(usage.user).len() != count + 1 {
-                        return None;
-                    }
-                    phis.push(usage.user);
-                }
-                UseKind::Control
-                    if matches!(graph.op(usage.user), Opcode::If | Opcode::VariantSwitch)
-                        && branch.is_none() =>
-                {
-                    branch = Some(usage.user);
-                }
-                _ => return None,
-            }
-        }
-        let branch = branch?;
-        if phis.is_empty() {
+        let (phis, branch) = region_exit(graph, region, uses)?;
+        if phis.is_empty() || graph.op(branch) == Opcode::Jump {
             return None;
         }
         let semantic_switch = graph.op(branch) == Opcode::VariantSwitch;
@@ -385,6 +477,12 @@ fn cloneable(graph: &FunctionGraph, node: NodeId) -> bool {
                 | Opcode::ShiftLeft
                 | Opcode::ShiftRightLogical
                 | Opcode::ShiftRightArithmetic
+                | Opcode::BitCount
+                | Opcode::ByteSwap
+                | Opcode::BitReverse
+                | Opcode::FunnelShift
+                | Opcode::SaturatingAdd
+                | Opcode::SaturatingSub
                 | Opcode::PointerCast
                 | Opcode::FieldAddr
                 | Opcode::VariantFieldAddr
@@ -498,3 +596,7 @@ fn evaluate(
         _ => None,
     }
 }
+
+#[cfg(test)]
+#[path = "thread_variants_tests.rs"]
+mod tests;

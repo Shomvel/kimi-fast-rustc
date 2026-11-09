@@ -37,6 +37,7 @@ mod convert;
 mod definitions;
 mod emission;
 mod enum_layout;
+mod permissions;
 mod profile;
 mod shell_entry;
 mod type_identity;
@@ -119,6 +120,7 @@ impl CodegenBackend for KfrcCodegenBackend {
         let partition = tcx.collect_and_partition_mono_items(());
         let mut graphs = CrateGraphs::default();
         let mut definitions = definitions::Definitions::default();
+        let mut permission_totals = permissions::PermissionTotals::default();
         let mut adapters = BTreeMap::new();
         for cgu in partition.codegen_units {
             for (item, _) in cgu.items_in_deterministic_order(tcx) {
@@ -144,12 +146,14 @@ impl CodegenBackend for KfrcCodegenBackend {
                 let graph = rustc_middle::ty::print::with_no_trimmed_paths!(build_instance_graph(
                     tcx,
                     instance,
-                    &mut definitions
+                    &mut definitions,
+                    &mut permission_totals
                 ));
                 graphs.bodies.insert(symbol, graph);
             }
         }
         definitions.report();
+        permission_totals.report(tcx.crate_name(rustc_hir::def_id::LOCAL_CRATE).as_str());
         for cgu in partition.codegen_units {
             // rustc may internalize a function during CGU partitioning even
             // when the source declaration has no explicit linkage attribute.
@@ -371,6 +375,10 @@ struct CrateGraphs {
     no_inline: BTreeSet<String>,
     internal: BTreeSet<String>,
     references: BTreeMap<String, BTreeSet<String>>,
+    /// Direct call sites per callee, by calling function.
+    call_sites: BTreeMap<String, BTreeMap<String, usize>>,
+    /// Symbols referenced other than by a direct call.
+    address_taken: BTreeSet<String>,
 }
 
 impl CrateGraphs {
@@ -380,11 +388,19 @@ impl CrateGraphs {
             for node in graph.ids() {
                 match graph.op(node) {
                     kfrc_son::Opcode::Call => {
-                        references
-                            .insert(graph.callees[graph.payload(node) as usize].symbol.clone());
+                        let callee = &graph.callees[graph.payload(node) as usize].symbol;
+                        references.insert(callee.clone());
+                        *self
+                            .call_sites
+                            .entry(callee.clone())
+                            .or_default()
+                            .entry(symbol.clone())
+                            .or_default() += 1;
                     }
                     kfrc_son::Opcode::SymbolAddress => {
-                        references.insert(graph.symbols[graph.payload(node) as usize].0.clone());
+                        let target = &graph.symbols[graph.payload(node) as usize].0;
+                        references.insert(target.clone());
+                        self.address_taken.insert(target.clone());
                     }
                     _ => {}
                 }
@@ -392,6 +408,7 @@ impl CrateGraphs {
             for object in &graph.data_objects {
                 for relocation in &object.relocations {
                     references.insert(relocation.target.clone());
+                    self.address_taken.insert(relocation.target.clone());
                 }
             }
             self.references.insert(symbol.clone(), references);
@@ -420,12 +437,27 @@ impl kfrc_son::GraphProvider for CguGraphs<'_> {
             self.all.bodies.get(symbol)
         }
     }
+
+    // Each CGU owns its copy of an internal function, so count its callers there.
+    fn sole_call_site(&self, symbol: &str) -> bool {
+        self.all.internal.contains(symbol)
+            && !self.all.address_taken.contains(symbol)
+            && self.all.call_sites.get(symbol).is_some_and(|callers| {
+                callers
+                    .iter()
+                    .filter(|(caller, _)| self.available.contains(*caller))
+                    .map(|(_, count)| count)
+                    .sum::<usize>()
+                    == 1
+            })
+    }
 }
 
 fn build_instance_graph<'tcx>(
     tcx: TyCtxt<'tcx>,
     instance: Instance<'tcx>,
     definitions: &mut definitions::Definitions<'tcx>,
+    permission_totals: &mut permissions::PermissionTotals,
 ) -> kfrc_son::FunctionGraph {
     let symbol = tcx.symbol_name(instance).name.to_string();
     let fail = |stage: &str, error: String| -> ! {
@@ -450,6 +482,23 @@ fn build_instance_graph<'tcx>(
         }
         Err(error) => fail("definition specialization", error),
     };
+    // RS5.1: R carries no permissions; the S instance receives them here,
+    // before its first optimization, from the instance's own rustc types.
+    if permissions::enabled().unwrap_or_else(|error| fail("argument permissions", error)) {
+        let (arguments, calls) = profile::measure("permissions_s", &symbol, || {
+            (
+                permissions::definition_permissions(tcx, instance, permission_totals),
+                permissions::callee_permissions(tcx, instance),
+            )
+        });
+        graph.arg_permissions =
+            arguments.unwrap_or_else(|error| fail("argument permissions", error));
+        graph.callee_permissions = calls
+            .unwrap_or_else(|error| fail("call permissions", error))
+            .into_iter()
+            .filter(|(symbol, _)| graph.callees.iter().any(|target| &target.symbol == symbol))
+            .collect();
+    }
     profile::measure("verify_s_input", &symbol, || {
         kfrc_son::verify_graph(&mut graph)
     })

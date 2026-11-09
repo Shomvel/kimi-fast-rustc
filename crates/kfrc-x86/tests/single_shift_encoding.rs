@@ -26,7 +26,7 @@ fn encode_shift(reg: Reg, direction: Direction, count: u8) -> Vec<u8> {
     let mut function = MachineFunction::new("single_shift");
     function.instructions = vec![shift(direction, reg, count), MachineInstr::Ret];
     let code = function.emit_machine_code().unwrap();
-    code[4..code.len() - 2].to_vec()
+    code[..code.len() - 1].to_vec()
 }
 
 fn expected_encoding(reg: Reg, direction: Direction, count: u8) -> Vec<u8> {

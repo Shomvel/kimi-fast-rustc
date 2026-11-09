@@ -2,6 +2,8 @@
 //!
 //! Constructing uses is one linear indexing pass. Rules only visit the given
 //! seeds and users of replacements; unchanged callee interiors are not swept.
+mod fields;
+
 use super::{aggregate, instcombine};
 use crate::{FunctionGraph, NodeId, Opcode};
 
@@ -22,8 +24,10 @@ pub(crate) fn run_seeded(graph: &mut FunctionGraph, seeds: &[NodeId]) -> SeamSta
         return stats;
     }
     let mut users = vec![Vec::new(); graph.len()];
+    let mut fields = fields::Fields::default();
     for node in graph.ids() {
         stats.nodes_indexed += 1;
+        fields.record(graph, node);
         for &input in graph.inputs(node) {
             let input = graph.resolve(input);
             if !input.is_none() {
@@ -59,6 +63,8 @@ pub(crate) fn run_seeded(graph: &mut FunctionGraph, seeds: &[NodeId]) -> SeamSta
             (replacement, 0)
         } else if let Some((replacement, constant)) = instcombine::rewrite(graph, node) {
             (replacement, if constant { 1 } else { 2 })
+        } else if let Some(replacement) = fields.replacement(graph, node) {
+            (replacement, 0)
         } else {
             continue;
         };

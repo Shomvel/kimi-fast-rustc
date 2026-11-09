@@ -35,6 +35,21 @@ pub enum Condition {
 }
 
 impl Condition {
+    /// The condition with its operands exchanged: `a < b` is `b > a`.
+    pub fn swapped(self) -> Self {
+        match self {
+            Self::Eq | Self::NotEq => self,
+            Self::SignedLess => Self::SignedGreater,
+            Self::SignedLessEq => Self::SignedGreaterEq,
+            Self::SignedGreater => Self::SignedLess,
+            Self::SignedGreaterEq => Self::SignedLessEq,
+            Self::UnsignedBelow => Self::UnsignedAbove,
+            Self::UnsignedBelowEq => Self::UnsignedAboveEq,
+            Self::UnsignedAbove => Self::UnsignedBelow,
+            Self::UnsignedAboveEq => Self::UnsignedBelowEq,
+        }
+    }
+
     fn mnemonic(self) -> &'static str {
         match self {
             Self::Eq => "e",
@@ -170,6 +185,24 @@ pub enum VirtualInstr {
     Return(VirtualValue),
 }
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum BitWidth {
+    W8,
+    W16,
+    W32,
+    W64,
+}
+impl BitWidth {
+    pub fn bits(self) -> u32 {
+        match self {
+            Self::W8 => 8,
+            Self::W16 => 16,
+            Self::W32 => 32,
+            Self::W64 => 64,
+        }
+    }
+}
+
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub enum Reg {
     Rax,
@@ -300,6 +333,32 @@ impl Reg {
         }
     }
 
+    fn bit_name(self, width: BitWidth) -> &'static str {
+        match width {
+            BitWidth::W8 => self.low8(),
+            BitWidth::W32 => self.low32(),
+            BitWidth::W64 => self.name(),
+            BitWidth::W16 => match self {
+                Self::Rax => "ax",
+                Self::Rbx => "bx",
+                Self::Rcx => "cx",
+                Self::Rdx => "dx",
+                Self::Rsi => "si",
+                Self::Rdi => "di",
+                Self::Rbp => "bp",
+                Self::Rsp => "sp",
+                Self::R8 => "r8w",
+                Self::R9 => "r9w",
+                Self::R10 => "r10w",
+                Self::R11 => "r11w",
+                Self::R12 => "r12w",
+                Self::R13 => "r13w",
+                Self::R14 => "r14w",
+                Self::R15 => "r15w",
+            },
+        }
+    }
+
     const fn low32(self) -> &'static str {
         match self {
             Self::Rax => "eax",
@@ -390,6 +449,31 @@ pub enum MachineInstr {
         dst: Reg,
         src: Operand,
     },
+    Rotate {
+        dst: Reg,
+        width: BitWidth,
+        right: bool,
+        count: Option<u8>,
+    },
+    ByteSwap {
+        dst: Reg,
+        wide: bool,
+    },
+    /// Zero- or sign-extends the low `width` bits of `src` into all of `dst`.
+    Extend {
+        dst: Reg,
+        src: Reg,
+        width: BitWidth,
+        signed: bool,
+    },
+    /// BSF/BSR followed immediately by CMOVZ from a defined fallback register.
+    /// The fallback must differ from dst; source may alias dst.
+    BitScanZero {
+        dst: Reg,
+        src: Reg,
+        zero: Reg,
+        reverse: bool,
+    },
     Shl {
         dst: Reg,
     },
@@ -425,6 +509,10 @@ pub enum MachineInstr {
     Test {
         reg: Reg,
     },
+    /// `test r8, r8`: flags of the low byte, read only by `Eq`/`NotEq`.
+    TestByte {
+        reg: Reg,
+    },
     SetCc {
         condition: Condition,
         dst: Reg,
@@ -446,15 +534,31 @@ pub enum MachineInstr {
         dst: Reg,
         offset: i32,
     },
+    /// `lea dst, [base + offset]`: three-address addition without flags.
+    OffsetAddress {
+        dst: Reg,
+        base: Reg,
+        offset: i32,
+    },
     /// Load/store exactly `bytes` (1, 2, 4 or 8) through an address register.
+    /// `bytes` from `[address + offset]`, zero-extended below four bytes.
     LoadIndirect {
         dst: Reg,
         address: Reg,
+        offset: i32,
         bytes: u8,
     },
     StoreIndirect {
         address: Reg,
+        offset: i32,
         src: Reg,
+        bytes: u8,
+    },
+    /// Stores the low `bytes` of `value` (sign-extended for eight bytes).
+    StoreImmediate {
+        address: Reg,
+        offset: i32,
+        value: i32,
         bytes: u8,
     },
     /// Unaligned 128-bit SSE storage transfers; no arithmetic or flag changes.
@@ -529,6 +633,24 @@ impl MachineFunction {
         emit_gnu_assembly(self)
     }
 
+    /// Keep the existing frame convention whenever storage, stack parameters or
+    /// call alignment needs it. Pointer-only leaf functions need no frame.
+    pub(crate) fn needs_frame(&self) -> bool {
+        self.stack_slots != 0
+            || !self.callee_saved.is_empty()
+            || self
+                .instructions
+                .iter()
+                .any(|instruction| match instruction {
+                    MachineInstr::LoadArg { index, .. } => *index >= Reg::ARGUMENTS.len(),
+                    MachineInstr::Call { .. }
+                    | MachineInstr::CallIndirect { .. }
+                    | MachineInstr::StoreArg { .. }
+                    | MachineInstr::StackAddress { .. } => true,
+                    _ => false,
+                })
+    }
+
     /// Rbp-relative spill/local storage, then callee saves, then an independent
     /// Rsp-relative outgoing argument area. The total preserves SysV call alignment.
     pub(crate) fn frame_size(&self) -> Option<u32> {
@@ -554,7 +676,7 @@ impl MachineFunction {
 }
 
 /// Replaces zero immediates with register XORs when no later flags consumer is reachable.
-/// Returns the number of replacements; each replacement saves four encoded bytes.
+/// Returns the number of replacements; each saves three encoded bytes.
 pub fn optimize_zero_idioms(instructions: &mut [MachineInstr]) -> usize {
     let labels = instructions
         .iter()
@@ -607,6 +729,7 @@ pub fn optimize_zero_idioms(instructions: &mut [MachineInstr]) -> usize {
                 instruction,
                 MachineInstr::Jcc { .. }
                     | MachineInstr::SetCc { .. }
+                    | MachineInstr::Rotate { .. }
                     | MachineInstr::Shl { .. }
                     | MachineInstr::Shr { .. }
                     | MachineInstr::LShr { .. }
@@ -614,7 +737,8 @@ pub fn optimize_zero_idioms(instructions: &mut [MachineInstr]) -> usize {
             ) || (multiple_returns && matches!(instruction, MachineInstr::Ret));
             let writes_flags = matches!(
                 instruction,
-                MachineInstr::Neg { .. }
+                MachineInstr::BitScanZero { .. }
+                    | MachineInstr::Neg { .. }
                     | MachineInstr::Add { .. }
                     | MachineInstr::Sub { .. }
                     | MachineInstr::IMul { .. }
@@ -628,6 +752,7 @@ pub fn optimize_zero_idioms(instructions: &mut [MachineInstr]) -> usize {
                     | MachineInstr::UDiv { .. }
                     | MachineInstr::Cmp { .. }
                     | MachineInstr::Test { .. }
+                    | MachineInstr::TestByte { .. }
                     | MachineInstr::Call { .. }
             ) || matches!(
                 instruction,
@@ -670,6 +795,7 @@ pub fn optimize_zero_idioms(instructions: &mut [MachineInstr]) -> usize {
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum AsmError {
+    InvalidBitScanFallback,
     InvalidVectorRegister(u8),
     InvalidFunctionName,
     ReservedRegister(Reg),
@@ -688,6 +814,7 @@ pub enum AsmError {
 impl fmt::Display for AsmError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            Self::InvalidBitScanFallback => f.write_str("bit scan fallback aliases destination"),
             Self::InvalidVectorRegister(reg) => write!(f, "invalid XMM register {reg}"),
             Self::InvalidFunctionName => f.write_str("invalid GNU assembly function name"),
             Self::ReservedRegister(reg) => write!(f, "{reg} is reserved for frame management"),
@@ -720,6 +847,7 @@ impl std::error::Error for AsmError {}
 pub fn emit_gnu_assembly(function: &MachineFunction) -> Result<String, AsmError> {
     validate_function(function)?;
 
+    let needs_frame = function.needs_frame();
     let frame_bytes = function.frame_size().ok_or(AsmError::FrameSizeOverflow)?;
     // A native program concatenates these functions into one assembly unit.
     // Keep every block label and branch target in the function's namespace.
@@ -732,7 +860,10 @@ pub fn emit_gnu_assembly(function: &MachineFunction) -> Result<String, AsmError>
     out.push_str(&function.name);
     out.push_str(", @function\n");
     out.push_str(&function.name);
-    out.push_str(":\n\tpush rbp\n\tmov rbp, rsp\n");
+    out.push_str(":\n");
+    if needs_frame {
+        out.push_str("\tpush rbp\n\tmov rbp, rsp\n");
+    }
     if frame_bytes != 0 {
         out.push_str(&format!("\tsub rsp, {frame_bytes}\n"));
     }
@@ -749,6 +880,7 @@ pub fn emit_gnu_assembly(function: &MachineFunction) -> Result<String, AsmError>
             &function.callee_saved,
             &function.symbols,
             &label_prefix,
+            needs_frame,
         )?;
     }
 
@@ -829,8 +961,22 @@ fn validate_instruction(
         | ShlImm { dst, .. }
         | ShrImm { dst, .. }
         | LShrImm { dst, .. }
+        | Rotate { dst, .. }
+        | ByteSwap { dst, .. }
         | SetCc { dst, .. } => validate_reg(dst)?,
-        Mov { dst, src } => {
+        Extend { dst, src, .. } => {
+            validate_reg(dst)?;
+            validate_reg(src)?;
+        }
+        BitScanZero { dst, src, zero, .. } => {
+            validate_reg(dst)?;
+            validate_reg(src)?;
+            validate_reg(zero)?;
+            if dst == zero {
+                return Err(AsmError::InvalidBitScanFallback);
+            }
+        }
+        Mov { dst, src } | OffsetAddress { dst, base: src, .. } => {
             validate_reg(dst)?;
             validate_reg(src)?;
         }
@@ -857,7 +1003,7 @@ fn validate_instruction(
             validate_reg(lhs)?;
             validate_operand(rhs)?;
         }
-        Test { reg } => validate_reg(reg)?,
+        Test { reg } | TestByte { reg } => validate_reg(reg)?,
         Load { dst, slot } => {
             validate_reg(dst)?;
             validate_slot(slot, stack_slots)?;
@@ -883,6 +1029,7 @@ fn validate_instruction(
             dst,
             address,
             bytes,
+            ..
         } => {
             validate_reg(dst)?;
             validate_reg(address)?;
@@ -894,9 +1041,16 @@ fn validate_instruction(
             address,
             src,
             bytes,
+            ..
         } => {
             validate_reg(address)?;
             validate_reg(src)?;
+            if !matches!(bytes, 1 | 2 | 4 | 8) {
+                return Err(AsmError::FrameSizeOverflow);
+            }
+        }
+        StoreImmediate { address, bytes, .. } => {
+            validate_reg(address)?;
             if !matches!(bytes, 1 | 2 | 4 | 8) {
                 return Err(AsmError::FrameSizeOverflow);
             }
@@ -959,6 +1113,7 @@ fn emit_instruction(
     callee_saved: &[Reg],
     symbols: &[String],
     label_prefix: &str,
+    needs_frame: bool,
 ) -> Result<(), AsmError> {
     use MachineInstr::*;
 
@@ -989,6 +1144,46 @@ fn emit_instruction(
         And { dst, src } => emit_binary(out, "and", dst, src, stack_slots)?,
         Or { dst, src } => emit_binary(out, "or", dst, src, stack_slots)?,
         Xor { dst, src } => emit_binary(out, "xor", dst, src, stack_slots)?,
+        Rotate {
+            dst,
+            width,
+            right,
+            count,
+        } => out.push_str(&format!(
+            "\t{} {}, {}\n",
+            if right { "ror" } else { "rol" },
+            dst.bit_name(width),
+            count.map_or_else(|| "cl".into(), |n| n.to_string())
+        )),
+        ByteSwap { dst, wide } => out.push_str(&format!(
+            "\tbswap {}\n",
+            if wide { dst.name() } else { dst.low32() }
+        )),
+        Extend {
+            dst,
+            src,
+            width,
+            signed,
+        } => out.push_str(&match (width, signed) {
+            (BitWidth::W64, _) => format!("\tmov {}, {}\n", dst.name(), src.name()),
+            (BitWidth::W32, false) => format!("\tmov {}, {}\n", dst.low32(), src.low32()),
+            (BitWidth::W32, true) => format!("\tmovsxd {}, {}\n", dst.name(), src.low32()),
+            (_, false) => format!("\tmovzx {}, {}\n", dst.low32(), src.bit_name(width)),
+            (_, true) => format!("\tmovsx {}, {}\n", dst.name(), src.bit_name(width)),
+        }),
+        BitScanZero {
+            dst,
+            src,
+            zero,
+            reverse,
+        } => out.push_str(&format!(
+            "\t{} {}, {}\n\tcmovz {}, {}\n",
+            if reverse { "bsr" } else { "bsf" },
+            dst.name(),
+            src.name(),
+            dst.name(),
+            zero.name()
+        )),
         Shl { dst } => out.push_str(&format!("\tshl {}, cl\n", dst.name())),
         Shr { dst } => out.push_str(&format!("\tsar {}, cl\n", dst.name())),
         LShr { dst } => out.push_str(&format!("\tshr {}, cl\n", dst.name())),
@@ -1012,6 +1207,10 @@ fn emit_instruction(
         }
         | Test { reg: lhs } => {
             out.push_str(&format!("\ttest {}, {}\n", lhs.name(), lhs.name()));
+        }
+        TestByte { reg } => {
+            let byte = reg.bit_name(BitWidth::W8);
+            out.push_str(&format!("\ttest {byte}, {byte}\n"));
         }
         Cmp { lhs, rhs } => {
             out.push_str(&format!("\tcmp {}, ", lhs.name()));
@@ -1037,9 +1236,15 @@ fn emit_instruction(
         StackAddress { dst, offset } => {
             out.push_str(&format!("\tlea {}, [rbp{offset:+}]\n", dst.name()))
         }
+        OffsetAddress { dst, base, offset } => out.push_str(&format!(
+            "\tlea {}, [{}{offset:+}]\n",
+            dst.name(),
+            base.name()
+        )),
         LoadIndirect {
             dst,
             address,
+            offset,
             bytes,
         } => {
             let size = match bytes {
@@ -1050,10 +1255,31 @@ fn emit_instruction(
             };
             let op = if bytes < 4 { "movzx" } else { "mov" };
             let dst = if bytes == 4 { dst.low32() } else { dst.name() };
-            out.push_str(&format!("\t{op} {dst}, {size} PTR [{}]\n", address.name()));
+            out.push_str(&format!(
+                "\t{op} {dst}, {size} PTR [{}{offset:+}]\n",
+                address.name()
+            ));
+        }
+        StoreImmediate {
+            address,
+            offset,
+            value,
+            bytes,
+        } => {
+            let (size, value) = match bytes {
+                1 => ("BYTE", i64::from(value as i8)),
+                2 => ("WORD", i64::from(value as i16)),
+                4 => ("DWORD", i64::from(value)),
+                _ => ("QWORD", i64::from(value)),
+            };
+            out.push_str(&format!(
+                "\tmov {size} PTR [{}{offset:+}], {value}\n",
+                address.name()
+            ));
         }
         StoreIndirect {
             address,
+            offset,
             src,
             bytes,
         } => {
@@ -1083,7 +1309,10 @@ fn emit_instruction(
                 4 => ("DWORD", src.low32()),
                 _ => ("QWORD", src.name()),
             };
-            out.push_str(&format!("\tmov {size} PTR [{}], {src}\n", address.name()));
+            out.push_str(&format!(
+                "\tmov {size} PTR [{}{offset:+}], {src}\n",
+                address.name()
+            ));
         }
         LoadVector { dst, address } => out.push_str(&format!(
             "\tmovdqu xmm{}, XMMWORD PTR [{}]\n",
@@ -1155,7 +1384,10 @@ fn emit_instruction(
                 let offset = saved_offset(stack_slots, index)?;
                 out.push_str(&format!("\tmov {}, QWORD PTR [rbp{offset}]\n", reg.name()));
             }
-            out.push_str("\tleave\n\tret\n");
+            if needs_frame {
+                out.push_str("\tleave\n");
+            }
+            out.push_str("\tret\n");
         }
     }
     Ok(())

@@ -77,3 +77,8 @@ if [ "$stage" = semantic ]; then
     run semantic bash "$tests/semantic-ir/run.sh" "$backend" "$out/semantic"
 fi
 printf 'PASS: requested stage %s\n' "$stage"
+
+if [ "$stage" = pressure ]; then
+    run pressure-generate python3 "$tests/p0-scalar/generated/pressure/generate.py" "$out/pressure-inputs"
+    run pressure python3 "$tests/p0-scalar/generated/pressure/run.py" --inputs "$out/pressure-inputs" --backend "$backend" --out "$out/pressure"
+fi

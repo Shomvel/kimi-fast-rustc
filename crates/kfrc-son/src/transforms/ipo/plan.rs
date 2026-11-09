@@ -16,13 +16,19 @@ pub(super) fn plan(
     call: NodeId,
     source: &FunctionGraph,
     remaining: usize,
+    copy_anonymous_constants: bool,
 ) -> Result<Plan, InlineSkip> {
     let ids: Vec<_> = source.ids().collect();
     for data in &source.data_objects {
         // A provider can expose another CGU's graph. Duplicating an object
         // with local linkage changes identity and potentially mutable state.
         // A symbol-owner contract must export a shared definition first.
-        if data.binding == kfrc_body::DataBinding::Local {
+        // Read-only anonymous constants have no identity and copy freely.
+        let duplicable = copy_anonymous_constants
+            && data.unnamed_address
+            && !data.writable
+            && !data.thread_local;
+        if data.binding == kfrc_body::DataBinding::Local && !duplicable {
             return Err(InlineSkip::DataConflict);
         }
         if let Some(old) = graph.data_objects.iter().find(|d| d.symbol == data.symbol) {

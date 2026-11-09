@@ -72,6 +72,9 @@ fn exact_parameter_return_folds_with_zero_inline_budget_and_independent_types() 
             max_depth: 0,
             max_nodes: 0,
             max_calls: 0,
+            free_nodes: 0,
+            max_callee_nodes: 0,
+            copy_anonymous_constants: false,
         };
         assert_eq!(
             inline_calls(&mut caller.graph, &functions, budget)

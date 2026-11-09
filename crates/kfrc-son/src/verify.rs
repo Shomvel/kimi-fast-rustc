@@ -9,7 +9,7 @@
 
 use std::collections::{HashMap, HashSet};
 
-use kfrc_body::{PassMode, TypeOracle, TypeShape};
+use kfrc_body::{Mutability, PassMode, TypeOracle, TypeShape};
 
 use crate::analysis::{
     cfg::{ControlFlow, is_anchored_value, is_control_flow},
@@ -17,7 +17,7 @@ use crate::analysis::{
     memory::MemoryFacts,
 };
 use crate::graph::{
-    FunctionGraph, GraphLevel, GraphState, Hole, MemoryPartition, NodeId, Opcode, ValueType,
+    ArgPermission, FunctionGraph, GraphLevel, GraphState, Hole, MemoryPartition, NodeId, Opcode, ValueType,
 };
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -82,7 +82,75 @@ pub fn check(graph: &FunctionGraph) -> Result<(), VerifyError> {
     structural(graph)?;
     stage(graph)?;
     typed(graph)?;
+    permissions(graph)?;
     dominance(graph)
+}
+
+/// RS5.1: permissions describe S reference parameters only. R has not chosen
+/// an instance and L has erased them at the layout boundary.
+fn permissions(graph: &FunctionGraph) -> Result<(), VerifyError> {
+    let any_argument = graph
+        .arg_permissions
+        .iter()
+        .any(|permission| *permission != ArgPermission::None);
+    if graph.level != GraphLevel::Specialized {
+        if any_argument || !graph.callee_permissions.is_empty() {
+            return Err(mismatch(
+                graph.start,
+                "only Specialized graphs carry argument permissions",
+            ));
+        }
+        return Ok(());
+    }
+    let ValueType::Tuple(start) = graph.value_type(graph.start) else {
+        return Err(mismatch(graph.start, "Start must produce a tuple"));
+    };
+    let parameters = start.len().saturating_sub(2);
+    if !graph.arg_permissions.is_empty() && graph.arg_permissions.len() != parameters {
+        return Err(mismatch(
+            graph.start,
+            format!(
+                "{} argument permissions for {parameters} parameters",
+                graph.arg_permissions.len()
+            ),
+        ));
+    }
+    for (parameter, permission) in graph.arg_permissions.iter().enumerate() {
+        let required = match permission {
+            ArgPermission::None => continue,
+            ArgPermission::Frozen { .. } => Mutability::Not,
+            ArgPermission::Unique { .. } => Mutability::Mut,
+        };
+        let reference = match &start[parameter + 2] {
+            ValueType::Rust(ty) => match graph.oracle.semantic().shape(*ty) {
+                TypeShape::Reference { mutability, .. } => Some(*mutability),
+                _ => None,
+            },
+            _ => None,
+        };
+        if reference != Some(required) {
+            return Err(mismatch(
+                graph.start,
+                format!("parameter {parameter} permission {permission:?} needs a {required:?} reference"),
+            ));
+        }
+    }
+    for target in &graph.callees {
+        if let Some(permissions) = graph.callee_permissions.get(&target.symbol)
+            && permissions.len() != target.abi.args.len()
+        {
+            return Err(mismatch(
+                graph.start,
+                format!(
+                    "{} call permissions for {} arguments of `{}`",
+                    permissions.len(),
+                    target.abi.args.len(),
+                    target.symbol
+                ),
+            ));
+        }
+    }
+    Ok(())
 }
 
 fn arity(node: NodeId, expected: &str, actual: usize, ok: bool) -> Result<(), VerifyError> {
@@ -187,6 +255,12 @@ fn structural(graph: &FunctionGraph) -> Result<(), VerifyError> {
             Opcode::Repeat | Opcode::RequireDefined | Opcode::Assume => graph.payload(node) == 0,
             Opcode::Compare => {
                 (graph.payload(node) as usize) < crate::graph::ComparePredicate::ALL.len()
+            }
+            op if op.integer_intrinsic_arity().is_some() => {
+                crate::IntegerIntrinsicPayload::valid(op, graph.payload(node))
+            }
+            op if crate::ArithmeticFlags::allowed(op).is_some() => {
+                crate::ArithmeticFlags(graph.payload(node)).valid_for(op)
             }
             _ => true,
         };
@@ -347,6 +421,10 @@ fn structural(graph: &FunctionGraph) -> Result<(), VerifyError> {
             | Opcode::Load
             | Opcode::Opaque => arity(node, "2", n, n == 2)?,
             Opcode::Store => arity(node, "3", n, n == 3)?,
+            op if op.integer_intrinsic_arity().is_some() => {
+                let expected = op.integer_intrinsic_arity().unwrap();
+                arity(node, &expected.to_string(), n, n == expected)?;
+            }
             op if op.is_binary_arithmetic() => arity(node, "2", n, n == 2)?,
             _ => {}
         }
@@ -358,11 +436,62 @@ fn rust_type(graph: &FunctionGraph, node: NodeId) -> Option<kfrc_body::TyId> {
     graph.rust_type(node)
 }
 
+fn verify_integer_intrinsic(graph: &FunctionGraph, node: NodeId) -> Result<(), VerifyError> {
+    let inputs = graph.inputs(node);
+    let integer = |value| {
+        if !matches!(graph.value_type(value), ValueType::Rust(_)) {
+            return None;
+        }
+        let ty = graph.rust_type(value)?;
+        match graph.oracle.shape(ty) {
+            TypeShape::Int { width, signed } if matches!(width.bits(64), 8 | 16 | 32 | 64) => {
+                Some((ty, width.bits(64), *signed))
+            }
+            _ => None,
+        }
+    };
+    let source = integer(inputs[0])
+        .ok_or_else(|| mismatch(node, "integer intrinsic requires an 8/16/32/64-bit integer"))?;
+    let result = integer(node)
+        .ok_or_else(|| mismatch(node, "integer intrinsic requires an integer result"))?;
+    let valid = match graph.op(node) {
+        Opcode::BitCount => result.1 == 32 && !result.2,
+        Opcode::ByteSwap | Opcode::BitReverse => result.0 == source.0,
+        Opcode::SaturatingAdd | Opcode::SaturatingSub => {
+            result.0 == source.0 && integer(inputs[1]) == Some(source)
+        }
+        Opcode::FunnelShift => {
+            result.0 == source.0
+                && integer(inputs[1]) == Some(source)
+                && integer(inputs[2]).is_some_and(|(_, _, signed)| !signed)
+        }
+        _ => unreachable!(),
+    };
+    if !valid {
+        return Err(mismatch(
+            node,
+            "integer intrinsic operand/result types disagree",
+        ));
+    }
+    Ok(())
+}
+
 fn mismatch(node: NodeId, detail: impl Into<String>) -> VerifyError {
     VerifyError::TypeMismatch {
         node,
         detail: detail.into(),
     }
+}
+
+/// Receipts are checked against the original graph before the batch mutates
+/// conditions. They never survive compaction or an unrelated CFG rewrite.
+#[cfg(debug_assertions)]
+pub(crate) fn condition_receipts(
+    graph: &FunctionGraph,
+    receipts: &[crate::analysis::refinement::ConditionReceipt],
+) -> Result<(), VerifyError> {
+    crate::analysis::refinement::check_conditions(graph, receipts)
+        .map_err(|(node, detail)| mismatch(node, detail))
 }
 
 fn parameter_count(graph: &FunctionGraph) -> usize {
@@ -822,6 +951,9 @@ fn typed(graph: &FunctionGraph) -> Result<(), VerifyError> {
                     ));
                 }
             }
+            op if op.integer_intrinsic_arity().is_some() => {
+                verify_integer_intrinsic(graph, node)?;
+            }
             Opcode::MulOverflow => {
                 if !is_integer_like(inputs[0])
                     || rust_type(graph, inputs[0]) != rust_type(graph, inputs[1])
@@ -1278,23 +1410,29 @@ fn semantic_memory_node(
                 {
                     return Err(mismatch(node, "IndexAddr requires integer index"));
                 }
-                let correct_element = match graph.oracle.shape(source) {
-                    TypeShape::Array { element, .. } | TypeShape::Slice { element } => {
-                        result == *element
-                    }
-                    TypeShape::Str => matches!(
-                        graph.oracle.shape(result),
-                        TypeShape::Int {
-                            width: kfrc_body::IntegerWidth::W8,
-                            signed: false,
-                        }
-                    ),
-                    _ => result == source,
-                };
+                // Pointer arithmetic preserves T even when T is itself an
+                // array. A place projection instead selects the immediate
+                // array/slice element. Both use the result pointee's stride;
+                // neither permits arbitrary retyping or an unsized stride.
+                let correct_element = !graph.oracle.semantic().is_unsized(result)
+                    && (result == source
+                        || match graph.oracle.shape(source) {
+                            TypeShape::Array { element, .. } | TypeShape::Slice { element } => {
+                                result == *element
+                            }
+                            TypeShape::Str => matches!(
+                                graph.oracle.shape(result),
+                                TypeShape::Int {
+                                    width: kfrc_body::IntegerWidth::W8,
+                                    signed: false,
+                                }
+                            ),
+                            _ => false,
+                        });
                 if !correct_element {
                     return Err(mismatch(
                         node,
-                        "IndexAddr result pointee differs from element type",
+                        "IndexAddr requires a sized source pointee or immediate element type",
                     ));
                 }
             }

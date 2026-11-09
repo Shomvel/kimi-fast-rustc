@@ -7,14 +7,41 @@ use crate::body::{
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum BodyError {
     NoBlocks,
-    BadArgCount { arg_count: usize, locals: usize },
-    BadLocal { block: BlockId, local: u32 },
-    BadBlock { block: BlockId, target: u32 },
-    BadConstant { block: BlockId, constant: u32 },
-    BadProjection { block: BlockId, projection: u32 },
-    AbiArity { abi_args: usize, arg_count: usize },
-    NonFunctionCallee { block: BlockId },
-    NonBooleanAssume { block: BlockId },
+    BadArgCount {
+        arg_count: usize,
+        locals: usize,
+    },
+    BadLocal {
+        block: BlockId,
+        local: u32,
+    },
+    BadBlock {
+        block: BlockId,
+        target: u32,
+    },
+    BadConstant {
+        block: BlockId,
+        constant: u32,
+    },
+    BadProjection {
+        block: BlockId,
+        projection: u32,
+    },
+    AbiArity {
+        abi_args: usize,
+        arg_count: usize,
+    },
+    NonFunctionCallee {
+        block: BlockId,
+    },
+    NonBooleanAssume {
+        block: BlockId,
+    },
+    IntrinsicArity {
+        block: BlockId,
+        expected: usize,
+        actual: usize,
+    },
 }
 
 impl std::fmt::Display for BodyError {
@@ -226,6 +253,18 @@ impl Checker<'_> {
             | Rvalue::RawPointer(_, place)
             | Rvalue::Discriminant(place)
             | Rvalue::Len(place) => self.place(*place),
+            Rvalue::IntegerIntrinsic(op, operands) => {
+                if operands.len() != op.arity() {
+                    return Err(BodyError::IntrinsicArity {
+                        block: self.block,
+                        expected: op.arity(),
+                        actual: operands.len(),
+                    });
+                }
+                operands
+                    .iter()
+                    .try_for_each(|operand| self.operand(operand))
+            }
             Rvalue::Aggregate(_, operands) => operands
                 .iter()
                 .try_for_each(|operand| self.operand(operand)),

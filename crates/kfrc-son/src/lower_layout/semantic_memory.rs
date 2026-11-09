@@ -79,27 +79,14 @@ impl LayoutLowering<'_> {
                 let Parts::Scalar(index) = index.parts else {
                     return Err(LayoutError::Malformed("aggregate index".into()));
                 };
-                // Pointer offsets wrap at pointer width. In particular, an
-                // isize index must be retyped before unsigned stride arithmetic.
-                let index = if self.graph.rust_type(index) == Some(usize_ty) {
-                    index
+                // Layout output gets no later scalar pass: emit a constant byte
+                // offset directly so it can become an address displacement.
+                if self.graph.op(index) == Opcode::Const {
+                    let bytes = (self.graph.constant_value(index) as u64).wrapping_mul(size);
+                    self.graph.add_constant(u128::from(bytes), usize_ty)
                 } else {
-                    self.graph.add_node(
-                        Opcode::IntCast,
-                        NodeId::NONE,
-                        &[index],
-                        0,
-                        ValueType::Rust(usize_ty),
-                    )
-                };
-                let size = self.graph.add_constant(u128::from(size), usize_ty);
-                self.graph.add_node(
-                    Opcode::Mul,
-                    NodeId::NONE,
-                    &[index, size],
-                    0,
-                    ValueType::Rust(usize_ty),
-                )
+                    self.index_offset(index, size, usize_ty)
+                }
             }
             Opcode::PointerCast => self.graph.add_constant(0, usize_ty),
             _ => {
@@ -111,6 +98,34 @@ impl LayoutLowering<'_> {
         self.graph.set_opcode_payload(node, Opcode::PtrOffset, 0);
         self.graph.set_inputs(node, &[base, offset]);
         Ok(node)
+    }
+
+    /// `index * size` in pointer-width wrapping arithmetic.
+    fn index_offset(&mut self, index: NodeId, size: u64, usize_ty: TyId) -> NodeId {
+        // Pointer offsets wrap at pointer width. In particular, an
+        // isize index must be retyped before unsigned stride arithmetic.
+        let index = if self.graph.rust_type(index) == Some(usize_ty) {
+            index
+        } else {
+            self.graph.add_node(
+                Opcode::IntCast,
+                NodeId::NONE,
+                &[index],
+                0,
+                ValueType::Rust(usize_ty),
+            )
+        };
+        if size == 1 {
+            return index;
+        }
+        let size = self.graph.add_constant(u128::from(size), usize_ty);
+        self.graph.add_node(
+            Opcode::Mul,
+            NodeId::NONE,
+            &[index, size],
+            0,
+            ValueType::Rust(usize_ty),
+        )
     }
 
     pub(super) fn lower_load_value(&mut self, node: NodeId) -> Result<(), LayoutError> {
@@ -141,7 +156,7 @@ impl LayoutLowering<'_> {
         } else if self.tag_only_loads.contains(&node) {
             Value {
                 ty,
-                parts: Parts::VariantTag(self.read_variant_index(
+                parts: Parts::VariantTag(self.read_variant_scalar(
                     address,
                     ty,
                     &mut control,
@@ -149,7 +164,8 @@ impl LayoutLowering<'_> {
                 )?),
             }
         } else {
-            self.decode_fields(address, ty, &mut control, &mut effect)?
+            let demand = result.map(|value| self.demand(value)).unwrap_or_default();
+            self.decode_fields_demand(address, ty, &mut control, &mut effect, &demand)?
         };
         self.partition = previous_partition;
         if let Some(result) = self.projections.find(self.graph, node, 2) {

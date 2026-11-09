@@ -544,10 +544,22 @@ impl<'a> Builder<'a> {
     }
 
     fn bool_type(&mut self) -> TyId {
-        self.graph.oracle.intern(
+        let ty = self.graph.oracle.intern(
             TypeShape::Bool,
             Some(kfrc_body::SizeAlign { size: 1, align: 1 }),
-        )
+        );
+        // Cmp and integer switches can synthesize Bool absent from the Body's
+        // source types. Match rustc's initialized eight-bit representation so
+        // IPO sees the same canonical fact as an explicitly converted Bool.
+        if self.graph.oracle.scalar_validity(ty).is_none() {
+            self.graph.oracle.record_scalar_validity(
+                ty,
+                kfrc_body::ScalarValidity::Scalar(
+                    kfrc_body::ScalarValidRange::new(8, 0, 1).unwrap(),
+                ),
+            );
+        }
+        ty
     }
 }
 
@@ -663,7 +675,7 @@ fn memory_locals(body: &Body) -> Vec<bool> {
                         operand(left, &mut memory);
                         operand(right, &mut memory);
                     }
-                    Rvalue::Aggregate(_, values) => {
+                    Rvalue::Aggregate(_, values) | Rvalue::IntegerIntrinsic(_, values) => {
                         for value in values {
                             operand(value, &mut memory);
                         }

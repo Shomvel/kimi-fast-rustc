@@ -850,7 +850,8 @@ impl<'a> Interpreter<'a> {
                             }
                             Some(destination)
                         }
-                        "memcmp" if arguments.len() == 3 => {
+                        // A memcmp ordering is also a valid bcmp result.
+                        "memcmp" | "bcmp" if arguments.len() == 3 => {
                             let mut ordering = 0i32;
                             if arguments[2] > 1_000_000 {
                                 return Err(InterpretError::OutOfFuel);
@@ -1070,7 +1071,10 @@ impl<'a> Interpreter<'a> {
         let op = graph.op(node);
         let ty = graph.rust_type(node);
         let value = match op {
-            Opcode::Const => Scalar::new(graph.constant_value(node) as u64),
+            Opcode::Const => Scalar::new(self.normalize(
+                ty.expect("constant has a Rust type"),
+                graph.constant_value(node) as u64,
+            )),
             Opcode::StackSlot => Scalar::new(frame.slots[graph.payload(node) as usize]),
             Opcode::SymbolAddress => {
                 let (symbol, addend) = &graph.symbols[graph.payload(node) as usize];
@@ -1179,7 +1183,8 @@ impl<'a> Interpreter<'a> {
         inputs: &[NodeId],
         values: &[Scalar],
     ) -> Result<Scalar, InterpretError> {
-        let poison = values.iter().any(|value| value.poison);
+        let input_poison = values.iter().any(|value| value.poison);
+        let mut poison = input_poison;
         let result_ty = ty;
         let operand_ty = inputs
             .first()
@@ -1188,8 +1193,37 @@ impl<'a> Interpreter<'a> {
         let (width, _) = self.width_and_sign(operand_ty);
         let a = values.first().map_or(0, |value| value.bits);
         let b = values.get(1).map_or(0, |value| value.bits);
+        if op.integer_intrinsic_arity().is_some() {
+            if !matches!(width, 8 | 16 | 32 | 64) {
+                return Err(InterpretError::Malformed(
+                    "unsupported integer intrinsic width".into(),
+                ));
+            }
+            let (_, signed) = self.width_and_sign(operand_ty);
+            let operands: Vec<_> = values.iter().map(|value| value.bits).collect();
+            let (bits, contract_poison) = crate::intrinsic::evaluate(
+                op,
+                self.graph.payload(node),
+                width as u8,
+                signed,
+                &operands,
+            );
+            return Ok(Scalar {
+                bits: self.normalize(result_ty, bits),
+                poison: input_poison || contract_poison,
+            });
+        }
         let sa = self.signed(operand_ty, a);
         let sb = self.signed(operand_ty, b);
+        if crate::ArithmeticFlags::allowed(op).is_some() {
+            if width > 64 {
+                return Err(InterpretError::Malformed(
+                    "arithmetic contract exceeds supported scalar width".into(),
+                ));
+            }
+            poison |=
+                crate::ArithmeticFlags(self.graph.payload(node)).violated(op, width as u8, a, b);
+        }
         let shift_amount = |amount: u64| (amount % u64::from(width.max(1))) as u32;
         let bits = match op {
             Opcode::Add | Opcode::PtrOffset => a.wrapping_add(b),
@@ -1208,7 +1242,7 @@ impl<'a> Interpreter<'a> {
             Opcode::Sub => a.wrapping_sub(b),
             Opcode::Mul => a.wrapping_mul(b),
             Opcode::DivSigned | Opcode::RemSigned | Opcode::DivUnsigned | Opcode::RemUnsigned => {
-                if poison {
+                if input_poison {
                     return Err(InterpretError::PoisonObserved(node));
                 }
                 if b == 0

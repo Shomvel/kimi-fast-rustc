@@ -181,6 +181,7 @@ impl<'tcx> UnitEntryPlan<'tcx> {
                     function.instructions.push(MachineInstr::LoadIndirect {
                         dst: Reg::Rax,
                         address: Reg::Rdi,
+                        offset: 0,
                         bytes: 8,
                     })
                 }

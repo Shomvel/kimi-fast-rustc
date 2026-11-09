@@ -145,6 +145,7 @@ impl<'a> TypeImport<'a> {
                 .semantic()
                 .inhabited_variants(source)
                 .map(<[u32]>::to_vec);
+            let scalar_validity = self.source.scalar_validity(source);
             let encoding = self
                 .source
                 .enums
@@ -198,6 +199,7 @@ impl<'a> TypeImport<'a> {
                     inhabited.as_deref(),
                 )
                 || conflicts(self.target.enums.get(&target), encoding.as_ref())
+                || conflicts(self.target.scalar_validity(target).as_ref(), scalar_validity.as_ref())
                 || conflicts(self.target.abi_pairs.get(&target), pair.as_ref())
                 || conflicts(self.target.vectors.get(&target), vector.as_ref())
                 || conflicts(old_maybe_uninit.as_ref(), maybe_uninit.as_ref())
@@ -232,6 +234,9 @@ impl<'a> TypeImport<'a> {
             if let Some(inhabited) = inhabited {
                 self.target
                     .record_semantic_inhabited_variants(target, inhabited);
+            }
+            if let Some(validity) = scalar_validity {
+                self.target.record_scalar_validity(target, validity);
             }
             if let Some(encoding) = encoding {
                 self.target.enums.insert(target, encoding);
@@ -272,6 +277,41 @@ fn conflicts<T: PartialEq + ?Sized>(old: Option<&T>, new: Option<&T>) -> bool {
 mod tests {
     use super::*;
     use kfrc_body::IntegerWidth;
+
+    #[test]
+    fn arbitrary_missing_bool_range_is_not_filled_during_import() {
+        use kfrc_body::{ScalarValidRange, ScalarValidity, SizeAlign};
+        let mut source = RecordedTypes::new();
+        source.intern(TypeShape::Bool, Some(SizeAlign { size: 1, align: 1 }));
+        let mut target = RecordedTypes::new();
+        let ty = target.intern(TypeShape::Bool, Some(SizeAlign { size: 1, align: 1 }));
+        target.record_scalar_validity(ty, ScalarValidity::Scalar(ScalarValidRange::new(8, 0, 1).unwrap()));
+        assert_eq!(TypeImport::new(&source, &mut target).finish(), Err(InlineSkip::TypeConflict));
+    }
+
+    #[test]
+    fn scalar_validity_import_preserves_nominal_identity_and_rejects_conflicts() {
+        use kfrc_body::{ScalarValidRange, ScalarValidity};
+        let nominal = TypeShape::Adt { name: "RestrictedWord#same-identity".into() };
+        let mut source = RecordedTypes::new();
+        let source_ty = source.intern(nominal.clone(), None);
+        let validity = ScalarValidity::Scalar(ScalarValidRange::new(32, 1, u32::MAX as u128).unwrap());
+        source.record_scalar_validity(source_ty, validity);
+        let mut target = RecordedTypes::new();
+        target.intern(TypeShape::Bool, None);
+        let mut import = TypeImport::new(&source, &mut target);
+        let ValueType::Rust(imported) = import.value_type(&ValueType::Rust(source_ty)).unwrap() else { unreachable!() };
+        import.finish().unwrap();
+        assert_eq!(target.scalar_validity(imported), Some(validity));
+        let mut conflict = RecordedTypes::new();
+        let ty = conflict.intern(nominal, None);
+        conflict.record_scalar_validity(ty, ScalarValidity::Scalar(ScalarValidRange::new(32, 2, u32::MAX as u128).unwrap()));
+        assert_eq!(TypeImport::new(&source, &mut conflict).finish(), Err(InlineSkip::TypeConflict));
+        let mut different = RecordedTypes::new();
+        let other = different.intern(TypeShape::Adt { name: "DifferentWord#other-identity".into() }, None);
+        TypeImport::new(&source, &mut different).finish().unwrap();
+        assert_eq!(different.scalar_validity(other), None);
+    }
 
     fn wrapper(types: &mut RecordedTypes, width: IntegerWidth, marked: bool) -> (TyId, TyId) {
         let inner = types.intern(

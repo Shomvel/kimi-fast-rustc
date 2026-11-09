@@ -68,6 +68,7 @@ fn counter(template: bool, conditional: bool, address_return: bool) -> Body {
             align: 8,
             writable: true,
             thread_local: true,
+            unnamed_address: false,
             relocations: vec![],
         });
     }

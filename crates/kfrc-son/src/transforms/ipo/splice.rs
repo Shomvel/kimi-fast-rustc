@@ -60,6 +60,17 @@ pub(super) fn splice(
         .iter()
         .map(|target| graph.add_callee(target.clone()))
         .collect();
+    // Call-site permissions travel with the copied direct calls. The callee's
+    // own `arg_permissions` stay behind: its protector ends at this seam
+    // (inlining v1), so no spliced access gains a scope it did not have.
+    for target in &source.callees {
+        if let Some(permissions) = source.callee_permissions.get(&target.symbol) {
+            graph
+                .callee_permissions
+                .entry(target.symbol.clone())
+                .or_insert_with(|| permissions.clone());
+        }
+    }
     let call_abis: Vec<_> = source
         .call_abis
         .iter()

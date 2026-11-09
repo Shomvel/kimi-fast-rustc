@@ -281,6 +281,7 @@ fn recursive_scc_and_budget_leave_calls_unchanged() {
         &provider,
         InlineBudget {
             max_calls: 0,
+            free_nodes: 0,
             ..InlineBudget::default()
         },
     )
@@ -340,6 +341,59 @@ fn conflicting_nominal_field_types_skip_atomically() {
     assert_eq!(
         caller.graph.oracle.semantic().field_type(adt, None, 0),
         Some(boolean)
+    );
+}
+
+/// Inlines `address() -> &private_static` for a local object with `flags`.
+fn inline_local_object(unnamed_address: bool, writable: bool) -> (usize, Vec<InlineSkip>, usize) {
+    let mut callee = Function::new("address", 0, true);
+    let pointer = callee.graph.oracle.intern(
+        TypeShape::RawPointer {
+            mutability: kfrc_body::Mutability::Not,
+            pointee: callee.int,
+        },
+        Some(SizeAlign { size: 8, align: 8 }),
+    );
+    callee.graph.symbols.push(("private_static".into(), 0));
+    callee.graph.data_objects.push(kfrc_body::DataObject {
+        symbol: "private_static".into(),
+        bytes: vec![0; 8],
+        align: 8,
+        unnamed_address,
+        writable,
+        ..Default::default()
+    });
+    let address = callee.node(Opcode::SymbolAddress, &[], 0, pointer);
+    callee.ret(address);
+    callee.verify();
+    let mut caller = Function::new("caller", 0, false);
+    let pointer = caller.graph.oracle.intern(
+        TypeShape::RawPointer {
+            mutability: kfrc_body::Mutability::Not,
+            pointee: caller.int,
+        },
+        Some(SizeAlign { size: 8, align: 8 }),
+    );
+    let result = caller.call(&callee.graph, &[], pointer);
+    caller.ret(result);
+    caller.verify();
+    let provider = HashMap::from([(callee.graph.symbol.clone(), callee.graph)]);
+    let budget = InlineBudget {
+        copy_anonymous_constants: true,
+        ..InlineBudget::default()
+    };
+    let stats = inline_calls(&mut caller.graph, &provider, budget).unwrap();
+    let reasons = stats.skipped.iter().map(|(_, reason)| *reason).collect();
+    (stats.calls_inlined, reasons, caller.graph.data_objects.len())
+}
+
+#[test]
+fn read_only_anonymous_constants_copy_into_the_caller() {
+    assert_eq!(inline_local_object(true, false), (1, vec![], 1));
+    // Writable memory keeps its single identity even when anonymous.
+    assert_eq!(
+        inline_local_object(true, true),
+        (0, vec![InlineSkip::DataConflict], 0)
     );
 }
 
@@ -712,4 +766,95 @@ fn inlining_retains_fixed_assumption_even_when_its_value_is_unused() {
         run(&caller.graph, &[1]).unwrap(),
         SemanticOutcome::Return(Value::Scalar(42))
     );
+}
+
+/// `x + 1 + 1 + ...` with `adds` additions.
+fn chain(name: &str, adds: usize) -> Function {
+    let mut callee = Function::new(name, 1, false);
+    let mut value = callee.args[0];
+    for _ in 0..adds {
+        let one = callee.graph.add_constant(1, callee.int);
+        value = callee.node(Opcode::Add, &[value, one], 0, callee.int);
+    }
+    callee.ret(value);
+    callee.verify();
+    callee
+}
+
+/// Calls `big` then `small` on the argument and sums both results.
+fn two_calls(big: &Function, small: &Function) -> Function {
+    let mut caller = Function::new("caller", 1, false);
+    let argument = caller.args[0];
+    let first = caller.call(&big.graph, &[argument], caller.int);
+    let second = caller.call(&small.graph, &[argument], caller.int);
+    let sum = caller.node(Opcode::Add, &[first, second], 0, caller.int);
+    caller.ret(sum);
+    caller.verify();
+    caller
+}
+
+fn remaining_calls(graph: &FunctionGraph) -> Vec<String> {
+    graph
+        .ids()
+        .filter(|&node| graph.op(node) == Opcode::Call)
+        .map(|node| graph.callees[graph.payload(node) as usize].symbol.clone())
+        .collect()
+}
+
+#[test]
+fn smallest_callee_is_inlined_first_and_large_callees_stay_calls() {
+    let big = chain("big", 60);
+    let small = chain("small", 3);
+    let provider = HashMap::from([
+        (big.graph.symbol.clone(), big.graph.clone()),
+        (small.graph.symbol.clone(), small.graph.clone()),
+    ]);
+    // One costed inline: the later, smaller call site wins it.
+    let mut caller = two_calls(&big, &small);
+    let budget = InlineBudget {
+        max_calls: 1,
+        free_nodes: 0,
+        ..InlineBudget::default()
+    };
+    let stats = inline_calls(&mut caller.graph, &provider, budget).unwrap();
+    assert_eq!(stats.calls_inlined, 1);
+    assert_eq!(remaining_calls(&caller.graph), ["big"]);
+
+    // Above the callee size limit the call stays; below it inlines.
+    let mut caller = two_calls(&big, &small);
+    let budget = InlineBudget {
+        max_callee_nodes: big.graph.ids().count() - 1,
+        ..InlineBudget::default()
+    };
+    let stats = inline_calls(&mut caller.graph, &provider, budget).unwrap();
+    assert_eq!(remaining_calls(&caller.graph), ["big"]);
+    assert!(stats.skipped.contains(&("big".into(), InlineSkip::Size)));
+}
+
+struct SoleCaller(HashMap<String, FunctionGraph>);
+impl kfrc_son::GraphProvider for SoleCaller {
+    fn graph(&self, symbol: &str) -> Option<&FunctionGraph> {
+        self.0.get(symbol)
+    }
+    fn sole_call_site(&self, symbol: &str) -> bool {
+        symbol == "big"
+    }
+}
+
+#[test]
+fn a_sole_call_site_inlines_regardless_of_callee_size() {
+    let big = chain("big", 60);
+    let small = chain("small", 3);
+    let provider = SoleCaller(HashMap::from([
+        (big.graph.symbol.clone(), big.graph.clone()),
+        (small.graph.symbol.clone(), small.graph.clone()),
+    ]));
+    let mut caller = two_calls(&big, &small);
+    let budget = InlineBudget {
+        max_callee_nodes: 1,
+        ..InlineBudget::default()
+    };
+    inline_calls(&mut caller.graph, &provider, budget).unwrap();
+    // `small` exceeds the limit and has other callers; `big` is local and sole.
+    assert_eq!(remaining_calls(&caller.graph), ["small"]);
 }

@@ -900,6 +900,88 @@ fn place_addresses_keep_unsized_owners_without_becoming_wide_rust_values() {
 }
 
 #[test]
+fn index_address_distinguishes_pointer_steps_from_immediate_place_elements() {
+    for case in 0..10 {
+        let mut f = Fixture::new();
+        let byte = f.graph.oracle.intern(
+            TypeShape::Int {
+                width: IntegerWidth::W8,
+                signed: false,
+            },
+            Some(SizeAlign { size: 1, align: 1 }),
+        );
+        let array = f.graph.oracle.intern(
+            TypeShape::Array {
+                element: byte,
+                length: 24,
+            },
+            Some(SizeAlign { size: 24, align: 1 }),
+        );
+        let outer = f.graph.oracle.intern(
+            TypeShape::Array {
+                element: array,
+                length: 2,
+            },
+            Some(SizeAlign { size: 48, align: 1 }),
+        );
+        let slice = f
+            .graph
+            .oracle
+            .intern(TypeShape::Slice { element: array }, None);
+        let string = f.graph.oracle.intern(TypeShape::Str, None);
+        let (source, result, stride) = match case {
+            0 => (outer, outer, Some(48)), // Advance by one entire nested array.
+            1 => (outer, array, Some(24)), // Select one immediate element.
+            2 => (array, array, Some(24)), // The iterator<[u8; 24]> case.
+            3 => (array, byte, Some(1)),
+            4 => (slice, array, Some(24)),
+            5 => (string, byte, Some(1)),
+            6 => (outer, byte, None), // Cannot skip a level of array nesting.
+            7 => (array, f.word, None), // Cannot choose an unrelated stride.
+            8 => (slice, slice, None), // Unsized elements have no stride.
+            _ => (string, string, None),
+        };
+        let source_address = f
+            .graph
+            .oracle
+            .intern(TypeShape::PlaceAddress { pointee: source }, None);
+        let result_address = f
+            .graph
+            .oracle
+            .intern(TypeShape::PlaceAddress { pointee: result }, None);
+        let raw = f.graph.add_constant(0x1000, f.pointer);
+        let base = f.node(Opcode::PointerCast, &[raw], 0, source_address);
+        // Computing a one-past address is valid; IndexAddr itself is not a
+        // bounds assertion or a load. Existing memory operations enforce bounds.
+        let index = f.graph.add_constant(2, f.word);
+        let address = f.node(Opcode::IndexAddr, &[base, index], 0, result_address);
+        let result = f.node(Opcode::PointerCast, &[address], 0, f.pointer);
+        f.ret(result);
+        if let Some(stride) = stride {
+            let expected = 0x1000 + 2 * stride;
+            assert_eq!(
+                f.run(),
+                Ok(SemanticOutcome::Return(Value::Scalar(expected)))
+            );
+            kfrc_son::lower_layout(&mut f.graph).unwrap();
+            verify_graph(&mut f.graph).unwrap();
+            assert_eq!(
+                Interpreter::new(&f.graph)
+                    .run(&[], &mut |_: &str, _: &[u64]| unreachable!())
+                    .unwrap(),
+                kfrc_son::Outcome::Return(expected),
+                "index relation case {case}",
+            );
+        } else {
+            assert!(
+                verify_graph(&mut f.graph).is_err(),
+                "index relation case {case}"
+            );
+        }
+    }
+}
+
+#[test]
 fn unsized_place_cannot_allocate_or_load_a_whole_value() {
     for allocation in [false, true] {
         let mut f = Fixture::new();

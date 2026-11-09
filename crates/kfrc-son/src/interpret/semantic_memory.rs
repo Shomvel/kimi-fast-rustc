@@ -361,6 +361,19 @@ impl SemanticMemory {
             });
         }
 
+        // Check the enclosing nominal type too: a NonZero newtype's field can
+        // be an unrestricted integer. Uninitialized lanes still become poison;
+        // a validity constraint must not turn them into an initialized value.
+        if let Some(validity) = types.scalar_validity(ty) {
+            for (offset, range) in validity.lanes() {
+                if let Value::Scalar(bits) = self.scalar(address + offset, u64::from(range.bits()).div_ceil(8))?
+                    && !range.contains(u128::from(bits))
+                {
+                    return Err(ub("scalar representation outside its type's valid range"));
+                }
+            }
+        }
+
         if semantic.is_enum(ty) {
             let layout = types
                 .enums

@@ -8,9 +8,11 @@
 
 pub mod body;
 pub mod oracle;
+pub mod scalar_range;
 pub mod types;
 pub mod verify;
 
 pub use body::*;
 pub use oracle::*;
+pub use scalar_range::*;
 pub use types::*;

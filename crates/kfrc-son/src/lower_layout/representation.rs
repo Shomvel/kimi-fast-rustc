@@ -84,8 +84,7 @@ impl LayoutLowering<'_> {
                     }
                 }
             };
-            let index_ty = self.usize_type();
-            let index = self.graph.add_constant(u128::from(active), index_ty);
+            let scalar = self.known_variant_scalar(ty, active)?;
             let fields = self
                 .fields(ty, Some(active))?
                 .into_iter()
@@ -95,7 +94,7 @@ impl LayoutLowering<'_> {
                 ty,
                 parts: Parts::KnownVariant {
                     variant: active,
-                    index,
+                    scalar,
                     fields,
                 },
             });

@@ -1,6 +1,7 @@
 //! Scalar operations on Rust values, shared by all graph construction.
 
 use super::*;
+use crate::ArithmeticFlags;
 
 impl Builder<'_> {
     pub(super) fn is_signed(&self, ty: TyId) -> bool {
@@ -20,6 +21,19 @@ impl Builder<'_> {
         match rvalue {
             Rvalue::Use(operand) => self.operand(operand, block, control),
             Rvalue::Opaque(operand) => self.opaque(operand, ty, block, control),
+            Rvalue::IntegerIntrinsic(intrinsic, operands) => {
+                let (opcode, payload) = crate::IntegerIntrinsicPayload::from_body(intrinsic);
+                if operands.len() != opcode.integer_intrinsic_arity().unwrap() {
+                    return self.unsupported("integer intrinsic operand arity");
+                }
+                let inputs = operands
+                    .iter()
+                    .map(|operand| self.operand(operand, block, control))
+                    .collect::<Result<Vec<_>, _>>()?;
+                Ok(self
+                    .graph
+                    .add_node(opcode, NodeId::NONE, &inputs, payload, ValueType::Rust(ty)))
+            }
             Rvalue::BinaryOp(op, lhs, rhs) => {
                 let signed = self.is_signed(self.operand_type(lhs));
                 let left = self.operand(lhs, block, control)?;
@@ -28,12 +42,12 @@ impl Builder<'_> {
                     BinaryOp::Add | BinaryOp::AddUnchecked => Opcode::Add,
                     BinaryOp::Sub | BinaryOp::SubUnchecked => Opcode::Sub,
                     BinaryOp::Mul | BinaryOp::MulUnchecked => Opcode::Mul,
-                    BinaryOp::Div if signed => Opcode::DivSigned,
-                    BinaryOp::Div => Opcode::DivUnsigned,
+                    BinaryOp::Div | BinaryOp::DivExact if signed => Opcode::DivSigned,
+                    BinaryOp::Div | BinaryOp::DivExact => Opcode::DivUnsigned,
                     BinaryOp::Rem if signed => Opcode::RemSigned,
                     BinaryOp::Rem => Opcode::RemUnsigned,
                     BinaryOp::BitAnd => Opcode::BitAnd,
-                    BinaryOp::BitOr => Opcode::BitOr,
+                    BinaryOp::BitOr | BinaryOp::BitOrDisjoint => Opcode::BitOr,
                     BinaryOp::BitXor => Opcode::BitXor,
                     BinaryOp::Shl | BinaryOp::ShlUnchecked => Opcode::ShiftLeft,
                     BinaryOp::Shr | BinaryOp::ShrUnchecked if signed => {
@@ -64,6 +78,21 @@ impl Builder<'_> {
                         return self.unsupported(format!("binary operator {op:?}"));
                     }
                 };
+                let flags = match op {
+                    BinaryOp::AddUnchecked | BinaryOp::SubUnchecked | BinaryOp::MulUnchecked => {
+                        if signed {
+                            ArithmeticFlags::NSW
+                        } else {
+                            ArithmeticFlags::NUW
+                        }
+                    }
+                    BinaryOp::ShlUnchecked | BinaryOp::ShrUnchecked => {
+                        ArithmeticFlags::AMOUNT_IN_RANGE
+                    }
+                    BinaryOp::DivExact => ArithmeticFlags::EXACT,
+                    BinaryOp::BitOrDisjoint => ArithmeticFlags::DISJOINT,
+                    _ => 0,
+                };
                 // Division may trap: fix it on the control skeleton.
                 let fixed_control = if opcode.is_fixed() {
                     *control
@@ -74,7 +103,7 @@ impl Builder<'_> {
                     opcode,
                     fixed_control,
                     &[left, right],
-                    0,
+                    flags,
                     ValueType::Rust(ty),
                 ))
             }

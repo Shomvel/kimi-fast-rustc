@@ -126,3 +126,73 @@ fn address_projection(graph: &FunctionGraph, node: NodeId) -> bool {
         && matches!(graph.value_type(node), ValueType::Rust(ty) | ValueType::LayoutValue(ty)
                 if matches!(graph.oracle.semantic().shape(*ty), TypeShape::Reference { .. } | TypeShape::RawPointer { .. } | TypeShape::PlaceAddress { .. })))
 }
+
+/// Whether `address` is based on a `Frozen` parameter (RS5.2 parameter root).
+///
+/// The query walks back through address arithmetic, retyping, the data
+/// pointer of a wide reference and value Phis whose every input qualifies.
+/// A pointer loaded from memory, returned by a call or converted from an
+/// integer is not based on the parameter, so `&&T` gives its inner pointer no
+/// permission. rustc-O marks such parameters `noalias readonly` (D1): no
+/// access during this execution writes memory reached through them.
+pub fn is_frozen_parameter_address(graph: &FunctionGraph, address: NodeId) -> bool {
+    if !graph.arg_permissions.iter().any(|permission| permission.is_frozen()) {
+        return false;
+    }
+    let mut on_stack = HashSet::new();
+    let mut budget = 32usize;
+    frozen_parameter_based(graph, address, &mut on_stack, &mut budget)
+}
+
+fn frozen_parameter_based(
+    graph: &FunctionGraph,
+    node: NodeId,
+    on_stack: &mut HashSet<NodeId>,
+    budget: &mut usize,
+) -> bool {
+    let mut node = graph.resolve(node);
+    loop {
+        if node.is_none() || *budget == 0 {
+            return false;
+        }
+        *budget -= 1;
+        match graph.op(node) {
+            Opcode::Projection if graph.resolve(graph.input(node, 0)) == graph.start => {
+                let payload = graph.payload(node) as usize;
+                return payload >= 2 && graph.arg_permission(payload - 2).is_frozen();
+            }
+            Opcode::PointerCast
+            | Opcode::FieldAddr
+            | Opcode::VariantFieldAddr
+            | Opcode::IndexAddr
+            | Opcode::WidePtr => node = graph.resolve(graph.input(node, 0)),
+            // The data pointer of a wide reference shares its provenance.
+            Opcode::Field
+                if graph.payload(node) == 0
+                    && matches!(
+                        graph.value_type(graph.resolve(graph.input(node, 0))),
+                        ValueType::Rust(ty) if matches!(
+                            graph.oracle.semantic().shape(*ty),
+                            TypeShape::Reference { .. }
+                        )
+                    ) =>
+            {
+                node = graph.resolve(graph.input(node, 0))
+            }
+            // A Phi on the current path stands for the values it merges: if
+            // every other input is parameter-based, so is every iteration.
+            Opcode::Phi if !matches!(graph.value_type(node), ValueType::Effect) => {
+                if !on_stack.insert(node) {
+                    return true;
+                }
+                let inputs: Vec<_> = graph.inputs(node)[1..].to_vec();
+                let based = inputs
+                    .into_iter()
+                    .all(|input| frozen_parameter_based(graph, input, on_stack, budget));
+                on_stack.remove(&node);
+                return based;
+            }
+            _ => return false,
+        }
+    }
+}

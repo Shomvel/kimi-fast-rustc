@@ -31,6 +31,11 @@ pub fn run(graph: &mut FunctionGraph) -> DivisionStats {
     for node in nodes {
         stats.nodes_visited += 1;
         let opcode = graph.op(node);
+        if crate::ArithmeticFlags::allowed(opcode).is_some() && graph.payload(node) != 0 {
+            // Keep exactness observable in S/L. The x86 selector consumes an
+            // EXACT constant divisor with shifts and a modular inverse.
+            continue;
+        }
         if !matches!(
             opcode,
             Opcode::DivSigned | Opcode::DivUnsigned | Opcode::RemSigned | Opcode::RemUnsigned
@@ -171,6 +176,13 @@ fn known_defined(
     }
     *visits += 1;
     memo[node.index()] = Some(false);
+    if crate::ArithmeticFlags::allowed(graph.op(node)).is_some() && graph.payload(node) != 0 {
+        // Defined operands do not prove that an unchecked contract holds.
+        return false;
+    }
+    if crate::IntegerIntrinsicPayload::may_produce_poison(graph.op(node), graph.payload(node)) {
+        return false;
+    }
     if graph
         .rust_type(node)
         .and_then(|ty| integer(graph, ty))
@@ -193,6 +205,12 @@ fn known_defined(
         | Opcode::BitNot
         | Opcode::Negate
         | Opcode::IntCast
+        | Opcode::BitCount
+        | Opcode::ByteSwap
+        | Opcode::BitReverse
+        | Opcode::FunnelShift
+        | Opcode::SaturatingAdd
+        | Opcode::SaturatingSub
             if graph.control(node).is_none() =>
         {
             graph

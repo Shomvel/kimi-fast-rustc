@@ -1180,6 +1180,7 @@ fn fat_pointer_cast_reads_data_lane_and_metadata_is_preserved() {
         align: 1,
         writable: false,
         thread_local: false,
+        unnamed_address: false,
         relocations: vec![],
     });
     let data = Operand::Constant(builder.add_constant(Constant {
@@ -1415,6 +1416,7 @@ fn slice_pattern_subslice_updates_data_address_and_length() {
         align: 1,
         writable: false,
         thread_local: false,
+        unnamed_address: false,
         relocations: vec![],
     });
     let pointer = Operand::Constant(builder.add_constant(Constant {
@@ -1775,6 +1777,7 @@ fn trait_object_vtable_relocation_loads_method_before_indirect_call() {
         align: 8,
         writable: false,
         thread_local: false,
+        unnamed_address: false,
         relocations: vec![DataRelocation {
             offset: 24,
             target: "debug_method".to_owned(),

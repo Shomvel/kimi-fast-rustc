@@ -71,6 +71,13 @@ for arm in ("llvm", "semantic-off", "semantic-on"):
             for i, stage in enumerate(("semantic_input", "semantic_after_passes", "layout_output"))
         }
     summary["arms"][arm] = row
+guard_log = (root / "permission-guard-library.stderr").read_text()
+assert json.loads((root / "permission-guard-library.result.json").read_text())["exit_code"] == 0
+totals = re.search(r"kfrc permission totals semantic_values: parameters=(\d+) frozen=(\d+) unique=(\d+) rustc_noalias=(\d+) guarded=(\d+)", guard_log)
+assert totals, "permission guard printed no totals"
+parameters, frozen, unique, noalias, guarded = map(int, totals.groups())
+assert frozen > 0 and unique > 0 and guarded == frozen + unique and noalias >= guarded, totals.group(0)
+summary["permission_guard"] = {"opt_level": 1, "parameters": parameters, "frozen": frozen, "unique": unique, "rustc_noalias": noalias, "guarded": guarded}
 for probe in ("union", "tls", "simd"):
     status = json.loads((root / f"reject-{probe}.result.json").read_text())["exit_code"]
     diagnostic = (root / f"reject-{probe}.stderr").read_text()
@@ -78,4 +85,4 @@ for probe in ("union", "tls", "simd"):
     assert not list((root / f"reject-{probe}").glob("*.rlib"))
     summary["negative_probes"][probe] = {"exit_code": status, "rlib_emitted": False}
 (root / "summary.json").write_text(json.dumps(summary, indent=2) + "\n")
-print(f"PASS: three arms, {len(reference.splitlines())} lines each, cross-backend Pair/Indirect calls, explicit S->L, borrow/index/enum/niche behavior, three scope rejections")
+print(f"PASS: three arms, {len(reference.splitlines())} lines each, cross-backend Pair/Indirect calls, explicit S->L, borrow/index/enum/niche behavior, three scope rejections, O1 permission guard {guarded}/{noalias} noalias")

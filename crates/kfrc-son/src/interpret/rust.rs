@@ -454,6 +454,7 @@ impl Runner<'_, '_, '_> {
                 _ => return Err(malformed("variant query requires enum")),
             },
             op if op.is_binary_arithmetic()
+                || op.integer_intrinsic_arity().is_some()
                 || matches!(
                     op,
                     Opcode::Negate

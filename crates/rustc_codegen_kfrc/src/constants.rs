@@ -165,6 +165,7 @@ impl<'tcx> ConstantCx<'tcx> {
                 binding,
                 self.tcx.is_mutable_static(def_id),
                 self.tcx.is_thread_local_static(def_id),
+                false,
                 builder,
             )?;
         }
@@ -189,6 +190,7 @@ impl<'tcx> ConstantCx<'tcx> {
                 DataBinding::Local,
                 false,
                 false,
+                true,
                 builder,
             )?;
         }
@@ -202,6 +204,7 @@ impl<'tcx> ConstantCx<'tcx> {
         binding: DataBinding,
         mutable_static: bool,
         thread_local: bool,
+        unnamed_address: bool,
         builder: &mut BodyBuilder,
     ) -> Result<(), String> {
         let allocation = allocation.inner();
@@ -259,6 +262,7 @@ impl<'tcx> ConstantCx<'tcx> {
             align: allocation.align.bytes(),
             writable,
             thread_local,
+            unnamed_address,
             relocations,
         });
         Ok(())

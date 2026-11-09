@@ -104,6 +104,9 @@ pub enum Opcode {
     /// Logical enum field address; payload indexes `variant_fields`.
     VariantFieldAddr,
     /// Pointer indexing: inputs base,index; stride is the result pointee type.
+    /// A pointer step preserves the sized source pointee (including arrays);
+    /// an array/slice/str place projection selects its immediate element type.
+    /// Bounds are checked by source control and memory accesses, not this node.
     IndexAddr,
     /// Pointer retyping without changing its allocation identity or offset.
     PointerCast,
@@ -154,6 +157,8 @@ pub enum Opcode {
     BitOr,
     BitXor,
     /// Shift amount taken modulo the bit width of the shifted value.
+    /// Ordinary shifts mask their amount; AMOUNT_IN_RANGE instead makes an
+    /// out-of-range amount poison. Arithmetic contracts live in payload.
     ShiftLeft,
     ShiftRightArithmetic,
     ShiftRightLogical,
@@ -177,6 +182,14 @@ pub enum Opcode {
     Store,
     /// Whether multiplying the two typed operands overflows their type.
     MulOverflow,
+    /// Count bits; kind in low two payload bits, ZERO_POISON in bit 2. Result u32.
+    BitCount,
+    ByteSwap,
+    BitReverse,
+    /// hi,lo,amount; direction in bit 0, AMOUNT_IN_RANGE in bit 1.
+    FunnelShift,
+    SaturatingAdd,
+    SaturatingSub,
 }
 
 impl Opcode {
@@ -335,6 +348,12 @@ impl Opcode {
             Self::Load => "Load",
             Self::Store => "Store",
             Self::MulOverflow => "MulOverflow",
+            Self::BitCount => "BitCount",
+            Self::ByteSwap => "ByteSwap",
+            Self::BitReverse => "BitReverse",
+            Self::FunnelShift => "FunnelShift",
+            Self::SaturatingAdd => "SaturatingAdd",
+            Self::SaturatingSub => "SaturatingSub",
         }
     }
 }
@@ -449,6 +468,40 @@ pub enum GraphState {
     Verified,
 }
 
+/// Rust borrow permission of one direct parameter (RS5.1, RF20/RF21).
+///
+/// The scope is one execution of the instance body that owns it (the
+/// parameter protector). The producer follows the rustc-O contract (D1): the
+/// permission is implied by the `noalias`/`readonly`/`dereferenceable`
+/// attributes rustc 1.94.1 emits for the same instance when optimizing.
+/// `dereferenceable` is the pointee size for sized pointees and `None` for
+/// unsized pointees. Layout lowering erases every permission.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
+pub enum ArgPermission {
+    #[default]
+    None,
+    /// `&T` with `T: Freeze`: nobody writes the pointee during the call.
+    Frozen { dereferenceable: Option<u64> },
+    /// `&mut T` with `T: Unpin` under `-Zmutable-noalias`: accesses through
+    /// other pointers do not alias the pointee during the call.
+    Unique { dereferenceable: Option<u64> },
+}
+
+impl ArgPermission {
+    pub fn is_frozen(self) -> bool {
+        matches!(self, Self::Frozen { .. })
+    }
+
+    fn text(self) -> String {
+        let bytes = |size: Option<u64>| size.map_or("unsized".to_owned(), |size| size.to_string());
+        match self {
+            Self::None => "None".to_owned(),
+            Self::Frozen { dereferenceable } => format!("Frozen({})", bytes(dereferenceable)),
+            Self::Unique { dereferenceable } => format!("Unique({})", bytes(dereferenceable)),
+        }
+    }
+}
+
 /// A direct call target: a function instance by linker symbol.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct CallTarget {
@@ -497,6 +550,14 @@ pub struct FunctionGraph {
     value_types: Vec<ValueType>,
     pub constants: Vec<u128>,
     pub callees: Vec<CallTarget>,
+    /// Permissions of S parameters in `Start` order. Empty means all `None`;
+    /// R graphs and Layout graphs keep it empty. Kept apart from `abi` so
+    /// function-pointer ABI equality is unchanged.
+    pub arg_permissions: Vec<ArgPermission>,
+    /// Parameter permissions of direct call targets, by callee symbol and call
+    /// argument index. A symbol names one instance, so this table survives
+    /// callee interning, splicing and lowering-added callees unchanged.
+    pub callee_permissions: std::collections::BTreeMap<String, Vec<ArgPermission>>,
     pub call_abis: Vec<kfrc_body::FunctionAbi>,
     pub stack_slots: Vec<kfrc_body::SizeAlign>,
     /// L-level physical slot index -> source LocalSlot identity. ABI temporary
@@ -537,6 +598,8 @@ impl FunctionGraph {
             value_types: Vec::new(),
             constants: Vec::new(),
             callees: Vec::new(),
+            arg_permissions: Vec::new(),
+            callee_permissions: std::collections::BTreeMap::new(),
             call_abis: Vec::new(),
             stack_slots: Vec::new(),
             stack_slot_locals: std::collections::HashMap::new(),
@@ -830,6 +893,25 @@ impl FunctionGraph {
         node
     }
 
+    /// Permission of S parameter `parameter` (0-based, `Start` projection 2+).
+    pub fn arg_permission(&self, parameter: usize) -> ArgPermission {
+        self.arg_permissions
+            .get(parameter)
+            .copied()
+            .unwrap_or_default()
+    }
+
+    /// Permission of argument `argument` (0-based, after the effect input) of
+    /// a direct call through callee table entry `callee`.
+    pub fn callee_permission(&self, callee: u32, argument: usize) -> ArgPermission {
+        self.callees
+            .get(callee as usize)
+            .and_then(|target| self.callee_permissions.get(&target.symbol))
+            .and_then(|permissions| permissions.get(argument))
+            .copied()
+            .unwrap_or_default()
+    }
+
     pub fn add_callee(&mut self, target: CallTarget) -> u32 {
         if let Some(index) = self.callees.iter().position(|existing| *existing == target) {
             return index as u32;
@@ -1004,10 +1086,26 @@ impl FunctionGraph {
             "graph {} ({:?}, {:?}) {{",
             self.symbol, self.level, self.state
         );
+        if self
+            .arg_permissions
+            .iter()
+            .any(|permission| *permission != ArgPermission::None)
+        {
+            let permissions: Vec<String> = self
+                .arg_permissions
+                .iter()
+                .enumerate()
+                .map(|(parameter, permission)| format!("p{parameter}:{}", permission.text()))
+                .collect();
+            let _ = writeln!(out, "  permissions {}", permissions.join(" "));
+        }
         for node in self.ids() {
             let op = self.op(node);
             let mut head = op.name().to_owned();
             match op {
+                Opcode::BitCount | Opcode::FunnelShift => {
+                    head = format!("{}[{}]", op.name(), self.payload(node))
+                }
                 Opcode::Projection => head = format!("Projection[{}]", self.payload(node)),
                 Opcode::Field
                 | Opcode::InsertField

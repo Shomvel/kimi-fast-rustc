@@ -1,34 +1,31 @@
 use kfrc_x86::machine::x86::{MachineFunction, MachineInstr, Reg};
 
 fn function(value: i64) -> MachineFunction {
+    function_into(Reg::Rcx, value)
+}
+
+fn function_into(dst: Reg, value: i64) -> MachineFunction {
     let mut function = MachineFunction::new("immediate");
-    function.instructions = vec![
-        MachineInstr::MovImm {
-            dst: Reg::Rcx,
-            value,
-        },
-        MachineInstr::Ret,
-    ];
+    function.instructions = vec![MachineInstr::MovImm { dst, value }, MachineInstr::Ret];
     function
 }
 
 #[test]
-fn small_constants_use_sign_extended_imm32() {
+fn unsigned_32_bit_constants_use_zero_extending_mov() {
     let code = function(42).emit_machine_code().unwrap();
-    assert_eq!(
-        code,
-        [
-            0x55, 0x48, 0x89, 0xe5, 0x48, 0xc7, 0xc1, 0x2a, 0x00, 0x00, 0x00, 0xc9, 0xc3,
-        ]
-    );
+    assert_eq!(code, [0xb9, 0x2a, 0x00, 0x00, 0x00, 0xc3]);
 
+    let max = function(i64::from(u32::MAX)).emit_machine_code().unwrap();
+    assert_eq!(max, [0xb9, 0xff, 0xff, 0xff, 0xff, 0xc3]);
+
+    let extended = function_into(Reg::R9, 0).emit_machine_code().unwrap();
+    assert_eq!(extended, [0x41, 0xb9, 0x00, 0x00, 0x00, 0x00, 0xc3]);
+}
+
+#[test]
+fn negative_small_constants_use_sign_extended_imm32() {
     let negative = function(-2).emit_machine_code().unwrap();
-    assert_eq!(
-        negative,
-        [
-            0x55, 0x48, 0x89, 0xe5, 0x48, 0xc7, 0xc1, 0xfe, 0xff, 0xff, 0xff, 0xc9, 0xc3,
-        ]
-    );
+    assert_eq!(negative, [0x48, 0xc7, 0xc1, 0xfe, 0xff, 0xff, 0xff, 0xc3,]);
 }
 
 #[test]
@@ -37,8 +34,7 @@ fn large_constants_keep_movabs_and_assembly_matches_the_encoding() {
     assert_eq!(
         code,
         [
-            0x55, 0x48, 0x89, 0xe5, 0x48, 0xb9, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x7f,
-            0xc9, 0xc3,
+            0x48, 0xb9, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x7f, 0xc3,
         ]
     );
 

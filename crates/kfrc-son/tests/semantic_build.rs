@@ -636,7 +636,7 @@ fn malformed_pointer_cast_from_integer_is_rejected_at_build_boundary() {
 
 #[test]
 fn pointer_offset_preserves_element_semantics_for_negative_wrapping_and_zst() {
-    for size in [0, 8] {
+    for size in [0, 8, 24, 48] {
         let (mut types, word, _, _) = types();
         types.intern(
             TypeShape::Int {
@@ -645,10 +645,36 @@ fn pointer_offset_preserves_element_semantics_for_negative_wrapping_and_zst() {
             },
             Some(SizeAlign { size: 8, align: 8 }),
         );
-        let element = if size == 0 {
-            types.intern(TypeShape::Unit, Some(SizeAlign { size: 0, align: 1 }))
-        } else {
-            word
+        let element = match size {
+            0 => types.intern(TypeShape::Unit, Some(SizeAlign { size: 0, align: 1 })),
+            8 => word,
+            _ => {
+                let byte = types.intern(
+                    TypeShape::Int {
+                        width: IntegerWidth::W8,
+                        signed: false,
+                    },
+                    Some(SizeAlign { size: 1, align: 1 }),
+                );
+                let array = types.intern(
+                    TypeShape::Array {
+                        element: byte,
+                        length: 24,
+                    },
+                    Some(SizeAlign { size: 24, align: 1 }),
+                );
+                if size == 24 {
+                    array
+                } else {
+                    types.intern(
+                        TypeShape::Array {
+                            element: array,
+                            length: 2,
+                        },
+                        Some(SizeAlign { size: 48, align: 1 }),
+                    )
+                }
+            }
         };
         let offset = types.intern(
             TypeShape::Int {
@@ -682,16 +708,27 @@ fn pointer_offset_preserves_element_semantics_for_negative_wrapping_and_zst() {
         b.finish_block(Terminator::Return, false);
         let graph = graph(&b.finish());
         assert!(graph.ids().any(|node| graph.op(node) == Opcode::IndexAddr));
-        for (address, index) in [(0x1000u64, -2i64), (u64::MAX - 3, 1), (0, -1)] {
+        let mut layout = graph.clone();
+        kfrc_son::lower_layout(&mut layout).unwrap();
+        verify_graph(&mut layout).unwrap();
+        for (address, index) in [(0x1000u64, -2i64), (0x1000, 2), (u64::MAX - 3, 1), (0, -1)] {
+            let expected = address.wrapping_add((index as u64).wrapping_mul(size));
             assert_eq!(
                 run(
                     &graph,
                     &[Value::Scalar(address), Value::Scalar(index as u64)]
                 )
                 .unwrap(),
-                SemanticOutcome::Return(Value::Scalar(
-                    address.wrapping_add((index as u64).wrapping_mul(size))
-                ))
+                SemanticOutcome::Return(Value::Scalar(expected))
+            );
+            assert_eq!(
+                Interpreter::new(&layout)
+                    .run(
+                        &[address, index as u64],
+                        &mut |_: &str, _: &[u64]| unreachable!()
+                    )
+                    .unwrap(),
+                kfrc_son::Outcome::Return(expected)
             );
         }
     }

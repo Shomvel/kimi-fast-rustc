@@ -6,7 +6,7 @@ fn encode_immediate(reg: Reg, value: i64) -> Vec<u8> {
     let mut function = MachineFunction::new("immediate");
     function.instructions = vec![MachineInstr::MovImm { dst: reg, value }, MachineInstr::Ret];
     let code = function.emit_machine_code().unwrap();
-    code[4..code.len() - 2].to_vec()
+    code[..code.len() - 1].to_vec()
 }
 
 fn register_encoding(reg: Reg) -> (Option<u8>, u8, u8, u8) {
@@ -23,6 +23,7 @@ fn unsigned_imm32_uses_b8_with_zero_extension_and_rex_b() {
     for reg in REGISTERS {
         let (rex32, _, opcode, _) = register_encoding(reg);
         for (value, immediate) in [
+            (0x7fff_ffff, [0xff, 0xff, 0xff, 0x7f]),
             (0x8000_0000, [0x00, 0x00, 0x00, 0x80]),
             (0xffff_ffff, [0xff, 0xff, 0xff, 0xff]),
         ] {
@@ -41,11 +42,11 @@ fn unsigned_imm32_uses_b8_with_zero_extension_and_rex_b() {
 }
 
 #[test]
-fn signed_imm32_and_imm64_boundaries_keep_their_encodings() {
+fn negative_imm32_and_imm64_boundaries_keep_their_encodings() {
     for reg in REGISTERS {
         let (_, rex64, opcode, modrm) = register_encoding(reg);
         for (value, expected_immediate) in [
-            (0x7fff_ffff, &[0xff, 0xff, 0xff, 0x7f][..]),
+            (-0x8000_0000, &[0x00, 0x00, 0x00, 0x80][..]),
             (-1, &[0xff, 0xff, 0xff, 0xff][..]),
         ] {
             let mut expected = vec![rex64, 0xc7, modrm];
@@ -68,7 +69,15 @@ mod direct_execution {
     use super::*;
     use kfrc_x86::{FunctionCode, SymbolBinding, write_object};
 
-    const VALUES: [i64; 5] = [0x7fff_ffff, 0x8000_0000, 0xffff_ffff, 0x1_0000_0000, -1];
+    const VALUES: [i64; 7] = [
+        0,
+        0x7fff_ffff,
+        0x8000_0000,
+        0xffff_ffff,
+        0x1_0000_0000,
+        -1,
+        -0x8000_0000,
+    ];
     use std::env;
     use std::fs;
     use std::path::PathBuf;

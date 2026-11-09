@@ -79,6 +79,12 @@ impl<'tcx> Converter<'tcx> {
         // Intern before traversing fields: recursive ADTs can point back to
         // this type through a reference or a Box.
         self.types.insert(ty, id);
+        if scalar_validity_identity_preserved(ty)
+            && !matches!(ty.kind(), ty::Adt(def, _) if def.is_union())
+            && let Some(validity) = rust_layout.and_then(|layout| scalar_validity(self.tcx, layout.backend_repr))
+        {
+            self.builder.types().record_scalar_validity(id, validity);
+        }
         if let ty::Adt(def, _) = ty.kind()
             && self.tcx.lang_items().ordering_enum() == Some(def.did())
         {
@@ -275,6 +281,48 @@ fn integer_width(bits: Option<u64>) -> IntegerWidth {
         Some(64) => IntegerWidth::W64,
         Some(128) => IntegerWidth::W128,
         _ => IntegerWidth::Pointer,
+    }
+}
+
+/// FnPtr currently uses the same structural TyId as nullable `*const ()`.
+/// Its nonnull validity cannot be attached to that erased identity, including
+/// when a tuple/array exposes the same erasure in its own scalar lanes.
+/// Nominal ADTs/closures/opaque types keep the complete native-type fingerprint.
+/// Pointer/reference validity describes the pointer itself, not its pointee.
+pub(super) fn scalar_validity_identity_preserved(ty: Ty<'_>) -> bool {
+    match ty.kind() {
+        ty::FnPtr(..) => false,
+        ty::Tuple(fields) => fields.iter().all(scalar_validity_identity_preserved),
+        ty::Array(element, _) => scalar_validity_identity_preserved(*element),
+        _ => true,
+    }
+}
+
+/// Keep lane constraints on the nominal type, never on its primitive ABI TyId.
+pub(super) fn scalar_validity(
+    tcx: ty::TyCtxt<'_>,
+    repr: rustc_abi::BackendRepr,
+) -> Option<kfrc_body::ScalarValidity> {
+    use kfrc_body::{ScalarValidRange, ScalarValidity};
+    use rustc_abi::{BackendRepr, Scalar};
+    let restricted = |scalar: Scalar| {
+        let Scalar::Initialized { valid_range, .. } = scalar else { return None };
+        let bits = u8::try_from(scalar.size(&tcx).bits()).ok()?;
+        let range = ScalarValidRange::new(bits, valid_range.start, valid_range.end)?;
+        (!range.is_full()).then_some(range)
+    };
+    match repr {
+        BackendRepr::Scalar(scalar) => restricted(scalar).map(ScalarValidity::Scalar),
+        BackendRepr::ScalarPair(first, second) => {
+            let first_range = restricted(first);
+            let second_range = restricted(second);
+            (first_range.is_some() || second_range.is_some()).then_some(ScalarValidity::Pair {
+                first: first_range,
+                second: second_range,
+                second_offset: first.size(&tcx).align_to(second.align(&tcx).abi).bytes(),
+            })
+        }
+        _ => None,
     }
 }
 

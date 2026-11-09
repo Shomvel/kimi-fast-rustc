@@ -14,10 +14,16 @@ pub use identity::{IdentityFoldStats, fold_identity_calls};
 use crate::{FunctionGraph, GraphLevel, NodeId, Opcode, VerifyError, verify_graph};
 use plan::plan;
 use splice::splice;
-use std::collections::{BTreeMap, HashMap, HashSet, VecDeque};
+use std::cmp::Reverse;
+use std::collections::{BTreeMap, BinaryHeap, HashMap, HashSet};
 
 pub trait GraphProvider {
     fn graph(&self, symbol: &str) -> Option<&FunctionGraph>;
+    /// The callee is local to the output and this is its only reference, so
+    /// inlining it removes the out-of-line body (LLVM's last-call-to-static).
+    fn sole_call_site(&self, _symbol: &str) -> bool {
+        false
+    }
 }
 impl GraphProvider for BTreeMap<String, FunctionGraph> {
     fn graph(&self, symbol: &str) -> Option<&FunctionGraph> {
@@ -30,11 +36,21 @@ impl GraphProvider for HashMap<String, FunctionGraph> {
     }
 }
 
+/// Call sites are visited smallest callee first (LLVM's `SizePriority`).
+/// Callees of at most `free_nodes` replace little more than the call sequence
+/// and do not count against `max_calls`; callees above `max_callee_nodes`
+/// stay calls unless this is their sole call site.
 #[derive(Clone, Copy, Debug)]
 pub struct InlineBudget {
     pub max_depth: usize,
     pub max_nodes: usize,
     pub max_calls: usize,
+    pub free_nodes: usize,
+    pub max_callee_nodes: usize,
+    /// Copy read-only anonymous constants (`unnamed_address`) into the caller.
+    /// Off by default: the node-count cost model has no cold-path signal, and
+    /// semver measured +11 KB text and a slower hot loop with it on.
+    pub copy_anonymous_constants: bool,
 }
 impl Default for InlineBudget {
     fn default() -> Self {
@@ -42,6 +58,9 @@ impl Default for InlineBudget {
             max_depth: 4,
             max_nodes: 2000,
             max_calls: 32,
+            free_nodes: 24,
+            max_callee_nodes: 64,
+            copy_anonymous_constants: false,
         }
     }
 }
@@ -50,6 +69,8 @@ pub enum InlineSkip {
     Missing,
     Recursive,
     Budget,
+    /// Larger than `max_callee_nodes` and called from elsewhere too.
+    Size,
     Unsupported,
     TypeConflict,
     AbiMismatch,
@@ -97,19 +118,33 @@ pub fn inline_calls(
     let mut source_checks = HashMap::new();
     let mut recursion = HashMap::new();
     let mut callees = HashMap::new();
-    let mut pending: VecDeque<_> = original
-        .ids()
-        .filter(|&n| original.op(n) == Opcode::Call)
-        .map(|n| (n, 0usize))
-        .collect();
-    while let Some((call, depth)) = pending.pop_front() {
+    let size_of = |graph: &FunctionGraph, call: NodeId| {
+        let symbol = &graph.callees[graph.payload(call) as usize].symbol;
+        provider.graph(symbol).map_or(0, |source| source.ids().count())
+    };
+    let mut sequence = 0usize;
+    let mut pending: BinaryHeap<Reverse<(usize, usize, NodeId, usize)>> = BinaryHeap::new();
+    for call in original.ids().filter(|&n| original.op(n) == Opcode::Call) {
+        pending.push(Reverse((size_of(original, call), sequence, call, 0)));
+        sequence += 1;
+    }
+    let mut costed_calls = 0usize;
+    while let Some(Reverse((size, _, call, depth))) = pending.pop() {
         let caller = candidate.as_ref().unwrap_or(&*original);
         if caller.is_dead(call) {
             continue;
         }
         let target = caller.callees[caller.payload(call) as usize].clone();
-        if depth >= budget.max_depth || stats.calls_inlined >= budget.max_calls {
+        let free = size <= budget.free_nodes;
+        if depth >= budget.max_depth || (!free && costed_calls >= budget.max_calls) {
             stats.skipped.push((target.symbol, InlineSkip::Budget));
+            continue;
+        }
+        // A nested call site is a copy of the callee's own call, so only the
+        // caller's original call sites can be the sole one.
+        if size > budget.max_callee_nodes && !(depth == 0 && provider.sole_call_site(&target.symbol))
+        {
+            stats.skipped.push((target.symbol, InlineSkip::Size));
             continue;
         }
         let Some(source) = provider.graph(&target.symbol) else {
@@ -157,6 +192,7 @@ pub fn inline_calls(
             call,
             source,
             budget.max_nodes.saturating_sub(stats.nodes_added),
+            budget.copy_anonymous_constants,
         ) {
             Ok(plan) => plan,
             Err(reason) => {
@@ -168,11 +204,15 @@ pub fn inline_calls(
         let caller = candidate.get_or_insert_with(|| original.clone());
         let spliced = splice(caller, call, source, plan);
         stats.calls_inlined += 1;
+        costed_calls += usize::from(!free);
         stats.nodes_added += caller.len() - before;
         stats.cloned_nodes += spliced.cloned_nodes;
         stats.dirty_nodes.extend(spliced.dirty);
         stats.argument_slots.extend(spliced.argument_slots);
-        pending.extend(spliced.nested.into_iter().map(|node| (node, depth + 1)));
+        for node in spliced.nested {
+            pending.push(Reverse((size_of(caller, node), sequence, node, depth + 1)));
+            sequence += 1;
+        }
     }
     let Some(mut candidate) = candidate else {
         return Ok(stats);
@@ -278,6 +318,12 @@ fn eligible(source: &FunctionGraph) -> bool {
                     | Opcode::Compare
                     | Opcode::IntCast
                     | Opcode::MulOverflow
+                    | Opcode::BitCount
+                    | Opcode::ByteSwap
+                    | Opcode::BitReverse
+                    | Opcode::FunnelShift
+                    | Opcode::SaturatingAdd
+                    | Opcode::SaturatingSub
                     | Opcode::SymbolAddress
                     | Opcode::PointerCast
                     | Opcode::LocalSlot

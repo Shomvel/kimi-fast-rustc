@@ -1,6 +1,8 @@
 //! x86_64 machine-code emission for the native instruction IR.
 
-use crate::machine::x86::{Condition, MachineFunction, MachineInstr, Operand, Reg, StackSlot, Xmm};
+use crate::machine::x86::{
+    BitWidth, Condition, MachineFunction, MachineInstr, Operand, Reg, StackSlot, Xmm,
+};
 use std::collections::BTreeMap;
 use std::error::Error;
 use std::fmt;
@@ -27,6 +29,7 @@ pub enum AddressRelocationKind {
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum EncodeError {
+    InvalidBitScanFallback,
     InvalidVectorRegister(u8),
     ReservedRegister(Reg),
     ExpectedCalleeSaved(Reg),
@@ -50,6 +53,9 @@ pub enum EncodeError {
 impl fmt::Display for EncodeError {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            Self::InvalidBitScanFallback => {
+                formatter.write_str("bit scan fallback aliases destination")
+            }
             Self::InvalidVectorRegister(reg) => write!(formatter, "invalid XMM register {reg}"),
             Self::ReservedRegister(reg) => {
                 write!(formatter, "{reg} is reserved for frame management")
@@ -155,6 +161,7 @@ pub fn encode_with_all_relocations(
     let mut encoder = Encoder {
         bytes: Vec::new(),
         stack_slots: function.stack_slots,
+        needs_frame: function.needs_frame(),
         callee_saved: &function.callee_saved,
         symbols: &function.symbols,
         calls: Vec::new(),
@@ -239,8 +246,22 @@ fn validate_instruction(
         | ShlImm { dst, .. }
         | ShrImm { dst, .. }
         | LShrImm { dst, .. }
+        | Rotate { dst, .. }
+        | ByteSwap { dst, .. }
         | SetCc { dst, .. } => validate_reg(dst)?,
-        Mov { dst, src } => {
+        Extend { dst, src, .. } => {
+            validate_reg(dst)?;
+            validate_reg(src)?;
+        }
+        BitScanZero { dst, src, zero, .. } => {
+            validate_reg(dst)?;
+            validate_reg(src)?;
+            validate_reg(zero)?;
+            if dst == zero {
+                return Err(EncodeError::InvalidBitScanFallback);
+            }
+        }
+        Mov { dst, src } | OffsetAddress { dst, base: src, .. } => {
             validate_reg(dst)?;
             validate_reg(src)?;
         }
@@ -267,7 +288,7 @@ fn validate_instruction(
             validate_reg(lhs)?;
             validate_operand(rhs, stack_slots)?;
         }
-        Test { reg } => validate_reg(reg)?,
+        Test { reg } | TestByte { reg } => validate_reg(reg)?,
         Load { dst, slot } => {
             validate_reg(dst)?;
             validate_slot(slot, stack_slots)?;
@@ -293,6 +314,7 @@ fn validate_instruction(
             dst,
             address,
             bytes,
+            ..
         } => {
             validate_reg(dst)?;
             validate_reg(address)?;
@@ -304,9 +326,16 @@ fn validate_instruction(
             address,
             src,
             bytes,
+            ..
         } => {
             validate_reg(address)?;
             validate_reg(src)?;
+            if !matches!(bytes, 1 | 2 | 4 | 8) {
+                return Err(EncodeError::FrameSizeOverflow);
+            }
+        }
+        StoreImmediate { address, bytes, .. } => {
+            validate_reg(address)?;
             if !matches!(bytes, 1 | 2 | 4 | 8) {
                 return Err(EncodeError::FrameSizeOverflow);
             }
@@ -389,6 +418,9 @@ fn incoming_arg_offset(index: usize) -> Result<i32, EncodeError> {
         .ok_or(EncodeError::ArgumentOffsetOverflow { index })
 }
 
+/// Encoder-private label of the shared epilogue; lowering numbers labels from zero.
+const EPILOGUE_LABEL: u32 = u32::MAX;
+
 struct JumpFixup {
     offset: usize,
     target: u32,
@@ -398,6 +430,7 @@ struct JumpFixup {
 struct Encoder<'a> {
     bytes: Vec<u8>,
     stack_slots: u32,
+    needs_frame: bool,
     callee_saved: &'a [Reg],
     symbols: &'a [String],
     calls: Vec<CallRelocation>,
@@ -408,22 +441,42 @@ struct Encoder<'a> {
 
 impl Encoder<'_> {
     fn prologue(&mut self, frame_size: u32) -> Result<(), EncodeError> {
+        if !self.needs_frame {
+            return Ok(());
+        }
         self.bytes.extend_from_slice(&[0x55, 0x48, 0x89, 0xe5]);
-        if frame_size != 0 {
-            self.bytes.extend_from_slice(&[0x48]);
-            if i8::try_from(frame_size as i32).is_ok() {
-                self.bytes
-                    .extend_from_slice(&[0x83, 0xec, frame_size as u8]);
-            } else {
-                self.bytes.extend_from_slice(&[0x81, 0xec]);
-                self.i32(frame_size as i32);
-            }
+        // Pushing after the local area stores register `index` exactly at
+        // `saved_offset(stack_slots, index)`; the rest of the frame follows.
+        let locals = self.stack_slots * 8;
+        let saved = u32::try_from(self.callee_saved.len() * 8)
+            .map_err(|_| EncodeError::FrameSizeOverflow)?;
+        let rest = frame_size
+            .checked_sub(locals + saved)
+            .ok_or(EncodeError::FrameSizeOverflow)?;
+        if self.callee_saved.is_empty() {
+            self.adjust_rsp(frame_size);
+            return Ok(());
         }
-        for (index, reg) in self.callee_saved.iter().copied().enumerate() {
-            let offset = saved_offset(self.stack_slots, index)?;
-            self.memory_reg(0x89, reg, offset);
+        self.adjust_rsp(locals);
+        for reg in self.callee_saved.iter().copied() {
+            self.rex(false, None, Some(reg), false);
+            self.bytes.push(0x50 + reg.low_code());
         }
+        self.adjust_rsp(rest);
         Ok(())
+    }
+
+    fn adjust_rsp(&mut self, bytes: u32) {
+        if bytes == 0 {
+            return;
+        }
+        self.bytes.push(0x48);
+        if let Ok(short) = i8::try_from(bytes as i32) {
+            self.bytes.extend_from_slice(&[0x83, 0xec, short as u8]);
+        } else {
+            self.bytes.extend_from_slice(&[0x81, 0xec]);
+            self.i32(bytes as i32);
+        }
     }
 
     fn instruction(&mut self, instruction: MachineInstr) -> Result<(), EncodeError> {
@@ -438,14 +491,16 @@ impl Encoder<'_> {
                 }
             }
             MovImm { dst, value } => {
-                if i32::try_from(value).is_ok() {
+                // A 32-bit move zero-extends, so it covers every value in
+                // 0..=u32::MAX; only negative imm32 values need REX.W C7.
+                if u32::try_from(value).is_ok() {
+                    self.rex(false, None, Some(dst), false);
+                    self.bytes.push(0xb8 + dst.low_code());
+                    self.i32(value as i32);
+                } else if i32::try_from(value).is_ok() {
                     self.rex(true, None, Some(dst), false);
                     self.bytes.push(0xc7);
                     self.modrm(3, Reg::Rax, dst.low_code());
-                    self.i32(value as i32);
-                } else if u32::try_from(value).is_ok() {
-                    self.rex(false, None, Some(dst), false);
-                    self.bytes.push(0xb8 + dst.low_code());
                     self.i32(value as i32);
                 } else {
                     self.rex(true, None, Some(dst), false);
@@ -468,7 +523,88 @@ impl Encoder<'_> {
             Sub { dst, src } => self.binary(0x29, 0x2b, dst, src)?,
             And { dst, src } => self.binary(0x21, 0x23, dst, src)?,
             Or { dst, src } => self.binary(0x09, 0x0b, dst, src)?,
+            // The 32-bit zero idiom clears the whole register and needs no REX.W.
+            Xor {
+                dst,
+                src: Operand::Reg(src),
+            } if src == dst => {
+                self.rex(false, Some(dst), Some(dst), false);
+                self.bytes.push(0x31);
+                self.modrm(3, dst, dst.low_code());
+            }
             Xor { dst, src } => self.binary(0x31, 0x33, dst, src)?,
+            Rotate {
+                dst,
+                width,
+                right,
+                count,
+            } => {
+                let bits = width.bits();
+                if bits == 16 {
+                    self.bytes.push(0x66);
+                }
+                self.rex(bits == 64, None, Some(dst), bits == 8 && dst.code() >= 4);
+                self.bytes.push(match (bits == 8, count) {
+                    (true, Some(_)) => 0xc0,
+                    (false, Some(_)) => 0xc1,
+                    (true, None) => 0xd2,
+                    (false, None) => 0xd3,
+                });
+                self.modrm(3, if right { Reg::Rcx } else { Reg::Rax }, dst.low_code());
+                if let Some(count) = count {
+                    self.bytes.push(count);
+                }
+            }
+            Extend {
+                dst,
+                src,
+                width,
+                signed,
+            } => match (width, signed) {
+                (BitWidth::W64, _) => self.reg_reg(0x89, dst, src),
+                // A 32-bit move clears the upper half.
+                (BitWidth::W32, false) => {
+                    self.rex(false, Some(src), Some(dst), false);
+                    self.bytes.push(0x89);
+                    self.modrm(3, src, dst.low_code());
+                }
+                (BitWidth::W32, true) => {
+                    self.rex(true, Some(dst), Some(src), false);
+                    self.bytes.push(0x63);
+                    self.modrm(3, dst, src.low_code());
+                }
+                (width, signed) => {
+                    // spl/bpl/sil/dil need a REX prefix as byte sources.
+                    let byte = width == BitWidth::W8 && (4..8).contains(&src.code());
+                    self.rex(signed, Some(dst), Some(src), byte);
+                    let opcode = match (width, signed) {
+                        (BitWidth::W8, false) => 0xb6,
+                        (_, false) => 0xb7,
+                        (BitWidth::W8, true) => 0xbe,
+                        _ => 0xbf,
+                    };
+                    self.bytes.extend_from_slice(&[0x0f, opcode]);
+                    self.modrm(3, dst, src.low_code());
+                }
+            },
+            ByteSwap { dst, wide } => {
+                self.rex(wide, None, Some(dst), false);
+                self.bytes.extend_from_slice(&[0x0f, 0xc8 + dst.low_code()]);
+            }
+            BitScanZero {
+                dst,
+                src,
+                zero,
+                reverse,
+            } => {
+                self.rex(true, Some(dst), Some(src), false);
+                self.bytes
+                    .extend_from_slice(&[0x0f, if reverse { 0xbd } else { 0xbc }]);
+                self.modrm(3, dst, src.low_code());
+                self.rex(true, Some(dst), Some(zero), false);
+                self.bytes.extend_from_slice(&[0x0f, 0x44]);
+                self.modrm(3, dst, zero.low_code());
+            }
             Shl { dst } => {
                 self.rex(true, None, Some(dst), false);
                 self.bytes.push(0xd3);
@@ -543,6 +679,12 @@ impl Encoder<'_> {
                 rhs: Operand::Imm(0),
             }
             | Test { reg: lhs } => self.reg_reg(0x85, lhs, lhs),
+            TestByte { reg } => {
+                // spl/bpl/sil/dil need a REX prefix as byte registers.
+                self.rex(false, Some(reg), Some(reg), (4..8).contains(&reg.code()));
+                self.bytes.push(0x84);
+                self.modrm(3, reg, reg.low_code());
+            }
             Cmp { lhs, rhs } => self.binary(0x39, 0x3b, lhs, rhs)?,
             SetCc { condition, dst } => {
                 self.rex(false, None, Some(dst), dst.code() >= 4);
@@ -564,16 +706,42 @@ impl Encoder<'_> {
                 self.stack_memory_rsp(src, ((index - Reg::ARGUMENTS.len()) * 8) as i32);
             }
             StackAddress { dst, offset } => self.memory_reg(0x8d, dst, offset),
+            OffsetAddress { dst, base, offset } => {
+                self.rex(true, Some(dst), Some(base), false);
+                self.bytes.push(0x8d);
+                self.base_memory(dst, base, offset);
+            }
             LoadIndirect {
                 dst,
                 address,
+                offset,
                 bytes,
-            } => self.indirect(true, dst, address, bytes),
+            } => self.indirect(true, dst, address, offset, bytes),
             StoreIndirect {
                 address,
+                offset,
                 src,
                 bytes,
-            } => self.indirect(false, src, address, bytes),
+            } => self.indirect(false, src, address, offset, bytes),
+            StoreImmediate {
+                address,
+                offset,
+                value,
+                bytes,
+            } => {
+                if bytes == 2 {
+                    self.bytes.push(0x66);
+                }
+                self.rex(bytes == 8, None, Some(address), false);
+                self.bytes.push(if bytes == 1 { 0xc6 } else { 0xc7 });
+                // ModRM.reg is the /0 opcode extension.
+                self.base_memory(Reg::Rax, address, offset);
+                match bytes {
+                    1 => self.bytes.push(value as u8),
+                    2 => self.bytes.extend_from_slice(&(value as i16).to_le_bytes()),
+                    _ => self.i32(value),
+                }
+            }
             LoadVector { dst, address } => self.vector_memory(true, dst, address),
             StoreVector { address, src } => self.vector_memory(false, src, address),
             SymbolAddress {
@@ -701,11 +869,29 @@ impl Encoder<'_> {
                 });
             }
             Ret => {
-                for (index, reg) in self.callee_saved.iter().copied().enumerate() {
-                    let offset = saved_offset(self.stack_slots, index)?;
-                    self.memory_reg(0x8b, reg, offset);
+                // Restoring callee-saved registers costs at least six bytes, so
+                // later returns jump to the first return's shared epilogue.
+                if !self.callee_saved.is_empty() {
+                    if self.labels.contains_key(&EPILOGUE_LABEL) {
+                        return self.instruction(Jmp(EPILOGUE_LABEL));
+                    }
+                    self.labels.insert(EPILOGUE_LABEL, self.bytes.len());
                 }
-                self.bytes.extend_from_slice(&[0xc9, 0xc3]);
+                if let Some(last) = self.callee_saved.len().checked_sub(1) {
+                    // lea rsp, [rbp + offset of the last pushed register]
+                    let offset = saved_offset(self.stack_slots, last)?;
+                    self.bytes.push(0x48);
+                    self.bytes.push(0x8d);
+                    self.stack_memory(Reg::Rsp, offset);
+                    for reg in self.callee_saved.iter().rev().copied() {
+                        self.rex(false, None, Some(reg), false);
+                        self.bytes.push(0x58 + reg.low_code());
+                    }
+                }
+                if self.needs_frame {
+                    self.bytes.push(0xc9);
+                }
+                self.bytes.push(0xc3);
             }
         }
         Ok(())
@@ -899,7 +1085,7 @@ impl Encoder<'_> {
         self.bytes.push(0); // disp8=0 also handles RBP/R13.
     }
 
-    fn indirect(&mut self, load: bool, reg: Reg, address: Reg, bytes: u8) {
+    fn indirect(&mut self, load: bool, reg: Reg, address: Reg, offset: i32, bytes: u8) {
         if !load && bytes == 2 {
             self.bytes.push(0x66);
         }
@@ -921,12 +1107,27 @@ impl Encoder<'_> {
                 0x89
             });
         }
-        // Always disp8=0, including rbp/r13 and rsp/r12 bases.
-        self.modrm(1, reg, address.low_code());
+        self.base_memory(reg, address, offset);
+    }
+
+    /// ModRM, SIB and displacement for `[address + offset]`.
+    fn base_memory(&mut self, reg: Reg, address: Reg, offset: i32) {
+        // mod=00 with rm=101 means RIP-relative, so rbp/r13 bases keep disp8=0.
+        let short = i8::try_from(offset).ok();
+        let mode = match short {
+            Some(0) if address.low_code() != 5 => 0,
+            Some(_) => 1,
+            None => 2,
+        };
+        self.modrm(mode, reg, address.low_code());
         if address.low_code() == 4 {
             self.bytes.push(0x24);
         }
-        self.bytes.push(0);
+        match mode {
+            1 => self.bytes.push(offset as u8),
+            2 => self.i32(offset),
+            _ => {}
+        }
     }
 
     fn stack_memory(&mut self, reg: Reg, offset: i32) {
@@ -1075,15 +1276,15 @@ mod tests {
         assert_eq!(
             bytes,
             [
-                0x55, 0x48, 0x89, 0xe5, 0xeb, 17, 0x64, 0x4c, 0x8b, 0x24, 0x25, 0, 0, 0, 0, 0x4d,
-                0x8d, 0xa4, 0x24, 0, 0, 0, 0, 0xc9, 0xc3,
+                0xeb, 17, 0x64, 0x4c, 0x8b, 0x24, 0x25, 0, 0, 0, 0, 0x4d, 0x8d, 0xa4, 0x24, 0, 0,
+                0, 0, 0xc3,
             ]
         );
         assert!(calls.is_empty());
         assert_eq!(
             addresses,
             [AddressRelocation {
-                offset: 19,
+                offset: 15,
                 target: "tls_symbol".into(),
                 addend: 0,
                 kind: AddressRelocationKind::TlsLocalExec,
@@ -1110,20 +1311,24 @@ mod tests {
             crate::machine::x86::MachineInstr::LoadIndirect {
                 dst: crate::machine::x86::Reg::Rax,
                 address: crate::machine::x86::Reg::R12,
+                offset: 0,
                 bytes: 1,
             },
             crate::machine::x86::MachineInstr::StoreIndirect {
                 address: crate::machine::x86::Reg::R13,
+                offset: 0,
                 src: crate::machine::x86::Reg::Rsi,
                 bytes: 1,
             },
             crate::machine::x86::MachineInstr::LoadIndirect {
                 dst: crate::machine::x86::Reg::R11,
                 address: crate::machine::x86::Reg::R10,
+                offset: 0,
                 bytes: 4,
             },
             crate::machine::x86::MachineInstr::StoreIndirect {
                 address: crate::machine::x86::Reg::R10,
+                offset: 0,
                 src: crate::machine::x86::Reg::R11,
                 bytes: 2,
             },
@@ -1131,12 +1336,12 @@ mod tests {
         ];
         let bytes = super::emit_machine_code(&function).unwrap();
         assert_eq!(
-            &bytes[4..bytes.len() - 2],
+            &bytes[..bytes.len() - 1],
             &[
-                0x49, 0x0f, 0xb6, 0x44, 0x24, 0x00, // movzx rax, byte [r12]
-                0x41, 0x88, 0x75, 0x00, // mov byte [r13], sil
-                0x45, 0x8b, 0x5a, 0x00, // mov r11d, dword [r10]
-                0x66, 0x45, 0x89, 0x5a, 0x00, // mov word [r10], r11w
+                0x49, 0x0f, 0xb6, 0x04, 0x24, // movzx rax, byte [r12]
+                0x41, 0x88, 0x75, 0x00, // mov byte [r13 + 0], sil (no mod=00 form)
+                0x45, 0x8b, 0x1a, // mov r11d, dword [r10]
+                0x66, 0x45, 0x89, 0x1a, // mov word [r10], r11w
             ]
         );
     }
@@ -1156,18 +1361,18 @@ mod tests {
             crate::machine::x86::MachineInstr::Ret,
         ];
         let (bytes, calls, addresses) = super::encode_with_all_relocations(&function).unwrap();
-        assert_eq!(bytes[4..6], [0xeb, 7]);
+        assert_eq!(bytes[..2], [0xeb, 7]);
         assert!(calls.is_empty());
         assert_eq!(
             addresses,
             vec![super::AddressRelocation {
-                offset: 9,
+                offset: 5,
                 target: "data_symbol".to_owned(),
                 addend: 17,
                 kind: super::AddressRelocationKind::PcRelative,
             }]
         );
-        assert_eq!(&bytes[6..9], &[0x48, 0x8d, 0x05]);
+        assert_eq!(&bytes[2..5], &[0x48, 0x8d, 0x05]);
     }
 
     use super::*;
@@ -1185,6 +1390,33 @@ mod tests {
             stack_slots: 0,
             callee_saved: Vec::new(),
             symbols: Vec::new(),
+        }
+    }
+
+    #[test]
+    fn empty_leaf_omits_frame_but_calls_and_stack_arguments_keep_it() {
+        assert_eq!(
+            function(vec![MachineInstr::Ret])
+                .emit_machine_code()
+                .unwrap(),
+            [0xc3]
+        );
+        for instruction in [
+            MachineInstr::Call { target: 0 },
+            MachineInstr::CallIndirect { target: Reg::Rax },
+            MachineInstr::LoadArg {
+                dst: Reg::Rax,
+                index: 6,
+            },
+        ] {
+            let mut function = function(vec![instruction, MachineInstr::Ret]);
+            function.symbols.push("callee".into());
+            let (bytes, _, _) = encode_with_all_relocations(&function).unwrap();
+            assert!(bytes.starts_with(&[0x55, 0x48, 0x89, 0xe5]));
+            assert!(bytes.ends_with(&[0xc9, 0xc3]));
+            let assembly = function.emit_gnu_assembly().unwrap();
+            assert!(assembly.contains("push rbp\n\tmov rbp, rsp"));
+            assert!(assembly.contains("leave\n\tret"));
         }
     }
 
@@ -1272,11 +1504,13 @@ mod tests {
         };
         let code = function.emit_machine_code().unwrap();
         let expected = [
-            0x55, 0x48, 0x89, 0xe5, 0x48, 0x83, 0xec, 0x20, 0x48, 0x89, 0x5d, 0xe8, 0x4c, 0x89,
-            0x65, 0xe0, 0x48, 0x89, 0x45, 0xf8, 0x4c, 0x8b, 0x4d, 0xf0, 0x48, 0x03, 0x45, 0xf8,
-            0x4d, 0x29, 0xd1, 0x4c, 0x0f, 0xaf, 0x65, 0xf0, 0x48, 0x3b, 0x45, 0xf8, 0x41, 0x0f,
-            0x9f, 0xc4, 0x45, 0x0f, 0xb6, 0xe4, 0x48, 0x8b, 0x5d, 0xe8, 0x4c, 0x8b, 0x65, 0xe0,
-            0xc9, 0xc3,
+            // push rbp; mov rbp, rsp; sub rsp, 16; push rbx; push r12
+            0x55, 0x48, 0x89, 0xe5, 0x48, 0x83, 0xec, 0x10, 0x53, 0x41, 0x54, //
+            0x48, 0x89, 0x45, 0xf8, 0x4c, 0x8b, 0x4d, 0xf0, 0x48, 0x03, 0x45, 0xf8, 0x4d, 0x29,
+            0xd1, 0x4c, 0x0f, 0xaf, 0x65, 0xf0, 0x48, 0x3b, 0x45, 0xf8, 0x41, 0x0f, 0x9f, 0xc4,
+            0x45, 0x0f, 0xb6, 0xe4,
+            // lea rsp, [rbp - 0x20]; pop r12; pop rbx; leave; ret
+            0x48, 0x8d, 0x65, 0xe0, 0x41, 0x5c, 0x5b, 0xc9, 0xc3,
         ];
         assert_eq!(code, expected);
     }
@@ -1358,12 +1592,29 @@ mod tests {
             ])
             .emit_machine_code()
             .unwrap();
-            let mut expected = vec![
-                0x55, 0x48, 0x89, 0xe5, 0x48, 0x39, 0xfe, 0x40, 0x0f, opcode, 0xc6,
-            ];
+            let mut expected = vec![0x48, 0x39, 0xfe, 0x40, 0x0f, opcode, 0xc6];
             expected.extend_from_slice(&[0x40, 0x0f, 0xb6, 0xf6, 0x41, 0x0f, opcode, 0xc7]);
-            expected.extend_from_slice(&[0x45, 0x0f, 0xb6, 0xff, 0xc9, 0xc3]);
+            expected.extend_from_slice(&[0x45, 0x0f, 0xb6, 0xff, 0xc3]);
             assert_eq!(code, expected, "condition {condition:?}");
+        }
+    }
+
+    #[test]
+    fn byte_tests_use_rex_only_for_new_byte_registers() {
+        for (reg, expected) in [
+            (Reg::Rax, vec![0x84, 0xc0]),
+            (Reg::Rbx, vec![0x84, 0xdb]),
+            (Reg::Rsi, vec![0x40, 0x84, 0xf6]),
+            (Reg::Rdi, vec![0x40, 0x84, 0xff]),
+            (Reg::R8, vec![0x45, 0x84, 0xc0]),
+            (Reg::R15, vec![0x45, 0x84, 0xff]),
+        ] {
+            let code = function(vec![MachineInstr::TestByte { reg }, MachineInstr::Ret])
+                .emit_machine_code()
+                .unwrap();
+            let mut expected = expected;
+            expected.push(0xc3);
+            assert_eq!(code, expected, "{reg:?}");
         }
     }
 
@@ -1385,8 +1636,7 @@ mod tests {
         assert_eq!(
             code,
             [
-                0x55, 0x48, 0x89, 0xe5, 0x49, 0x39, 0xdb, 0x49, 0xc7, 0xc7, 0xff, 0xff, 0xff, 0xff,
-                0xc9, 0xc3,
+                0x49, 0x39, 0xdb, 0x49, 0xc7, 0xc7, 0xff, 0xff, 0xff, 0xff, 0xc3,
             ]
         );
     }
@@ -1416,6 +1666,7 @@ mod tests {
         let mut encoder = Encoder {
             bytes: Vec::new(),
             stack_slots: 0,
+            needs_frame: true,
             callee_saved: &[],
             symbols: &[],
             calls: Vec::new(),
