@@ -1,0 +1,7 @@
+fn example_result() -> i64 {
+    let signed = !(-43);
+    let unsigned = !0xffff_ffff_ffff_ffd5u64;
+    return if !false { signed + (unsigned as i64) - 42 } else { 0 };
+}
+
+fn main() { println!("{}", example_result()); }

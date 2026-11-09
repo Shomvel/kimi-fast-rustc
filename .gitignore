@@ -5,3 +5,21 @@
 *.profdata
 crates/rustc_codegen_kfrc/target/
 crates/rustc_codegen_kfrc/rustc-ice-*.txt
+__pycache__/
+*.pyc
+
+# Keep frozen archives, generated binaries and raw profiles local. Commit only
+# the small acceptance records and input fingerprints selected for each run.
+/evidence/*
+!/evidence/README.md
+!/evidence/poc-semantic-only-20261109/
+/evidence/poc-semantic-only-20261109/*
+!/evidence/poc-semantic-only-20261109/*.md
+!/evidence/poc-semantic-only-20261109/*-acceptance.json
+!/evidence/poc-semantic-only-20261109/artifact-hashes.json
+!/evidence/poc-semantic-only-20261109/*-inputs.json
+!/evidence/poc-semantic-only-20261109/test-migration-inventory.json
+!/evidence/poc-semantic-only-20261109/candidate04-to-08a-comparison.json
+!/evidence/poc-semantic-only-20261109/candidate*/
+/evidence/poc-semantic-only-20261109/candidate*/*
+!/evidence/poc-semantic-only-20261109/candidate*/source.json

@@ -71,13 +71,15 @@ version = "0.1.0"
 dependencies = [
  "kfrc-body",
  "kfrc-son",
- "kimi-fast-rustc",
  "object",
 ]
 
 [[package]]
 name = "kimi-fast-rustc"
 version = "0.1.0"
+dependencies = [
+ "kfrc-x86",
+]
 
 [[package]]
 name = "memchr"

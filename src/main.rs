@@ -5,15 +5,12 @@ use std::path::{Path, PathBuf};
 
 use kimi_fast_rustc::cache_admin::{CacheAdmin, OutputFormat};
 use kimi_fast_rustc::llvm::{LlvmConfig, Lto, OptLevel, TargetCpu};
-use kimi_fast_rustc::native_batch::BatchMode;
 use kimi_fast_rustc::rustc::{self, RustcInvocation};
 use kimi_fast_rustc::tuning_runner::{self, TuningRunner};
 
 const CACHE_USAGE: &str =
     "usage: kfrc cache --root DIR stats [--json]\n       kfrc cache --root DIR clear [--json]";
 const TUNE_USAGE: &str = "usage: kfrc tune <crate-dir|Cargo.toml> --out-dir DIR [--candidates N] [--runs N] [--workload PROGRAM [ARG...]]";
-const NATIVE_BATCH_USAGE: &str =
-    "usage: kfrc native-batch --jobs N --out-dir DIR [--pipeline] <input.kfr>...";
 
 fn main() {
     match run() {
@@ -38,7 +35,7 @@ fn run() -> Result<i32, String> {
     }
     if first == "--help" || first == "-h" {
         println!(
-            "usage: kfrc <rustc-path> [rustc arguments]\n       kfrc rustc [rustc arguments]\n       kfrc native <input.rs> -o <output> [--emit=asm | --emit=obj | -S]\n       kfrc native <input.rs> [--emit=asm=<path> | --emit=obj=<path>]\n       kfrc native-batch --jobs N --out-dir DIR [--pipeline] <input.kfr>...\n       kfrc tune <crate-dir|Cargo.toml> --out-dir DIR [--candidates N] [--runs N] [--workload PROGRAM [ARG...]]\n       kfrc cache --root DIR stats [--json]\n       kfrc cache --root DIR clear [--json]\n       kfrc fingerprint"
+            "usage: kfrc <rustc-path> [rustc arguments]\n       kfrc rustc [rustc arguments]\n       kfrc native <input.rs> [rustc arguments]\n       kfrc tune <crate-dir|Cargo.toml> --out-dir DIR [--candidates N] [--runs N] [--workload PROGRAM [ARG...]]\n       kfrc cache --root DIR stats [--json]\n       kfrc cache --root DIR clear [--json]\n       kfrc fingerprint"
         );
         return Ok(0);
     }
@@ -49,14 +46,10 @@ fn run() -> Result<i32, String> {
         return run_cache(args);
     }
     if first == "native" {
-        kimi_fast_rustc::native_cli::run_with_args(args).map_err(|error| error.to_string())?;
-        return Ok(0);
+        return kimi_fast_rustc::semantic_cli::run(args);
     }
     if first == "native-batch" {
-        for output in run_native_batch(args)? {
-            println!("{}", output.display());
-        }
-        return Ok(0);
+        return Err("native-batch used the removed demonstration IR; compile real Rust with `kfrc native`, or use Cargo's package runner".into());
     }
     if first == "fingerprint" {
         println!(
@@ -440,106 +433,6 @@ fn manifest_binary_name(manifest: &str) -> Option<String> {
     }
 
     binary_name.or(package_name)
-}
-
-#[derive(Debug)]
-struct NativeBatchOptions {
-    jobs: usize,
-    output_directory: PathBuf,
-    inputs: Vec<PathBuf>,
-    mode: BatchMode,
-}
-
-fn run_native_batch<I, S>(args: I) -> Result<Vec<PathBuf>, String>
-where
-    I: IntoIterator<Item = S>,
-    S: Into<OsString>,
-{
-    let args = args.into_iter().map(Into::into).collect::<Vec<OsString>>();
-    if args.len() == 1 && (args[0] == "--help" || args[0] == "-h") {
-        println!("{NATIVE_BATCH_USAGE}");
-        return Ok(Vec::new());
-    }
-    let options = parse_native_batch_args(args)?;
-    kimi_fast_rustc::native_batch::compile_batch_with_mode(
-        &options.inputs,
-        &options.output_directory,
-        options.jobs,
-        options.mode,
-    )
-    .map_err(|error| error.to_string())
-}
-
-fn parse_native_batch_args<I, S>(args: I) -> Result<NativeBatchOptions, String>
-where
-    I: IntoIterator<Item = S>,
-    S: Into<OsString>,
-{
-    let mut args = args.into_iter().map(Into::into);
-    let mut jobs = None;
-    let mut output_directory = None;
-    let mut pipeline = false;
-    let mut inputs = Vec::new();
-
-    while let Some(argument) = args.next() {
-        if argument == "--jobs" {
-            if jobs.is_some() {
-                return Err("--jobs was provided more than once".to_owned());
-            }
-            let value = args
-                .next()
-                .ok_or_else(|| "missing value after --jobs".to_owned())?;
-            let value = value
-                .to_str()
-                .and_then(|value| value.parse::<usize>().ok())
-                .ok_or_else(|| {
-                    format!("invalid --jobs value {value:?}; expected a positive integer")
-                })?;
-            if value == 0 {
-                return Err("--jobs must be greater than zero".to_owned());
-            }
-            jobs = Some(value);
-        } else if argument == "--out-dir" {
-            if output_directory.is_some() {
-                return Err("--out-dir was provided more than once".to_owned());
-            }
-            let path = args
-                .next()
-                .ok_or_else(|| "missing path after --out-dir".to_owned())?;
-            if path.is_empty() {
-                return Err("output directory after --out-dir must not be empty".to_owned());
-            }
-            output_directory = Some(PathBuf::from(path));
-        } else if argument == "--pipeline" {
-            if pipeline {
-                return Err("--pipeline was provided more than once".to_owned());
-            }
-            pipeline = true;
-        } else if argument.to_string_lossy().starts_with('-') {
-            return Err(format!("unknown native-batch option {argument:?}"));
-        } else {
-            if argument.is_empty() {
-                return Err("input path must not be empty".to_owned());
-            }
-            inputs.push(PathBuf::from(argument));
-        }
-    }
-
-    let jobs = jobs.ok_or_else(|| "missing --jobs N".to_owned())?;
-    let output_directory = output_directory.ok_or_else(|| "missing --out-dir DIR".to_owned())?;
-    if inputs.is_empty() {
-        return Err("native-batch requires at least one input".to_owned());
-    }
-    Ok(NativeBatchOptions {
-        jobs,
-        output_directory,
-        inputs,
-        mode: if pipeline {
-            BatchMode::Pipeline
-        } else {
-            BatchMode::Dag
-        },
-    })
 }
 
 struct WrapperOptions {
@@ -970,115 +863,6 @@ mod tests {
         );
         assert_eq!(manifest_binary_name("[package]\nname = \"\"\n"), None);
         assert_eq!(manifest_binary_name("[package]\nname = 42\n"), None);
-    }
-
-    #[test]
-    fn parses_native_batch_options_and_preserves_input_order() {
-        let options = parse_native_batch_args([
-            "first.kfr",
-            "--out-dir",
-            "objects",
-            "second.kfr",
-            "--jobs",
-            "3",
-        ])
-        .unwrap();
-
-        assert_eq!(options.jobs, 3);
-        assert_eq!(options.output_directory, PathBuf::from("objects"));
-        assert_eq!(options.mode, BatchMode::Dag);
-        assert_eq!(
-            options.inputs,
-            [PathBuf::from("first.kfr"), PathBuf::from("second.kfr")]
-        );
-
-        let options = parse_native_batch_args([
-            "--pipeline",
-            "first.kfr",
-            "--out-dir",
-            "objects",
-            "second.kfr",
-            "--jobs",
-            "3",
-        ])
-        .unwrap();
-        assert_eq!(options.mode, BatchMode::Pipeline);
-        assert_eq!(
-            options.inputs,
-            [PathBuf::from("first.kfr"), PathBuf::from("second.kfr")]
-        );
-    }
-
-    #[test]
-    fn native_batch_help_succeeds_only_as_a_standalone_argument() {
-        for help in ["--help", "-h"] {
-            assert_eq!(run_native_batch([help]), Ok(Vec::new()));
-
-            let error = run_native_batch([help, "input.kfr"]).unwrap_err();
-            assert_eq!(error, format!("unknown native-batch option {help:?}"));
-        }
-
-        assert!(NATIVE_BATCH_USAGE.contains("--jobs N"));
-        assert!(NATIVE_BATCH_USAGE.contains("--out-dir DIR"));
-        assert!(NATIVE_BATCH_USAGE.contains("[--pipeline]"));
-        assert!(NATIVE_BATCH_USAGE.contains("<input.kfr>..."));
-    }
-
-    #[test]
-    fn rejects_invalid_native_batch_arguments() {
-        let cases = [
-            (
-                vec!["--jobs", "0", "--out-dir", "objects", "input.kfr"],
-                "greater than zero",
-            ),
-            (
-                vec!["--jobs", "many", "--out-dir", "objects", "input.kfr"],
-                "positive integer",
-            ),
-            (
-                vec!["--jobs", "2", "--out-dir", "objects"],
-                "at least one input",
-            ),
-            (vec!["--out-dir", "objects", "input.kfr"], "missing --jobs"),
-            (vec!["--jobs", "2", "input.kfr"], "missing --out-dir"),
-            (
-                vec!["--jobs", "2", "--out-dir", "", "input.kfr"],
-                "must not be empty",
-            ),
-            (
-                vec![
-                    "--jobs",
-                    "2",
-                    "--jobs",
-                    "3",
-                    "--out-dir",
-                    "objects",
-                    "input.kfr",
-                ],
-                "more than once",
-            ),
-            (
-                vec![
-                    "--pipeline",
-                    "--jobs",
-                    "2",
-                    "--pipeline",
-                    "--out-dir",
-                    "objects",
-                    "input.kfr",
-                ],
-                "--pipeline was provided more than once",
-            ),
-            (
-                vec!["--jobs", "2", "--out-dir", "objects", "--unknown"],
-                "unknown native-batch option",
-            ),
-        ];
-
-        for (args, expected) in cases {
-            let error = parse_native_batch_args(args).unwrap_err();
-            assert!(error.contains(expected), "{error}");
-        }
     }
 
     #[test]

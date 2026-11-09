@@ -1,0 +1,19 @@
+[package]
+name = "rustc_codegen_llvm_profile"
+version = "0.1.0"
+edition = "2024"
+description = "Transparent rustc 1.94.1 LLVM backend with inherited instruction counters"
+license = "MIT OR Apache-2.0"
+
+[lib]
+crate-type = ["dylib"]
+
+[[bin]]
+name = "inherited-counter-probe"
+path = "src/bin/inherited_counter_probe.rs"
+
+[package.metadata.rust-analyzer]
+rustc_private = true
+
+# Like rustc_codegen_kfrc, this is built with rustc-dev on its pinned toolchain.
+[workspace]

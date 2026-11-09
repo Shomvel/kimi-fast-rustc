@@ -1,0 +1,1330 @@
+{
+  "schema_version": 1,
+  "crate_name": "legacy_consts",
+  "source_revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f",
+  "rustc_flags": [
+    "--edition=2021",
+    "-Cpanic=abort",
+    "-Coverflow-checks=off",
+    "-Copt-level=0",
+    "-Cdebug-assertions=off",
+    "-Zmir-opt-level=0",
+    "-Awarnings",
+    "-Aunconditional_panic",
+    "-Aarithmetic_overflow"
+  ],
+  "runs": [
+    {
+      "id": "consts_normal",
+      "run_args": [],
+      "expected_exit": "success",
+      "expected_stdout": "const_expressions__evaluates_arithmetic_bitwise_shift_parentheses_and_precedence__0:0=42\nconst_expressions__evaluates_arithmetic_bitwise_shift_parentheses_and_precedence__1:0=42\nconst_expressions__evaluates_arithmetic_bitwise_shift_parentheses_and_precedence__2:0=42\nconst_expressions__evaluates_arithmetic_bitwise_shift_parentheses_and_precedence__3:0=42\nconst_expressions__evaluates_arithmetic_bitwise_shift_parentheses_and_precedence__4:0=42\nconst_expressions__evaluates_arithmetic_bitwise_shift_parentheses_and_precedence__5:0=42\nconst_expressions__evaluates_arithmetic_bitwise_shift_parentheses_and_precedence__6:0=42\nconst_expressions__evaluates_arithmetic_bitwise_shift_parentheses_and_precedence__7:0=42\nconst_expressions__evaluates_arithmetic_bitwise_shift_parentheses_and_precedence__8:0=42\nconst_expressions__evaluates_arithmetic_bitwise_shift_parentheses_and_precedence__9:0=42\nconst_expressions__evaluates_arithmetic_bitwise_shift_parentheses_and_precedence__10:0=42\nconst_expressions__evaluates_arithmetic_bitwise_shift_parentheses_and_precedence__11:0=42\nconst_expressions__evaluates_arithmetic_bitwise_shift_parentheses_and_precedence__12:0=7\nconst_expressions__evaluates_arithmetic_bitwise_shift_parentheses_and_precedence__13:0=9\nconst_expressions__evaluates_arithmetic_bitwise_shift_parentheses_and_precedence__14:0=62\nconst_expressions__evaluates_arithmetic_bitwise_shift_parentheses_and_precedence__15:0=-3\nconst_expressions__evaluates_arithmetic_bitwise_shift_parentheses_and_precedence__16:0=-1\nconst_expressions__evaluates_arithmetic_bitwise_shift_parentheses_and_precedence__17:0=-2\nconst_expressions__evaluates_comparisons_boolean_not_and_short_circuiting__0:0=1\nconst_expressions__evaluates_comparisons_boolean_not_and_short_circuiting__1:0=1\nconst_expressions__evaluates_comparisons_boolean_not_and_short_circuiting__2:0=1\nconst_expressions__evaluates_comparisons_boolean_not_and_short_circuiting__3:0=0\nconst_expressions__evaluates_comparisons_boolean_not_and_short_circuiting__4:0=1\nconst_expressions__evaluates_comparisons_boolean_not_and_short_circuiting__5:0=0\nconst_expressions__evaluates_comparisons_boolean_not_and_short_circuiting__6:0=1\nconst_expressions__evaluates_comparisons_boolean_not_and_short_circuiting__7:0=0\nconst_expressions__evaluates_comparisons_boolean_not_and_short_circuiting__8:0=1\nconst_expressions__evaluates_comparisons_boolean_not_and_short_circuiting__9:0=0\nconst_expressions__evaluates_comparisons_boolean_not_and_short_circuiting__10:0=1\nconst_expressions__resolves_forward_and_transitive_dependencies_without_emitting_runtime_operators:0=42\nconst_expressions__preserves_signed_and_unsigned_boundaries__0:0=9223372036854775807\nconst_expressions__preserves_signed_and_unsigned_boundaries__1:0=-9223372036854775808\nconst_expressions__preserves_signed_and_unsigned_boundaries__2:0=-1\nconst_expressions__preserves_signed_and_unsigned_boundaries__3:0=1\nconst_expressions__preserves_signed_and_unsigned_boundaries__4:0=-9223372036854775808\nconst_expressions__preserves_signed_and_unsigned_boundaries__5:0=-1\nconst_items__constant_items_do_not_change_function_indices_and_const_fn_stays_a_function:0=42\ninteger_syntax__radix_literals_preserve_signed_and_unsigned_values:0=252\ninteger_syntax__radix_literals_preserve_signed_and_unsigned_values__maximum:0=-1\nconst_items__scalar_constants_support_visibilities_radices_suffixes_and_boolean_references:0=42\nconst_items__references_emit_typed_constants_and_locals_can_shadow_constant_names:0=42\nconst_items__scalar_constants_support_visibilities_radices_suffixes_and_boolean_references__minimum:0=-9223372036854775808\n",
+      "source_refs": [
+        {
+          "path": "tests/const_expressions.rs",
+          "test": "evaluates_arithmetic_bitwise_shift_parentheses_and_precedence",
+          "line": 39,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/const_expressions.rs",
+          "test": "evaluates_arithmetic_bitwise_shift_parentheses_and_precedence",
+          "line": 39,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/const_expressions.rs",
+          "test": "evaluates_arithmetic_bitwise_shift_parentheses_and_precedence",
+          "line": 39,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/const_expressions.rs",
+          "test": "evaluates_arithmetic_bitwise_shift_parentheses_and_precedence",
+          "line": 39,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/const_expressions.rs",
+          "test": "evaluates_arithmetic_bitwise_shift_parentheses_and_precedence",
+          "line": 39,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/const_expressions.rs",
+          "test": "evaluates_arithmetic_bitwise_shift_parentheses_and_precedence",
+          "line": 39,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/const_expressions.rs",
+          "test": "evaluates_arithmetic_bitwise_shift_parentheses_and_precedence",
+          "line": 39,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/const_expressions.rs",
+          "test": "evaluates_arithmetic_bitwise_shift_parentheses_and_precedence",
+          "line": 39,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/const_expressions.rs",
+          "test": "evaluates_arithmetic_bitwise_shift_parentheses_and_precedence",
+          "line": 39,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/const_expressions.rs",
+          "test": "evaluates_arithmetic_bitwise_shift_parentheses_and_precedence",
+          "line": 39,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/const_expressions.rs",
+          "test": "evaluates_arithmetic_bitwise_shift_parentheses_and_precedence",
+          "line": 39,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/const_expressions.rs",
+          "test": "evaluates_arithmetic_bitwise_shift_parentheses_and_precedence",
+          "line": 39,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/const_expressions.rs",
+          "test": "evaluates_arithmetic_bitwise_shift_parentheses_and_precedence",
+          "line": 39,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/const_expressions.rs",
+          "test": "evaluates_arithmetic_bitwise_shift_parentheses_and_precedence",
+          "line": 39,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/const_expressions.rs",
+          "test": "evaluates_arithmetic_bitwise_shift_parentheses_and_precedence",
+          "line": 39,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/const_expressions.rs",
+          "test": "evaluates_arithmetic_bitwise_shift_parentheses_and_precedence",
+          "line": 39,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/const_expressions.rs",
+          "test": "evaluates_arithmetic_bitwise_shift_parentheses_and_precedence",
+          "line": 39,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/const_expressions.rs",
+          "test": "evaluates_arithmetic_bitwise_shift_parentheses_and_precedence",
+          "line": 39,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/const_expressions.rs",
+          "test": "evaluates_comparisons_boolean_not_and_short_circuiting",
+          "line": 65,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/const_expressions.rs",
+          "test": "evaluates_comparisons_boolean_not_and_short_circuiting",
+          "line": 65,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/const_expressions.rs",
+          "test": "evaluates_comparisons_boolean_not_and_short_circuiting",
+          "line": 65,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/const_expressions.rs",
+          "test": "evaluates_comparisons_boolean_not_and_short_circuiting",
+          "line": 65,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/const_expressions.rs",
+          "test": "evaluates_comparisons_boolean_not_and_short_circuiting",
+          "line": 65,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/const_expressions.rs",
+          "test": "evaluates_comparisons_boolean_not_and_short_circuiting",
+          "line": 65,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/const_expressions.rs",
+          "test": "evaluates_comparisons_boolean_not_and_short_circuiting",
+          "line": 65,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/const_expressions.rs",
+          "test": "evaluates_comparisons_boolean_not_and_short_circuiting",
+          "line": 65,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/const_expressions.rs",
+          "test": "evaluates_comparisons_boolean_not_and_short_circuiting",
+          "line": 65,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/const_expressions.rs",
+          "test": "evaluates_comparisons_boolean_not_and_short_circuiting",
+          "line": 65,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/const_expressions.rs",
+          "test": "evaluates_comparisons_boolean_not_and_short_circuiting",
+          "line": 65,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/const_expressions.rs",
+          "test": "resolves_forward_and_transitive_dependencies_without_emitting_runtime_operators",
+          "line": 108,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/const_expressions.rs",
+          "test": "preserves_signed_and_unsigned_boundaries",
+          "line": 87,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/const_expressions.rs",
+          "test": "preserves_signed_and_unsigned_boundaries",
+          "line": 87,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/const_expressions.rs",
+          "test": "preserves_signed_and_unsigned_boundaries",
+          "line": 87,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/const_expressions.rs",
+          "test": "preserves_signed_and_unsigned_boundaries",
+          "line": 87,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/const_expressions.rs",
+          "test": "preserves_signed_and_unsigned_boundaries",
+          "line": 87,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/const_expressions.rs",
+          "test": "preserves_signed_and_unsigned_boundaries",
+          "line": 87,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/const_items.rs",
+          "test": "constant_items_do_not_change_function_indices_and_const_fn_stays_a_function",
+          "line": 85,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/integer_syntax.rs",
+          "test": "radix_literals_preserve_signed_and_unsigned_values",
+          "line": 26,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/integer_syntax.rs",
+          "test": "radix_literals_preserve_signed_and_unsigned_values",
+          "line": 32,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/const_items.rs",
+          "test": "scalar_constants_support_visibilities_radices_suffixes_and_boolean_references",
+          "line": 22,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/const_items.rs",
+          "test": "references_emit_typed_constants_and_locals_can_shadow_constant_names",
+          "line": 49,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/const_items.rs",
+          "test": "scalar_constants_support_visibilities_radices_suffixes_and_boolean_references",
+          "line": 41,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ]
+    }
+  ],
+  "cases": [
+    {
+      "id": "const_expressions__evaluates_arithmetic_bitwise_shift_parentheses_and_precedence__0",
+      "source_refs": [
+        {
+          "path": "tests/const_expressions.rs",
+          "test": "evaluates_arithmetic_bitwise_shift_parentheses_and_precedence",
+          "line": 39,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "const VALUE: i64 = 40 + 2; fn main() -> i64 { return VALUE; }",
+      "source": "const VALUE: i64 = 40 + 2; #[inline(never)] pub fn test_fn() -> i64 { return VALUE; }",
+      "source_sha256": "5df5c68b59a5cffcfc25790831db060c29d91eaaabfeb72d804425ef0fcfc686",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_000"
+    },
+    {
+      "id": "const_expressions__evaluates_arithmetic_bitwise_shift_parentheses_and_precedence__1",
+      "source_refs": [
+        {
+          "path": "tests/const_expressions.rs",
+          "test": "evaluates_arithmetic_bitwise_shift_parentheses_and_precedence",
+          "line": 39,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "const VALUE: i64 = 46 - 4; fn main() -> i64 { return VALUE; }",
+      "source": "const VALUE: i64 = 46 - 4; #[inline(never)] pub fn test_fn() -> i64 { return VALUE; }",
+      "source_sha256": "f1a52921f80c559ccdfd6fa5ba5b762f303019f8086b73262893fa8ee10aaa08",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_001"
+    },
+    {
+      "id": "const_expressions__evaluates_arithmetic_bitwise_shift_parentheses_and_precedence__2",
+      "source_refs": [
+        {
+          "path": "tests/const_expressions.rs",
+          "test": "evaluates_arithmetic_bitwise_shift_parentheses_and_precedence",
+          "line": 39,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "const VALUE: i64 = 6 * 7; fn main() -> i64 { return VALUE; }",
+      "source": "const VALUE: i64 = 6 * 7; #[inline(never)] pub fn test_fn() -> i64 { return VALUE; }",
+      "source_sha256": "ba39d3372120d6663df99852ae76c3178f684cdc20107639ef629055667ce786",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_002"
+    },
+    {
+      "id": "const_expressions__evaluates_arithmetic_bitwise_shift_parentheses_and_precedence__3",
+      "source_refs": [
+        {
+          "path": "tests/const_expressions.rs",
+          "test": "evaluates_arithmetic_bitwise_shift_parentheses_and_precedence",
+          "line": 39,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "const VALUE: i64 = 84 / 2; fn main() -> i64 { return VALUE; }",
+      "source": "const VALUE: i64 = 84 / 2; #[inline(never)] pub fn test_fn() -> i64 { return VALUE; }",
+      "source_sha256": "9d7ccaf1c7ed1ff78b47a14ea1112d3bd79824f29fe9b8eec511755df19a0995",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_003"
+    },
+    {
+      "id": "const_expressions__evaluates_arithmetic_bitwise_shift_parentheses_and_precedence__4",
+      "source_refs": [
+        {
+          "path": "tests/const_expressions.rs",
+          "test": "evaluates_arithmetic_bitwise_shift_parentheses_and_precedence",
+          "line": 39,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "const VALUE: i64 = 127 % 85; fn main() -> i64 { return VALUE; }",
+      "source": "const VALUE: i64 = 127 % 85; #[inline(never)] pub fn test_fn() -> i64 { return VALUE; }",
+      "source_sha256": "d967f5a38985ebfa512b6cf4928165c671d1d17434a03d37c3ce92451b0e2bfc",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_004"
+    },
+    {
+      "id": "const_expressions__evaluates_arithmetic_bitwise_shift_parentheses_and_precedence__5",
+      "source_refs": [
+        {
+          "path": "tests/const_expressions.rs",
+          "test": "evaluates_arithmetic_bitwise_shift_parentheses_and_precedence",
+          "line": 39,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "const VALUE: i64 = 0x20 | 0x0a; fn main() -> i64 { return VALUE; }",
+      "source": "const VALUE: i64 = 0x20 | 0x0a; #[inline(never)] pub fn test_fn() -> i64 { return VALUE; }",
+      "source_sha256": "acf167be8d630ffb344c028787cad175b0761f26750722234e769382d120d3d3",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_005"
+    },
+    {
+      "id": "const_expressions__evaluates_arithmetic_bitwise_shift_parentheses_and_precedence__6",
+      "source_refs": [
+        {
+          "path": "tests/const_expressions.rs",
+          "test": "evaluates_arithmetic_bitwise_shift_parentheses_and_precedence",
+          "line": 39,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "const VALUE: i64 = 0x3f & 0x2a; fn main() -> i64 { return VALUE; }",
+      "source": "const VALUE: i64 = 0x3f & 0x2a; #[inline(never)] pub fn test_fn() -> i64 { return VALUE; }",
+      "source_sha256": "c35818e144bf949b33c3fdd550445760de1093ee1d9a311c570641614795b299",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_006"
+    },
+    {
+      "id": "const_expressions__evaluates_arithmetic_bitwise_shift_parentheses_and_precedence__7",
+      "source_refs": [
+        {
+          "path": "tests/const_expressions.rs",
+          "test": "evaluates_arithmetic_bitwise_shift_parentheses_and_precedence",
+          "line": 39,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "const VALUE: i64 = 0x30 ^ 0x1a; fn main() -> i64 { return VALUE; }",
+      "source": "const VALUE: i64 = 0x30 ^ 0x1a; #[inline(never)] pub fn test_fn() -> i64 { return VALUE; }",
+      "source_sha256": "22bb79f3c1dc05230bf9435b8d8ef57278c46e789b8ad8b869208724e97d6b8c",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_007"
+    },
+    {
+      "id": "const_expressions__evaluates_arithmetic_bitwise_shift_parentheses_and_precedence__8",
+      "source_refs": [
+        {
+          "path": "tests/const_expressions.rs",
+          "test": "evaluates_arithmetic_bitwise_shift_parentheses_and_precedence",
+          "line": 39,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "const VALUE: i64 = 21i64 << 1; fn main() -> i64 { return VALUE; }",
+      "source": "const VALUE: i64 = 21i64 << 1; #[inline(never)] pub fn test_fn() -> i64 { return VALUE; }",
+      "source_sha256": "f5b2e9d85a208778c441cd62b3ddcabce0789e83dc6e94d4197a56f017a19faf",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_008"
+    },
+    {
+      "id": "const_expressions__evaluates_arithmetic_bitwise_shift_parentheses_and_precedence__9",
+      "source_refs": [
+        {
+          "path": "tests/const_expressions.rs",
+          "test": "evaluates_arithmetic_bitwise_shift_parentheses_and_precedence",
+          "line": 39,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "const VALUE: i64 = 168i64 >> 2; fn main() -> i64 { return VALUE; }",
+      "source": "const VALUE: i64 = 168i64 >> 2; #[inline(never)] pub fn test_fn() -> i64 { return VALUE; }",
+      "source_sha256": "3f5dd5ea1e8139825b5a3dde818231969f859697478cd05a2b364b9391762f93",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_009"
+    },
+    {
+      "id": "const_expressions__evaluates_arithmetic_bitwise_shift_parentheses_and_precedence__10",
+      "source_refs": [
+        {
+          "path": "tests/const_expressions.rs",
+          "test": "evaluates_arithmetic_bitwise_shift_parentheses_and_precedence",
+          "line": 39,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "const VALUE: i64 = !(!42i64); fn main() -> i64 { return VALUE; }",
+      "source": "const VALUE: i64 = !(!42i64); #[inline(never)] pub fn test_fn() -> i64 { return VALUE; }",
+      "source_sha256": "241f787158df27c2c923722a06d561663aa620081b2029645ba5afaf7c951cbf",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_010"
+    },
+    {
+      "id": "const_expressions__evaluates_arithmetic_bitwise_shift_parentheses_and_precedence__11",
+      "source_refs": [
+        {
+          "path": "tests/const_expressions.rs",
+          "test": "evaluates_arithmetic_bitwise_shift_parentheses_and_precedence",
+          "line": 39,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "const VALUE: i64 = (40 + 2); fn main() -> i64 { return VALUE; }",
+      "source": "const VALUE: i64 = (40 + 2); #[inline(never)] pub fn test_fn() -> i64 { return VALUE; }",
+      "source_sha256": "0b77d116f80f3b2083f2fb7f7b8d2347576ff9951bffb259ce596acc9df02770",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_011"
+    },
+    {
+      "id": "const_expressions__evaluates_arithmetic_bitwise_shift_parentheses_and_precedence__12",
+      "source_refs": [
+        {
+          "path": "tests/const_expressions.rs",
+          "test": "evaluates_arithmetic_bitwise_shift_parentheses_and_precedence",
+          "line": 39,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 7,
+          "trap": null
+        }
+      ],
+      "original_source": "const VALUE: i64 = 1 + 2 * 3; fn main() -> i64 { return VALUE; }",
+      "source": "const VALUE: i64 = 1 + 2 * 3; #[inline(never)] pub fn test_fn() -> i64 { return VALUE; }",
+      "source_sha256": "39fb73227381064657e0d89b99965e6e72d7f112c8abae43bea61394724c1b6e",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_012"
+    },
+    {
+      "id": "const_expressions__evaluates_arithmetic_bitwise_shift_parentheses_and_precedence__13",
+      "source_refs": [
+        {
+          "path": "tests/const_expressions.rs",
+          "test": "evaluates_arithmetic_bitwise_shift_parentheses_and_precedence",
+          "line": 39,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 9,
+          "trap": null
+        }
+      ],
+      "original_source": "const VALUE: i64 = (1 + 2) * 3; fn main() -> i64 { return VALUE; }",
+      "source": "const VALUE: i64 = (1 + 2) * 3; #[inline(never)] pub fn test_fn() -> i64 { return VALUE; }",
+      "source_sha256": "44f752b051fa7c9af0ce5035648408953a8e268dcb5c038f838ee0e6283386f8",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_013"
+    },
+    {
+      "id": "const_expressions__evaluates_arithmetic_bitwise_shift_parentheses_and_precedence__14",
+      "source_refs": [
+        {
+          "path": "tests/const_expressions.rs",
+          "test": "evaluates_arithmetic_bitwise_shift_parentheses_and_precedence",
+          "line": 39,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 62,
+          "trap": null
+        }
+      ],
+      "original_source": "const VALUE: i64 = 0x30 | 0x0c ^ 0x02 & 0x03; fn main() -> i64 { return VALUE; }",
+      "source": "const VALUE: i64 = 0x30 | 0x0c ^ 0x02 & 0x03; #[inline(never)] pub fn test_fn() -> i64 { return VALUE; }",
+      "source_sha256": "85ad29ba1eba2935db5d4b66078dd6ef38b374e7d56dbc68d0ccbbf94d2d55bd",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_014"
+    },
+    {
+      "id": "const_expressions__evaluates_arithmetic_bitwise_shift_parentheses_and_precedence__15",
+      "source_refs": [
+        {
+          "path": "tests/const_expressions.rs",
+          "test": "evaluates_arithmetic_bitwise_shift_parentheses_and_precedence",
+          "line": 39,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": -3,
+          "trap": null
+        }
+      ],
+      "original_source": "const VALUE: i64 = -7 / 2; fn main() -> i64 { return VALUE; }",
+      "source": "const VALUE: i64 = -7 / 2; #[inline(never)] pub fn test_fn() -> i64 { return VALUE; }",
+      "source_sha256": "178f2d1803772fb4030be4f2807b4faa76e7af1d35ec0685c2f79fac2b86039d",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_015"
+    },
+    {
+      "id": "const_expressions__evaluates_arithmetic_bitwise_shift_parentheses_and_precedence__16",
+      "source_refs": [
+        {
+          "path": "tests/const_expressions.rs",
+          "test": "evaluates_arithmetic_bitwise_shift_parentheses_and_precedence",
+          "line": 39,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": -1,
+          "trap": null
+        }
+      ],
+      "original_source": "const VALUE: i64 = -7 % 2; fn main() -> i64 { return VALUE; }",
+      "source": "const VALUE: i64 = -7 % 2; #[inline(never)] pub fn test_fn() -> i64 { return VALUE; }",
+      "source_sha256": "cab565118e0987dbd4fef25f3e99a6d222cf500da5da81efad437d753ccc7266",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_016"
+    },
+    {
+      "id": "const_expressions__evaluates_arithmetic_bitwise_shift_parentheses_and_precedence__17",
+      "source_refs": [
+        {
+          "path": "tests/const_expressions.rs",
+          "test": "evaluates_arithmetic_bitwise_shift_parentheses_and_precedence",
+          "line": 39,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": -2,
+          "trap": null
+        }
+      ],
+      "original_source": "const VALUE: i64 = -8i64 >> 2; fn main() -> i64 { return VALUE; }",
+      "source": "const VALUE: i64 = -8i64 >> 2; #[inline(never)] pub fn test_fn() -> i64 { return VALUE; }",
+      "source_sha256": "e0673e6e1b1b5140b29eaf1b356cb31d204c55d5a9c081a6b667f069473e0950",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_017"
+    },
+    {
+      "id": "const_expressions__evaluates_comparisons_boolean_not_and_short_circuiting__0",
+      "source_refs": [
+        {
+          "path": "tests/const_expressions.rs",
+          "test": "evaluates_comparisons_boolean_not_and_short_circuiting",
+          "line": 65,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "bool",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 1,
+          "trap": null
+        }
+      ],
+      "original_source": "const VALUE: bool = 2 < 3; fn main() -> bool { return VALUE; }",
+      "source": "const VALUE: bool = 2 < 3; #[inline(never)] pub fn test_fn() -> bool { return VALUE; }",
+      "source_sha256": "66d40cd44af80b3a529e61019168c9cdc824ed04197e8519cf3e2dd404c61367",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_018"
+    },
+    {
+      "id": "const_expressions__evaluates_comparisons_boolean_not_and_short_circuiting__1",
+      "source_refs": [
+        {
+          "path": "tests/const_expressions.rs",
+          "test": "evaluates_comparisons_boolean_not_and_short_circuiting",
+          "line": 65,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "bool",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 1,
+          "trap": null
+        }
+      ],
+      "original_source": "const VALUE: bool = 2 <= 2; fn main() -> bool { return VALUE; }",
+      "source": "const VALUE: bool = 2 <= 2; #[inline(never)] pub fn test_fn() -> bool { return VALUE; }",
+      "source_sha256": "3bdac9a2ac2779fda3d7b3f67b1c3976fb3dabaf10aae627290b70592b5a8e5b",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_019"
+    },
+    {
+      "id": "const_expressions__evaluates_comparisons_boolean_not_and_short_circuiting__2",
+      "source_refs": [
+        {
+          "path": "tests/const_expressions.rs",
+          "test": "evaluates_comparisons_boolean_not_and_short_circuiting",
+          "line": 65,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "bool",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 1,
+          "trap": null
+        }
+      ],
+      "original_source": "const VALUE: bool = 3 > 2; fn main() -> bool { return VALUE; }",
+      "source": "const VALUE: bool = 3 > 2; #[inline(never)] pub fn test_fn() -> bool { return VALUE; }",
+      "source_sha256": "2a26a16e0c74deb0fcf18b013a612d725056eb21e3be7bb92d6c07c4411fda8a",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_020"
+    },
+    {
+      "id": "const_expressions__evaluates_comparisons_boolean_not_and_short_circuiting__3",
+      "source_refs": [
+        {
+          "path": "tests/const_expressions.rs",
+          "test": "evaluates_comparisons_boolean_not_and_short_circuiting",
+          "line": 65,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "bool",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 0,
+          "trap": null
+        }
+      ],
+      "original_source": "const VALUE: bool = 3 >= 4; fn main() -> bool { return VALUE; }",
+      "source": "const VALUE: bool = 3 >= 4; #[inline(never)] pub fn test_fn() -> bool { return VALUE; }",
+      "source_sha256": "cb0de56733c2006ddc65bc581f68aedec0cbda2a5c40b20364435f58732f20b6",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_021"
+    },
+    {
+      "id": "const_expressions__evaluates_comparisons_boolean_not_and_short_circuiting__4",
+      "source_refs": [
+        {
+          "path": "tests/const_expressions.rs",
+          "test": "evaluates_comparisons_boolean_not_and_short_circuiting",
+          "line": 65,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "bool",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 1,
+          "trap": null
+        }
+      ],
+      "original_source": "const VALUE: bool = 3 == 3; fn main() -> bool { return VALUE; }",
+      "source": "const VALUE: bool = 3 == 3; #[inline(never)] pub fn test_fn() -> bool { return VALUE; }",
+      "source_sha256": "d006fe20296b93a9ba558c49145c37113c011bf12a84efa2742d8c395df231d1",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_022"
+    },
+    {
+      "id": "const_expressions__evaluates_comparisons_boolean_not_and_short_circuiting__5",
+      "source_refs": [
+        {
+          "path": "tests/const_expressions.rs",
+          "test": "evaluates_comparisons_boolean_not_and_short_circuiting",
+          "line": 65,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "bool",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 0,
+          "trap": null
+        }
+      ],
+      "original_source": "const VALUE: bool = 3 != 3; fn main() -> bool { return VALUE; }",
+      "source": "const VALUE: bool = 3 != 3; #[inline(never)] pub fn test_fn() -> bool { return VALUE; }",
+      "source_sha256": "97b08dbc7936d7f36552b963c50b0164c8f32e71a06674cfba1f5f11a6b1176a",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_023"
+    },
+    {
+      "id": "const_expressions__evaluates_comparisons_boolean_not_and_short_circuiting__6",
+      "source_refs": [
+        {
+          "path": "tests/const_expressions.rs",
+          "test": "evaluates_comparisons_boolean_not_and_short_circuiting",
+          "line": 65,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "bool",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 1,
+          "trap": null
+        }
+      ],
+      "original_source": "const VALUE: bool = true == !false; fn main() -> bool { return VALUE; }",
+      "source": "const VALUE: bool = true == !false; #[inline(never)] pub fn test_fn() -> bool { return VALUE; }",
+      "source_sha256": "4a791d2f2853e6136c2c88edde61b198810ba62e2b307885420ebf24afeb0364",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_024"
+    },
+    {
+      "id": "const_expressions__evaluates_comparisons_boolean_not_and_short_circuiting__7",
+      "source_refs": [
+        {
+          "path": "tests/const_expressions.rs",
+          "test": "evaluates_comparisons_boolean_not_and_short_circuiting",
+          "line": 65,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "bool",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 0,
+          "trap": null
+        }
+      ],
+      "original_source": "const VALUE: bool = false != false; fn main() -> bool { return VALUE; }",
+      "source": "const VALUE: bool = false != false; #[inline(never)] pub fn test_fn() -> bool { return VALUE; }",
+      "source_sha256": "db03f1da642f75bdd699f2f22b611e94c9e5ff15d1ba725a478819421c256231",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_025"
+    },
+    {
+      "id": "const_expressions__evaluates_comparisons_boolean_not_and_short_circuiting__8",
+      "source_refs": [
+        {
+          "path": "tests/const_expressions.rs",
+          "test": "evaluates_comparisons_boolean_not_and_short_circuiting",
+          "line": 65,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "bool",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 1,
+          "trap": null
+        }
+      ],
+      "original_source": "const VALUE: bool = !false && (2 < 3) || false; fn main() -> bool { return VALUE; }",
+      "source": "const VALUE: bool = !false && (2 < 3) || false; #[inline(never)] pub fn test_fn() -> bool { return VALUE; }",
+      "source_sha256": "ed838b792cef1d8d0805097f522d2c175045197030a4ec1260bcdb6ed5d188c5",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_026"
+    },
+    {
+      "id": "const_expressions__evaluates_comparisons_boolean_not_and_short_circuiting__9",
+      "source_refs": [
+        {
+          "path": "tests/const_expressions.rs",
+          "test": "evaluates_comparisons_boolean_not_and_short_circuiting",
+          "line": 65,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "bool",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 0,
+          "trap": null
+        }
+      ],
+      "original_source": "const VALUE: bool = false && (1 / 0 == 0); fn main() -> bool { return VALUE; }",
+      "source": "const VALUE: bool = false && (1 / 0 == 0); #[inline(never)] pub fn test_fn() -> bool { return VALUE; }",
+      "source_sha256": "e81407eab88f339835f68b828527098e0e6173c61280fc5babf2a730bc6ebe15",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_027"
+    },
+    {
+      "id": "const_expressions__evaluates_comparisons_boolean_not_and_short_circuiting__10",
+      "source_refs": [
+        {
+          "path": "tests/const_expressions.rs",
+          "test": "evaluates_comparisons_boolean_not_and_short_circuiting",
+          "line": 65,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "bool",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 1,
+          "trap": null
+        }
+      ],
+      "original_source": "const VALUE: bool = true || (1 % 0 == 0); fn main() -> bool { return VALUE; }",
+      "source": "const VALUE: bool = true || (1 % 0 == 0); #[inline(never)] pub fn test_fn() -> bool { return VALUE; }",
+      "source_sha256": "eb3d54d01c205d0b84a8a8025a37a98f31602f42fcf0369ba21e7cfe5e521bf2",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_028"
+    },
+    {
+      "id": "const_expressions__resolves_forward_and_transitive_dependencies_without_emitting_runtime_operators",
+      "source_refs": [
+        {
+          "path": "tests/const_expressions.rs",
+          "test": "resolves_forward_and_transitive_dependencies_without_emitting_runtime_operators",
+          "line": 108,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "const ANSWER: i64 = (BASE + OFFSET) * 2;const BASE: i64 = LIMIT - 1;const OFFSET: i64 = 1;const LIMIT: i64 = 21;const CHECKED: bool = ANSWER == 42 && !false || false;fn main() -> i64 { return ANSWER; }",
+      "source": "const ANSWER: i64 = (BASE + OFFSET) * 2;const BASE: i64 = LIMIT - 1;const OFFSET: i64 = 1;const LIMIT: i64 = 21;const CHECKED: bool = ANSWER == 42 && !false || false;#[inline(never)] pub fn test_fn() -> i64 { return ANSWER; }",
+      "source_sha256": "645a6c647df47f4e56b2d18bd944b5a863c6fd41978e9728d150f55623eeafb7",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_029"
+    },
+    {
+      "id": "const_expressions__preserves_signed_and_unsigned_boundaries__0",
+      "source_refs": [
+        {
+          "path": "tests/const_expressions.rs",
+          "test": "preserves_signed_and_unsigned_boundaries",
+          "line": 87,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 9223372036854775807,
+          "trap": null
+        }
+      ],
+      "original_source": "const VALUE: i64 = 9223372036854775807i64; fn main() -> i64 { return VALUE; }",
+      "source": "const VALUE: i64 = 9223372036854775807i64; #[inline(never)] pub fn test_fn() -> i64 { return VALUE; }",
+      "source_sha256": "df6c6fae0c9ac49f876c58b9557cab2c294b8cb91cbd4b0bd69700bd248e5ad6",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_030"
+    },
+    {
+      "id": "const_expressions__preserves_signed_and_unsigned_boundaries__1",
+      "source_refs": [
+        {
+          "path": "tests/const_expressions.rs",
+          "test": "preserves_signed_and_unsigned_boundaries",
+          "line": 87,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": -9223372036854775808,
+          "trap": null
+        }
+      ],
+      "original_source": "const VALUE: i64 = -9223372036854775808i64; fn main() -> i64 { return VALUE; }",
+      "source": "const VALUE: i64 = -9223372036854775808i64; #[inline(never)] pub fn test_fn() -> i64 { return VALUE; }",
+      "source_sha256": "aa4e718018512df84e0d62497d156bdd83c75d7ba4491d917b35f40656ec6838",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_031"
+    },
+    {
+      "id": "const_expressions__preserves_signed_and_unsigned_boundaries__2",
+      "source_refs": [
+        {
+          "path": "tests/const_expressions.rs",
+          "test": "preserves_signed_and_unsigned_boundaries",
+          "line": 87,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "u64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": -1,
+          "trap": null
+        }
+      ],
+      "original_source": "const VALUE: u64 = 18446744073709551615; fn main() -> u64 { return VALUE; }",
+      "source": "const VALUE: u64 = 18446744073709551615; #[inline(never)] pub fn test_fn() -> u64 { return VALUE; }",
+      "source_sha256": "d62afc1479efc94961a3ace3049ddf2a2e88684dfec2b7e1cb007368814f40ef",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_032"
+    },
+    {
+      "id": "const_expressions__preserves_signed_and_unsigned_boundaries__3",
+      "source_refs": [
+        {
+          "path": "tests/const_expressions.rs",
+          "test": "preserves_signed_and_unsigned_boundaries",
+          "line": 87,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "u64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 1,
+          "trap": null
+        }
+      ],
+      "original_source": "const VALUE: u64 = 0xffff_ffff_ffff_ffffu64 >> 63u64; fn main() -> u64 { return VALUE; }",
+      "source": "const VALUE: u64 = 0xffff_ffff_ffff_ffffu64 >> 63u64; #[inline(never)] pub fn test_fn() -> u64 { return VALUE; }",
+      "source_sha256": "4ee1163c49c73dc55fc47e052997ba34edff5db1a6e62dabca53d66342ec7128",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_033"
+    },
+    {
+      "id": "const_expressions__preserves_signed_and_unsigned_boundaries__4",
+      "source_refs": [
+        {
+          "path": "tests/const_expressions.rs",
+          "test": "preserves_signed_and_unsigned_boundaries",
+          "line": 87,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "u64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": -9223372036854775808,
+          "trap": null
+        }
+      ],
+      "original_source": "const VALUE: u64 = 1u64 << 63u64; fn main() -> u64 { return VALUE; }",
+      "source": "const VALUE: u64 = 1u64 << 63u64; #[inline(never)] pub fn test_fn() -> u64 { return VALUE; }",
+      "source_sha256": "dfa71446736709025e9ab5a1d3726b3ebb39bca66720a18d5bbc54bad2900813",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_034"
+    },
+    {
+      "id": "const_expressions__preserves_signed_and_unsigned_boundaries__5",
+      "source_refs": [
+        {
+          "path": "tests/const_expressions.rs",
+          "test": "preserves_signed_and_unsigned_boundaries",
+          "line": 87,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "u64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": -1,
+          "trap": null
+        }
+      ],
+      "original_source": "const VALUE: u64 = !0u64; fn main() -> u64 { return VALUE; }",
+      "source": "const VALUE: u64 = !0u64; #[inline(never)] pub fn test_fn() -> u64 { return VALUE; }",
+      "source_sha256": "da4f187ec2a313b0400eeac1b892b5eab027e0b50f76f22f8805ada538f50f6b",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_035"
+    },
+    {
+      "id": "const_items__constant_items_do_not_change_function_indices_and_const_fn_stays_a_function",
+      "source_refs": [
+        {
+          "path": "tests/const_items.rs",
+          "test": "constant_items_do_not_change_function_indices_and_const_fn_stays_a_function",
+          "line": 85,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "const ANSWER: i64 = 42;const fn identity(value: i64) -> i64 { return value; }pub const UNUSED: bool = false;fn main() -> i64 { return identity(ANSWER); }",
+      "source": "const ANSWER: i64 = 42;const fn identity(value: i64) -> i64 { return value; }pub const UNUSED: bool = false;#[inline(never)] pub fn test_fn() -> i64 { return identity(ANSWER); }",
+      "source_sha256": "23e386b96f11c0f3dba56d4e650141d9645b073b3b4395452bb7ccaf5d828894",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_036"
+    },
+    {
+      "id": "integer_syntax__radix_literals_preserve_signed_and_unsigned_values",
+      "source_refs": [
+        {
+          "path": "tests/integer_syntax.rs",
+          "test": "radix_literals_preserve_signed_and_unsigned_values",
+          "line": 26,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 252,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main() -> i64 { return 0x2a + 0X2A + 0o52 + 0O52 + 0b10_1010 + 0B101010; }",
+      "source": "#[inline(never)] pub fn test_fn() -> i64 { return 0x2a + 0x2A + 0o52 + 0o52 + 0b10_1010 + 0b101010; }",
+      "source_sha256": "5a1adc4a10c2da8c54594e26de536ccf281e8bc061e57d7c55d33fbb1436d4a2",
+      "adaptation": "Normalize unsupported uppercase radix prefixes to standard Rust lowercase; exact numeric value preserved.",
+      "module": "case_037"
+    },
+    {
+      "id": "integer_syntax__radix_literals_preserve_signed_and_unsigned_values__maximum",
+      "source_refs": [
+        {
+          "path": "tests/integer_syntax.rs",
+          "test": "radix_literals_preserve_signed_and_unsigned_values",
+          "line": 32,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "u64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": -1,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main() -> u64 { let value: u64 = 0xffff_ffff_ffff_ffff; return value; }",
+      "source": "#[inline(never)] pub fn test_fn() -> u64 { let value: u64 = 0xffff_ffff_ffff_ffff; return value; }",
+      "source_sha256": "cb4bb8e3a1c80766fa1f5cada7f09ad15852bdec590c0298c0d6a52551402934",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_038"
+    },
+    {
+      "id": "const_items__scalar_constants_support_visibilities_radices_suffixes_and_boolean_references",
+      "source_refs": [
+        {
+          "path": "tests/const_items.rs",
+          "test": "scalar_constants_support_visibilities_radices_suffixes_and_boolean_references",
+          "line": 22,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "const SIGNED: i64 = -0x2a;const UNSIGNED: u64 = 0xffff_ffff_ffff_ffff;pub const WORD: isize = 0o52isize;pub(crate) const UWORD: usize = 0b10_1010usize;pub(self) const ENABLED: bool = true;pub(super) const DISABLED: bool = false;fn main() -> i64 {if ENABLED && !DISABLED {return SIGNED + WORD + UWORD as i64 + 1 + UNSIGNED as i64;}return 0;}",
+      "source": "const SIGNED: i64 = -0x2a;const UNSIGNED: u64 = 0xffff_ffff_ffff_ffff;pub const WORD: isize = 0o52isize;pub(crate) const UWORD: usize = 0b10_1010usize;pub(self) const ENABLED: bool = true;pub(super) const DISABLED: bool = false;#[inline(never)] pub fn test_fn() -> i64 {if ENABLED && !DISABLED {return SIGNED + WORD as i64 + UWORD as i64 + 1 + UNSIGNED as i64;}return 0;}",
+      "source_sha256": "6473bff7bda5940def171919b6dba011ddea9d2f6210a5e57641fa5280240e86",
+      "adaptation": "Explicit x86_64 word-sized cast replaces the removed frontend alias rule; numeric result preserved.",
+      "module": "case_039"
+    },
+    {
+      "id": "const_items__references_emit_typed_constants_and_locals_can_shadow_constant_names",
+      "source_refs": [
+        {
+          "path": "tests/const_items.rs",
+          "test": "references_emit_typed_constants_and_locals_can_shadow_constant_names",
+          "line": 49,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "u64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "const BASE: u64 = 0x28; const OFFSET: usize = 2usize;fn main() -> u64 { return BASE + OFFSET; }",
+      "source": "const BASE: u64 = 0x28; const OFFSET: usize = 2usize;#[inline(never)] pub fn test_fn() -> u64 { return BASE + OFFSET as u64; }",
+      "source_sha256": "f8527205636743faa0d1592b23dddcf84e1fc7112d45b612f55e4da6537c29f0",
+      "adaptation": "Explicit x86_64 word-sized cast replaces the removed frontend alias rule; numeric result preserved.",
+      "module": "case_040"
+    },
+    {
+      "id": "const_items__scalar_constants_support_visibilities_radices_suffixes_and_boolean_references__minimum",
+      "source_refs": [
+        {
+          "path": "tests/const_items.rs",
+          "test": "scalar_constants_support_visibilities_radices_suffixes_and_boolean_references",
+          "line": 41,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "isize",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": -9223372036854775808,
+          "trap": null
+        }
+      ],
+      "original_source": "const MINIMUM: isize = -0x8000_0000_0000_0000isize;fn main() -> isize { return MINIMUM; }",
+      "source": "const MINIMUM: isize = -0x8000_0000_0000_0000isize;#[inline(never)] pub fn test_fn() -> isize { return MINIMUM; }",
+      "source_sha256": "e87941a3d89045005ca2f83bbfebea9580ae34729bff3b1cf91fc24ba6d61c08",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_041"
+    }
+  ]
+}

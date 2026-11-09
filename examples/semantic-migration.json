@@ -1,0 +1,236 @@
+[
+  {
+    "source": "examples/integer_syntax.kfr",
+    "source_sha256": "44632fccbbf212fa5a77920a3065a253ae6124b9161181736e6ffadc886e06d3",
+    "rust_source": "examples/integer_syntax.rs",
+    "change": "renamed non-Rust return-valued main to example_result and added standard printing main"
+  },
+  {
+    "source": "examples/native_bitwise.kfr",
+    "source_sha256": "8593f2300031f73f2c4e74774521741594359bf422eb650b3a0c14a40f29ed46",
+    "rust_source": "examples/native_bitwise.rs",
+    "change": "renamed non-Rust return-valued main to example_result and added standard printing main"
+  },
+  {
+    "source": "examples/native_bool.kfr",
+    "source_sha256": "c986f388b13f1f73d0dffb764534c82bb6990d1ba3b2a417d35d990a8138b5d1",
+    "rust_source": "examples/native_bool.rs",
+    "change": "renamed non-Rust return-valued main to example_result and added standard printing main"
+  },
+  {
+    "source": "examples/native_bool_compare.kfr",
+    "source_sha256": "dd50f779d6321319f9b9474cd9c99669f66bfc9f5f8b1f3730dce96085857d98",
+    "rust_source": "examples/native_bool_compare.rs",
+    "change": "renamed non-Rust return-valued main to example_result and added standard printing main"
+  },
+  {
+    "source": "examples/native_boolean_inverse.kfr",
+    "source_sha256": "22472b4ad06e0f51017e9c48286ce1cf085022f4f68caf76a1ca9df67a162fcd",
+    "rust_source": "examples/native_boolean_inverse.rs",
+    "change": "renamed non-Rust return-valued main to example_result and added standard printing main"
+  },
+  {
+    "source": "examples/native_break_continue.kfr",
+    "source_sha256": "ca0b205fd958238bd1e128a3e3518dd0cda1a7ae1e72a241442d390ee29d08c0",
+    "rust_source": "examples/native_break_continue.rs",
+    "change": "renamed non-Rust return-valued main to example_result and added standard printing main"
+  },
+  {
+    "source": "examples/native_call.kfr",
+    "source_sha256": "72a251db18bd9e90f0aecf5294e2e619ece11878b4a64be4e9be8fea18008168",
+    "rust_source": "examples/native_call.rs",
+    "change": "renamed non-Rust return-valued main to example_result and added standard printing main"
+  },
+  {
+    "source": "examples/native_cast.kfr",
+    "source_sha256": "261e161989edcc2214df78276fa34ad067882dd27185c445a834dd53123dbbfc",
+    "rust_source": "examples/native_cast.rs",
+    "change": "renamed non-Rust return-valued main to example_result and added standard printing main"
+  },
+  {
+    "source": "examples/native_compare_immediate.kfr",
+    "source_sha256": "0798f6e08b6ea8e2ae42e9fea5a668785fe68ecdb6480184d004c802ff4d2481",
+    "rust_source": "examples/native_compare_immediate.rs",
+    "change": "renamed non-Rust return-valued main to example_result and added standard printing main"
+  },
+  {
+    "source": "examples/native_const_expression.kfr",
+    "source_sha256": "bce6f73d68eb158971f5a5b532c27887547f3af72e4b4fc4146bd123aa0aed61",
+    "rust_source": "examples/native_const_expression.rs",
+    "change": "renamed non-Rust return-valued main to example_result and added standard printing main"
+  },
+  {
+    "source": "examples/native_const_fn.kfr",
+    "source_sha256": "ba8bd0f035fe82dd75093513604fe479c8c8677d582d551a65dc5b22c728e9f5",
+    "rust_source": "examples/native_const_fn.rs",
+    "change": "renamed non-Rust return-valued main to example_result and added standard printing main"
+  },
+  {
+    "source": "examples/native_const_item.kfr",
+    "source_sha256": "ceb845c594974923a8a3a8c084ffb0d6b4acd8858f8acdaf48131e94b3cecda1",
+    "rust_source": "examples/native_const_item.rs",
+    "change": "renamed non-Rust return-valued main to example_result and added standard printing main"
+  },
+  {
+    "source": "examples/native_early_return.kfr",
+    "source_sha256": "9517bce447d443b492a3c1222bb67230b46cb42bb84a78131f6f5d907514beb0",
+    "rust_source": "examples/native_early_return.rs",
+    "change": "renamed non-Rust return-valued main to example_result and added standard printing main"
+  },
+  {
+    "source": "examples/native_else_if.kfr",
+    "source_sha256": "882278d69f303da7fd02d75c6e803aebc6037e4713d8000bad49d2ed4c56bb2d",
+    "rust_source": "examples/native_else_if.rs",
+    "change": "renamed non-Rust return-valued main to example_result and added standard printing main"
+  },
+  {
+    "source": "examples/native_expressions.kfr",
+    "source_sha256": "da0fe70d6ceffdd92ae7d55fd16c60b4be2880b404a33938f7576e0040047165",
+    "rust_source": "examples/native_expressions.rs",
+    "change": "renamed non-Rust return-valued main to example_result and added standard printing main"
+  },
+  {
+    "source": "examples/native_for.kfr",
+    "source_sha256": "11938aa4bd597a03d80bdd0628d764dd7a8c50beb72c6e0518fddce23577e699",
+    "rust_source": "examples/native_for.rs",
+    "change": "renamed non-Rust return-valued main to example_result and added standard printing main"
+  },
+  {
+    "source": "examples/native_id.kfr",
+    "source_sha256": "7b3bf539452a17d7bc4561de629b2c1e73500af0a3b6ef9fa2ff66be189ebec4",
+    "rust_source": "examples/native_id.rs",
+    "change": "renamed non-Rust return-valued main to example_result and added standard printing main"
+  },
+  {
+    "source": "examples/native_if.kfr",
+    "source_sha256": "970651af305459b5190b7a3d3044a3a8fab8f63f0f1a95940a0178a98c2d25de",
+    "rust_source": "examples/native_if.rs",
+    "change": "renamed non-Rust return-valued main to example_result and added standard printing main"
+  },
+  {
+    "source": "examples/native_inclusive.kfr",
+    "source_sha256": "eec3de7af34327101024cd7dabdadb7ca93931ae24d0c701cedfb227867e5b35",
+    "rust_source": "examples/native_inclusive.rs",
+    "change": "renamed non-Rust return-valued main to example_result and added standard printing main"
+  },
+  {
+    "source": "examples/native_loop_value.kfr",
+    "source_sha256": "89ca6b995aafeb1ffb2645f527ad31ae1b5eed7c75bac9ff4684efdf5c29f4dd",
+    "rust_source": "examples/native_loop_value.rs",
+    "change": "renamed non-Rust return-valued main to example_result and added standard printing main"
+  },
+  {
+    "source": "examples/native_main.kfr",
+    "source_sha256": "2b131d09f885ff7299a7edfa7ef0cbc4a65498d0cc2d9ff60acb51fe2e9fa02e",
+    "rust_source": "examples/native_main.rs",
+    "change": "renamed non-Rust return-valued main to example_result and added standard printing main"
+  },
+  {
+    "source": "examples/native_match.kfr",
+    "source_sha256": "18df8515963aa2b4e3df195d7ba0d6845683eb5a138a1c2474e162cfe56c7b92",
+    "rust_source": "examples/native_match.rs",
+    "change": "renamed non-Rust return-valued main to example_result and added standard printing main"
+  },
+  {
+    "source": "examples/native_match_range.kfr",
+    "source_sha256": "53b35133b19db28d9d45ceb8abc180ff69702bf22020ee5ba31038a780d41244",
+    "rust_source": "examples/native_match_range.rs",
+    "change": "renamed non-Rust return-valued main to example_result and added standard printing main"
+  },
+  {
+    "source": "examples/native_nested_while.kfr",
+    "source_sha256": "38d9da14390f7c50c6b3dd9a3e0b9ef75c6f44b0eba8dba457c74c10dc255cd1",
+    "rust_source": "examples/native_nested_while.rs",
+    "change": "renamed non-Rust return-valued main to example_result and added standard printing main"
+  },
+  {
+    "source": "examples/native_not.kfr",
+    "source_sha256": "54a3a5e7864f53592b08e1c7b2e298f60da91799512fb745d2a1af026dcc0fc4",
+    "rust_source": "examples/native_not.rs",
+    "change": "renamed non-Rust return-valued main to example_result and added standard printing main"
+  },
+  {
+    "source": "examples/native_recursion.kfr",
+    "source_sha256": "6521436e217ec830fdc34fb090574f629e23719d1e3a307dfe27f1eb25b5866b",
+    "rust_source": "examples/native_recursion.rs",
+    "change": "renamed non-Rust return-valued main to example_result and added standard printing main"
+  },
+  {
+    "source": "examples/native_remainder.kfr",
+    "source_sha256": "380f10a156da434dd639cc1e793ab895b14f908133b1f108f4c37875b65bbd8d",
+    "rust_source": "examples/native_remainder.rs",
+    "change": "renamed non-Rust return-valued main to example_result and added standard printing main"
+  },
+  {
+    "source": "examples/native_second.kfr",
+    "source_sha256": "b184503468430ca6587825bbe2c4a19e4462092dad97792c530a3dd677d4e804",
+    "rust_source": "examples/native_second.rs",
+    "change": "renamed non-Rust return-valued main to example_result and added standard printing main"
+  },
+  {
+    "source": "examples/native_shadowing.kfr",
+    "source_sha256": "155bcf158faa783a29120db56d800e420cc29af0637b1125bd8bd4bf36d391b4",
+    "rust_source": "examples/native_shadowing.rs",
+    "change": "renamed non-Rust return-valued main to example_result and added standard printing main"
+  },
+  {
+    "source": "examples/native_signed_division.kfr",
+    "source_sha256": "491256222be939beaf0d350518b9c83d5fa54d631f5fdbbbab3017aed58fd195",
+    "rust_source": "examples/native_signed_division.rs",
+    "change": "renamed non-Rust return-valued main to example_result and added standard printing main"
+  },
+  {
+    "source": "examples/native_statement_if.kfr",
+    "source_sha256": "482009cb11961bd68b9a26d72b5b1e8f5fa5cd9ac971226e1837b7830cbd67e2",
+    "rust_source": "examples/native_statement_if.rs",
+    "change": "renamed non-Rust return-valued main to example_result and added standard printing main"
+  },
+  {
+    "source": "examples/native_strength.kfr",
+    "source_sha256": "57908a7c96e676e8e2d4dd44f3f1daa746b91c6abe5c0752ab2d5f3eb5378f9a",
+    "rust_source": "examples/native_strength.rs",
+    "change": "renamed non-Rust return-valued main to example_result and added standard printing main"
+  },
+  {
+    "source": "examples/native_sum8.kfr",
+    "source_sha256": "4f74faef548c92a6eccede3266f956fe91a872dba3bb70712732d178c1c41c03",
+    "rust_source": "examples/native_sum8.rs",
+    "change": "renamed non-Rust return-valued main to example_result and added standard printing main"
+  },
+  {
+    "source": "examples/native_tail.kfr",
+    "source_sha256": "067895a303c6ba4e917716a252c8264a406ed28c565ad4588249ef2b9107df8c",
+    "rust_source": "examples/native_tail.rs",
+    "change": "renamed non-Rust return-valued main to example_result and added standard printing main"
+  },
+  {
+    "source": "examples/native_u32_immediate.kfr",
+    "source_sha256": "57aced89eef4e119f06baba81b340ea500d7a2ae692f8863fdfeaad04717dfc8",
+    "rust_source": "examples/native_u32_immediate.rs",
+    "change": "renamed non-Rust return-valued main to example_result and added standard printing main"
+  },
+  {
+    "source": "examples/native_u64.kfr",
+    "source_sha256": "53b5484c2dbb5c5b14243cd343d48c9d76e2a6d3b1631f73880d1424a45a3c01",
+    "rust_source": "examples/native_u64.rs",
+    "change": "renamed non-Rust return-valued main to example_result and added standard printing main"
+  },
+  {
+    "source": "examples/native_unary_strength.kfr",
+    "source_sha256": "9972aa58c3740e77b4c8ec6cf76f5b832c4bbe28366ff3d56f861125b4dc5323",
+    "rust_source": "examples/native_unary_strength.rs",
+    "change": "renamed non-Rust return-valued main to example_result and added standard printing main"
+  },
+  {
+    "source": "examples/native_visibility.kfr",
+    "source_sha256": "f33718a816618d799c2f13241d41228c12c1686842beffb11c0cd984993709dc",
+    "rust_source": "examples/native_visibility.rs",
+    "change": "renamed non-Rust return-valued main to example_result and added standard printing main"
+  },
+  {
+    "source": "examples/native_while.kfr",
+    "source_sha256": "04316ed459101bbba5ea8541dfd09d5ad680c60f131d43bd5ae8c9593897f478",
+    "rust_source": "examples/native_while.rs",
+    "change": "renamed non-Rust return-valued main to example_result and added standard printing main"
+  }
+]

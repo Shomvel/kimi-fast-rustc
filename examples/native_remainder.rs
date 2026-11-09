@@ -1,0 +1,13 @@
+fn example_result() -> u64 {
+    let remainder = 0xffff_ffff_ffff_ffffu64 % 64;
+    let quotient = 255u64 / 64;
+    let high = 0x8000_0000_0000_0000u64;
+    let high_remainder = (high - 1) % high;
+    return if high_remainder == high - 1 {
+        remainder - quotient - 18
+    } else {
+        0
+    };
+}
+
+fn main() { println!("{}", example_result()); }

@@ -1,0 +1,24 @@
+fn adjust(mut value: isize) -> isize {
+    let mut count = 0;
+    while count < 2 {
+        value &= 0x7f;
+        value ^= 0x20;
+        value <<= 1;
+        value >>= 1;
+        value |= 1;
+        count += 1;
+    }
+    return value;
+}
+
+fn example_result() -> i64 {
+    let mut value: u64 = 0x8000_0000_0000_0000u64;
+    value >>= 63;
+    value <<= 6;
+    value |= 2;
+    value ^= 0x68;
+    let signed: isize = adjust(0xff);
+    return (value as i64) + (signed as i64) - 0b111_1111;
+}
+
+fn main() { println!("{}", example_result()); }

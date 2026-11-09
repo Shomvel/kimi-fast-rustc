@@ -1,0 +1,18 @@
+fn example_result() -> i64 {
+    let mut sum = 0;
+    let mut i = 0;
+    while i < 10 {
+        if i % 2 == 0 {
+            sum = sum + i;
+        } else {
+            sum = sum + 0;
+        }
+        i = i + 1;
+    }
+    if sum == 20 {
+        sum = sum + 22;
+    }
+    return sum;
+}
+
+fn main() { println!("{}", example_result()); }

@@ -1,0 +1,4784 @@
+{
+  "schema_version": 1,
+  "crate_name": "legacy_comparison",
+  "source_revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f",
+  "rustc_flags": [
+    "--edition=2021",
+    "-Cpanic=abort",
+    "-Coverflow-checks=off",
+    "-Copt-level=0",
+    "-Cdebug-assertions=off",
+    "-Zmir-opt-level=0",
+    "-Awarnings",
+    "-Aunconditional_panic",
+    "-Aarithmetic_overflow"
+  ],
+  "runs": [
+    {
+      "id": "comparison_normal",
+      "run_args": [],
+      "expected_exit": "success",
+      "expected_stdout": "bool_comparisons__bool_equality_and_inequality_cover_the_truth_table__eq:0=1\nbool_comparisons__bool_equality_and_inequality_cover_the_truth_table__eq:1=0\nbool_comparisons__bool_equality_and_inequality_cover_the_truth_table__eq:2=0\nbool_comparisons__bool_equality_and_inequality_cover_the_truth_table__eq:3=1\nbool_comparisons__bool_equality_and_inequality_cover_the_truth_table__ne:0=0\nbool_comparisons__bool_equality_and_inequality_cover_the_truth_table__ne:1=1\nbool_comparisons__bool_equality_and_inequality_cover_the_truth_table__ne:2=1\nbool_comparisons__bool_equality_and_inequality_cover_the_truth_table__ne:3=0\nbool_ops__bool_parameters_and_logical_operators_cover_truth_tables__0:0=0\nbool_ops__bool_parameters_and_logical_operators_cover_truth_tables__0:1=0\nbool_ops__bool_parameters_and_logical_operators_cover_truth_tables__0:2=0\nbool_ops__bool_parameters_and_logical_operators_cover_truth_tables__0:3=1\nbool_ops__bool_parameters_and_logical_operators_cover_truth_tables__1:0=0\nbool_ops__bool_parameters_and_logical_operators_cover_truth_tables__1:1=1\nbool_ops__bool_parameters_and_logical_operators_cover_truth_tables__1:2=1\nbool_ops__bool_parameters_and_logical_operators_cover_truth_tables__1:3=1\nbool_comparisons__bool_comparisons_preserve_short_circuit_evaluation_and_precedence__and:0=0\nbool_comparisons__bool_comparisons_preserve_short_circuit_evaluation_and_precedence__and:1=0\nbool_comparisons__bool_comparisons_preserve_short_circuit_evaluation_and_precedence__and:2=1\nbool_comparisons__bool_comparisons_preserve_short_circuit_evaluation_and_precedence__or:0=1\nbool_comparisons__bool_comparisons_preserve_short_circuit_evaluation_and_precedence__or:1=1\nbool_comparisons__bool_comparisons_preserve_short_circuit_evaluation_and_precedence__or:2=1\nbool_comparisons__bool_comparisons_preserve_short_circuit_evaluation_and_precedence__or:3=0\nbool_comparisons__bool_comparisons_accept_branch_phi_values:0=1\nbool_comparisons__bool_comparisons_accept_branch_phi_values:1=1\nbool_comparisons__bool_comparisons_accept_branch_phi_values:2=0\nbool_comparisons__bool_comparisons_accept_branch_phi_values:3=0\nbool_comparisons__integer_comparisons_keep_signed_and_unsigned_semantics__i64:0=1\nbool_comparisons__integer_comparisons_keep_signed_and_unsigned_semantics__i64:1=1\nbool_comparisons__integer_comparisons_keep_signed_and_unsigned_semantics__i64:2=0\nbool_comparisons__integer_comparisons_keep_signed_and_unsigned_semantics__u64:0=0\nbool_comparisons__integer_comparisons_keep_signed_and_unsigned_semantics__u64:1=0\nbool_comparisons__integer_comparisons_keep_signed_and_unsigned_semantics__u64:2=1\ncompare_immediates__signed_left_constants_swap_to_the_inverse_right_immediate_comparison__lt:0=0\ncompare_immediates__signed_left_constants_swap_to_the_inverse_right_immediate_comparison__lt:1=0\ncompare_immediates__signed_left_constants_swap_to_the_inverse_right_immediate_comparison__lt:2=1\ncompare_immediates__unsigned_left_constants_swap_to_the_inverse_right_immediate_comparison__lt:0=1\ncompare_immediates__unsigned_left_constants_swap_to_the_inverse_right_immediate_comparison__lt:1=0\ncompare_immediates__unsigned_left_constants_swap_to_the_inverse_right_immediate_comparison__lt:2=0\ncompare_immediates__unsigned_left_constants_swap_to_the_inverse_right_immediate_comparison__lt:3=0\ncompare_immediates__unsigned_left_constants_swap_to_the_inverse_right_immediate_comparison__lt:4=1\ncompare_immediates__unsigned_left_constants_swap_to_the_inverse_right_immediate_comparison__lt:5=1\nboolean_comparison_simplification__signed_negated_comparisons_use_their_inverse__lt:0=0\nboolean_comparison_simplification__signed_negated_comparisons_use_their_inverse__lt:1=0\nboolean_comparison_simplification__signed_negated_comparisons_use_their_inverse__lt:2=1\nboolean_comparison_simplification__signed_negated_comparisons_use_their_inverse__lt:3=1\nboolean_comparison_simplification__signed_negated_comparisons_use_their_inverse__lt:4=1\nboolean_comparison_simplification__unsigned_negated_comparisons_use_their_inverse__lt:0=1\nboolean_comparison_simplification__unsigned_negated_comparisons_use_their_inverse__lt:1=1\nboolean_comparison_simplification__unsigned_negated_comparisons_use_their_inverse__lt:2=0\nboolean_comparison_simplification__unsigned_negated_comparisons_use_their_inverse__lt:3=1\nboolean_comparison_simplification__unsigned_negated_comparisons_use_their_inverse__lt:4=1\ncompare_immediates__signed_left_constants_swap_to_the_inverse_right_immediate_comparison__le:0=0\ncompare_immediates__signed_left_constants_swap_to_the_inverse_right_immediate_comparison__le:1=1\ncompare_immediates__signed_left_constants_swap_to_the_inverse_right_immediate_comparison__le:2=1\ncompare_immediates__unsigned_left_constants_swap_to_the_inverse_right_immediate_comparison__le:0=1\ncompare_immediates__unsigned_left_constants_swap_to_the_inverse_right_immediate_comparison__le:1=0\ncompare_immediates__unsigned_left_constants_swap_to_the_inverse_right_immediate_comparison__le:2=0\ncompare_immediates__unsigned_left_constants_swap_to_the_inverse_right_immediate_comparison__le:3=1\ncompare_immediates__unsigned_left_constants_swap_to_the_inverse_right_immediate_comparison__le:4=1\ncompare_immediates__unsigned_left_constants_swap_to_the_inverse_right_immediate_comparison__le:5=1\nboolean_comparison_simplification__signed_negated_comparisons_use_their_inverse__le:0=0\nboolean_comparison_simplification__signed_negated_comparisons_use_their_inverse__le:1=0\nboolean_comparison_simplification__signed_negated_comparisons_use_their_inverse__le:2=1\nboolean_comparison_simplification__signed_negated_comparisons_use_their_inverse__le:3=0\nboolean_comparison_simplification__signed_negated_comparisons_use_their_inverse__le:4=1\nboolean_comparison_simplification__unsigned_negated_comparisons_use_their_inverse__le:0=1\nboolean_comparison_simplification__unsigned_negated_comparisons_use_their_inverse__le:1=1\nboolean_comparison_simplification__unsigned_negated_comparisons_use_their_inverse__le:2=0\nboolean_comparison_simplification__unsigned_negated_comparisons_use_their_inverse__le:3=0\nboolean_comparison_simplification__unsigned_negated_comparisons_use_their_inverse__le:4=1\ncompare_immediates__signed_left_constants_swap_to_the_inverse_right_immediate_comparison__gt:0=1\ncompare_immediates__signed_left_constants_swap_to_the_inverse_right_immediate_comparison__gt:1=0\ncompare_immediates__signed_left_constants_swap_to_the_inverse_right_immediate_comparison__gt:2=0\ncompare_immediates__unsigned_left_constants_swap_to_the_inverse_right_immediate_comparison__gt:0=0\ncompare_immediates__unsigned_left_constants_swap_to_the_inverse_right_immediate_comparison__gt:1=1\ncompare_immediates__unsigned_left_constants_swap_to_the_inverse_right_immediate_comparison__gt:2=1\ncompare_immediates__unsigned_left_constants_swap_to_the_inverse_right_immediate_comparison__gt:3=0\ncompare_immediates__unsigned_left_constants_swap_to_the_inverse_right_immediate_comparison__gt:4=0\ncompare_immediates__unsigned_left_constants_swap_to_the_inverse_right_immediate_comparison__gt:5=0\nboolean_comparison_simplification__signed_negated_comparisons_use_their_inverse__gt:0=1\nboolean_comparison_simplification__signed_negated_comparisons_use_their_inverse__gt:1=1\nboolean_comparison_simplification__signed_negated_comparisons_use_their_inverse__gt:2=0\nboolean_comparison_simplification__signed_negated_comparisons_use_their_inverse__gt:3=1\nboolean_comparison_simplification__signed_negated_comparisons_use_their_inverse__gt:4=0\nboolean_comparison_simplification__unsigned_negated_comparisons_use_their_inverse__gt:0=0\nboolean_comparison_simplification__unsigned_negated_comparisons_use_their_inverse__gt:1=0\nboolean_comparison_simplification__unsigned_negated_comparisons_use_their_inverse__gt:2=1\nboolean_comparison_simplification__unsigned_negated_comparisons_use_their_inverse__gt:3=1\nboolean_comparison_simplification__unsigned_negated_comparisons_use_their_inverse__gt:4=0\ncompare_immediates__signed_left_constants_swap_to_the_inverse_right_immediate_comparison__ge:0=1\ncompare_immediates__signed_left_constants_swap_to_the_inverse_right_immediate_comparison__ge:1=1\ncompare_immediates__signed_left_constants_swap_to_the_inverse_right_immediate_comparison__ge:2=0\ncompare_immediates__unsigned_left_constants_swap_to_the_inverse_right_immediate_comparison__ge:0=0\ncompare_immediates__unsigned_left_constants_swap_to_the_inverse_right_immediate_comparison__ge:1=1\ncompare_immediates__unsigned_left_constants_swap_to_the_inverse_right_immediate_comparison__ge:2=1\ncompare_immediates__unsigned_left_constants_swap_to_the_inverse_right_immediate_comparison__ge:3=1\ncompare_immediates__unsigned_left_constants_swap_to_the_inverse_right_immediate_comparison__ge:4=0\ncompare_immediates__unsigned_left_constants_swap_to_the_inverse_right_immediate_comparison__ge:5=0\nboolean_comparison_simplification__signed_negated_comparisons_use_their_inverse__ge:0=1\nboolean_comparison_simplification__signed_negated_comparisons_use_their_inverse__ge:1=1\nboolean_comparison_simplification__signed_negated_comparisons_use_their_inverse__ge:2=0\nboolean_comparison_simplification__signed_negated_comparisons_use_their_inverse__ge:3=0\nboolean_comparison_simplification__signed_negated_comparisons_use_their_inverse__ge:4=0\nboolean_comparison_simplification__unsigned_negated_comparisons_use_their_inverse__ge:0=0\nboolean_comparison_simplification__unsigned_negated_comparisons_use_their_inverse__ge:1=0\nboolean_comparison_simplification__unsigned_negated_comparisons_use_their_inverse__ge:2=1\nboolean_comparison_simplification__unsigned_negated_comparisons_use_their_inverse__ge:3=0\nboolean_comparison_simplification__unsigned_negated_comparisons_use_their_inverse__ge:4=0\ncompare_immediates__signed_left_constants_swap_to_the_inverse_right_immediate_comparison__eq:0=0\ncompare_immediates__signed_left_constants_swap_to_the_inverse_right_immediate_comparison__eq:1=1\ncompare_immediates__signed_left_constants_swap_to_the_inverse_right_immediate_comparison__eq:2=0\nboolean_comparison_simplification__signed_negated_comparisons_use_their_inverse__eq:0=1\nboolean_comparison_simplification__signed_negated_comparisons_use_their_inverse__eq:1=1\nboolean_comparison_simplification__signed_negated_comparisons_use_their_inverse__eq:2=1\nboolean_comparison_simplification__signed_negated_comparisons_use_their_inverse__eq:3=0\nboolean_comparison_simplification__signed_negated_comparisons_use_their_inverse__eq:4=1\nboolean_comparison_simplification__unsigned_negated_comparisons_use_their_inverse__eq:0=1\nboolean_comparison_simplification__unsigned_negated_comparisons_use_their_inverse__eq:1=1\nboolean_comparison_simplification__unsigned_negated_comparisons_use_their_inverse__eq:2=1\nboolean_comparison_simplification__unsigned_negated_comparisons_use_their_inverse__eq:3=0\nboolean_comparison_simplification__unsigned_negated_comparisons_use_their_inverse__eq:4=1\ncompare_immediates__signed_left_constants_swap_to_the_inverse_right_immediate_comparison__ne:0=1\ncompare_immediates__signed_left_constants_swap_to_the_inverse_right_immediate_comparison__ne:1=0\ncompare_immediates__signed_left_constants_swap_to_the_inverse_right_immediate_comparison__ne:2=1\nboolean_comparison_simplification__signed_negated_comparisons_use_their_inverse__ne:0=0\nboolean_comparison_simplification__signed_negated_comparisons_use_their_inverse__ne:1=0\nboolean_comparison_simplification__signed_negated_comparisons_use_their_inverse__ne:2=0\nboolean_comparison_simplification__signed_negated_comparisons_use_their_inverse__ne:3=1\nboolean_comparison_simplification__signed_negated_comparisons_use_their_inverse__ne:4=0\nboolean_comparison_simplification__unsigned_negated_comparisons_use_their_inverse__ne:0=0\nboolean_comparison_simplification__unsigned_negated_comparisons_use_their_inverse__ne:1=0\nboolean_comparison_simplification__unsigned_negated_comparisons_use_their_inverse__ne:2=0\nboolean_comparison_simplification__unsigned_negated_comparisons_use_their_inverse__ne:3=1\nboolean_comparison_simplification__unsigned_negated_comparisons_use_their_inverse__ne:4=0\nbool_ops__comparisons_and_logical_not_return_bool:0=1\nbool_ops__comparisons_and_logical_not_return_bool:1=1\nbool_ops__comparisons_and_logical_not_return_bool:2=0\nbool_ops__logical_precedence_supports_not_and_parentheses:0=0\nbool_ops__logical_precedence_supports_not_and_parentheses:1=0\nbool_ops__logical_precedence_supports_not_and_parentheses:2=1\nbool_ops__logical_precedence_supports_not_and_parentheses:3=0\nbool_ops__logical_precedence_supports_not_and_parentheses:4=1\nbool_ops__logical_precedence_supports_not_and_parentheses:5=1\nbool_ops__logical_precedence_supports_not_and_parentheses:6=1\nbool_ops__logical_precedence_supports_not_and_parentheses:7=1\nu64_ops__unsigned_comparisons_do_not_use_signed_ordering__lt:0=1\nu64_ops__unsigned_comparisons_do_not_use_signed_ordering__lt:1=0\nu64_ops__unsigned_comparisons_do_not_use_signed_ordering__lt:2=0\nu64_ops__unsigned_comparisons_do_not_use_signed_ordering__lt:3=0\nu64_ops__unsigned_comparisons_do_not_use_signed_ordering__lt:4=0\nu64_ops__unsigned_comparisons_do_not_use_signed_ordering__le:0=1\nu64_ops__unsigned_comparisons_do_not_use_signed_ordering__le:1=0\nu64_ops__unsigned_comparisons_do_not_use_signed_ordering__le:2=0\nu64_ops__unsigned_comparisons_do_not_use_signed_ordering__le:3=0\nu64_ops__unsigned_comparisons_do_not_use_signed_ordering__le:4=1\nu64_ops__unsigned_comparisons_do_not_use_signed_ordering__gt:0=0\nu64_ops__unsigned_comparisons_do_not_use_signed_ordering__gt:1=1\nu64_ops__unsigned_comparisons_do_not_use_signed_ordering__gt:2=1\nu64_ops__unsigned_comparisons_do_not_use_signed_ordering__gt:3=1\nu64_ops__unsigned_comparisons_do_not_use_signed_ordering__gt:4=0\nu64_ops__unsigned_comparisons_do_not_use_signed_ordering__ge:0=0\nu64_ops__unsigned_comparisons_do_not_use_signed_ordering__ge:1=1\nu64_ops__unsigned_comparisons_do_not_use_signed_ordering__ge:2=1\nu64_ops__unsigned_comparisons_do_not_use_signed_ordering__ge:3=1\nu64_ops__unsigned_comparisons_do_not_use_signed_ordering__ge:4=1\nbool_ops__short_circuit_rhs_does_not_execute_division__0:0=0\nbool_ops__short_circuit_rhs_does_not_execute_division__1:0=1\nboolean_comparison_simplification__comparison_with_true_or_false_removes_the_outer_comparison__eq_true:0=1\nboolean_comparison_simplification__comparison_with_true_or_false_removes_the_outer_comparison__eq_true:1=1\nboolean_comparison_simplification__comparison_with_true_or_false_removes_the_outer_comparison__eq_true:2=0\nboolean_comparison_simplification__comparison_with_true_or_false_removes_the_outer_comparison__eq_true:3=0\nboolean_comparison_simplification__comparison_with_true_or_false_removes_the_outer_comparison__eq_true:4=0\nboolean_comparison_simplification__comparison_with_true_or_false_removes_the_outer_comparison__ne_false:0=1\nboolean_comparison_simplification__comparison_with_true_or_false_removes_the_outer_comparison__ne_false:1=1\nboolean_comparison_simplification__comparison_with_true_or_false_removes_the_outer_comparison__ne_false:2=0\nboolean_comparison_simplification__comparison_with_true_or_false_removes_the_outer_comparison__ne_false:3=0\nboolean_comparison_simplification__comparison_with_true_or_false_removes_the_outer_comparison__ne_false:4=0\nboolean_comparison_simplification__comparison_with_true_or_false_removes_the_outer_comparison__eq_false:0=0\nboolean_comparison_simplification__comparison_with_true_or_false_removes_the_outer_comparison__eq_false:1=0\nboolean_comparison_simplification__comparison_with_true_or_false_removes_the_outer_comparison__eq_false:2=1\nboolean_comparison_simplification__comparison_with_true_or_false_removes_the_outer_comparison__eq_false:3=1\nboolean_comparison_simplification__comparison_with_true_or_false_removes_the_outer_comparison__eq_false:4=1\nboolean_comparison_simplification__comparison_with_true_or_false_removes_the_outer_comparison__ne_true:0=0\nboolean_comparison_simplification__comparison_with_true_or_false_removes_the_outer_comparison__ne_true:1=0\nboolean_comparison_simplification__comparison_with_true_or_false_removes_the_outer_comparison__ne_true:2=1\nboolean_comparison_simplification__comparison_with_true_or_false_removes_the_outer_comparison__ne_true:3=1\nboolean_comparison_simplification__comparison_with_true_or_false_removes_the_outer_comparison__ne_true:4=1\nboolean_comparison_simplification__negated_branch_comparison_does_not_materialize_two_booleans:0=0\nboolean_comparison_simplification__negated_branch_comparison_does_not_materialize_two_booleans:1=42\nboolean_comparison_simplification__negated_branch_comparison_does_not_materialize_two_booleans:2=42\ncasts__numeric_to_bool_and_numeric_conditions_are_rejected__identity:0=0\ncasts__numeric_to_bool_and_numeric_conditions_are_rejected__identity:1=1\nmachine_differential__every_supported_comparison_matches_at_boundaries__lt:0=0\nmachine_differential__every_supported_comparison_matches_at_boundaries__lt:1=1\nmachine_differential__every_supported_comparison_matches_at_boundaries__lt:2=1\nmachine_differential__every_supported_comparison_matches_at_boundaries__lt:3=0\nmachine_differential__every_supported_comparison_matches_at_boundaries__lt:4=1\nmachine_differential__every_supported_comparison_matches_at_boundaries__lt:5=1\nmachine_differential__every_supported_comparison_matches_at_boundaries__lt:6=0\nmachine_differential__every_supported_comparison_matches_at_boundaries__lt:7=1\nmachine_differential__every_supported_comparison_matches_at_boundaries__le:0=1\nmachine_differential__every_supported_comparison_matches_at_boundaries__le:1=1\nmachine_differential__every_supported_comparison_matches_at_boundaries__le:2=1\nmachine_differential__every_supported_comparison_matches_at_boundaries__le:3=0\nmachine_differential__every_supported_comparison_matches_at_boundaries__le:4=1\nmachine_differential__every_supported_comparison_matches_at_boundaries__le:5=1\nmachine_differential__every_supported_comparison_matches_at_boundaries__le:6=1\nmachine_differential__every_supported_comparison_matches_at_boundaries__le:7=1\nmachine_differential__every_supported_comparison_matches_at_boundaries__gt:0=0\nmachine_differential__every_supported_comparison_matches_at_boundaries__gt:1=0\nmachine_differential__every_supported_comparison_matches_at_boundaries__gt:2=0\nmachine_differential__every_supported_comparison_matches_at_boundaries__gt:3=1\nmachine_differential__every_supported_comparison_matches_at_boundaries__gt:4=0\nmachine_differential__every_supported_comparison_matches_at_boundaries__gt:5=0\nmachine_differential__every_supported_comparison_matches_at_boundaries__gt:6=0\nmachine_differential__every_supported_comparison_matches_at_boundaries__gt:7=0\nmachine_differential__every_supported_comparison_matches_at_boundaries__ge:0=1\nmachine_differential__every_supported_comparison_matches_at_boundaries__ge:1=0\nmachine_differential__every_supported_comparison_matches_at_boundaries__ge:2=0\nmachine_differential__every_supported_comparison_matches_at_boundaries__ge:3=1\nmachine_differential__every_supported_comparison_matches_at_boundaries__ge:4=0\nmachine_differential__every_supported_comparison_matches_at_boundaries__ge:5=0\nmachine_differential__every_supported_comparison_matches_at_boundaries__ge:6=1\nmachine_differential__every_supported_comparison_matches_at_boundaries__ge:7=0\nmachine_differential__every_supported_comparison_matches_at_boundaries__eq:0=1\nmachine_differential__every_supported_comparison_matches_at_boundaries__eq:1=0\nmachine_differential__every_supported_comparison_matches_at_boundaries__eq:2=0\nmachine_differential__every_supported_comparison_matches_at_boundaries__eq:3=0\nmachine_differential__every_supported_comparison_matches_at_boundaries__eq:4=0\nmachine_differential__every_supported_comparison_matches_at_boundaries__eq:5=0\nmachine_differential__every_supported_comparison_matches_at_boundaries__eq:6=1\nmachine_differential__every_supported_comparison_matches_at_boundaries__eq:7=0\nmachine_differential__every_supported_comparison_matches_at_boundaries__ne:0=0\nmachine_differential__every_supported_comparison_matches_at_boundaries__ne:1=1\nmachine_differential__every_supported_comparison_matches_at_boundaries__ne:2=1\nmachine_differential__every_supported_comparison_matches_at_boundaries__ne:3=1\nmachine_differential__every_supported_comparison_matches_at_boundaries__ne:4=1\nmachine_differential__every_supported_comparison_matches_at_boundaries__ne:5=1\nmachine_differential__every_supported_comparison_matches_at_boundaries__ne:6=0\nmachine_differential__every_supported_comparison_matches_at_boundaries__ne:7=1\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_lt_compare:0=1\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_lt_compare:1=1\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_lt_compare:2=0\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_lt_compare:3=0\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_lt_compare:4=0\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_lt_branch:0=42\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_lt_branch:1=42\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_lt_branch:2=0\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_lt_branch:3=0\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_lt_branch:4=0\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__u64_lt_compare:0=0\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__u64_lt_compare:1=0\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__u64_lt_compare:2=0\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__u64_lt_compare:3=0\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__u64_lt_compare:4=0\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__u64_lt_branch:0=0\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__u64_lt_branch:1=0\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__u64_lt_branch:2=0\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__u64_lt_branch:3=0\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__u64_lt_branch:4=0\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_le_compare:0=1\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_le_compare:1=1\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_le_compare:2=1\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_le_compare:3=0\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_le_compare:4=0\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_le_branch:0=42\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_le_branch:1=42\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_le_branch:2=42\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_le_branch:3=0\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_le_branch:4=0\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__u64_le_compare:0=0\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__u64_le_compare:1=0\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__u64_le_compare:2=1\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__u64_le_compare:3=0\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__u64_le_compare:4=0\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__u64_le_branch:0=0\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__u64_le_branch:1=0\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__u64_le_branch:2=42\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__u64_le_branch:3=0\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__u64_le_branch:4=0\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_gt_compare:0=0\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_gt_compare:1=0\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_gt_compare:2=0\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_gt_compare:3=1\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_gt_compare:4=1\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_gt_branch:0=0\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_gt_branch:1=0\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_gt_branch:2=0\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_gt_branch:3=42\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_gt_branch:4=42\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__u64_gt_compare:0=1\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__u64_gt_compare:1=1\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__u64_gt_compare:2=0\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__u64_gt_compare:3=1\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__u64_gt_compare:4=1\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__u64_gt_branch:0=42\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__u64_gt_branch:1=42\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__u64_gt_branch:2=0\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__u64_gt_branch:3=42\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__u64_gt_branch:4=42\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_ge_compare:0=0\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_ge_compare:1=0\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_ge_compare:2=1\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_ge_compare:3=1\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_ge_compare:4=1\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_ge_branch:0=0\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_ge_branch:1=0\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_ge_branch:2=42\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_ge_branch:3=42\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_ge_branch:4=42\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__u64_ge_compare:0=1\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__u64_ge_compare:1=1\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__u64_ge_compare:2=1\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__u64_ge_compare:3=1\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__u64_ge_compare:4=1\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__u64_ge_branch:0=42\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__u64_ge_branch:1=42\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__u64_ge_branch:2=42\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__u64_ge_branch:3=42\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__u64_ge_branch:4=42\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_eq_compare:0=0\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_eq_compare:1=0\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_eq_compare:2=1\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_eq_compare:3=0\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_eq_compare:4=0\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_eq_branch:0=0\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_eq_branch:1=0\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_eq_branch:2=42\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_eq_branch:3=0\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_eq_branch:4=0\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_ne_compare:0=1\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_ne_compare:1=1\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_ne_compare:2=0\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_ne_compare:3=1\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_ne_compare:4=1\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_ne_branch:0=42\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_ne_branch:1=42\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_ne_branch:2=0\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_ne_branch:3=42\nzero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_ne_branch:4=42\nimmediate_arithmetic__bitwise_multiply_and_compare_support_immediates__compare:0=1\nimmediate_arithmetic__bitwise_multiply_and_compare_support_immediates__compare:1=0\n",
+      "source_refs": [
+        {
+          "path": "tests/bool_comparisons.rs",
+          "test": "bool_equality_and_inequality_cover_the_truth_table",
+          "line": 12,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/bool_comparisons.rs",
+          "test": "bool_equality_and_inequality_cover_the_truth_table",
+          "line": 12,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/bool_ops.rs",
+          "test": "bool_parameters_and_logical_operators_cover_truth_tables",
+          "line": 22,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/bool_ops.rs",
+          "test": "bool_parameters_and_logical_operators_cover_truth_tables",
+          "line": 23,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/bool_comparisons.rs",
+          "test": "bool_comparisons_preserve_short_circuit_evaluation_and_precedence",
+          "line": 30,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/bool_comparisons.rs",
+          "test": "bool_comparisons_preserve_short_circuit_evaluation_and_precedence",
+          "line": 41,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/bool_comparisons.rs",
+          "test": "bool_comparisons_accept_branch_phi_values",
+          "line": 56,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/bool_comparisons.rs",
+          "test": "integer_comparisons_keep_signed_and_unsigned_semantics",
+          "line": 104,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/bool_comparisons.rs",
+          "test": "integer_comparisons_keep_signed_and_unsigned_semantics",
+          "line": 105,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/compare_immediates.rs",
+          "test": "signed_left_constants_swap_to_the_inverse_right_immediate_comparison",
+          "line": 27,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/compare_immediates.rs",
+          "test": "unsigned_left_constants_swap_to_the_inverse_right_immediate_comparison",
+          "line": 51,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/boolean_comparison_simplification.rs",
+          "test": "signed_negated_comparisons_use_their_inverse",
+          "line": 28,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/boolean_comparison_simplification.rs",
+          "test": "unsigned_negated_comparisons_use_their_inverse",
+          "line": 56,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/compare_immediates.rs",
+          "test": "signed_left_constants_swap_to_the_inverse_right_immediate_comparison",
+          "line": 27,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/compare_immediates.rs",
+          "test": "unsigned_left_constants_swap_to_the_inverse_right_immediate_comparison",
+          "line": 51,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/boolean_comparison_simplification.rs",
+          "test": "signed_negated_comparisons_use_their_inverse",
+          "line": 28,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/boolean_comparison_simplification.rs",
+          "test": "unsigned_negated_comparisons_use_their_inverse",
+          "line": 56,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/compare_immediates.rs",
+          "test": "signed_left_constants_swap_to_the_inverse_right_immediate_comparison",
+          "line": 27,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/compare_immediates.rs",
+          "test": "unsigned_left_constants_swap_to_the_inverse_right_immediate_comparison",
+          "line": 51,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/boolean_comparison_simplification.rs",
+          "test": "signed_negated_comparisons_use_their_inverse",
+          "line": 28,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/boolean_comparison_simplification.rs",
+          "test": "unsigned_negated_comparisons_use_their_inverse",
+          "line": 56,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/compare_immediates.rs",
+          "test": "signed_left_constants_swap_to_the_inverse_right_immediate_comparison",
+          "line": 27,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/compare_immediates.rs",
+          "test": "unsigned_left_constants_swap_to_the_inverse_right_immediate_comparison",
+          "line": 51,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/boolean_comparison_simplification.rs",
+          "test": "signed_negated_comparisons_use_their_inverse",
+          "line": 28,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/boolean_comparison_simplification.rs",
+          "test": "unsigned_negated_comparisons_use_their_inverse",
+          "line": 56,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/compare_immediates.rs",
+          "test": "signed_left_constants_swap_to_the_inverse_right_immediate_comparison",
+          "line": 27,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/boolean_comparison_simplification.rs",
+          "test": "signed_negated_comparisons_use_their_inverse",
+          "line": 28,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/boolean_comparison_simplification.rs",
+          "test": "unsigned_negated_comparisons_use_their_inverse",
+          "line": 56,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/compare_immediates.rs",
+          "test": "signed_left_constants_swap_to_the_inverse_right_immediate_comparison",
+          "line": 27,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/boolean_comparison_simplification.rs",
+          "test": "signed_negated_comparisons_use_their_inverse",
+          "line": 28,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/boolean_comparison_simplification.rs",
+          "test": "unsigned_negated_comparisons_use_their_inverse",
+          "line": 56,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/bool_ops.rs",
+          "test": "comparisons_and_logical_not_return_bool",
+          "line": 14,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/bool_ops.rs",
+          "test": "logical_precedence_supports_not_and_parentheses",
+          "line": 34,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/u64_ops.rs",
+          "test": "unsigned_comparisons_do_not_use_signed_ordering",
+          "line": 39,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/u64_ops.rs",
+          "test": "unsigned_comparisons_do_not_use_signed_ordering",
+          "line": 39,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/u64_ops.rs",
+          "test": "unsigned_comparisons_do_not_use_signed_ordering",
+          "line": 39,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/u64_ops.rs",
+          "test": "unsigned_comparisons_do_not_use_signed_ordering",
+          "line": 39,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/bool_ops.rs",
+          "test": "short_circuit_rhs_does_not_execute_division",
+          "line": 49,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/bool_ops.rs",
+          "test": "short_circuit_rhs_does_not_execute_division",
+          "line": 56,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/boolean_comparison_simplification.rs",
+          "test": "comparison_with_true_or_false_removes_the_outer_comparison",
+          "line": 81,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/boolean_comparison_simplification.rs",
+          "test": "comparison_with_true_or_false_removes_the_outer_comparison",
+          "line": 81,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/boolean_comparison_simplification.rs",
+          "test": "comparison_with_true_or_false_removes_the_outer_comparison",
+          "line": 81,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/boolean_comparison_simplification.rs",
+          "test": "comparison_with_true_or_false_removes_the_outer_comparison",
+          "line": 81,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/boolean_comparison_simplification.rs",
+          "test": "negated_branch_comparison_does_not_materialize_two_booleans",
+          "line": 95,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/casts.rs",
+          "test": "numeric_to_bool_and_numeric_conditions_are_rejected",
+          "line": 63,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/machine_differential.rs",
+          "test": "every_supported_comparison_matches_at_boundaries",
+          "line": 96,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/machine_differential.rs",
+          "test": "every_supported_comparison_matches_at_boundaries",
+          "line": 96,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/machine_differential.rs",
+          "test": "every_supported_comparison_matches_at_boundaries",
+          "line": 96,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/machine_differential.rs",
+          "test": "every_supported_comparison_matches_at_boundaries",
+          "line": 96,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/machine_differential.rs",
+          "test": "every_supported_comparison_matches_at_boundaries",
+          "line": 96,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/machine_differential.rs",
+          "test": "every_supported_comparison_matches_at_boundaries",
+          "line": 96,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/zero_compare.rs",
+          "test": "native_compare_and_direct_branch_use_test_for_zero",
+          "line": 116,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/zero_compare.rs",
+          "test": "native_compare_and_direct_branch_use_test_for_zero",
+          "line": 116,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/zero_compare.rs",
+          "test": "native_compare_and_direct_branch_use_test_for_zero",
+          "line": 116,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/zero_compare.rs",
+          "test": "native_compare_and_direct_branch_use_test_for_zero",
+          "line": 116,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/zero_compare.rs",
+          "test": "native_compare_and_direct_branch_use_test_for_zero",
+          "line": 116,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/zero_compare.rs",
+          "test": "native_compare_and_direct_branch_use_test_for_zero",
+          "line": 116,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/zero_compare.rs",
+          "test": "native_compare_and_direct_branch_use_test_for_zero",
+          "line": 116,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/zero_compare.rs",
+          "test": "native_compare_and_direct_branch_use_test_for_zero",
+          "line": 116,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/zero_compare.rs",
+          "test": "native_compare_and_direct_branch_use_test_for_zero",
+          "line": 116,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/zero_compare.rs",
+          "test": "native_compare_and_direct_branch_use_test_for_zero",
+          "line": 116,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/zero_compare.rs",
+          "test": "native_compare_and_direct_branch_use_test_for_zero",
+          "line": 116,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/zero_compare.rs",
+          "test": "native_compare_and_direct_branch_use_test_for_zero",
+          "line": 116,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/zero_compare.rs",
+          "test": "native_compare_and_direct_branch_use_test_for_zero",
+          "line": 116,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/zero_compare.rs",
+          "test": "native_compare_and_direct_branch_use_test_for_zero",
+          "line": 116,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/zero_compare.rs",
+          "test": "native_compare_and_direct_branch_use_test_for_zero",
+          "line": 116,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/zero_compare.rs",
+          "test": "native_compare_and_direct_branch_use_test_for_zero",
+          "line": 116,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/zero_compare.rs",
+          "test": "native_compare_and_direct_branch_use_test_for_zero",
+          "line": 116,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/zero_compare.rs",
+          "test": "native_compare_and_direct_branch_use_test_for_zero",
+          "line": 116,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/zero_compare.rs",
+          "test": "native_compare_and_direct_branch_use_test_for_zero",
+          "line": 116,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/zero_compare.rs",
+          "test": "native_compare_and_direct_branch_use_test_for_zero",
+          "line": 116,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/immediate_arithmetic.rs",
+          "test": "bitwise_multiply_and_compare_support_immediates",
+          "line": 58,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ]
+    },
+    {
+      "id": "bool_comparisons__bool_comparisons_preserve_short_circuit_evaluation_and_precedence__and:3",
+      "run_args": [
+        "bool_comparisons__bool_comparisons_preserve_short_circuit_evaluation_and_precedence__and:3"
+      ],
+      "expected_exit": "trap",
+      "trap_kind": "division_by_zero",
+      "source_refs": [
+        {
+          "path": "tests/bool_comparisons.rs",
+          "test": "bool_comparisons_preserve_short_circuit_evaluation_and_precedence",
+          "line": 30,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ]
+    },
+    {
+      "id": "bool_comparisons__bool_comparisons_preserve_short_circuit_evaluation_and_precedence__or:4",
+      "run_args": [
+        "bool_comparisons__bool_comparisons_preserve_short_circuit_evaluation_and_precedence__or:4"
+      ],
+      "expected_exit": "trap",
+      "trap_kind": "division_by_zero",
+      "source_refs": [
+        {
+          "path": "tests/bool_comparisons.rs",
+          "test": "bool_comparisons_preserve_short_circuit_evaluation_and_precedence",
+          "line": 41,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ]
+    },
+    {
+      "id": "bool_ops__short_circuit_rhs_does_not_execute_division__0:1",
+      "run_args": [
+        "bool_ops__short_circuit_rhs_does_not_execute_division__0:1"
+      ],
+      "expected_exit": "trap",
+      "trap_kind": "division_by_zero",
+      "source_refs": [
+        {
+          "path": "tests/bool_ops.rs",
+          "test": "short_circuit_rhs_does_not_execute_division",
+          "line": 49,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ]
+    },
+    {
+      "id": "bool_ops__short_circuit_rhs_does_not_execute_division__1:1",
+      "run_args": [
+        "bool_ops__short_circuit_rhs_does_not_execute_division__1:1"
+      ],
+      "expected_exit": "trap",
+      "trap_kind": "division_by_zero",
+      "source_refs": [
+        {
+          "path": "tests/bool_ops.rs",
+          "test": "short_circuit_rhs_does_not_execute_division",
+          "line": 56,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ]
+    }
+  ],
+  "cases": [
+    {
+      "id": "bool_comparisons__bool_equality_and_inequality_cover_the_truth_table__eq",
+      "source_refs": [
+        {
+          "path": "tests/bool_comparisons.rs",
+          "test": "bool_equality_and_inequality_cover_the_truth_table",
+          "line": 12,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "bool",
+        "bool"
+      ],
+      "return_type": "bool",
+      "vectors": [
+        {
+          "arguments": [
+            "false",
+            "false"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "false",
+            "true"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "true",
+            "false"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "true",
+            "true"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(a: bool, b: bool) -> bool { return a == b; }",
+      "source": "#[inline(never)] pub fn test_fn(a: bool, b: bool) -> bool { return a == b; }",
+      "source_sha256": "ee7b6a4cf8564ec8d71a32b524eb67e2ddb76bc4ab63146d1af1fe4b5bb3ee15",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_000"
+    },
+    {
+      "id": "bool_comparisons__bool_equality_and_inequality_cover_the_truth_table__ne",
+      "source_refs": [
+        {
+          "path": "tests/bool_comparisons.rs",
+          "test": "bool_equality_and_inequality_cover_the_truth_table",
+          "line": 12,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "bool",
+        "bool"
+      ],
+      "return_type": "bool",
+      "vectors": [
+        {
+          "arguments": [
+            "false",
+            "false"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "false",
+            "true"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "true",
+            "false"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "true",
+            "true"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(a: bool, b: bool) -> bool { return a != b; }",
+      "source": "#[inline(never)] pub fn test_fn(a: bool, b: bool) -> bool { return a != b; }",
+      "source_sha256": "365b7f17950afa07eca5a535b88687f01e325a6af38dca252d89763f7ca13fb1",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_001"
+    },
+    {
+      "id": "bool_ops__bool_parameters_and_logical_operators_cover_truth_tables__0",
+      "source_refs": [
+        {
+          "path": "tests/bool_ops.rs",
+          "test": "bool_parameters_and_logical_operators_cover_truth_tables",
+          "line": 22,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "bool",
+        "bool"
+      ],
+      "return_type": "bool",
+      "vectors": [
+        {
+          "arguments": [
+            "false",
+            "false"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "false",
+            "true"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "true",
+            "false"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "true",
+            "true"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(a: bool, b: bool) -> bool { return a && b; }",
+      "source": "#[inline(never)] pub fn test_fn(a: bool, b: bool) -> bool { return a && b; }",
+      "source_sha256": "3a6185e7bed9df59f9198c1aa060be8b1d98e22e10eaae8d46966232a7369f6e",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_002"
+    },
+    {
+      "id": "bool_ops__bool_parameters_and_logical_operators_cover_truth_tables__1",
+      "source_refs": [
+        {
+          "path": "tests/bool_ops.rs",
+          "test": "bool_parameters_and_logical_operators_cover_truth_tables",
+          "line": 23,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "bool",
+        "bool"
+      ],
+      "return_type": "bool",
+      "vectors": [
+        {
+          "arguments": [
+            "false",
+            "false"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "false",
+            "true"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "true",
+            "false"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "true",
+            "true"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(a: bool, b: bool) -> bool { return a || b; }",
+      "source": "#[inline(never)] pub fn test_fn(a: bool, b: bool) -> bool { return a || b; }",
+      "source_sha256": "182c237b77966e939cb6faf2b20eb07f85e5e0e5e9106d88992be6db10c244cd",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_003"
+    },
+    {
+      "id": "bool_comparisons__bool_comparisons_preserve_short_circuit_evaluation_and_precedence__and",
+      "source_refs": [
+        {
+          "path": "tests/bool_comparisons.rs",
+          "test": "bool_comparisons_preserve_short_circuit_evaluation_and_precedence",
+          "line": 30,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "bool",
+        "bool",
+        "i64"
+      ],
+      "return_type": "bool",
+      "vectors": [
+        {
+          "arguments": [
+            "false",
+            "true",
+            "(0i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "true",
+            "false",
+            "(0i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "true",
+            "true",
+            "(2i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "true",
+            "true",
+            "(0i64)"
+          ],
+          "expected_bits": null,
+          "trap": "division_by_zero"
+        }
+      ],
+      "original_source": "fn main(a: bool, b: bool, divisor: i64) -> bool { return a == b && 1 / divisor == 0; }",
+      "source": "#[inline(never)] pub fn test_fn(a: bool, b: bool, divisor: i64) -> bool { return a == b && 1 / divisor == 0; }",
+      "source_sha256": "29674cc204b1f9e09381902709ff4b1b754234708de06905e046a706b979310a",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_004"
+    },
+    {
+      "id": "bool_comparisons__bool_comparisons_preserve_short_circuit_evaluation_and_precedence__or",
+      "source_refs": [
+        {
+          "path": "tests/bool_comparisons.rs",
+          "test": "bool_comparisons_preserve_short_circuit_evaluation_and_precedence",
+          "line": 41,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "bool",
+        "bool",
+        "i64"
+      ],
+      "return_type": "bool",
+      "vectors": [
+        {
+          "arguments": [
+            "true",
+            "false",
+            "(0i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "false",
+            "true",
+            "(0i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "true",
+            "true",
+            "(2i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "true",
+            "true",
+            "(1i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "false",
+            "false",
+            "(0i64)"
+          ],
+          "expected_bits": null,
+          "trap": "division_by_zero"
+        }
+      ],
+      "original_source": "fn main(a: bool, b: bool, divisor: i64) -> bool { return a != b || 1 / divisor == 0; }",
+      "source": "#[inline(never)] pub fn test_fn(a: bool, b: bool, divisor: i64) -> bool { return a != b || 1 / divisor == 0; }",
+      "source_sha256": "e2d2986c3f9d8b461d121a90701e12a9fe6b9cc57e5b9887846db6154b51a6b9",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_005"
+    },
+    {
+      "id": "bool_comparisons__bool_comparisons_accept_branch_phi_values",
+      "source_refs": [
+        {
+          "path": "tests/bool_comparisons.rs",
+          "test": "bool_comparisons_accept_branch_phi_values",
+          "line": 56,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "bool",
+        "bool"
+      ],
+      "return_type": "bool",
+      "vectors": [
+        {
+          "arguments": [
+            "false",
+            "false"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "false",
+            "true"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "true",
+            "false"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "true",
+            "true"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(a: bool, b: bool) -> bool { let expression_value = if a == b { a } else { b }; let mut statement_value = false; if a != b { statement_value = true; } else { statement_value = false; } return expression_value == statement_value; }",
+      "source": "#[inline(never)] pub fn test_fn(a: bool, b: bool) -> bool { let expression_value = if a == b { a } else { b }; let mut statement_value = false; if a != b { statement_value = true; } else { statement_value = false; } return expression_value == statement_value; }",
+      "source_sha256": "907701fbde6ca2edaf8cf7eed0ac947a83b9cb8b9bc2f6797ab51b22a739c980",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_006"
+    },
+    {
+      "id": "bool_comparisons__integer_comparisons_keep_signed_and_unsigned_semantics__i64",
+      "source_refs": [
+        {
+          "path": "tests/bool_comparisons.rs",
+          "test": "integer_comparisons_keep_signed_and_unsigned_semantics",
+          "line": 104,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64",
+        "i64"
+      ],
+      "return_type": "bool",
+      "vectors": [
+        {
+          "arguments": [
+            "(-1i64)",
+            "(1i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(-9223372036854775808i64)",
+            "(9223372036854775807i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(0i64)",
+            "(-1i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(a: i64, b: i64) -> bool { return a < b; }",
+      "source": "#[inline(never)] pub fn test_fn(a: i64, b: i64) -> bool { return a < b; }",
+      "source_sha256": "4a8f1262c155e560764079eef140c76d9ed9d8dbabc5bbb62a47439193e981a4",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_007"
+    },
+    {
+      "id": "bool_comparisons__integer_comparisons_keep_signed_and_unsigned_semantics__u64",
+      "source_refs": [
+        {
+          "path": "tests/bool_comparisons.rs",
+          "test": "integer_comparisons_keep_signed_and_unsigned_semantics",
+          "line": 105,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "u64",
+        "u64"
+      ],
+      "return_type": "bool",
+      "vectors": [
+        {
+          "arguments": [
+            "18446744073709551615u64",
+            "1u64"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "9223372036854775808u64",
+            "9223372036854775807u64"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "0u64",
+            "18446744073709551615u64"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(a: u64, b: u64) -> bool { return a < b; }",
+      "source": "#[inline(never)] pub fn test_fn(a: u64, b: u64) -> bool { return a < b; }",
+      "source_sha256": "02fc1e1dbb57c018451201ef8cf8d4564f371885f87b62a8a6470573f1466add",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_008"
+    },
+    {
+      "id": "compare_immediates__signed_left_constants_swap_to_the_inverse_right_immediate_comparison__lt",
+      "source_refs": [
+        {
+          "path": "tests/compare_immediates.rs",
+          "test": "signed_left_constants_swap_to_the_inverse_right_immediate_comparison",
+          "line": 27,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64"
+      ],
+      "return_type": "bool",
+      "vectors": [
+        {
+          "arguments": [
+            "(1i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(2i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(3i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(value: i64) -> bool { return 2 < value; }",
+      "source": "#[inline(never)] pub fn test_fn(value: i64) -> bool { return 2 < value; }",
+      "source_sha256": "be90f86e2ea4f150d77c28dd5492be8eda03aa48d668dcd1287a2a3e8ebd018a",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_009"
+    },
+    {
+      "id": "compare_immediates__unsigned_left_constants_swap_to_the_inverse_right_immediate_comparison__lt",
+      "source_refs": [
+        {
+          "path": "tests/compare_immediates.rs",
+          "test": "unsigned_left_constants_swap_to_the_inverse_right_immediate_comparison",
+          "line": 51,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "u64"
+      ],
+      "return_type": "bool",
+      "vectors": [
+        {
+          "arguments": [
+            "18446744073709551615u64"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "0u64"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "1u64"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "2u64"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "3u64"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "9223372036854775808u64"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(value: u64) -> bool { return 2 < value; }",
+      "source": "#[inline(never)] pub fn test_fn(value: u64) -> bool { return 2 < value; }",
+      "source_sha256": "317228fd67c29b2b4af9b9c990b3cb1ceb4345381a6d84b0240d307f9f0d90b0",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_010"
+    },
+    {
+      "id": "boolean_comparison_simplification__signed_negated_comparisons_use_their_inverse__lt",
+      "source_refs": [
+        {
+          "path": "tests/boolean_comparison_simplification.rs",
+          "test": "signed_negated_comparisons_use_their_inverse",
+          "line": 28,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64",
+        "i64"
+      ],
+      "return_type": "bool",
+      "vectors": [
+        {
+          "arguments": [
+            "(-9223372036854775808i64)",
+            "(9223372036854775807i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(-1i64)",
+            "(0i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(0i64)",
+            "(-1i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(2i64)",
+            "(2i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(3i64)",
+            "(2i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(a: i64, b: i64) -> bool { return !(a < b); }",
+      "source": "#[inline(never)] pub fn test_fn(a: i64, b: i64) -> bool { return !(a < b); }",
+      "source_sha256": "598d1b246f1a88f8503e4393904b1b4f7dea16ad4cf84104ad16fc45f4b80a90",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_011"
+    },
+    {
+      "id": "boolean_comparison_simplification__unsigned_negated_comparisons_use_their_inverse__lt",
+      "source_refs": [
+        {
+          "path": "tests/boolean_comparison_simplification.rs",
+          "test": "unsigned_negated_comparisons_use_their_inverse",
+          "line": 56,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "u64",
+        "u64"
+      ],
+      "return_type": "bool",
+      "vectors": [
+        {
+          "arguments": [
+            "9223372036854775808u64",
+            "9223372036854775807u64"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "18446744073709551615u64",
+            "0u64"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "0u64",
+            "18446744073709551615u64"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "2u64",
+            "2u64"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "3u64",
+            "2u64"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(a: u64, b: u64) -> bool { return !(a < b); }",
+      "source": "#[inline(never)] pub fn test_fn(a: u64, b: u64) -> bool { return !(a < b); }",
+      "source_sha256": "5755acecd29411f22c6c30eb31bbf6afe5da7947f033005892cf1cb1c4a5d85f",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_012"
+    },
+    {
+      "id": "compare_immediates__signed_left_constants_swap_to_the_inverse_right_immediate_comparison__le",
+      "source_refs": [
+        {
+          "path": "tests/compare_immediates.rs",
+          "test": "signed_left_constants_swap_to_the_inverse_right_immediate_comparison",
+          "line": 27,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64"
+      ],
+      "return_type": "bool",
+      "vectors": [
+        {
+          "arguments": [
+            "(1i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(2i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(3i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(value: i64) -> bool { return 2 <= value; }",
+      "source": "#[inline(never)] pub fn test_fn(value: i64) -> bool { return 2 <= value; }",
+      "source_sha256": "10c349bb07a3253995076b3220ad42b37c4c7c50cb82b517542340d5e3f436b7",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_013"
+    },
+    {
+      "id": "compare_immediates__unsigned_left_constants_swap_to_the_inverse_right_immediate_comparison__le",
+      "source_refs": [
+        {
+          "path": "tests/compare_immediates.rs",
+          "test": "unsigned_left_constants_swap_to_the_inverse_right_immediate_comparison",
+          "line": 51,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "u64"
+      ],
+      "return_type": "bool",
+      "vectors": [
+        {
+          "arguments": [
+            "18446744073709551615u64"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "0u64"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "1u64"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "2u64"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "3u64"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "9223372036854775808u64"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(value: u64) -> bool { return 2 <= value; }",
+      "source": "#[inline(never)] pub fn test_fn(value: u64) -> bool { return 2 <= value; }",
+      "source_sha256": "e81054a376b8d2d6f8114e7d66db62b410e80acf23619d041c271c0c8571ebc5",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_014"
+    },
+    {
+      "id": "boolean_comparison_simplification__signed_negated_comparisons_use_their_inverse__le",
+      "source_refs": [
+        {
+          "path": "tests/boolean_comparison_simplification.rs",
+          "test": "signed_negated_comparisons_use_their_inverse",
+          "line": 28,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64",
+        "i64"
+      ],
+      "return_type": "bool",
+      "vectors": [
+        {
+          "arguments": [
+            "(-9223372036854775808i64)",
+            "(9223372036854775807i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(-1i64)",
+            "(0i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(0i64)",
+            "(-1i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(2i64)",
+            "(2i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(3i64)",
+            "(2i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(a: i64, b: i64) -> bool { return !(a <= b); }",
+      "source": "#[inline(never)] pub fn test_fn(a: i64, b: i64) -> bool { return !(a <= b); }",
+      "source_sha256": "069e6963aa8e2e24f742a90393107e767932d9be748877048034e85249aa4139",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_015"
+    },
+    {
+      "id": "boolean_comparison_simplification__unsigned_negated_comparisons_use_their_inverse__le",
+      "source_refs": [
+        {
+          "path": "tests/boolean_comparison_simplification.rs",
+          "test": "unsigned_negated_comparisons_use_their_inverse",
+          "line": 56,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "u64",
+        "u64"
+      ],
+      "return_type": "bool",
+      "vectors": [
+        {
+          "arguments": [
+            "9223372036854775808u64",
+            "9223372036854775807u64"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "18446744073709551615u64",
+            "0u64"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "0u64",
+            "18446744073709551615u64"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "2u64",
+            "2u64"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "3u64",
+            "2u64"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(a: u64, b: u64) -> bool { return !(a <= b); }",
+      "source": "#[inline(never)] pub fn test_fn(a: u64, b: u64) -> bool { return !(a <= b); }",
+      "source_sha256": "a991ba289afc883c91481a03130b568752bc94f09d17b0f136ed978660c92356",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_016"
+    },
+    {
+      "id": "compare_immediates__signed_left_constants_swap_to_the_inverse_right_immediate_comparison__gt",
+      "source_refs": [
+        {
+          "path": "tests/compare_immediates.rs",
+          "test": "signed_left_constants_swap_to_the_inverse_right_immediate_comparison",
+          "line": 27,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64"
+      ],
+      "return_type": "bool",
+      "vectors": [
+        {
+          "arguments": [
+            "(1i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(2i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(3i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(value: i64) -> bool { return 2 > value; }",
+      "source": "#[inline(never)] pub fn test_fn(value: i64) -> bool { return 2 > value; }",
+      "source_sha256": "eda7ccd6b8487faf910f03a0715b969a2bb129ecaa534453108efacca05defe7",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_017"
+    },
+    {
+      "id": "compare_immediates__unsigned_left_constants_swap_to_the_inverse_right_immediate_comparison__gt",
+      "source_refs": [
+        {
+          "path": "tests/compare_immediates.rs",
+          "test": "unsigned_left_constants_swap_to_the_inverse_right_immediate_comparison",
+          "line": 51,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "u64"
+      ],
+      "return_type": "bool",
+      "vectors": [
+        {
+          "arguments": [
+            "18446744073709551615u64"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "0u64"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "1u64"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "2u64"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "3u64"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "9223372036854775808u64"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(value: u64) -> bool { return 2 > value; }",
+      "source": "#[inline(never)] pub fn test_fn(value: u64) -> bool { return 2 > value; }",
+      "source_sha256": "63944f60d4eb6d1d81d45f38c18064c136e6bd60154e88847ae6dcb264a64576",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_018"
+    },
+    {
+      "id": "boolean_comparison_simplification__signed_negated_comparisons_use_their_inverse__gt",
+      "source_refs": [
+        {
+          "path": "tests/boolean_comparison_simplification.rs",
+          "test": "signed_negated_comparisons_use_their_inverse",
+          "line": 28,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64",
+        "i64"
+      ],
+      "return_type": "bool",
+      "vectors": [
+        {
+          "arguments": [
+            "(-9223372036854775808i64)",
+            "(9223372036854775807i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(-1i64)",
+            "(0i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(0i64)",
+            "(-1i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(2i64)",
+            "(2i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(3i64)",
+            "(2i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(a: i64, b: i64) -> bool { return !(a > b); }",
+      "source": "#[inline(never)] pub fn test_fn(a: i64, b: i64) -> bool { return !(a > b); }",
+      "source_sha256": "5ee300bef526c67e272d6646628c4527957c437230cc5bd8bff4fe7928a98cd8",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_019"
+    },
+    {
+      "id": "boolean_comparison_simplification__unsigned_negated_comparisons_use_their_inverse__gt",
+      "source_refs": [
+        {
+          "path": "tests/boolean_comparison_simplification.rs",
+          "test": "unsigned_negated_comparisons_use_their_inverse",
+          "line": 56,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "u64",
+        "u64"
+      ],
+      "return_type": "bool",
+      "vectors": [
+        {
+          "arguments": [
+            "9223372036854775808u64",
+            "9223372036854775807u64"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "18446744073709551615u64",
+            "0u64"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "0u64",
+            "18446744073709551615u64"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "2u64",
+            "2u64"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "3u64",
+            "2u64"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(a: u64, b: u64) -> bool { return !(a > b); }",
+      "source": "#[inline(never)] pub fn test_fn(a: u64, b: u64) -> bool { return !(a > b); }",
+      "source_sha256": "26259779c0c3c6c51e2dcbe25c9f58b0d8776078fe5db51a1f9f566f7fdb4c8a",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_020"
+    },
+    {
+      "id": "compare_immediates__signed_left_constants_swap_to_the_inverse_right_immediate_comparison__ge",
+      "source_refs": [
+        {
+          "path": "tests/compare_immediates.rs",
+          "test": "signed_left_constants_swap_to_the_inverse_right_immediate_comparison",
+          "line": 27,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64"
+      ],
+      "return_type": "bool",
+      "vectors": [
+        {
+          "arguments": [
+            "(1i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(2i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(3i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(value: i64) -> bool { return 2 >= value; }",
+      "source": "#[inline(never)] pub fn test_fn(value: i64) -> bool { return 2 >= value; }",
+      "source_sha256": "10d19331899124c06eddb6dfb9a09cb86e49d006d5b06f2f00aa4a9c71caa75d",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_021"
+    },
+    {
+      "id": "compare_immediates__unsigned_left_constants_swap_to_the_inverse_right_immediate_comparison__ge",
+      "source_refs": [
+        {
+          "path": "tests/compare_immediates.rs",
+          "test": "unsigned_left_constants_swap_to_the_inverse_right_immediate_comparison",
+          "line": 51,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "u64"
+      ],
+      "return_type": "bool",
+      "vectors": [
+        {
+          "arguments": [
+            "18446744073709551615u64"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "0u64"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "1u64"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "2u64"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "3u64"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "9223372036854775808u64"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(value: u64) -> bool { return 2 >= value; }",
+      "source": "#[inline(never)] pub fn test_fn(value: u64) -> bool { return 2 >= value; }",
+      "source_sha256": "a84d7893144cc94cfa7ba44df2037f6a2986bce2e92bf1017672b5ffc946a940",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_022"
+    },
+    {
+      "id": "boolean_comparison_simplification__signed_negated_comparisons_use_their_inverse__ge",
+      "source_refs": [
+        {
+          "path": "tests/boolean_comparison_simplification.rs",
+          "test": "signed_negated_comparisons_use_their_inverse",
+          "line": 28,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64",
+        "i64"
+      ],
+      "return_type": "bool",
+      "vectors": [
+        {
+          "arguments": [
+            "(-9223372036854775808i64)",
+            "(9223372036854775807i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(-1i64)",
+            "(0i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(0i64)",
+            "(-1i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(2i64)",
+            "(2i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(3i64)",
+            "(2i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(a: i64, b: i64) -> bool { return !(a >= b); }",
+      "source": "#[inline(never)] pub fn test_fn(a: i64, b: i64) -> bool { return !(a >= b); }",
+      "source_sha256": "4c1440a85983668aed8d3ca1d6a753f8bea7a2e23ffccf71d4b107c296c57ae0",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_023"
+    },
+    {
+      "id": "boolean_comparison_simplification__unsigned_negated_comparisons_use_their_inverse__ge",
+      "source_refs": [
+        {
+          "path": "tests/boolean_comparison_simplification.rs",
+          "test": "unsigned_negated_comparisons_use_their_inverse",
+          "line": 56,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "u64",
+        "u64"
+      ],
+      "return_type": "bool",
+      "vectors": [
+        {
+          "arguments": [
+            "9223372036854775808u64",
+            "9223372036854775807u64"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "18446744073709551615u64",
+            "0u64"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "0u64",
+            "18446744073709551615u64"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "2u64",
+            "2u64"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "3u64",
+            "2u64"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(a: u64, b: u64) -> bool { return !(a >= b); }",
+      "source": "#[inline(never)] pub fn test_fn(a: u64, b: u64) -> bool { return !(a >= b); }",
+      "source_sha256": "bc67a2bab7c36f348b1482d750858095ee72a761277add46e5f6df2daf1836d0",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_024"
+    },
+    {
+      "id": "compare_immediates__signed_left_constants_swap_to_the_inverse_right_immediate_comparison__eq",
+      "source_refs": [
+        {
+          "path": "tests/compare_immediates.rs",
+          "test": "signed_left_constants_swap_to_the_inverse_right_immediate_comparison",
+          "line": 27,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64"
+      ],
+      "return_type": "bool",
+      "vectors": [
+        {
+          "arguments": [
+            "(1i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(2i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(3i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(value: i64) -> bool { return 2 == value; }",
+      "source": "#[inline(never)] pub fn test_fn(value: i64) -> bool { return 2 == value; }",
+      "source_sha256": "47ab5c0293fc970fd43adc96569636beee01668b812cb992fcfb845a8941b44c",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_025"
+    },
+    {
+      "id": "boolean_comparison_simplification__signed_negated_comparisons_use_their_inverse__eq",
+      "source_refs": [
+        {
+          "path": "tests/boolean_comparison_simplification.rs",
+          "test": "signed_negated_comparisons_use_their_inverse",
+          "line": 28,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64",
+        "i64"
+      ],
+      "return_type": "bool",
+      "vectors": [
+        {
+          "arguments": [
+            "(-9223372036854775808i64)",
+            "(9223372036854775807i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(-1i64)",
+            "(0i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(0i64)",
+            "(-1i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(2i64)",
+            "(2i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(3i64)",
+            "(2i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(a: i64, b: i64) -> bool { return !(a == b); }",
+      "source": "#[inline(never)] pub fn test_fn(a: i64, b: i64) -> bool { return !(a == b); }",
+      "source_sha256": "49366dde53218f65952b36cff72c734830b1c6f494d2fa998c268adb018a8f4b",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_026"
+    },
+    {
+      "id": "boolean_comparison_simplification__unsigned_negated_comparisons_use_their_inverse__eq",
+      "source_refs": [
+        {
+          "path": "tests/boolean_comparison_simplification.rs",
+          "test": "unsigned_negated_comparisons_use_their_inverse",
+          "line": 56,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "u64",
+        "u64"
+      ],
+      "return_type": "bool",
+      "vectors": [
+        {
+          "arguments": [
+            "9223372036854775808u64",
+            "9223372036854775807u64"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "18446744073709551615u64",
+            "0u64"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "0u64",
+            "18446744073709551615u64"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "2u64",
+            "2u64"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "3u64",
+            "2u64"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(a: u64, b: u64) -> bool { return !(a == b); }",
+      "source": "#[inline(never)] pub fn test_fn(a: u64, b: u64) -> bool { return !(a == b); }",
+      "source_sha256": "551cf8ead406ca4cfecdf535a72e544382811d6fc4464213584cb9bbc4654f81",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_027"
+    },
+    {
+      "id": "compare_immediates__signed_left_constants_swap_to_the_inverse_right_immediate_comparison__ne",
+      "source_refs": [
+        {
+          "path": "tests/compare_immediates.rs",
+          "test": "signed_left_constants_swap_to_the_inverse_right_immediate_comparison",
+          "line": 27,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64"
+      ],
+      "return_type": "bool",
+      "vectors": [
+        {
+          "arguments": [
+            "(1i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(2i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(3i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(value: i64) -> bool { return 2 != value; }",
+      "source": "#[inline(never)] pub fn test_fn(value: i64) -> bool { return 2 != value; }",
+      "source_sha256": "831117a0b8a5b4f7b08292b967fc59b8820d0c5d90e8a04d4322aac056e04052",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_028"
+    },
+    {
+      "id": "boolean_comparison_simplification__signed_negated_comparisons_use_their_inverse__ne",
+      "source_refs": [
+        {
+          "path": "tests/boolean_comparison_simplification.rs",
+          "test": "signed_negated_comparisons_use_their_inverse",
+          "line": 28,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64",
+        "i64"
+      ],
+      "return_type": "bool",
+      "vectors": [
+        {
+          "arguments": [
+            "(-9223372036854775808i64)",
+            "(9223372036854775807i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(-1i64)",
+            "(0i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(0i64)",
+            "(-1i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(2i64)",
+            "(2i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(3i64)",
+            "(2i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(a: i64, b: i64) -> bool { return !(a != b); }",
+      "source": "#[inline(never)] pub fn test_fn(a: i64, b: i64) -> bool { return !(a != b); }",
+      "source_sha256": "67cf1689099fad64ad280ffd99f44aa1cff2085a20672fb222f0a2074474a26e",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_029"
+    },
+    {
+      "id": "boolean_comparison_simplification__unsigned_negated_comparisons_use_their_inverse__ne",
+      "source_refs": [
+        {
+          "path": "tests/boolean_comparison_simplification.rs",
+          "test": "unsigned_negated_comparisons_use_their_inverse",
+          "line": 56,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "u64",
+        "u64"
+      ],
+      "return_type": "bool",
+      "vectors": [
+        {
+          "arguments": [
+            "9223372036854775808u64",
+            "9223372036854775807u64"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "18446744073709551615u64",
+            "0u64"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "0u64",
+            "18446744073709551615u64"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "2u64",
+            "2u64"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "3u64",
+            "2u64"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(a: u64, b: u64) -> bool { return !(a != b); }",
+      "source": "#[inline(never)] pub fn test_fn(a: u64, b: u64) -> bool { return !(a != b); }",
+      "source_sha256": "2c70b6a4b453daef461fd0d946c1cdf9347a9b7676ba46eb7a5851b65d4cbae7",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_030"
+    },
+    {
+      "id": "bool_ops__comparisons_and_logical_not_return_bool",
+      "source_refs": [
+        {
+          "path": "tests/bool_ops.rs",
+          "test": "comparisons_and_logical_not_return_bool",
+          "line": 14,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64"
+      ],
+      "return_type": "bool",
+      "vectors": [
+        {
+          "arguments": [
+            "(-1i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(0i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(1i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(value: i64) -> bool { let positive = value > 0; return !positive; }",
+      "source": "#[inline(never)] pub fn test_fn(value: i64) -> bool { let positive = value > 0; return !positive; }",
+      "source_sha256": "1f312c2dea47bf16377e9e6e55145cc707691327eab820b750a03a5ad4da5355",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_031"
+    },
+    {
+      "id": "bool_ops__logical_precedence_supports_not_and_parentheses",
+      "source_refs": [
+        {
+          "path": "tests/bool_ops.rs",
+          "test": "logical_precedence_supports_not_and_parentheses",
+          "line": 34,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "bool",
+        "bool",
+        "bool"
+      ],
+      "return_type": "bool",
+      "vectors": [
+        {
+          "arguments": [
+            "false",
+            "false",
+            "false"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "false",
+            "false",
+            "true"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "false",
+            "true",
+            "false"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "false",
+            "true",
+            "true"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "true",
+            "false",
+            "false"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "true",
+            "false",
+            "true"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "true",
+            "true",
+            "false"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "true",
+            "true",
+            "true"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(a: bool, b: bool, c: bool) -> bool { return a || b && !c; }",
+      "source": "#[inline(never)] pub fn test_fn(a: bool, b: bool, c: bool) -> bool { return a || b && !c; }",
+      "source_sha256": "938218e2519e45d0e01e0e81160658ac352cf6087185ce0bc957efa45f9fe635",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_032"
+    },
+    {
+      "id": "u64_ops__unsigned_comparisons_do_not_use_signed_ordering__lt",
+      "source_refs": [
+        {
+          "path": "tests/u64_ops.rs",
+          "test": "unsigned_comparisons_do_not_use_signed_ordering",
+          "line": 39,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "u64",
+        "u64"
+      ],
+      "return_type": "bool",
+      "vectors": [
+        {
+          "arguments": [
+            "0u64",
+            "1u64"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "18446744073709551615u64",
+            "0u64"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "18446744073709551615u64",
+            "9223372036854775807u64"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "9223372036854775808u64",
+            "1u64"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "18446744073709551615u64",
+            "18446744073709551615u64"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(a: u64, b: u64) -> bool { return a < b; }",
+      "source": "#[inline(never)] pub fn test_fn(a: u64, b: u64) -> bool { return a < b; }",
+      "source_sha256": "02fc1e1dbb57c018451201ef8cf8d4564f371885f87b62a8a6470573f1466add",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_033"
+    },
+    {
+      "id": "u64_ops__unsigned_comparisons_do_not_use_signed_ordering__le",
+      "source_refs": [
+        {
+          "path": "tests/u64_ops.rs",
+          "test": "unsigned_comparisons_do_not_use_signed_ordering",
+          "line": 39,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "u64",
+        "u64"
+      ],
+      "return_type": "bool",
+      "vectors": [
+        {
+          "arguments": [
+            "0u64",
+            "1u64"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "18446744073709551615u64",
+            "0u64"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "18446744073709551615u64",
+            "9223372036854775807u64"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "9223372036854775808u64",
+            "1u64"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "18446744073709551615u64",
+            "18446744073709551615u64"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(a: u64, b: u64) -> bool { return a <= b; }",
+      "source": "#[inline(never)] pub fn test_fn(a: u64, b: u64) -> bool { return a <= b; }",
+      "source_sha256": "e5584376b3883c6179a3ea152d91355d1ca77ce3a56632af98a5c6083ffc2cfb",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_034"
+    },
+    {
+      "id": "u64_ops__unsigned_comparisons_do_not_use_signed_ordering__gt",
+      "source_refs": [
+        {
+          "path": "tests/u64_ops.rs",
+          "test": "unsigned_comparisons_do_not_use_signed_ordering",
+          "line": 39,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "u64",
+        "u64"
+      ],
+      "return_type": "bool",
+      "vectors": [
+        {
+          "arguments": [
+            "0u64",
+            "1u64"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "18446744073709551615u64",
+            "0u64"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "18446744073709551615u64",
+            "9223372036854775807u64"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "9223372036854775808u64",
+            "1u64"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "18446744073709551615u64",
+            "18446744073709551615u64"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(a: u64, b: u64) -> bool { return a > b; }",
+      "source": "#[inline(never)] pub fn test_fn(a: u64, b: u64) -> bool { return a > b; }",
+      "source_sha256": "c198ebe995a33da9ff89973773856ae1f115a81642d8be6291ce0bd81898c8b0",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_035"
+    },
+    {
+      "id": "u64_ops__unsigned_comparisons_do_not_use_signed_ordering__ge",
+      "source_refs": [
+        {
+          "path": "tests/u64_ops.rs",
+          "test": "unsigned_comparisons_do_not_use_signed_ordering",
+          "line": 39,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "u64",
+        "u64"
+      ],
+      "return_type": "bool",
+      "vectors": [
+        {
+          "arguments": [
+            "0u64",
+            "1u64"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "18446744073709551615u64",
+            "0u64"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "18446744073709551615u64",
+            "9223372036854775807u64"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "9223372036854775808u64",
+            "1u64"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "18446744073709551615u64",
+            "18446744073709551615u64"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(a: u64, b: u64) -> bool { return a >= b; }",
+      "source": "#[inline(never)] pub fn test_fn(a: u64, b: u64) -> bool { return a >= b; }",
+      "source_sha256": "1611e4b1047725ccf783e1e3ea37997bcd52fa6cd5ee2a9ca358799361c227c5",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_036"
+    },
+    {
+      "id": "bool_ops__short_circuit_rhs_does_not_execute_division__0",
+      "source_refs": [
+        {
+          "path": "tests/bool_ops.rs",
+          "test": "short_circuit_rhs_does_not_execute_division",
+          "line": 49,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "bool"
+      ],
+      "return_type": "bool",
+      "vectors": [
+        {
+          "arguments": [
+            "false"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "true"
+          ],
+          "expected_bits": null,
+          "trap": "division_by_zero"
+        }
+      ],
+      "original_source": "fn main(flag: bool) -> bool { let zero = 0; return flag && 1 / zero == 0; }",
+      "source": "#[inline(never)] pub fn test_fn(flag: bool) -> bool { let zero = 0; return flag && 1 / zero == 0; }",
+      "source_sha256": "fdbbbdb9ec7dad954a4a4ac9722d24ee8c8e34fe15ff12da0397669eaad4bff9",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_037"
+    },
+    {
+      "id": "bool_ops__short_circuit_rhs_does_not_execute_division__1",
+      "source_refs": [
+        {
+          "path": "tests/bool_ops.rs",
+          "test": "short_circuit_rhs_does_not_execute_division",
+          "line": 56,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "bool"
+      ],
+      "return_type": "bool",
+      "vectors": [
+        {
+          "arguments": [
+            "true"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "false"
+          ],
+          "expected_bits": null,
+          "trap": "division_by_zero"
+        }
+      ],
+      "original_source": "fn main(flag: bool) -> bool { let zero = 0; return flag || 1 / zero == 0; }",
+      "source": "#[inline(never)] pub fn test_fn(flag: bool) -> bool { let zero = 0; return flag || 1 / zero == 0; }",
+      "source_sha256": "cd3dfb085e0701c886d384f2a7dc6727afcbc984074980b457a3dc1342c59d82",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_038"
+    },
+    {
+      "id": "boolean_comparison_simplification__comparison_with_true_or_false_removes_the_outer_comparison__eq_true",
+      "source_refs": [
+        {
+          "path": "tests/boolean_comparison_simplification.rs",
+          "test": "comparison_with_true_or_false_removes_the_outer_comparison",
+          "line": 81,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64",
+        "i64"
+      ],
+      "return_type": "bool",
+      "vectors": [
+        {
+          "arguments": [
+            "(-9223372036854775808i64)",
+            "(9223372036854775807i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(-1i64)",
+            "(0i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(0i64)",
+            "(-1i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(2i64)",
+            "(2i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(3i64)",
+            "(2i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(a: i64, b: i64) -> bool { return (a < b) == true; }",
+      "source": "#[inline(never)] pub fn test_fn(a: i64, b: i64) -> bool { return (a < b) == true; }",
+      "source_sha256": "40aa1591caf7b1b91d411c53acc51d006fae124f96b6a5a80725a9ace181838e",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_039"
+    },
+    {
+      "id": "boolean_comparison_simplification__comparison_with_true_or_false_removes_the_outer_comparison__ne_false",
+      "source_refs": [
+        {
+          "path": "tests/boolean_comparison_simplification.rs",
+          "test": "comparison_with_true_or_false_removes_the_outer_comparison",
+          "line": 81,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64",
+        "i64"
+      ],
+      "return_type": "bool",
+      "vectors": [
+        {
+          "arguments": [
+            "(-9223372036854775808i64)",
+            "(9223372036854775807i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(-1i64)",
+            "(0i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(0i64)",
+            "(-1i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(2i64)",
+            "(2i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(3i64)",
+            "(2i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(a: i64, b: i64) -> bool { return (a < b) != false; }",
+      "source": "#[inline(never)] pub fn test_fn(a: i64, b: i64) -> bool { return (a < b) != false; }",
+      "source_sha256": "96c47d62f4674adec937489c2d303a7f990e589d0d66c9a70a0ba27d69a2eeab",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_040"
+    },
+    {
+      "id": "boolean_comparison_simplification__comparison_with_true_or_false_removes_the_outer_comparison__eq_false",
+      "source_refs": [
+        {
+          "path": "tests/boolean_comparison_simplification.rs",
+          "test": "comparison_with_true_or_false_removes_the_outer_comparison",
+          "line": 81,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64",
+        "i64"
+      ],
+      "return_type": "bool",
+      "vectors": [
+        {
+          "arguments": [
+            "(-9223372036854775808i64)",
+            "(9223372036854775807i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(-1i64)",
+            "(0i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(0i64)",
+            "(-1i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(2i64)",
+            "(2i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(3i64)",
+            "(2i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(a: i64, b: i64) -> bool { return (a < b) == false; }",
+      "source": "#[inline(never)] pub fn test_fn(a: i64, b: i64) -> bool { return (a < b) == false; }",
+      "source_sha256": "759eb3ec820880bbe0de5f45e1fe3bbf8775dfd76c278d4c9f65b098e8c8d4ed",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_041"
+    },
+    {
+      "id": "boolean_comparison_simplification__comparison_with_true_or_false_removes_the_outer_comparison__ne_true",
+      "source_refs": [
+        {
+          "path": "tests/boolean_comparison_simplification.rs",
+          "test": "comparison_with_true_or_false_removes_the_outer_comparison",
+          "line": 81,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64",
+        "i64"
+      ],
+      "return_type": "bool",
+      "vectors": [
+        {
+          "arguments": [
+            "(-9223372036854775808i64)",
+            "(9223372036854775807i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(-1i64)",
+            "(0i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(0i64)",
+            "(-1i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(2i64)",
+            "(2i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(3i64)",
+            "(2i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(a: i64, b: i64) -> bool { return (a < b) != true; }",
+      "source": "#[inline(never)] pub fn test_fn(a: i64, b: i64) -> bool { return (a < b) != true; }",
+      "source_sha256": "afc8ab663d94347a3360e95f815498218c23ee4020a8d4a279932f24b349c1e0",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_042"
+    },
+    {
+      "id": "boolean_comparison_simplification__negated_branch_comparison_does_not_materialize_two_booleans",
+      "source_refs": [
+        {
+          "path": "tests/boolean_comparison_simplification.rs",
+          "test": "negated_branch_comparison_does_not_materialize_two_booleans",
+          "line": 95,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64"
+      ],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [
+            "(3i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(4i64)"
+          ],
+          "expected_bits": 42,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(5i64)"
+          ],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(a: i64) -> i64 { return if !(a < 4) { 42 } else { 0 }; }",
+      "source": "#[inline(never)] pub fn test_fn(a: i64) -> i64 { return if !(a < 4) { 42 } else { 0 }; }",
+      "source_sha256": "e69765227e8f4c8e757bad0c894550ddb99f40c4e6c804895f8ccef7cbfe5526",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_043"
+    },
+    {
+      "id": "casts__numeric_to_bool_and_numeric_conditions_are_rejected__identity",
+      "source_refs": [
+        {
+          "path": "tests/casts.rs",
+          "test": "numeric_to_bool_and_numeric_conditions_are_rejected",
+          "line": 63,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "bool"
+      ],
+      "return_type": "bool",
+      "vectors": [
+        {
+          "arguments": [
+            "false"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "true"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(flag: bool) -> bool { return flag as bool; }",
+      "source": "#[inline(never)] pub fn test_fn(flag: bool) -> bool { return flag as bool; }",
+      "source_sha256": "590ec00ebb92faa23b67afc4d12167a8c2bc04ab01c352f5bae5c52fcdfbf64f",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_044"
+    },
+    {
+      "id": "machine_differential__every_supported_comparison_matches_at_boundaries__lt",
+      "source_refs": [
+        {
+          "path": "tests/machine_differential.rs",
+          "test": "every_supported_comparison_matches_at_boundaries",
+          "line": 96,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64",
+        "i64"
+      ],
+      "return_type": "bool",
+      "vectors": [
+        {
+          "arguments": [
+            "(0i64)",
+            "(0i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(1i64)",
+            "(2i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(-7i64)",
+            "(3i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(9223372036854775807i64)",
+            "(1i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(-9223372036854775808i64)",
+            "(1i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(-9223372036854775808i64)",
+            "(-1i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(9223372036854775807i64)",
+            "(9223372036854775807i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(-9223372036854775808i64)",
+            "(9223372036854775807i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(left: i64, right: i64) -> bool { return left < right; }",
+      "source": "#[inline(never)] pub fn test_fn(left: i64, right: i64) -> bool { return left < right; }",
+      "source_sha256": "c4d8f7a002bdac9a91d9088239203d8f2223989181aa7155eb8387f9713c8d5b",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_045"
+    },
+    {
+      "id": "machine_differential__every_supported_comparison_matches_at_boundaries__le",
+      "source_refs": [
+        {
+          "path": "tests/machine_differential.rs",
+          "test": "every_supported_comparison_matches_at_boundaries",
+          "line": 96,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64",
+        "i64"
+      ],
+      "return_type": "bool",
+      "vectors": [
+        {
+          "arguments": [
+            "(0i64)",
+            "(0i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(1i64)",
+            "(2i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(-7i64)",
+            "(3i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(9223372036854775807i64)",
+            "(1i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(-9223372036854775808i64)",
+            "(1i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(-9223372036854775808i64)",
+            "(-1i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(9223372036854775807i64)",
+            "(9223372036854775807i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(-9223372036854775808i64)",
+            "(9223372036854775807i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(left: i64, right: i64) -> bool { return left <= right; }",
+      "source": "#[inline(never)] pub fn test_fn(left: i64, right: i64) -> bool { return left <= right; }",
+      "source_sha256": "42b2b9926ce9b1ab5ec05f00a0b19faf4c4158e74cec406742ee13882f9b7bef",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_046"
+    },
+    {
+      "id": "machine_differential__every_supported_comparison_matches_at_boundaries__gt",
+      "source_refs": [
+        {
+          "path": "tests/machine_differential.rs",
+          "test": "every_supported_comparison_matches_at_boundaries",
+          "line": 96,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64",
+        "i64"
+      ],
+      "return_type": "bool",
+      "vectors": [
+        {
+          "arguments": [
+            "(0i64)",
+            "(0i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(1i64)",
+            "(2i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(-7i64)",
+            "(3i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(9223372036854775807i64)",
+            "(1i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(-9223372036854775808i64)",
+            "(1i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(-9223372036854775808i64)",
+            "(-1i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(9223372036854775807i64)",
+            "(9223372036854775807i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(-9223372036854775808i64)",
+            "(9223372036854775807i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(left: i64, right: i64) -> bool { return left > right; }",
+      "source": "#[inline(never)] pub fn test_fn(left: i64, right: i64) -> bool { return left > right; }",
+      "source_sha256": "592c103158c9a5e1de90ca8d17f3f97c59379c44bceba2ecdb326aa2c2348e7c",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_047"
+    },
+    {
+      "id": "machine_differential__every_supported_comparison_matches_at_boundaries__ge",
+      "source_refs": [
+        {
+          "path": "tests/machine_differential.rs",
+          "test": "every_supported_comparison_matches_at_boundaries",
+          "line": 96,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64",
+        "i64"
+      ],
+      "return_type": "bool",
+      "vectors": [
+        {
+          "arguments": [
+            "(0i64)",
+            "(0i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(1i64)",
+            "(2i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(-7i64)",
+            "(3i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(9223372036854775807i64)",
+            "(1i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(-9223372036854775808i64)",
+            "(1i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(-9223372036854775808i64)",
+            "(-1i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(9223372036854775807i64)",
+            "(9223372036854775807i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(-9223372036854775808i64)",
+            "(9223372036854775807i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(left: i64, right: i64) -> bool { return left >= right; }",
+      "source": "#[inline(never)] pub fn test_fn(left: i64, right: i64) -> bool { return left >= right; }",
+      "source_sha256": "ebd668f08ee453a914d762a35726f379bc29a13498e4d79b0fc41d88c6c64cae",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_048"
+    },
+    {
+      "id": "machine_differential__every_supported_comparison_matches_at_boundaries__eq",
+      "source_refs": [
+        {
+          "path": "tests/machine_differential.rs",
+          "test": "every_supported_comparison_matches_at_boundaries",
+          "line": 96,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64",
+        "i64"
+      ],
+      "return_type": "bool",
+      "vectors": [
+        {
+          "arguments": [
+            "(0i64)",
+            "(0i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(1i64)",
+            "(2i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(-7i64)",
+            "(3i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(9223372036854775807i64)",
+            "(1i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(-9223372036854775808i64)",
+            "(1i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(-9223372036854775808i64)",
+            "(-1i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(9223372036854775807i64)",
+            "(9223372036854775807i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(-9223372036854775808i64)",
+            "(9223372036854775807i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(left: i64, right: i64) -> bool { return left == right; }",
+      "source": "#[inline(never)] pub fn test_fn(left: i64, right: i64) -> bool { return left == right; }",
+      "source_sha256": "6e2449d09f5816625168bcfcb25294733a553a5cab19486fe438db19b4fee469",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_049"
+    },
+    {
+      "id": "machine_differential__every_supported_comparison_matches_at_boundaries__ne",
+      "source_refs": [
+        {
+          "path": "tests/machine_differential.rs",
+          "test": "every_supported_comparison_matches_at_boundaries",
+          "line": 96,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64",
+        "i64"
+      ],
+      "return_type": "bool",
+      "vectors": [
+        {
+          "arguments": [
+            "(0i64)",
+            "(0i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(1i64)",
+            "(2i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(-7i64)",
+            "(3i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(9223372036854775807i64)",
+            "(1i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(-9223372036854775808i64)",
+            "(1i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(-9223372036854775808i64)",
+            "(-1i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(9223372036854775807i64)",
+            "(9223372036854775807i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(-9223372036854775808i64)",
+            "(9223372036854775807i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(left: i64, right: i64) -> bool { return left != right; }",
+      "source": "#[inline(never)] pub fn test_fn(left: i64, right: i64) -> bool { return left != right; }",
+      "source_sha256": "981dde5ac71f193fe25b842b0dedef241f78e203df5723877d2c4c6a1e231165",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_050"
+    },
+    {
+      "id": "zero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_lt_compare",
+      "source_refs": [
+        {
+          "path": "tests/zero_compare.rs",
+          "test": "native_compare_and_direct_branch_use_test_for_zero",
+          "line": 116,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64"
+      ],
+      "return_type": "bool",
+      "vectors": [
+        {
+          "arguments": [
+            "(-9223372036854775808i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(-1i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(0i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(1i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(9223372036854775807i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(value: i64) -> bool { return value < 0; }",
+      "source": "#[inline(never)] pub fn test_fn(value: i64) -> bool { return value < 0; }",
+      "source_sha256": "4cf67755c414899680c461741a9ad909bb2f8b3ad771c826872c8973d54fecd6",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_051"
+    },
+    {
+      "id": "zero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_lt_branch",
+      "source_refs": [
+        {
+          "path": "tests/zero_compare.rs",
+          "test": "native_compare_and_direct_branch_use_test_for_zero",
+          "line": 116,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64"
+      ],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [
+            "(-9223372036854775808i64)"
+          ],
+          "expected_bits": 42,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(-1i64)"
+          ],
+          "expected_bits": 42,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(0i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(1i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(9223372036854775807i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(value: i64) -> i64 { return if value < 0 { 42 } else { 0 }; }",
+      "source": "#[inline(never)] pub fn test_fn(value: i64) -> i64 { return if value < 0 { 42 } else { 0 }; }",
+      "source_sha256": "bbbbe79b93a7a5c8dfc13f44649c532a3de217265c8d543f6f481ebae172116b",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_052"
+    },
+    {
+      "id": "zero_compare__native_compare_and_direct_branch_use_test_for_zero__u64_lt_compare",
+      "source_refs": [
+        {
+          "path": "tests/zero_compare.rs",
+          "test": "native_compare_and_direct_branch_use_test_for_zero",
+          "line": 116,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "u64"
+      ],
+      "return_type": "bool",
+      "vectors": [
+        {
+          "arguments": [
+            "9223372036854775808u64"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "18446744073709551615u64"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "0u64"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "1u64"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "9223372036854775807u64"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(value: u64) -> bool { return value < 0; }",
+      "source": "#[inline(never)] pub fn test_fn(value: u64) -> bool { return value < 0; }",
+      "source_sha256": "10c7194d4399d42c3330175563ebc1254541379d1f3629f2c3f29477ed20e900",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_053"
+    },
+    {
+      "id": "zero_compare__native_compare_and_direct_branch_use_test_for_zero__u64_lt_branch",
+      "source_refs": [
+        {
+          "path": "tests/zero_compare.rs",
+          "test": "native_compare_and_direct_branch_use_test_for_zero",
+          "line": 116,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "u64"
+      ],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [
+            "9223372036854775808u64"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "18446744073709551615u64"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "0u64"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "1u64"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "9223372036854775807u64"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(value: u64) -> i64 { return if value < 0 { 42 } else { 0 }; }",
+      "source": "#[inline(never)] pub fn test_fn(value: u64) -> i64 { return if value < 0 { 42 } else { 0 }; }",
+      "source_sha256": "43aaa31dba1cbf14fe2eab6f9c64b21f91741edc5bb9b2423cf7d088b90dc7f5",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_054"
+    },
+    {
+      "id": "zero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_le_compare",
+      "source_refs": [
+        {
+          "path": "tests/zero_compare.rs",
+          "test": "native_compare_and_direct_branch_use_test_for_zero",
+          "line": 116,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64"
+      ],
+      "return_type": "bool",
+      "vectors": [
+        {
+          "arguments": [
+            "(-9223372036854775808i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(-1i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(0i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(1i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(9223372036854775807i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(value: i64) -> bool { return value <= 0; }",
+      "source": "#[inline(never)] pub fn test_fn(value: i64) -> bool { return value <= 0; }",
+      "source_sha256": "1aa115135a8dc402c02336d89a2a6bf257516a91431e83552da576503b1799fe",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_055"
+    },
+    {
+      "id": "zero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_le_branch",
+      "source_refs": [
+        {
+          "path": "tests/zero_compare.rs",
+          "test": "native_compare_and_direct_branch_use_test_for_zero",
+          "line": 116,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64"
+      ],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [
+            "(-9223372036854775808i64)"
+          ],
+          "expected_bits": 42,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(-1i64)"
+          ],
+          "expected_bits": 42,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(0i64)"
+          ],
+          "expected_bits": 42,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(1i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(9223372036854775807i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(value: i64) -> i64 { return if value <= 0 { 42 } else { 0 }; }",
+      "source": "#[inline(never)] pub fn test_fn(value: i64) -> i64 { return if value <= 0 { 42 } else { 0 }; }",
+      "source_sha256": "8e43f065c7ff78beda56b893940c145b8c7f01648f09cc4584d0f69544bf003e",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_056"
+    },
+    {
+      "id": "zero_compare__native_compare_and_direct_branch_use_test_for_zero__u64_le_compare",
+      "source_refs": [
+        {
+          "path": "tests/zero_compare.rs",
+          "test": "native_compare_and_direct_branch_use_test_for_zero",
+          "line": 116,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "u64"
+      ],
+      "return_type": "bool",
+      "vectors": [
+        {
+          "arguments": [
+            "9223372036854775808u64"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "18446744073709551615u64"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "0u64"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "1u64"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "9223372036854775807u64"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(value: u64) -> bool { return value <= 0; }",
+      "source": "#[inline(never)] pub fn test_fn(value: u64) -> bool { return value <= 0; }",
+      "source_sha256": "771d0a948630056b295d97d2e85d5ef90972ca6374b2a9a9a59686d01ad8dd58",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_057"
+    },
+    {
+      "id": "zero_compare__native_compare_and_direct_branch_use_test_for_zero__u64_le_branch",
+      "source_refs": [
+        {
+          "path": "tests/zero_compare.rs",
+          "test": "native_compare_and_direct_branch_use_test_for_zero",
+          "line": 116,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "u64"
+      ],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [
+            "9223372036854775808u64"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "18446744073709551615u64"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "0u64"
+          ],
+          "expected_bits": 42,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "1u64"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "9223372036854775807u64"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(value: u64) -> i64 { return if value <= 0 { 42 } else { 0 }; }",
+      "source": "#[inline(never)] pub fn test_fn(value: u64) -> i64 { return if value <= 0 { 42 } else { 0 }; }",
+      "source_sha256": "7bc20e6d8e704c61c1374e35301869cc9eceed50c2ef1d5119bd623526892110",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_058"
+    },
+    {
+      "id": "zero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_gt_compare",
+      "source_refs": [
+        {
+          "path": "tests/zero_compare.rs",
+          "test": "native_compare_and_direct_branch_use_test_for_zero",
+          "line": 116,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64"
+      ],
+      "return_type": "bool",
+      "vectors": [
+        {
+          "arguments": [
+            "(-9223372036854775808i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(-1i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(0i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(1i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(9223372036854775807i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(value: i64) -> bool { return value > 0; }",
+      "source": "#[inline(never)] pub fn test_fn(value: i64) -> bool { return value > 0; }",
+      "source_sha256": "ec225ee56a00a07d1090db85526321ee2d35ece6af79a534f35b5cfd893222a4",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_059"
+    },
+    {
+      "id": "zero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_gt_branch",
+      "source_refs": [
+        {
+          "path": "tests/zero_compare.rs",
+          "test": "native_compare_and_direct_branch_use_test_for_zero",
+          "line": 116,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64"
+      ],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [
+            "(-9223372036854775808i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(-1i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(0i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(1i64)"
+          ],
+          "expected_bits": 42,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(9223372036854775807i64)"
+          ],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(value: i64) -> i64 { return if value > 0 { 42 } else { 0 }; }",
+      "source": "#[inline(never)] pub fn test_fn(value: i64) -> i64 { return if value > 0 { 42 } else { 0 }; }",
+      "source_sha256": "dc5a6bd08074d226fe512b12791208f661685538f5b8498a054cbbd1c8d60019",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_060"
+    },
+    {
+      "id": "zero_compare__native_compare_and_direct_branch_use_test_for_zero__u64_gt_compare",
+      "source_refs": [
+        {
+          "path": "tests/zero_compare.rs",
+          "test": "native_compare_and_direct_branch_use_test_for_zero",
+          "line": 116,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "u64"
+      ],
+      "return_type": "bool",
+      "vectors": [
+        {
+          "arguments": [
+            "9223372036854775808u64"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "18446744073709551615u64"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "0u64"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "1u64"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "9223372036854775807u64"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(value: u64) -> bool { return value > 0; }",
+      "source": "#[inline(never)] pub fn test_fn(value: u64) -> bool { return value > 0; }",
+      "source_sha256": "c2e68d45a4ba3467b9fa5989e6c707161045b1a9a13cfc844c7adffb34d0b1fa",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_061"
+    },
+    {
+      "id": "zero_compare__native_compare_and_direct_branch_use_test_for_zero__u64_gt_branch",
+      "source_refs": [
+        {
+          "path": "tests/zero_compare.rs",
+          "test": "native_compare_and_direct_branch_use_test_for_zero",
+          "line": 116,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "u64"
+      ],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [
+            "9223372036854775808u64"
+          ],
+          "expected_bits": 42,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "18446744073709551615u64"
+          ],
+          "expected_bits": 42,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "0u64"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "1u64"
+          ],
+          "expected_bits": 42,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "9223372036854775807u64"
+          ],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(value: u64) -> i64 { return if value > 0 { 42 } else { 0 }; }",
+      "source": "#[inline(never)] pub fn test_fn(value: u64) -> i64 { return if value > 0 { 42 } else { 0 }; }",
+      "source_sha256": "ca442b2b3c90aa5d77537cf1029eef88b8cf01303f850ad12d491e65a4be0542",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_062"
+    },
+    {
+      "id": "zero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_ge_compare",
+      "source_refs": [
+        {
+          "path": "tests/zero_compare.rs",
+          "test": "native_compare_and_direct_branch_use_test_for_zero",
+          "line": 116,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64"
+      ],
+      "return_type": "bool",
+      "vectors": [
+        {
+          "arguments": [
+            "(-9223372036854775808i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(-1i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(0i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(1i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(9223372036854775807i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(value: i64) -> bool { return value >= 0; }",
+      "source": "#[inline(never)] pub fn test_fn(value: i64) -> bool { return value >= 0; }",
+      "source_sha256": "abfb1b4c0ca19853e41c2eb45f164a7d76b2d5cc570f1a092ee3825c484e4d0c",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_063"
+    },
+    {
+      "id": "zero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_ge_branch",
+      "source_refs": [
+        {
+          "path": "tests/zero_compare.rs",
+          "test": "native_compare_and_direct_branch_use_test_for_zero",
+          "line": 116,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64"
+      ],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [
+            "(-9223372036854775808i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(-1i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(0i64)"
+          ],
+          "expected_bits": 42,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(1i64)"
+          ],
+          "expected_bits": 42,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(9223372036854775807i64)"
+          ],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(value: i64) -> i64 { return if value >= 0 { 42 } else { 0 }; }",
+      "source": "#[inline(never)] pub fn test_fn(value: i64) -> i64 { return if value >= 0 { 42 } else { 0 }; }",
+      "source_sha256": "780a71de2d8d6e3a0de0d98ca1fbf739309a2e40be75944a7bc7e96d550d8faf",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_064"
+    },
+    {
+      "id": "zero_compare__native_compare_and_direct_branch_use_test_for_zero__u64_ge_compare",
+      "source_refs": [
+        {
+          "path": "tests/zero_compare.rs",
+          "test": "native_compare_and_direct_branch_use_test_for_zero",
+          "line": 116,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "u64"
+      ],
+      "return_type": "bool",
+      "vectors": [
+        {
+          "arguments": [
+            "9223372036854775808u64"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "18446744073709551615u64"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "0u64"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "1u64"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "9223372036854775807u64"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(value: u64) -> bool { return value >= 0; }",
+      "source": "#[inline(never)] pub fn test_fn(value: u64) -> bool { return value >= 0; }",
+      "source_sha256": "dd5e24ad5e702e3f2ce1a8a96559f9ea6e9d8eb55d444ae39161114e6e848e48",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_065"
+    },
+    {
+      "id": "zero_compare__native_compare_and_direct_branch_use_test_for_zero__u64_ge_branch",
+      "source_refs": [
+        {
+          "path": "tests/zero_compare.rs",
+          "test": "native_compare_and_direct_branch_use_test_for_zero",
+          "line": 116,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "u64"
+      ],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [
+            "9223372036854775808u64"
+          ],
+          "expected_bits": 42,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "18446744073709551615u64"
+          ],
+          "expected_bits": 42,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "0u64"
+          ],
+          "expected_bits": 42,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "1u64"
+          ],
+          "expected_bits": 42,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "9223372036854775807u64"
+          ],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(value: u64) -> i64 { return if value >= 0 { 42 } else { 0 }; }",
+      "source": "#[inline(never)] pub fn test_fn(value: u64) -> i64 { return if value >= 0 { 42 } else { 0 }; }",
+      "source_sha256": "c0bc0d67f83b314d403a8fec288e2fdd943d44e5df8268011d8c22643beaa167",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_066"
+    },
+    {
+      "id": "zero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_eq_compare",
+      "source_refs": [
+        {
+          "path": "tests/zero_compare.rs",
+          "test": "native_compare_and_direct_branch_use_test_for_zero",
+          "line": 116,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64"
+      ],
+      "return_type": "bool",
+      "vectors": [
+        {
+          "arguments": [
+            "(-9223372036854775808i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(-1i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(0i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(1i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(9223372036854775807i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(value: i64) -> bool { return value == 0; }",
+      "source": "#[inline(never)] pub fn test_fn(value: i64) -> bool { return value == 0; }",
+      "source_sha256": "249f59a546c1a717fa0926bdbf447e8dfedc8e3d8c5e7a7fdef09e45091b655e",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_067"
+    },
+    {
+      "id": "zero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_eq_branch",
+      "source_refs": [
+        {
+          "path": "tests/zero_compare.rs",
+          "test": "native_compare_and_direct_branch_use_test_for_zero",
+          "line": 116,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64"
+      ],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [
+            "(-9223372036854775808i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(-1i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(0i64)"
+          ],
+          "expected_bits": 42,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(1i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(9223372036854775807i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(value: i64) -> i64 { return if value == 0 { 42 } else { 0 }; }",
+      "source": "#[inline(never)] pub fn test_fn(value: i64) -> i64 { return if value == 0 { 42 } else { 0 }; }",
+      "source_sha256": "27ac244821384f81d87319e51379c2379dbf3e5e709ce505ce73a6081ffdf0d1",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_068"
+    },
+    {
+      "id": "zero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_ne_compare",
+      "source_refs": [
+        {
+          "path": "tests/zero_compare.rs",
+          "test": "native_compare_and_direct_branch_use_test_for_zero",
+          "line": 116,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64"
+      ],
+      "return_type": "bool",
+      "vectors": [
+        {
+          "arguments": [
+            "(-9223372036854775808i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(-1i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(0i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(1i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(9223372036854775807i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(value: i64) -> bool { return value != 0; }",
+      "source": "#[inline(never)] pub fn test_fn(value: i64) -> bool { return value != 0; }",
+      "source_sha256": "38d88d515d9458bf7d9c24a214e8e041590bc2797f71ce2b333e24276e4af7fd",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_069"
+    },
+    {
+      "id": "zero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_ne_branch",
+      "source_refs": [
+        {
+          "path": "tests/zero_compare.rs",
+          "test": "native_compare_and_direct_branch_use_test_for_zero",
+          "line": 116,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64"
+      ],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [
+            "(-9223372036854775808i64)"
+          ],
+          "expected_bits": 42,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(-1i64)"
+          ],
+          "expected_bits": 42,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(0i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(1i64)"
+          ],
+          "expected_bits": 42,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(9223372036854775807i64)"
+          ],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(value: i64) -> i64 { return if value != 0 { 42 } else { 0 }; }",
+      "source": "#[inline(never)] pub fn test_fn(value: i64) -> i64 { return if value != 0 { 42 } else { 0 }; }",
+      "source_sha256": "89b6f8760b0054a2c186ddfd54e5eb4609f7bbceb324112366208e13e0837f2c",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_070"
+    },
+    {
+      "id": "immediate_arithmetic__bitwise_multiply_and_compare_support_immediates__compare",
+      "source_refs": [
+        {
+          "path": "tests/immediate_arithmetic.rs",
+          "test": "bitwise_multiply_and_compare_support_immediates",
+          "line": 58,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64"
+      ],
+      "return_type": "bool",
+      "vectors": [
+        {
+          "arguments": [
+            "(42i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(41i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(value: i64) -> bool { return value == 42; }",
+      "source": "#[inline(never)] pub fn test_fn(value: i64) -> bool { return value == 42; }",
+      "source_sha256": "6e70ba8a065937b8bb2c8b80eb443a0469ce7b879f0431400194c79e7660fde4",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_071"
+    }
+  ]
+}

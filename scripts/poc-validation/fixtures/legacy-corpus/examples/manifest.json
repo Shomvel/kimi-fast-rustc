@@ -1,0 +1,1432 @@
+{
+  "schema_version": 1,
+  "crate_name": "legacy_examples",
+  "source_revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f",
+  "rustc_flags": [
+    "--edition=2021",
+    "-Cpanic=abort",
+    "-Coverflow-checks=off",
+    "-Copt-level=0",
+    "-Cdebug-assertions=off",
+    "-Zmir-opt-level=0",
+    "-Awarnings",
+    "-Aunconditional_panic",
+    "-Aarithmetic_overflow"
+  ],
+  "runs": [
+    {
+      "id": "examples_normal",
+      "run_args": [],
+      "expected_exit": "success",
+      "expected_stdout": "kfrc-ok\nexample__hello:0=0\nexample__integer_syntax:0=42\nexample__native_bitwise:0=42\nexample__native_bool:0=42\nexample__native_bool_compare:0=42\nexample__native_boolean_inverse:0=42\nexample__native_break_continue:0=42\nexample__native_call:0=42\nexample__native_cast:0=42\nexample__native_compare_immediate:0=42\nexample__native_const_expression:0=42\nexample__native_const_fn:0=42\nexample__native_const_item:0=42\nexample__native_early_return:0=42\nexample__native_else_if:0=42\nexample__native_expressions:0=42\nexample__native_for:0=42\nexample__native_id:0=42\nexample__native_if:0=42\nexample__native_inclusive:0=42\nexample__native_loop_value:0=42\nexample__native_main:0=42\nexample__native_match:0=42\nexample__native_match_range:0=42\nexample__native_nested_while:0=4\nexample__native_not:0=42\nexample__native_recursion:0=42\nexample__native_remainder:0=42\nexample__native_second:0=42\nexample__native_shadowing:0=42\nexample__native_signed_division:0=42\nexample__native_statement_if:0=42\nexample__native_strength:0=42\nexample__native_sum8:0=36\nexample__native_tail:0=42\nexample__native_u32_immediate:0=42\nexample__native_u64:0=42\nexample__native_unary_strength:0=42\nexample__native_unit:0=0\nexample__native_visibility:0=42\nexample__native_while:0=55\n",
+      "source_refs": [
+        {
+          "path": "examples/hello.rs",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "examples/integer_syntax.kfr",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "examples/native_bitwise.kfr",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "examples/native_bool.kfr",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "examples/native_bool_compare.kfr",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/bool_comparisons.rs",
+          "test": "native_bool_compare_example_returns_42",
+          "line": 169,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/bool_optimizer_regression.rs",
+          "test": "native_bool_compare_example_uses_the_exit_comparison",
+          "line": 15,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "examples/native_boolean_inverse.kfr",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "examples/native_break_continue.kfr",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "examples/native_call.kfr",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "examples/native_cast.kfr",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "examples/native_compare_immediate.kfr",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "examples/native_const_expression.kfr",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/const_expressions.rs",
+          "test": "native_const_expression_example_returns_42",
+          "line": 208,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "examples/native_const_fn.kfr",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/const_functions.rs",
+          "test": "native_const_fn_example_returns_42",
+          "line": 123,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "examples/native_const_item.kfr",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/const_items.rs",
+          "test": "native_const_item_example_returns_42",
+          "line": 165,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "examples/native_early_return.kfr",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "examples/native_else_if.kfr",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "examples/native_expressions.kfr",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "examples/native_for.kfr",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "examples/native_id.kfr",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "examples/native_if.kfr",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "examples/native_inclusive.kfr",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "examples/native_loop_value.kfr",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/loop_values.rs",
+          "test": "native_loop_value_example_returns_42",
+          "line": 100,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "examples/native_main.kfr",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "examples/native_match.kfr",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/scalar_match.rs",
+          "test": "native_match_example_returns_42",
+          "line": 102,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "examples/native_match_range.kfr",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/match_ranges.rs",
+          "test": "native_match_range_example_returns_42",
+          "line": 193,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "examples/native_nested_while.kfr",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "examples/native_not.kfr",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "examples/native_recursion.kfr",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "examples/native_remainder.kfr",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "examples/native_second.kfr",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "examples/native_shadowing.kfr",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/shadowing.rs",
+          "test": "native_shadowing_example_returns_42",
+          "line": 74,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "examples/native_signed_division.kfr",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "examples/native_statement_if.kfr",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "examples/native_strength.kfr",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "examples/native_sum8.kfr",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "examples/native_tail.kfr",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "examples/native_u32_immediate.kfr",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "examples/native_u64.kfr",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "examples/native_unary_strength.kfr",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "examples/native_unit.rs",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "examples/native_visibility.kfr",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/function_visibility.rs",
+          "test": "native_visibility_example_returns_42",
+          "line": 76,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/function_visibility.rs",
+          "test": "optimized_multifunction_constants_remain_inside_function_graphs",
+          "line": 90,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "examples/native_while.kfr",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ]
+    }
+  ],
+  "cases": [
+    {
+      "id": "example__hello",
+      "source_refs": [
+        {
+          "path": "examples/hello.rs",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "()",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 0,
+          "trap": null,
+          "stdout_before": "kfrc-ok\n"
+        }
+      ],
+      "original_source": "fn main() {\n    println!(\"kfrc-ok\");\n}\n",
+      "source": "#[inline(never)] pub fn test_fn() {\n    println!(\"kfrc-ok\");\n}\n",
+      "source_sha256": "b469ff3ab38626b9895fe90b4dc5f6c4f140e7453d83a95e031ae5d7d322bd65",
+      "adaptation": "Rename the entry point to public test_fn inside a module; preserve the example program body.",
+      "module": "case_000"
+    },
+    {
+      "id": "example__integer_syntax",
+      "source_refs": [
+        {
+          "path": "examples/integer_syntax.kfr",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "fn adjust(mut value: isize) -> isize {\n    let mut count = 0;\n    while count < 2 {\n        value &= 0x7f;\n        value ^= 0x20;\n        value <<= 1;\n        value >>= 1;\n        value |= 1;\n        count += 1;\n    }\n    return value;\n}\n\nfn main() -> i64 {\n    let mut value: u64 = 0x8000_0000_0000_0000u64;\n    value >>= 63;\n    value <<= 6;\n    value |= 2;\n    value ^= 0x68;\n    let signed: isize = adjust(0xff);\n    return (value as i64) + signed - 0b111_1111;\n}\n",
+      "source": "fn adjust(mut value: isize) -> isize {\n    let mut count = 0;\n    while count < 2 {\n        value &= 0x7f;\n        value ^= 0x20;\n        value <<= 1;\n        value >>= 1;\n        value |= 1;\n        count += 1;\n    }\n    return value;\n}\n\n#[inline(never)] pub fn test_fn() -> i64 {\n    let mut value: u64 = 0x8000_0000_0000_0000u64;\n    value >>= 63;\n    value <<= 6;\n    value |= 2;\n    value ^= 0x68;\n    let signed: isize = adjust(0xff);\n    return (value as i64) + (signed as i64) - 0b111_1111;\n}\n",
+      "source_sha256": "44632fccbbf212fa5a77920a3065a253ae6124b9161181736e6ffadc886e06d3",
+      "adaptation": "Rename the entry point to public test_fn inside a module; preserve the example program body. Explicit isize\u2192i64 cast replaces the removed 64-bit alias rule.",
+      "module": "case_001"
+    },
+    {
+      "id": "example__native_bitwise",
+      "source_refs": [
+        {
+          "path": "examples/native_bitwise.kfr",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main() -> i64 {\n    let value = 5;\n    let shifted = (value << 4) | 2;\n    let masked = shifted & 126;\n    let result = masked ^ 80;\n    let negated = -result;\n    return (negated >> 1) + 43;\n}\n",
+      "source": "#[inline(never)] pub fn test_fn() -> i64 {\n    let value = 5;\n    let shifted = (value << 4) | 2;\n    let masked = shifted & 126;\n    let result = masked ^ 80;\n    let negated = -result;\n    return (negated >> 1) + 43;\n}\n",
+      "source_sha256": "8593f2300031f73f2c4e74774521741594359bf422eb650b3a0c14a40f29ed46",
+      "adaptation": "Rename the entry point to public test_fn inside a module; preserve the example program body.",
+      "module": "case_002"
+    },
+    {
+      "id": "example__native_bool",
+      "source_refs": [
+        {
+          "path": "examples/native_bool.kfr",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "fn is_positive(value: i64) -> bool {\n    return value > 0;\n}\n\nfn main() -> i64 {\n    let positive = is_positive(42);\n    let valid = positive && !false;\n    return if valid { 42 } else { 0 };\n}\n",
+      "source": "fn is_positive(value: i64) -> bool {\n    return value > 0;\n}\n\n#[inline(never)] pub fn test_fn() -> i64 {\n    let positive = is_positive(42);\n    let valid = positive && !false;\n    return if valid { 42 } else { 0 };\n}\n",
+      "source_sha256": "c986f388b13f1f73d0dffb764534c82bb6990d1ba3b2a417d35d990a8138b5d1",
+      "adaptation": "Rename the entry point to public test_fn inside a module; preserve the example program body.",
+      "module": "case_003"
+    },
+    {
+      "id": "example__native_bool_compare",
+      "source_refs": [
+        {
+          "path": "examples/native_bool_compare.kfr",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/bool_comparisons.rs",
+          "test": "native_bool_compare_example_returns_42",
+          "line": 169,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/bool_optimizer_regression.rs",
+          "test": "native_bool_compare_example_uses_the_exit_comparison",
+          "line": 15,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main() -> i64 {\n    let mut value = false;\n    let mut changes = 0;\n    let mut index = 0;\n    while index < 4 {\n        let next = !value;\n        if next != value {\n            changes += 1;\n        }\n        value = next;\n        index += 1;\n    }\n    let unchanged = value == false;\n    let wrong_count = changes != 4;\n    return if unchanged && !wrong_count { 42 } else { 0 };\n}\n",
+      "source": "#[inline(never)] pub fn test_fn() -> i64 {\n    let mut value = false;\n    let mut changes = 0;\n    let mut index = 0;\n    while index < 4 {\n        let next = !value;\n        if next != value {\n            changes += 1;\n        }\n        value = next;\n        index += 1;\n    }\n    let unchanged = value == false;\n    let wrong_count = changes != 4;\n    return if unchanged && !wrong_count { 42 } else { 0 };\n}\n",
+      "source_sha256": "dd50f779d6321319f9b9474cd9c99669f66bfc9f5f8b1f3730dce96085857d98",
+      "adaptation": "Rename the entry point to public test_fn inside a module; preserve the example program body.",
+      "module": "case_004"
+    },
+    {
+      "id": "example__native_boolean_inverse",
+      "source_refs": [
+        {
+          "path": "examples/native_boolean_inverse.kfr",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main() -> i64 {\n    let signed = !(6 < 4);\n    let unsigned = !(0xffff_ffff_ffff_ffffu64 < 1);\n    return if signed && unsigned { 42 } else { 0 };\n}\n",
+      "source": "#[inline(never)] pub fn test_fn() -> i64 {\n    let signed = !(6 < 4);\n    let unsigned = !(0xffff_ffff_ffff_ffffu64 < 1);\n    return if signed && unsigned { 42 } else { 0 };\n}\n",
+      "source_sha256": "22472b4ad06e0f51017e9c48286ce1cf085022f4f68caf76a1ca9df67a162fcd",
+      "adaptation": "Rename the entry point to public test_fn inside a module; preserve the example program body.",
+      "module": "case_005"
+    },
+    {
+      "id": "example__native_break_continue",
+      "source_refs": [
+        {
+          "path": "examples/native_break_continue.kfr",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main() -> i64 {\n    let mut sum = 0;\n    let mut i = 0;\n    while true {\n        i += 1;\n        if i > 10 {\n            break;\n        }\n        if i % 2 == 1 {\n            continue;\n        }\n        sum += i;\n    }\n    sum += 12;\n    return sum;\n}\n",
+      "source": "#[inline(never)] pub fn test_fn() -> i64 {\n    let mut sum = 0;\n    let mut i = 0;\n    while true {\n        i += 1;\n        if i > 10 {\n            break;\n        }\n        if i % 2 == 1 {\n            continue;\n        }\n        sum += i;\n    }\n    sum += 12;\n    return sum;\n}\n",
+      "source_sha256": "ca0b205fd958238bd1e128a3e3518dd0cda1a7ae1e72a241442d390ee29d08c0",
+      "adaptation": "Rename the entry point to public test_fn inside a module; preserve the example program body.",
+      "module": "case_006"
+    },
+    {
+      "id": "example__native_call",
+      "source_refs": [
+        {
+          "path": "examples/native_call.kfr",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "fn answer() -> i64 {\n    return 42;\n}\n\nfn main() -> i64 {\n    return answer();\n}\n",
+      "source": "fn answer() -> i64 {\n    return 42;\n}\n\n#[inline(never)] pub fn test_fn() -> i64 {\n    return answer();\n}\n",
+      "source_sha256": "72a251db18bd9e90f0aecf5294e2e619ece11878b4a64be4e9be8fea18008168",
+      "adaptation": "Rename the entry point to public test_fn inside a module; preserve the example program body.",
+      "module": "case_007"
+    },
+    {
+      "id": "example__native_cast",
+      "source_refs": [
+        {
+          "path": "examples/native_cast.kfr",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "fn convert(value: i64) -> u64 {\n    return value as u64;\n}\n\nfn main() -> i64 {\n    let highest_bit = convert(-1) >> 63;\n    return (highest_bit == 1) as i64 + 41;\n}\n",
+      "source": "fn convert(value: i64) -> u64 {\n    return value as u64;\n}\n\n#[inline(never)] pub fn test_fn() -> i64 {\n    let highest_bit = convert(-1) >> 63;\n    return (highest_bit == 1) as i64 + 41;\n}\n",
+      "source_sha256": "261e161989edcc2214df78276fa34ad067882dd27185c445a834dd53123dbbfc",
+      "adaptation": "Rename the entry point to public test_fn inside a module; preserve the example program body.",
+      "module": "case_008"
+    },
+    {
+      "id": "example__native_compare_immediate",
+      "source_refs": [
+        {
+          "path": "examples/native_compare_immediate.kfr",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "fn greater(value: i64) -> i64 {\n    return if 2 < value { 42 } else { 0 };\n}\n\nfn main() -> i64 {\n    return greater(3);\n}\n",
+      "source": "fn greater(value: i64) -> i64 {\n    return if 2 < value { 42 } else { 0 };\n}\n\n#[inline(never)] pub fn test_fn() -> i64 {\n    return greater(3);\n}\n",
+      "source_sha256": "0798f6e08b6ea8e2ae42e9fea5a668785fe68ecdb6480184d004c802ff4d2481",
+      "adaptation": "Rename the entry point to public test_fn inside a module; preserve the example program body.",
+      "module": "case_009"
+    },
+    {
+      "id": "example__native_const_expression",
+      "source_refs": [
+        {
+          "path": "examples/native_const_expression.kfr",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/const_expressions.rs",
+          "test": "native_const_expression_example_returns_42",
+          "line": 208,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "pub const ANSWER: i64 = (BASE + OFFSET) * 2;\nconst BASE: i64 = LIMIT - 1;\nconst OFFSET: i64 = 1;\nconst LIMIT: i64 = 21;\nconst CHECKED: bool = ANSWER == 42 && !false;\n\nfn main() -> i64 {\n    if CHECKED {\n        return ANSWER;\n    }\n    return 0;\n}\n",
+      "source": "pub const ANSWER: i64 = (BASE + OFFSET) * 2;\nconst BASE: i64 = LIMIT - 1;\nconst OFFSET: i64 = 1;\nconst LIMIT: i64 = 21;\nconst CHECKED: bool = ANSWER == 42 && !false;\n\n#[inline(never)] pub fn test_fn() -> i64 {\n    if CHECKED {\n        return ANSWER;\n    }\n    return 0;\n}\n",
+      "source_sha256": "bce6f73d68eb158971f5a5b532c27887547f3af72e4b4fc4146bd123aa0aed61",
+      "adaptation": "Rename the entry point to public test_fn inside a module; preserve the example program body.",
+      "module": "case_010"
+    },
+    {
+      "id": "example__native_const_fn",
+      "source_refs": [
+        {
+          "path": "examples/native_const_fn.kfr",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/const_functions.rs",
+          "test": "native_const_fn_example_returns_42",
+          "line": 123,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "pub const fn main() -> i64 {\n    return 42;\n}\n",
+      "source": "#[inline(never)] pub const fn test_fn() -> i64 {\n    return 42;\n}\n",
+      "source_sha256": "ba8bd0f035fe82dd75093513604fe479c8c8677d582d551a65dc5b22c728e9f5",
+      "adaptation": "Rename the entry point to public test_fn inside a module; preserve the example program body.",
+      "module": "case_011"
+    },
+    {
+      "id": "example__native_const_item",
+      "source_refs": [
+        {
+          "path": "examples/native_const_item.kfr",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/const_items.rs",
+          "test": "native_const_item_example_returns_42",
+          "line": 165,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "pub const ANSWER: i64 = 0x2a;\n\nfn main() -> i64 {\n    return ANSWER;\n}\n",
+      "source": "pub const ANSWER: i64 = 0x2a;\n\n#[inline(never)] pub fn test_fn() -> i64 {\n    return ANSWER;\n}\n",
+      "source_sha256": "ceb845c594974923a8a3a8c084ffb0d6b4acd8858f8acdaf48131e94b3cecda1",
+      "adaptation": "Rename the entry point to public test_fn inside a module; preserve the example program body.",
+      "module": "case_012"
+    },
+    {
+      "id": "example__native_early_return",
+      "source_refs": [
+        {
+          "path": "examples/native_early_return.kfr",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "fn classify(value: i64) -> i64 {\n    if value > 40 {\n        return 42;\n    } else if value < 0 {\n        return 0;\n    }\n    return 1;\n}\n\nfn main() -> i64 {\n    let mut i = 0;\n    while true {\n        i += 1;\n        if i == 3 {\n            return classify(42);\n        }\n    }\n    return 0;\n}\n",
+      "source": "fn classify(value: i64) -> i64 {\n    if value > 40 {\n        return 42;\n    } else if value < 0 {\n        return 0;\n    }\n    return 1;\n}\n\n#[inline(never)] pub fn test_fn() -> i64 {\n    let mut i = 0;\n    while true {\n        i += 1;\n        if i == 3 {\n            return classify(42);\n        }\n    }\n    return 0;\n}\n",
+      "source_sha256": "9517bce447d443b492a3c1222bb67230b46cb42bb84a78131f6f5d907514beb0",
+      "adaptation": "Rename the entry point to public test_fn inside a module; preserve the example program body.",
+      "module": "case_013"
+    },
+    {
+      "id": "example__native_else_if",
+      "source_refs": [
+        {
+          "path": "examples/native_else_if.kfr",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "fn normalize(mut value: i64) -> i64 {\n    value += 5;\n    value *= 3;\n    if value >= 100 {\n        value = 100;\n    } else if value >= 50 {\n        value -= 21;\n    } else if value < 0 {\n        value = 0;\n    }\n    return value;\n}\n\nfn main() -> i64 {\n    return normalize(16);\n}\n",
+      "source": "fn normalize(mut value: i64) -> i64 {\n    value += 5;\n    value *= 3;\n    if value >= 100 {\n        value = 100;\n    } else if value >= 50 {\n        value -= 21;\n    } else if value < 0 {\n        value = 0;\n    }\n    return value;\n}\n\n#[inline(never)] pub fn test_fn() -> i64 {\n    return normalize(16);\n}\n",
+      "source_sha256": "882278d69f303da7fd02d75c6e803aebc6037e4713d8000bad49d2ed4c56bb2d",
+      "adaptation": "Rename the entry point to public test_fn inside a module; preserve the example program body.",
+      "module": "case_014"
+    },
+    {
+      "id": "example__native_expressions",
+      "source_refs": [
+        {
+          "path": "examples/native_expressions.kfr",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "fn spin(mut value: i64) {\n    while value > 0 {\n        value -= 1;\n    }\n    return;\n}\n\nfn answer() -> i64 {\n    return 42;\n}\n\nfn main() -> i64 {\n    spin(3);\n    answer();\n    1 + 2;\n    3 < 4;\n    return answer();\n}\n",
+      "source": "fn spin(mut value: i64) {\n    while value > 0 {\n        value -= 1;\n    }\n    return;\n}\n\nfn answer() -> i64 {\n    return 42;\n}\n\n#[inline(never)] pub fn test_fn() -> i64 {\n    spin(3);\n    answer();\n    1 + 2;\n    3 < 4;\n    return answer();\n}\n",
+      "source_sha256": "da0fe70d6ceffdd92ae7d55fd16c60b4be2880b404a33938f7576e0040047165",
+      "adaptation": "Rename the entry point to public test_fn inside a module; preserve the example program body.",
+      "module": "case_015"
+    },
+    {
+      "id": "example__native_for",
+      "source_refs": [
+        {
+          "path": "examples/native_for.kfr",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "u64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "fn start() -> usize {\n    return 1;\n}\n\nfn end() -> usize {\n    return 6;\n}\n\nfn main() -> u64 {\n    let mut total = 0usize;\n    for i in start()..end() {\n        if i % 2 == 0 {\n            continue;\n        }\n        total += i;\n    }\n    return total + 33;\n}\n",
+      "source": "fn start() -> usize {\n    return 1;\n}\n\nfn end() -> usize {\n    return 6;\n}\n\n#[inline(never)] pub fn test_fn() -> u64 {\n    let mut total = 0usize;\n    for i in start()..end() {\n        if i % 2 == 0 {\n            continue;\n        }\n        total += i;\n    }\n    return (total + 33) as u64;\n}\n",
+      "source_sha256": "11938aa4bd597a03d80bdd0628d764dd7a8c50beb72c6e0518fddce23577e699",
+      "adaptation": "Rename the entry point to public test_fn inside a module; preserve the example program body. Explicit usize\u2192u64 return cast replaces the removed 64-bit alias rule.",
+      "module": "case_016"
+    },
+    {
+      "id": "example__native_id",
+      "source_refs": [
+        {
+          "path": "examples/native_id.kfr",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "fn id(x: i64) -> i64 {\n    return x;\n}\n\nfn main() -> i64 {\n    return id(42);\n}\n",
+      "source": "fn id(x: i64) -> i64 {\n    return x;\n}\n\n#[inline(never)] pub fn test_fn() -> i64 {\n    return id(42);\n}\n",
+      "source_sha256": "7b3bf539452a17d7bc4561de629b2c1e73500af0a3b6ef9fa2ff66be189ebec4",
+      "adaptation": "Rename the entry point to public test_fn inside a module; preserve the example program body.",
+      "module": "case_017"
+    },
+    {
+      "id": "example__native_if",
+      "source_refs": [
+        {
+          "path": "examples/native_if.kfr",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main() -> i64 {\n    return if 2 > 1 { 42 } else { 0 };\n}\n",
+      "source": "#[inline(never)] pub fn test_fn() -> i64 {\n    return if 2 > 1 { 42 } else { 0 };\n}\n",
+      "source_sha256": "970651af305459b5190b7a3d3044a3a8fab8f63f0f1a95940a0178a98c2d25de",
+      "adaptation": "Rename the entry point to public test_fn inside a module; preserve the example program body.",
+      "module": "case_018"
+    },
+    {
+      "id": "example__native_inclusive",
+      "source_refs": [
+        {
+          "path": "examples/native_inclusive.kfr",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "u64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main() -> u64 {\n    let mut total = 0usize;\n    for i in 1..=6usize {\n        if i % 2 == 0 {\n            continue;\n        }\n        total += i;\n    }\n    return total + 33;\n}\n",
+      "source": "#[inline(never)] pub fn test_fn() -> u64 {\n    let mut total = 0usize;\n    for i in 1..=6usize {\n        if i % 2 == 0 {\n            continue;\n        }\n        total += i;\n    }\n    return (total + 33) as u64;\n}\n",
+      "source_sha256": "eec3de7af34327101024cd7dabdadb7ca93931ae24d0c701cedfb227867e5b35",
+      "adaptation": "Rename the entry point to public test_fn inside a module; preserve the example program body. Explicit usize\u2192u64 return cast replaces the removed 64-bit alias rule.",
+      "module": "case_019"
+    },
+    {
+      "id": "example__native_loop_value",
+      "source_refs": [
+        {
+          "path": "examples/native_loop_value.kfr",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/loop_values.rs",
+          "test": "native_loop_value_example_returns_42",
+          "line": 100,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main() -> i64 {\n    let answer = loop {\n        break 40 + 2;\n    };\n    answer\n}\n",
+      "source": "#[inline(never)] pub fn test_fn() -> i64 {\n    let answer = loop {\n        break 40 + 2;\n    };\n    answer\n}\n",
+      "source_sha256": "89ca6b995aafeb1ffb2645f527ad31ae1b5eed7c75bac9ff4684efdf5c29f4dd",
+      "adaptation": "Rename the entry point to public test_fn inside a module; preserve the example program body.",
+      "module": "case_020"
+    },
+    {
+      "id": "example__native_main",
+      "source_refs": [
+        {
+          "path": "examples/native_main.kfr",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main() -> i64 {\n    let base = 40;\n    return base + 2;\n}\n",
+      "source": "#[inline(never)] pub fn test_fn() -> i64 {\n    let base = 40;\n    return base + 2;\n}\n",
+      "source_sha256": "2b131d09f885ff7299a7edfa7ef0cbc4a65498d0cc2d9ff60acb51fe2e9fa02e",
+      "adaptation": "Rename the entry point to public test_fn inside a module; preserve the example program body.",
+      "module": "case_021"
+    },
+    {
+      "id": "example__native_match",
+      "source_refs": [
+        {
+          "path": "examples/native_match.kfr",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/scalar_match.rs",
+          "test": "native_match_example_returns_42",
+          "line": 102,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main() -> i64 {\n    return match 2 {\n        0 => 0,\n        1 => 21,\n        2 => { 40 + 2 },\n        _ => -1,\n    };\n}\n",
+      "source": "#[inline(never)] pub fn test_fn() -> i64 {\n    return match 2 {\n        0 => 0,\n        1 => 21,\n        2 => { 40 + 2 },\n        _ => -1,\n    };\n}\n",
+      "source_sha256": "18df8515963aa2b4e3df195d7ba0d6845683eb5a138a1c2474e162cfe56c7b92",
+      "adaptation": "Rename the entry point to public test_fn inside a module; preserve the example program body.",
+      "module": "case_022"
+    },
+    {
+      "id": "example__native_match_range",
+      "source_refs": [
+        {
+          "path": "examples/native_match_range.kfr",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/match_ranges.rs",
+          "test": "native_match_range_example_returns_42",
+          "line": 193,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main() -> i64 {\n    let value = 42;\n    return match value {\n        -10..=10 => 0,\n        40..=50 if value % 2 == 0 => 42,\n        _ => -1,\n    };\n}\n",
+      "source": "#[inline(never)] pub fn test_fn() -> i64 {\n    let value = 42;\n    return match value {\n        -10..=10 => 0,\n        40..=50 if value % 2 == 0 => 42,\n        _ => -1,\n    };\n}\n",
+      "source_sha256": "53b35133b19db28d9d45ceb8abc180ff69702bf22020ee5ba31038a780d41244",
+      "adaptation": "Rename the entry point to public test_fn inside a module; preserve the example program body.",
+      "module": "case_023"
+    },
+    {
+      "id": "example__native_nested_while",
+      "source_refs": [
+        {
+          "path": "examples/native_nested_while.kfr",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 4,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main() -> i64 {\n    let mut total = 0;\n    let mut i = 0;\n    while i < 4 {\n        let mut j = 0;\n        while j < i {\n            total = total + j;\n            j = j + 1;\n        }\n        i = i + 1;\n    }\n    return total;\n}\n",
+      "source": "#[inline(never)] pub fn test_fn() -> i64 {\n    let mut total = 0;\n    let mut i = 0;\n    while i < 4 {\n        let mut j = 0;\n        while j < i {\n            total = total + j;\n            j = j + 1;\n        }\n        i = i + 1;\n    }\n    return total;\n}\n",
+      "source_sha256": "38d9da14390f7c50c6b3dd9a3e0b9ef75c6f44b0eba8dba457c74c10dc255cd1",
+      "adaptation": "Rename the entry point to public test_fn inside a module; preserve the example program body.",
+      "module": "case_024"
+    },
+    {
+      "id": "example__native_not",
+      "source_refs": [
+        {
+          "path": "examples/native_not.kfr",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main() -> i64 {\n    let signed = !(-43);\n    let unsigned = !0xffff_ffff_ffff_ffd5u64;\n    return if !false { signed + (unsigned as i64) - 42 } else { 0 };\n}\n",
+      "source": "#[inline(never)] pub fn test_fn() -> i64 {\n    let signed = !(-43);\n    let unsigned = !0xffff_ffff_ffff_ffd5u64;\n    return if !false { signed + (unsigned as i64) - 42 } else { 0 };\n}\n",
+      "source_sha256": "54a3a5e7864f53592b08e1c7b2e298f60da91799512fb745d2a1af026dcc0fc4",
+      "adaptation": "Rename the entry point to public test_fn inside a module; preserve the example program body.",
+      "module": "case_025"
+    },
+    {
+      "id": "example__native_recursion",
+      "source_refs": [
+        {
+          "path": "examples/native_recursion.kfr",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main() -> i64 {\n    return if even(10) { sum_down(9) - 3 } else { 0 };\n}\n\nfn sum_down(value: i64) -> i64 {\n    if value == 0 {\n        return 0;\n    }\n    return value + sum_down(value - 1);\n}\n\nfn even(value: u64) -> bool {\n    if value == 0 {\n        return true;\n    }\n    return odd(value - 1);\n}\n\nfn odd(value: u64) -> bool {\n    if value == 0 {\n        return false;\n    }\n    return even(value - 1);\n}\n",
+      "source": "#[inline(never)] pub fn test_fn() -> i64 {\n    return if even(10) { sum_down(9) - 3 } else { 0 };\n}\n\nfn sum_down(value: i64) -> i64 {\n    if value == 0 {\n        return 0;\n    }\n    return value + sum_down(value - 1);\n}\n\nfn even(value: u64) -> bool {\n    if value == 0 {\n        return true;\n    }\n    return odd(value - 1);\n}\n\nfn odd(value: u64) -> bool {\n    if value == 0 {\n        return false;\n    }\n    return even(value - 1);\n}\n",
+      "source_sha256": "6521436e217ec830fdc34fb090574f629e23719d1e3a307dfe27f1eb25b5866b",
+      "adaptation": "Rename the entry point to public test_fn inside a module; preserve the example program body.",
+      "module": "case_026"
+    },
+    {
+      "id": "example__native_remainder",
+      "source_refs": [
+        {
+          "path": "examples/native_remainder.kfr",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "u64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main() -> u64 {\n    let remainder = 0xffff_ffff_ffff_ffffu64 % 64;\n    let quotient = 255u64 / 64;\n    let high = 0x8000_0000_0000_0000u64;\n    let high_remainder = (high - 1) % high;\n    return if high_remainder == high - 1 {\n        remainder - quotient - 18\n    } else {\n        0\n    };\n}\n",
+      "source": "#[inline(never)] pub fn test_fn() -> u64 {\n    let remainder = 0xffff_ffff_ffff_ffffu64 % 64;\n    let quotient = 255u64 / 64;\n    let high = 0x8000_0000_0000_0000u64;\n    let high_remainder = (high - 1) % high;\n    return if high_remainder == high - 1 {\n        remainder - quotient - 18\n    } else {\n        0\n    };\n}\n",
+      "source_sha256": "380f10a156da434dd639cc1e793ab895b14f908133b1f108f4c37875b65bbd8d",
+      "adaptation": "Rename the entry point to public test_fn inside a module; preserve the example program body.",
+      "module": "case_027"
+    },
+    {
+      "id": "example__native_second",
+      "source_refs": [
+        {
+          "path": "examples/native_second.kfr",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main() -> i64 {\n    let left = 6;\n    return left * 7;\n}\n",
+      "source": "#[inline(never)] pub fn test_fn() -> i64 {\n    let left = 6;\n    return left * 7;\n}\n",
+      "source_sha256": "b184503468430ca6587825bbe2c4a19e4462092dad97792c530a3dd677d4e804",
+      "adaptation": "Rename the entry point to public test_fn inside a module; preserve the example program body.",
+      "module": "case_028"
+    },
+    {
+      "id": "example__native_shadowing",
+      "source_refs": [
+        {
+          "path": "examples/native_shadowing.kfr",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/shadowing.rs",
+          "test": "native_shadowing_example_returns_42",
+          "line": 74,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main() -> i64 {\n    let mut x = 40;\n    for x in 0..3 {\n        let x = x + 1;\n        if x == 2 {\n            let x = 100;\n        }\n    }\n    let x = x + 1;\n    let mut i = 0;\n    while i < 1 {\n        let x = 0;\n        i += 1;\n    }\n    return x + 1;\n}\n",
+      "source": "#[inline(never)] pub fn test_fn() -> i64 {\n    let mut x = 40;\n    for x in 0..3 {\n        let x = x + 1;\n        if x == 2 {\n            let x = 100;\n        }\n    }\n    let x = x + 1;\n    let mut i = 0;\n    while i < 1 {\n        let x = 0;\n        i += 1;\n    }\n    return x + 1;\n}\n",
+      "source_sha256": "155bcf158faa783a29120db56d800e420cc29af0637b1125bd8bd4bf36d391b4",
+      "adaptation": "Rename the entry point to public test_fn inside a module; preserve the example program body.",
+      "module": "case_029"
+    },
+    {
+      "id": "example__native_signed_division",
+      "source_refs": [
+        {
+          "path": "examples/native_signed_division.kfr",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main() -> i64 {\n    let negative = -85;\n    let positive = 85;\n    return negative / 2 + positive / 2 + 42;\n}\n",
+      "source": "#[inline(never)] pub fn test_fn() -> i64 {\n    let negative = -85;\n    let positive = 85;\n    return negative / 2 + positive / 2 + 42;\n}\n",
+      "source_sha256": "491256222be939beaf0d350518b9c83d5fa54d631f5fdbbbab3017aed58fd195",
+      "adaptation": "Rename the entry point to public test_fn inside a module; preserve the example program body.",
+      "module": "case_030"
+    },
+    {
+      "id": "example__native_statement_if",
+      "source_refs": [
+        {
+          "path": "examples/native_statement_if.kfr",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main() -> i64 {\n    let mut sum = 0;\n    let mut i = 0;\n    while i < 10 {\n        if i % 2 == 0 {\n            sum = sum + i;\n        } else {\n            sum = sum + 0;\n        }\n        i = i + 1;\n    }\n    if sum == 20 {\n        sum = sum + 22;\n    }\n    return sum;\n}\n",
+      "source": "#[inline(never)] pub fn test_fn() -> i64 {\n    let mut sum = 0;\n    let mut i = 0;\n    while i < 10 {\n        if i % 2 == 0 {\n            sum = sum + i;\n        } else {\n            sum = sum + 0;\n        }\n        i = i + 1;\n    }\n    if sum == 20 {\n        sum = sum + 22;\n    }\n    return sum;\n}\n",
+      "source_sha256": "482009cb11961bd68b9a26d72b5b1e8f5fa5cd9ac971226e1837b7830cbd67e2",
+      "adaptation": "Rename the entry point to public test_fn inside a module; preserve the example program body.",
+      "module": "case_031"
+    },
+    {
+      "id": "example__native_strength",
+      "source_refs": [
+        {
+          "path": "examples/native_strength.kfr",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "fn scale(value: i64) -> i64 {\n    return value * 8;\n}\n\nfn reduce(value: u64) -> u64 {\n    return value / 8;\n}\n\nfn main() -> i64 {\n    return scale(5) + reduce(16) as i64;\n}\n",
+      "source": "fn scale(value: i64) -> i64 {\n    return value * 8;\n}\n\nfn reduce(value: u64) -> u64 {\n    return value / 8;\n}\n\n#[inline(never)] pub fn test_fn() -> i64 {\n    return scale(5) + reduce(16) as i64;\n}\n",
+      "source_sha256": "57908a7c96e676e8e2d4dd44f3f1daa746b91c6abe5c0752ab2d5f3eb5378f9a",
+      "adaptation": "Rename the entry point to public test_fn inside a module; preserve the example program body.",
+      "module": "case_032"
+    },
+    {
+      "id": "example__native_sum8",
+      "source_refs": [
+        {
+          "path": "examples/native_sum8.kfr",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 36,
+          "trap": null
+        }
+      ],
+      "original_source": "fn sum8(a: i64, b: i64, c: i64, d: i64, e: i64, f: i64, g: i64, h: i64) -> i64 {\n    return a + b + c + d + e + f + g + h;\n}\n\nfn main() -> i64 {\n    return sum8(1, 2, 3, 4, 5, 6, 7, 8);\n}\n",
+      "source": "fn sum8(a: i64, b: i64, c: i64, d: i64, e: i64, f: i64, g: i64, h: i64) -> i64 {\n    return a + b + c + d + e + f + g + h;\n}\n\n#[inline(never)] pub fn test_fn() -> i64 {\n    return sum8(1, 2, 3, 4, 5, 6, 7, 8);\n}\n",
+      "source_sha256": "4f74faef548c92a6eccede3266f956fe91a872dba3bb70712732d178c1c41c03",
+      "adaptation": "Rename the entry point to public test_fn inside a module; preserve the example program body.",
+      "module": "case_033"
+    },
+    {
+      "id": "example__native_tail",
+      "source_refs": [
+        {
+          "path": "examples/native_tail.kfr",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "fn sum() -> i64 {\n    let mut total = 0;\n    for i in 0..5 {\n        total += i;\n    }\n    total + 32\n}\n\nfn main() -> i64 {\n    sum()\n}\n",
+      "source": "fn sum() -> i64 {\n    let mut total = 0;\n    for i in 0..5 {\n        total += i;\n    }\n    total + 32\n}\n\n#[inline(never)] pub fn test_fn() -> i64 {\n    sum()\n}\n",
+      "source_sha256": "067895a303c6ba4e917716a252c8264a406ed28c565ad4588249ef2b9107df8c",
+      "adaptation": "Rename the entry point to public test_fn inside a module; preserve the example program body.",
+      "module": "case_034"
+    },
+    {
+      "id": "example__native_u32_immediate",
+      "source_refs": [
+        {
+          "path": "examples/native_u32_immediate.kfr",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "u64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main() -> u64 {\n    let value = 0x8000_0000u64;\n    return if value > 0x7fff_ffffu64 { 42u64 } else { 0 };\n}\n",
+      "source": "#[inline(never)] pub fn test_fn() -> u64 {\n    let value = 0x8000_0000u64;\n    return if value > 0x7fff_ffffu64 { 42u64 } else { 0 };\n}\n",
+      "source_sha256": "57aced89eef4e119f06baba81b340ea500d7a2ae692f8863fdfeaad04717dfc8",
+      "adaptation": "Rename the entry point to public test_fn inside a module; preserve the example program body.",
+      "module": "case_035"
+    },
+    {
+      "id": "example__native_u64",
+      "source_refs": [
+        {
+          "path": "examples/native_u64.kfr",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "u64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "fn compute(value: u64) -> u64 {\n    return (value >> 63) + (value % 3) + 41;\n}\n\nfn main() -> u64 {\n    return compute(18446744073709551615u64);\n}\n",
+      "source": "fn compute(value: u64) -> u64 {\n    return (value >> 63) + (value % 3) + 41;\n}\n\n#[inline(never)] pub fn test_fn() -> u64 {\n    return compute(18446744073709551615u64);\n}\n",
+      "source_sha256": "53b5484c2dbb5c5b14243cd343d48c9d76e2a6d3b1631f73880d1424a45a3c01",
+      "adaptation": "Rename the entry point to public test_fn inside a module; preserve the example program body.",
+      "module": "case_036"
+    },
+    {
+      "id": "example__native_unary_strength",
+      "source_refs": [
+        {
+          "path": "examples/native_unary_strength.kfr",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main() -> i64 {\n    let negated = 0 - (-40);\n    let multiplied = 1 * -2;\n    let inverted = 0 ^ -1;\n    return negated + multiplied + inverted + 5;\n}\n",
+      "source": "#[inline(never)] pub fn test_fn() -> i64 {\n    let negated = 0 - (-40);\n    let multiplied = 1 * -2;\n    let inverted = 0 ^ -1;\n    return negated + multiplied + inverted + 5;\n}\n",
+      "source_sha256": "9972aa58c3740e77b4c8ec6cf76f5b832c4bbe28366ff3d56f861125b4dc5323",
+      "adaptation": "Rename the entry point to public test_fn inside a module; preserve the example program body.",
+      "module": "case_037"
+    },
+    {
+      "id": "example__native_unit",
+      "source_refs": [
+        {
+          "path": "examples/native_unit.rs",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "()",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 0,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main() {}\n",
+      "source": "#[inline(never)] pub fn test_fn() {}\n",
+      "source_sha256": "536e506bb90914c243a12b397b9a998f85ae2cbd9ba02dfd03a9e155ca5ca0f4",
+      "adaptation": "Rename the entry point to public test_fn inside a module; preserve the example program body.",
+      "module": "case_038"
+    },
+    {
+      "id": "example__native_visibility",
+      "source_refs": [
+        {
+          "path": "examples/native_visibility.kfr",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/function_visibility.rs",
+          "test": "native_visibility_example_returns_42",
+          "line": 76,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/function_visibility.rs",
+          "test": "optimized_multifunction_constants_remain_inside_function_graphs",
+          "line": 90,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "pub fn main() -> i64 {\n    return 40 + 2;\n}\n\npub(crate) fn crate_visible() -> i64 {\n    return 42;\n}\n\npub(self) fn self_visible() -> i64 {\n    return 42;\n}\n\npub(super) fn super_visible() -> i64 {\n    return 42;\n}\n",
+      "source": "#[inline(never)] pub fn test_fn() -> i64 {\n    return 40 + 2;\n}\n\npub(crate) fn crate_visible() -> i64 {\n    return 42;\n}\n\npub(self) fn self_visible() -> i64 {\n    return 42;\n}\n\npub(super) fn super_visible() -> i64 {\n    return 42;\n}\n",
+      "source_sha256": "f33718a816618d799c2f13241d41228c12c1686842beffb11c0cd984993709dc",
+      "adaptation": "Rename the entry point to public test_fn inside a module; preserve the example program body.",
+      "module": "case_039"
+    },
+    {
+      "id": "example__native_while",
+      "source_refs": [
+        {
+          "path": "examples/native_while.kfr",
+          "test": "main",
+          "line": 1,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 55,
+          "trap": null
+        }
+      ],
+      "original_source": "fn sum_to(limit: i64) -> i64 {\n    let mut sum = 0;\n    let mut i = 1;\n    while i <= limit {\n        sum = sum + i;\n        i = i + 1;\n    }\n    return sum;\n}\n\nfn main() -> i64 {\n    return sum_to(10);\n}\n",
+      "source": "fn sum_to(limit: i64) -> i64 {\n    let mut sum = 0;\n    let mut i = 1;\n    while i <= limit {\n        sum = sum + i;\n        i = i + 1;\n    }\n    return sum;\n}\n\n#[inline(never)] pub fn test_fn() -> i64 {\n    return sum_to(10);\n}\n",
+      "source_sha256": "04316ed459101bbba5ea8541dfd09d5ad680c60f131d43bd5ae8c9593897f478",
+      "adaptation": "Rename the entry point to public test_fn inside a module; preserve the example program body.",
+      "module": "case_040"
+    }
+  ]
+}
