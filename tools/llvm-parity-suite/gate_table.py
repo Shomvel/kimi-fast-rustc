@@ -260,7 +260,7 @@ for crate in crates:
     lines.append(f"| {crate} | {base['driver']['local_text_bytes']} | {', '.join(same) or '—'} |")
 lines.append('')
 
-text = '\n'.join(lines) + '\n'
+text = '\n'.join(lines).rstrip() + '\n'
 out = a.out or (root / 'table.md')
 out.write_text(text)
 (out.with_suffix('.json')).write_text(json.dumps(summary, indent=2) + '\n')

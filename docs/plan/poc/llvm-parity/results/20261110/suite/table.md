@@ -103,4 +103,3 @@ Correctness notes:
 | base64 | 18392 | c12-phi: yes, integrated: yes |
 | unicode-segmentation | 37496 | c12-phi: yes, integrated: yes |
 | humantime | 11184 | c12-phi: yes, integrated: yes |
-
