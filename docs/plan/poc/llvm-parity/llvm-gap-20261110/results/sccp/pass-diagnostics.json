@@ -1,0 +1,34 @@
+[
+  {
+    "crate": "semver",
+    "stats_entries": 745,
+    "objects_identical_to_reference": true,
+    "sccp_constants": 6,
+    "sccp_visits": 28604,
+    "sccp_budget_bailouts": 0
+  },
+  {
+    "crate": "base64",
+    "stats_entries": 381,
+    "objects_identical_to_reference": true,
+    "sccp_constants": 1,
+    "sccp_visits": 13636,
+    "sccp_budget_bailouts": 0
+  },
+  {
+    "crate": "unicode-segmentation",
+    "stats_entries": 332,
+    "objects_identical_to_reference": true,
+    "sccp_constants": 2,
+    "sccp_visits": 22842,
+    "sccp_budget_bailouts": 0
+  },
+  {
+    "crate": "humantime",
+    "stats_entries": 444,
+    "objects_identical_to_reference": true,
+    "sccp_constants": 2,
+    "sccp_visits": 20120,
+    "sccp_budget_bailouts": 0
+  }
+]

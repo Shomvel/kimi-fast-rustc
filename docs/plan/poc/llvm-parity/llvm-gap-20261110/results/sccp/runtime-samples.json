@@ -1,0 +1,5465 @@
+{
+  "base64": {
+    "crate": "base64",
+    "arms": [
+      "llvm",
+      "baseline",
+      "sccp",
+      "bits"
+    ],
+    "skipped_arms": [],
+    "rounds": 11,
+    "order": "warm-up round -1, then rounds alternate forward/reverse arm order",
+    "workloads": {
+      "encode": {
+        "iterations": 10000,
+        "samples": [
+          {
+            "arm": "bits",
+            "round": -1,
+            "exit_code": 0,
+            "elapsed_ns": 173982648,
+            "checksum": 55493921
+          },
+          {
+            "arm": "sccp",
+            "round": -1,
+            "exit_code": 0,
+            "elapsed_ns": 172458957,
+            "checksum": 55493921
+          },
+          {
+            "arm": "baseline",
+            "round": -1,
+            "exit_code": 0,
+            "elapsed_ns": 188295460,
+            "checksum": 55493921
+          },
+          {
+            "arm": "llvm",
+            "round": -1,
+            "exit_code": 0,
+            "elapsed_ns": 19397345,
+            "checksum": 55493921
+          },
+          {
+            "arm": "llvm",
+            "round": 0,
+            "exit_code": 0,
+            "elapsed_ns": 17561015,
+            "checksum": 55493921
+          },
+          {
+            "arm": "baseline",
+            "round": 0,
+            "exit_code": 0,
+            "elapsed_ns": 178409751,
+            "checksum": 55493921
+          },
+          {
+            "arm": "sccp",
+            "round": 0,
+            "exit_code": 0,
+            "elapsed_ns": 172747632,
+            "checksum": 55493921
+          },
+          {
+            "arm": "bits",
+            "round": 0,
+            "exit_code": 0,
+            "elapsed_ns": 171595480,
+            "checksum": 55493921
+          },
+          {
+            "arm": "bits",
+            "round": 1,
+            "exit_code": 0,
+            "elapsed_ns": 172635863,
+            "checksum": 55493921
+          },
+          {
+            "arm": "sccp",
+            "round": 1,
+            "exit_code": 0,
+            "elapsed_ns": 172076732,
+            "checksum": 55493921
+          },
+          {
+            "arm": "baseline",
+            "round": 1,
+            "exit_code": 0,
+            "elapsed_ns": 173102765,
+            "checksum": 55493921
+          },
+          {
+            "arm": "llvm",
+            "round": 1,
+            "exit_code": 0,
+            "elapsed_ns": 17472941,
+            "checksum": 55493921
+          },
+          {
+            "arm": "llvm",
+            "round": 2,
+            "exit_code": 0,
+            "elapsed_ns": 17521896,
+            "checksum": 55493921
+          },
+          {
+            "arm": "baseline",
+            "round": 2,
+            "exit_code": 0,
+            "elapsed_ns": 171935680,
+            "checksum": 55493921
+          },
+          {
+            "arm": "sccp",
+            "round": 2,
+            "exit_code": 0,
+            "elapsed_ns": 172369873,
+            "checksum": 55493921
+          },
+          {
+            "arm": "bits",
+            "round": 2,
+            "exit_code": 0,
+            "elapsed_ns": 171828509,
+            "checksum": 55493921
+          },
+          {
+            "arm": "bits",
+            "round": 3,
+            "exit_code": 0,
+            "elapsed_ns": 171494798,
+            "checksum": 55493921
+          },
+          {
+            "arm": "sccp",
+            "round": 3,
+            "exit_code": 0,
+            "elapsed_ns": 174602929,
+            "checksum": 55493921
+          },
+          {
+            "arm": "baseline",
+            "round": 3,
+            "exit_code": 0,
+            "elapsed_ns": 172009432,
+            "checksum": 55493921
+          },
+          {
+            "arm": "llvm",
+            "round": 3,
+            "exit_code": 0,
+            "elapsed_ns": 30427724,
+            "checksum": 55493921
+          },
+          {
+            "arm": "llvm",
+            "round": 4,
+            "exit_code": 0,
+            "elapsed_ns": 17459903,
+            "checksum": 55493921
+          },
+          {
+            "arm": "baseline",
+            "round": 4,
+            "exit_code": 0,
+            "elapsed_ns": 177540244,
+            "checksum": 55493921
+          },
+          {
+            "arm": "sccp",
+            "round": 4,
+            "exit_code": 0,
+            "elapsed_ns": 182624166,
+            "checksum": 55493921
+          },
+          {
+            "arm": "bits",
+            "round": 4,
+            "exit_code": 0,
+            "elapsed_ns": 173290648,
+            "checksum": 55493921
+          },
+          {
+            "arm": "bits",
+            "round": 5,
+            "exit_code": 0,
+            "elapsed_ns": 171632446,
+            "checksum": 55493921
+          },
+          {
+            "arm": "sccp",
+            "round": 5,
+            "exit_code": 0,
+            "elapsed_ns": 172658507,
+            "checksum": 55493921
+          },
+          {
+            "arm": "baseline",
+            "round": 5,
+            "exit_code": 0,
+            "elapsed_ns": 171787528,
+            "checksum": 55493921
+          },
+          {
+            "arm": "llvm",
+            "round": 5,
+            "exit_code": 0,
+            "elapsed_ns": 17488535,
+            "checksum": 55493921
+          },
+          {
+            "arm": "llvm",
+            "round": 6,
+            "exit_code": 0,
+            "elapsed_ns": 17540894,
+            "checksum": 55493921
+          },
+          {
+            "arm": "baseline",
+            "round": 6,
+            "exit_code": 0,
+            "elapsed_ns": 173153341,
+            "checksum": 55493921
+          },
+          {
+            "arm": "sccp",
+            "round": 6,
+            "exit_code": 0,
+            "elapsed_ns": 172197553,
+            "checksum": 55493921
+          },
+          {
+            "arm": "bits",
+            "round": 6,
+            "exit_code": 0,
+            "elapsed_ns": 171725996,
+            "checksum": 55493921
+          },
+          {
+            "arm": "bits",
+            "round": 7,
+            "exit_code": 0,
+            "elapsed_ns": 171997963,
+            "checksum": 55493921
+          },
+          {
+            "arm": "sccp",
+            "round": 7,
+            "exit_code": 0,
+            "elapsed_ns": 175079155,
+            "checksum": 55493921
+          },
+          {
+            "arm": "baseline",
+            "round": 7,
+            "exit_code": 0,
+            "elapsed_ns": 173393652,
+            "checksum": 55493921
+          },
+          {
+            "arm": "llvm",
+            "round": 7,
+            "exit_code": 0,
+            "elapsed_ns": 17510568,
+            "checksum": 55493921
+          },
+          {
+            "arm": "llvm",
+            "round": 8,
+            "exit_code": 0,
+            "elapsed_ns": 17605630,
+            "checksum": 55493921
+          },
+          {
+            "arm": "baseline",
+            "round": 8,
+            "exit_code": 0,
+            "elapsed_ns": 189642224,
+            "checksum": 55493921
+          },
+          {
+            "arm": "sccp",
+            "round": 8,
+            "exit_code": 0,
+            "elapsed_ns": 174637862,
+            "checksum": 55493921
+          },
+          {
+            "arm": "bits",
+            "round": 8,
+            "exit_code": 0,
+            "elapsed_ns": 185814029,
+            "checksum": 55493921
+          },
+          {
+            "arm": "bits",
+            "round": 9,
+            "exit_code": 0,
+            "elapsed_ns": 172494200,
+            "checksum": 55493921
+          },
+          {
+            "arm": "sccp",
+            "round": 9,
+            "exit_code": 0,
+            "elapsed_ns": 175286647,
+            "checksum": 55493921
+          },
+          {
+            "arm": "baseline",
+            "round": 9,
+            "exit_code": 0,
+            "elapsed_ns": 172054730,
+            "checksum": 55493921
+          },
+          {
+            "arm": "llvm",
+            "round": 9,
+            "exit_code": 0,
+            "elapsed_ns": 17446323,
+            "checksum": 55493921
+          },
+          {
+            "arm": "llvm",
+            "round": 10,
+            "exit_code": 0,
+            "elapsed_ns": 17494534,
+            "checksum": 55493921
+          },
+          {
+            "arm": "baseline",
+            "round": 10,
+            "exit_code": 0,
+            "elapsed_ns": 173641615,
+            "checksum": 55493921
+          },
+          {
+            "arm": "sccp",
+            "round": 10,
+            "exit_code": 0,
+            "elapsed_ns": 178186284,
+            "checksum": 55493921
+          },
+          {
+            "arm": "bits",
+            "round": 10,
+            "exit_code": 0,
+            "elapsed_ns": 172335261,
+            "checksum": 55493921
+          }
+        ],
+        "arms": {
+          "llvm": {
+            "runs": 11,
+            "failures": 0,
+            "median_ns": 17510568,
+            "min_ns": 17446323,
+            "max_ns": 30427724,
+            "checksums": [
+              55493921
+            ],
+            "instructions": 292760712,
+            "cycles": 64920726
+          },
+          "baseline": {
+            "runs": 11,
+            "failures": 0,
+            "median_ns": 173153341,
+            "min_ns": 171787528,
+            "max_ns": 189642224,
+            "checksums": [
+              55493921
+            ],
+            "instructions": 1870915357,
+            "cycles": 633365123
+          },
+          "sccp": {
+            "runs": 11,
+            "failures": 0,
+            "median_ns": 174602929,
+            "min_ns": 172076732,
+            "max_ns": 182624166,
+            "checksums": [
+              55493921
+            ],
+            "instructions": 1870915740,
+            "cycles": 637322703
+          },
+          "bits": {
+            "runs": 11,
+            "failures": 0,
+            "median_ns": 171997963,
+            "min_ns": 171494798,
+            "max_ns": 185814029,
+            "checksums": [
+              55493921
+            ],
+            "instructions": 1864115394,
+            "cycles": 650901410
+          }
+        }
+      },
+      "decode": {
+        "iterations": 10000,
+        "samples": [
+          {
+            "arm": "bits",
+            "round": -1,
+            "exit_code": 0,
+            "elapsed_ns": 151266615,
+            "checksum": 42229339
+          },
+          {
+            "arm": "sccp",
+            "round": -1,
+            "exit_code": 0,
+            "elapsed_ns": 169542383,
+            "checksum": 42229339
+          },
+          {
+            "arm": "baseline",
+            "round": -1,
+            "exit_code": 0,
+            "elapsed_ns": 152685027,
+            "checksum": 42229339
+          },
+          {
+            "arm": "llvm",
+            "round": -1,
+            "exit_code": 0,
+            "elapsed_ns": 18510030,
+            "checksum": 42229339
+          },
+          {
+            "arm": "llvm",
+            "round": 0,
+            "exit_code": 0,
+            "elapsed_ns": 18478022,
+            "checksum": 42229339
+          },
+          {
+            "arm": "baseline",
+            "round": 0,
+            "exit_code": 0,
+            "elapsed_ns": 152720371,
+            "checksum": 42229339
+          },
+          {
+            "arm": "sccp",
+            "round": 0,
+            "exit_code": 0,
+            "elapsed_ns": 157801247,
+            "checksum": 42229339
+          },
+          {
+            "arm": "bits",
+            "round": 0,
+            "exit_code": 0,
+            "elapsed_ns": 148789090,
+            "checksum": 42229339
+          },
+          {
+            "arm": "bits",
+            "round": 1,
+            "exit_code": 0,
+            "elapsed_ns": 154363369,
+            "checksum": 42229339
+          },
+          {
+            "arm": "sccp",
+            "round": 1,
+            "exit_code": 0,
+            "elapsed_ns": 159227270,
+            "checksum": 42229339
+          },
+          {
+            "arm": "baseline",
+            "round": 1,
+            "exit_code": 0,
+            "elapsed_ns": 153286981,
+            "checksum": 42229339
+          },
+          {
+            "arm": "llvm",
+            "round": 1,
+            "exit_code": 0,
+            "elapsed_ns": 18747027,
+            "checksum": 42229339
+          },
+          {
+            "arm": "llvm",
+            "round": 2,
+            "exit_code": 0,
+            "elapsed_ns": 18463791,
+            "checksum": 42229339
+          },
+          {
+            "arm": "baseline",
+            "round": 2,
+            "exit_code": 0,
+            "elapsed_ns": 152814071,
+            "checksum": 42229339
+          },
+          {
+            "arm": "sccp",
+            "round": 2,
+            "exit_code": 0,
+            "elapsed_ns": 156072639,
+            "checksum": 42229339
+          },
+          {
+            "arm": "bits",
+            "round": 2,
+            "exit_code": 0,
+            "elapsed_ns": 150008915,
+            "checksum": 42229339
+          },
+          {
+            "arm": "bits",
+            "round": 3,
+            "exit_code": 0,
+            "elapsed_ns": 150502357,
+            "checksum": 42229339
+          },
+          {
+            "arm": "sccp",
+            "round": 3,
+            "exit_code": 0,
+            "elapsed_ns": 157752173,
+            "checksum": 42229339
+          },
+          {
+            "arm": "baseline",
+            "round": 3,
+            "exit_code": 0,
+            "elapsed_ns": 154196719,
+            "checksum": 42229339
+          },
+          {
+            "arm": "llvm",
+            "round": 3,
+            "exit_code": 0,
+            "elapsed_ns": 18526035,
+            "checksum": 42229339
+          },
+          {
+            "arm": "llvm",
+            "round": 4,
+            "exit_code": 0,
+            "elapsed_ns": 18623722,
+            "checksum": 42229339
+          },
+          {
+            "arm": "baseline",
+            "round": 4,
+            "exit_code": 0,
+            "elapsed_ns": 153321554,
+            "checksum": 42229339
+          },
+          {
+            "arm": "sccp",
+            "round": 4,
+            "exit_code": 0,
+            "elapsed_ns": 156376996,
+            "checksum": 42229339
+          },
+          {
+            "arm": "bits",
+            "round": 4,
+            "exit_code": 0,
+            "elapsed_ns": 149420770,
+            "checksum": 42229339
+          },
+          {
+            "arm": "bits",
+            "round": 5,
+            "exit_code": 0,
+            "elapsed_ns": 149340791,
+            "checksum": 42229339
+          },
+          {
+            "arm": "sccp",
+            "round": 5,
+            "exit_code": 0,
+            "elapsed_ns": 154285031,
+            "checksum": 42229339
+          },
+          {
+            "arm": "baseline",
+            "round": 5,
+            "exit_code": 0,
+            "elapsed_ns": 153193551,
+            "checksum": 42229339
+          },
+          {
+            "arm": "llvm",
+            "round": 5,
+            "exit_code": 0,
+            "elapsed_ns": 18459745,
+            "checksum": 42229339
+          },
+          {
+            "arm": "llvm",
+            "round": 6,
+            "exit_code": 0,
+            "elapsed_ns": 18456640,
+            "checksum": 42229339
+          },
+          {
+            "arm": "baseline",
+            "round": 6,
+            "exit_code": 0,
+            "elapsed_ns": 155726969,
+            "checksum": 42229339
+          },
+          {
+            "arm": "sccp",
+            "round": 6,
+            "exit_code": 0,
+            "elapsed_ns": 155379137,
+            "checksum": 42229339
+          },
+          {
+            "arm": "bits",
+            "round": 6,
+            "exit_code": 0,
+            "elapsed_ns": 151584622,
+            "checksum": 42229339
+          },
+          {
+            "arm": "bits",
+            "round": 7,
+            "exit_code": 0,
+            "elapsed_ns": 149515933,
+            "checksum": 42229339
+          },
+          {
+            "arm": "sccp",
+            "round": 7,
+            "exit_code": 0,
+            "elapsed_ns": 155854260,
+            "checksum": 42229339
+          },
+          {
+            "arm": "baseline",
+            "round": 7,
+            "exit_code": 0,
+            "elapsed_ns": 152819999,
+            "checksum": 42229339
+          },
+          {
+            "arm": "llvm",
+            "round": 7,
+            "exit_code": 0,
+            "elapsed_ns": 18563382,
+            "checksum": 42229339
+          },
+          {
+            "arm": "llvm",
+            "round": 8,
+            "exit_code": 0,
+            "elapsed_ns": 18493737,
+            "checksum": 42229339
+          },
+          {
+            "arm": "baseline",
+            "round": 8,
+            "exit_code": 0,
+            "elapsed_ns": 159591537,
+            "checksum": 42229339
+          },
+          {
+            "arm": "sccp",
+            "round": 8,
+            "exit_code": 0,
+            "elapsed_ns": 157528878,
+            "checksum": 42229339
+          },
+          {
+            "arm": "bits",
+            "round": 8,
+            "exit_code": 0,
+            "elapsed_ns": 149638829,
+            "checksum": 42229339
+          },
+          {
+            "arm": "bits",
+            "round": 9,
+            "exit_code": 0,
+            "elapsed_ns": 151711193,
+            "checksum": 42229339
+          },
+          {
+            "arm": "sccp",
+            "round": 9,
+            "exit_code": 0,
+            "elapsed_ns": 157186363,
+            "checksum": 42229339
+          },
+          {
+            "arm": "baseline",
+            "round": 9,
+            "exit_code": 0,
+            "elapsed_ns": 157352762,
+            "checksum": 42229339
+          },
+          {
+            "arm": "llvm",
+            "round": 9,
+            "exit_code": 0,
+            "elapsed_ns": 18545905,
+            "checksum": 42229339
+          },
+          {
+            "arm": "llvm",
+            "round": 10,
+            "exit_code": 0,
+            "elapsed_ns": 18516090,
+            "checksum": 42229339
+          },
+          {
+            "arm": "baseline",
+            "round": 10,
+            "exit_code": 0,
+            "elapsed_ns": 157732073,
+            "checksum": 42229339
+          },
+          {
+            "arm": "sccp",
+            "round": 10,
+            "exit_code": 0,
+            "elapsed_ns": 156769436,
+            "checksum": 42229339
+          },
+          {
+            "arm": "bits",
+            "round": 10,
+            "exit_code": 0,
+            "elapsed_ns": 151160205,
+            "checksum": 42229339
+          }
+        ],
+        "arms": {
+          "llvm": {
+            "runs": 11,
+            "failures": 0,
+            "median_ns": 18516090,
+            "min_ns": 18456640,
+            "max_ns": 18747027,
+            "checksums": [
+              42229339
+            ],
+            "instructions": 385642750,
+            "cycles": 68219011
+          },
+          "baseline": {
+            "runs": 11,
+            "failures": 0,
+            "median_ns": 153321554,
+            "min_ns": 152720371,
+            "max_ns": 159591537,
+            "checksums": [
+              42229339
+            ],
+            "instructions": 2429135562,
+            "cycles": 560710739
+          },
+          "sccp": {
+            "runs": 11,
+            "failures": 0,
+            "median_ns": 156769436,
+            "min_ns": 154285031,
+            "max_ns": 159227270,
+            "checksums": [
+              42229339
+            ],
+            "instructions": 2429133468,
+            "cycles": 627625675
+          },
+          "bits": {
+            "runs": 11,
+            "failures": 0,
+            "median_ns": 150008915,
+            "min_ns": 148789090,
+            "max_ns": 154363369,
+            "checksums": [
+              42229339
+            ],
+            "instructions": 2429135086,
+            "cycles": 555062994
+          }
+        }
+      },
+      "short": {
+        "iterations": 200000,
+        "samples": [
+          {
+            "arm": "bits",
+            "round": -1,
+            "exit_code": 0,
+            "elapsed_ns": 77641256,
+            "checksum": 55990625
+          },
+          {
+            "arm": "sccp",
+            "round": -1,
+            "exit_code": 0,
+            "elapsed_ns": 79390475,
+            "checksum": 55990625
+          },
+          {
+            "arm": "baseline",
+            "round": -1,
+            "exit_code": 0,
+            "elapsed_ns": 78336900,
+            "checksum": 55990625
+          },
+          {
+            "arm": "llvm",
+            "round": -1,
+            "exit_code": 0,
+            "elapsed_ns": 17128564,
+            "checksum": 55990625
+          },
+          {
+            "arm": "llvm",
+            "round": 0,
+            "exit_code": 0,
+            "elapsed_ns": 17093132,
+            "checksum": 55990625
+          },
+          {
+            "arm": "baseline",
+            "round": 0,
+            "exit_code": 0,
+            "elapsed_ns": 78839976,
+            "checksum": 55990625
+          },
+          {
+            "arm": "sccp",
+            "round": 0,
+            "exit_code": 0,
+            "elapsed_ns": 78913188,
+            "checksum": 55990625
+          },
+          {
+            "arm": "bits",
+            "round": 0,
+            "exit_code": 0,
+            "elapsed_ns": 77563969,
+            "checksum": 55990625
+          },
+          {
+            "arm": "bits",
+            "round": 1,
+            "exit_code": 0,
+            "elapsed_ns": 79118125,
+            "checksum": 55990625
+          },
+          {
+            "arm": "sccp",
+            "round": 1,
+            "exit_code": 0,
+            "elapsed_ns": 79143091,
+            "checksum": 55990625
+          },
+          {
+            "arm": "baseline",
+            "round": 1,
+            "exit_code": 0,
+            "elapsed_ns": 77771371,
+            "checksum": 55990625
+          },
+          {
+            "arm": "llvm",
+            "round": 1,
+            "exit_code": 0,
+            "elapsed_ns": 17075554,
+            "checksum": 55990625
+          },
+          {
+            "arm": "llvm",
+            "round": 2,
+            "exit_code": 0,
+            "elapsed_ns": 17027612,
+            "checksum": 55990625
+          },
+          {
+            "arm": "baseline",
+            "round": 2,
+            "exit_code": 0,
+            "elapsed_ns": 78515910,
+            "checksum": 55990625
+          },
+          {
+            "arm": "sccp",
+            "round": 2,
+            "exit_code": 0,
+            "elapsed_ns": 78580807,
+            "checksum": 55990625
+          },
+          {
+            "arm": "bits",
+            "round": 2,
+            "exit_code": 0,
+            "elapsed_ns": 79078345,
+            "checksum": 55990625
+          },
+          {
+            "arm": "bits",
+            "round": 3,
+            "exit_code": 0,
+            "elapsed_ns": 77557600,
+            "checksum": 55990625
+          },
+          {
+            "arm": "sccp",
+            "round": 3,
+            "exit_code": 0,
+            "elapsed_ns": 78338613,
+            "checksum": 55990625
+          },
+          {
+            "arm": "baseline",
+            "round": 3,
+            "exit_code": 0,
+            "elapsed_ns": 78396431,
+            "checksum": 55990625
+          },
+          {
+            "arm": "llvm",
+            "round": 3,
+            "exit_code": 0,
+            "elapsed_ns": 17102466,
+            "checksum": 55990625
+          },
+          {
+            "arm": "llvm",
+            "round": 4,
+            "exit_code": 0,
+            "elapsed_ns": 17221945,
+            "checksum": 55990625
+          },
+          {
+            "arm": "baseline",
+            "round": 4,
+            "exit_code": 0,
+            "elapsed_ns": 78285053,
+            "checksum": 55990625
+          },
+          {
+            "arm": "sccp",
+            "round": 4,
+            "exit_code": 0,
+            "elapsed_ns": 80478881,
+            "checksum": 55990625
+          },
+          {
+            "arm": "bits",
+            "round": 4,
+            "exit_code": 0,
+            "elapsed_ns": 77548196,
+            "checksum": 55990625
+          },
+          {
+            "arm": "bits",
+            "round": 5,
+            "exit_code": 0,
+            "elapsed_ns": 79270895,
+            "checksum": 55990625
+          },
+          {
+            "arm": "sccp",
+            "round": 5,
+            "exit_code": 0,
+            "elapsed_ns": 78261287,
+            "checksum": 55990625
+          },
+          {
+            "arm": "baseline",
+            "round": 5,
+            "exit_code": 0,
+            "elapsed_ns": 78026494,
+            "checksum": 55990625
+          },
+          {
+            "arm": "llvm",
+            "round": 5,
+            "exit_code": 0,
+            "elapsed_ns": 17120582,
+            "checksum": 55990625
+          },
+          {
+            "arm": "llvm",
+            "round": 6,
+            "exit_code": 0,
+            "elapsed_ns": 18024372,
+            "checksum": 55990625
+          },
+          {
+            "arm": "baseline",
+            "round": 6,
+            "exit_code": 0,
+            "elapsed_ns": 78695550,
+            "checksum": 55990625
+          },
+          {
+            "arm": "sccp",
+            "round": 6,
+            "exit_code": 0,
+            "elapsed_ns": 78716421,
+            "checksum": 55990625
+          },
+          {
+            "arm": "bits",
+            "round": 6,
+            "exit_code": 0,
+            "elapsed_ns": 77204178,
+            "checksum": 55990625
+          },
+          {
+            "arm": "bits",
+            "round": 7,
+            "exit_code": 0,
+            "elapsed_ns": 78717925,
+            "checksum": 55990625
+          },
+          {
+            "arm": "sccp",
+            "round": 7,
+            "exit_code": 0,
+            "elapsed_ns": 78447367,
+            "checksum": 55990625
+          },
+          {
+            "arm": "baseline",
+            "round": 7,
+            "exit_code": 0,
+            "elapsed_ns": 78581339,
+            "checksum": 55990625
+          },
+          {
+            "arm": "llvm",
+            "round": 7,
+            "exit_code": 0,
+            "elapsed_ns": 17021543,
+            "checksum": 55990625
+          },
+          {
+            "arm": "llvm",
+            "round": 8,
+            "exit_code": 0,
+            "elapsed_ns": 17068233,
+            "checksum": 55990625
+          },
+          {
+            "arm": "baseline",
+            "round": 8,
+            "exit_code": 0,
+            "elapsed_ns": 78031292,
+            "checksum": 55990625
+          },
+          {
+            "arm": "sccp",
+            "round": 8,
+            "exit_code": 0,
+            "elapsed_ns": 78689211,
+            "checksum": 55990625
+          },
+          {
+            "arm": "bits",
+            "round": 8,
+            "exit_code": 0,
+            "elapsed_ns": 79951187,
+            "checksum": 55990625
+          },
+          {
+            "arm": "bits",
+            "round": 9,
+            "exit_code": 0,
+            "elapsed_ns": 77442857,
+            "checksum": 55990625
+          },
+          {
+            "arm": "sccp",
+            "round": 9,
+            "exit_code": 0,
+            "elapsed_ns": 79239027,
+            "checksum": 55990625
+          },
+          {
+            "arm": "baseline",
+            "round": 9,
+            "exit_code": 0,
+            "elapsed_ns": 78442900,
+            "checksum": 55990625
+          },
+          {
+            "arm": "llvm",
+            "round": 9,
+            "exit_code": 0,
+            "elapsed_ns": 20240912,
+            "checksum": 55990625
+          },
+          {
+            "arm": "llvm",
+            "round": 10,
+            "exit_code": 0,
+            "elapsed_ns": 17095335,
+            "checksum": 55990625
+          },
+          {
+            "arm": "baseline",
+            "round": 10,
+            "exit_code": 0,
+            "elapsed_ns": 82861782,
+            "checksum": 55990625
+          },
+          {
+            "arm": "sccp",
+            "round": 10,
+            "exit_code": 0,
+            "elapsed_ns": 79078486,
+            "checksum": 55990625
+          },
+          {
+            "arm": "bits",
+            "round": 10,
+            "exit_code": 0,
+            "elapsed_ns": 78566276,
+            "checksum": 55990625
+          }
+        ],
+        "arms": {
+          "llvm": {
+            "runs": 11,
+            "failures": 0,
+            "median_ns": 17095335,
+            "min_ns": 17021543,
+            "max_ns": 20240912,
+            "checksums": [
+              55990625
+            ],
+            "instructions": 335776414,
+            "cycles": 63137039
+          },
+          "baseline": {
+            "runs": 11,
+            "failures": 0,
+            "median_ns": 78442900,
+            "min_ns": 77771371,
+            "max_ns": 82861782,
+            "checksums": [
+              55990625
+            ],
+            "instructions": 1172203189,
+            "cycles": 292960328
+          },
+          "sccp": {
+            "runs": 11,
+            "failures": 0,
+            "median_ns": 78716421,
+            "min_ns": 78261287,
+            "max_ns": 80478881,
+            "checksums": [
+              55990625
+            ],
+            "instructions": 1172203009,
+            "cycles": 334035541
+          },
+          "bits": {
+            "runs": 11,
+            "failures": 0,
+            "median_ns": 78566276,
+            "min_ns": 77204178,
+            "max_ns": 79951187,
+            "checksums": [
+              55990625
+            ],
+            "instructions": 1171565323,
+            "cycles": 285801355
+          }
+        }
+      }
+    }
+  },
+  "humantime": {
+    "crate": "humantime",
+    "arms": [
+      "llvm",
+      "baseline",
+      "sccp",
+      "bits"
+    ],
+    "skipped_arms": [],
+    "rounds": 11,
+    "order": "warm-up round -1, then rounds alternate forward/reverse arm order",
+    "workloads": {
+      "dur-parse": {
+        "iterations": 500000,
+        "samples": [
+          {
+            "arm": "bits",
+            "round": -1,
+            "exit_code": 0,
+            "elapsed_ns": 221747768,
+            "checksum": 9931678550000
+          },
+          {
+            "arm": "sccp",
+            "round": -1,
+            "exit_code": 0,
+            "elapsed_ns": 225271985,
+            "checksum": 9931678550000
+          },
+          {
+            "arm": "baseline",
+            "round": -1,
+            "exit_code": 0,
+            "elapsed_ns": 224028326,
+            "checksum": 9931678550000
+          },
+          {
+            "arm": "llvm",
+            "round": -1,
+            "exit_code": 0,
+            "elapsed_ns": 21353755,
+            "checksum": 9931678550000
+          },
+          {
+            "arm": "llvm",
+            "round": 0,
+            "exit_code": 0,
+            "elapsed_ns": 20984079,
+            "checksum": 9931678550000
+          },
+          {
+            "arm": "baseline",
+            "round": 0,
+            "exit_code": 0,
+            "elapsed_ns": 222694502,
+            "checksum": 9931678550000
+          },
+          {
+            "arm": "sccp",
+            "round": 0,
+            "exit_code": 0,
+            "elapsed_ns": 228136231,
+            "checksum": 9931678550000
+          },
+          {
+            "arm": "bits",
+            "round": 0,
+            "exit_code": 0,
+            "elapsed_ns": 223605951,
+            "checksum": 9931678550000
+          },
+          {
+            "arm": "bits",
+            "round": 1,
+            "exit_code": 0,
+            "elapsed_ns": 222446479,
+            "checksum": 9931678550000
+          },
+          {
+            "arm": "sccp",
+            "round": 1,
+            "exit_code": 0,
+            "elapsed_ns": 225821842,
+            "checksum": 9931678550000
+          },
+          {
+            "arm": "baseline",
+            "round": 1,
+            "exit_code": 0,
+            "elapsed_ns": 227268376,
+            "checksum": 9931678550000
+          },
+          {
+            "arm": "llvm",
+            "round": 1,
+            "exit_code": 0,
+            "elapsed_ns": 21103388,
+            "checksum": 9931678550000
+          },
+          {
+            "arm": "llvm",
+            "round": 2,
+            "exit_code": 0,
+            "elapsed_ns": 21032512,
+            "checksum": 9931678550000
+          },
+          {
+            "arm": "baseline",
+            "round": 2,
+            "exit_code": 0,
+            "elapsed_ns": 223454584,
+            "checksum": 9931678550000
+          },
+          {
+            "arm": "sccp",
+            "round": 2,
+            "exit_code": 0,
+            "elapsed_ns": 227139213,
+            "checksum": 9931678550000
+          },
+          {
+            "arm": "bits",
+            "round": 2,
+            "exit_code": 0,
+            "elapsed_ns": 222356454,
+            "checksum": 9931678550000
+          },
+          {
+            "arm": "bits",
+            "round": 3,
+            "exit_code": 0,
+            "elapsed_ns": 232735343,
+            "checksum": 9931678550000
+          },
+          {
+            "arm": "sccp",
+            "round": 3,
+            "exit_code": 0,
+            "elapsed_ns": 226134712,
+            "checksum": 9931678550000
+          },
+          {
+            "arm": "baseline",
+            "round": 3,
+            "exit_code": 0,
+            "elapsed_ns": 222789034,
+            "checksum": 9931678550000
+          },
+          {
+            "arm": "llvm",
+            "round": 3,
+            "exit_code": 0,
+            "elapsed_ns": 20869877,
+            "checksum": 9931678550000
+          },
+          {
+            "arm": "llvm",
+            "round": 4,
+            "exit_code": 0,
+            "elapsed_ns": 21013483,
+            "checksum": 9931678550000
+          },
+          {
+            "arm": "baseline",
+            "round": 4,
+            "exit_code": 0,
+            "elapsed_ns": 223453452,
+            "checksum": 9931678550000
+          },
+          {
+            "arm": "sccp",
+            "round": 4,
+            "exit_code": 0,
+            "elapsed_ns": 236063625,
+            "checksum": 9931678550000
+          },
+          {
+            "arm": "bits",
+            "round": 4,
+            "exit_code": 0,
+            "elapsed_ns": 222491967,
+            "checksum": 9931678550000
+          },
+          {
+            "arm": "bits",
+            "round": 5,
+            "exit_code": 0,
+            "elapsed_ns": 223145950,
+            "checksum": 9931678550000
+          },
+          {
+            "arm": "sccp",
+            "round": 5,
+            "exit_code": 0,
+            "elapsed_ns": 231365584,
+            "checksum": 9931678550000
+          },
+          {
+            "arm": "baseline",
+            "round": 5,
+            "exit_code": 0,
+            "elapsed_ns": 223812332,
+            "checksum": 9931678550000
+          },
+          {
+            "arm": "llvm",
+            "round": 5,
+            "exit_code": 0,
+            "elapsed_ns": 22277763,
+            "checksum": 9931678550000
+          },
+          {
+            "arm": "llvm",
+            "round": 6,
+            "exit_code": 0,
+            "elapsed_ns": 20969176,
+            "checksum": 9931678550000
+          },
+          {
+            "arm": "baseline",
+            "round": 6,
+            "exit_code": 0,
+            "elapsed_ns": 227094444,
+            "checksum": 9931678550000
+          },
+          {
+            "arm": "sccp",
+            "round": 6,
+            "exit_code": 0,
+            "elapsed_ns": 228834370,
+            "checksum": 9931678550000
+          },
+          {
+            "arm": "bits",
+            "round": 6,
+            "exit_code": 0,
+            "elapsed_ns": 224420215,
+            "checksum": 9931678550000
+          },
+          {
+            "arm": "bits",
+            "round": 7,
+            "exit_code": 0,
+            "elapsed_ns": 222791608,
+            "checksum": 9931678550000
+          },
+          {
+            "arm": "sccp",
+            "round": 7,
+            "exit_code": 0,
+            "elapsed_ns": 228274499,
+            "checksum": 9931678550000
+          },
+          {
+            "arm": "baseline",
+            "round": 7,
+            "exit_code": 0,
+            "elapsed_ns": 225153739,
+            "checksum": 9931678550000
+          },
+          {
+            "arm": "llvm",
+            "round": 7,
+            "exit_code": 0,
+            "elapsed_ns": 21017980,
+            "checksum": 9931678550000
+          },
+          {
+            "arm": "llvm",
+            "round": 8,
+            "exit_code": 0,
+            "elapsed_ns": 21029428,
+            "checksum": 9931678550000
+          },
+          {
+            "arm": "baseline",
+            "round": 8,
+            "exit_code": 0,
+            "elapsed_ns": 227066593,
+            "checksum": 9931678550000
+          },
+          {
+            "arm": "sccp",
+            "round": 8,
+            "exit_code": 0,
+            "elapsed_ns": 226676136,
+            "checksum": 9931678550000
+          },
+          {
+            "arm": "bits",
+            "round": 8,
+            "exit_code": 0,
+            "elapsed_ns": 225037122,
+            "checksum": 9931678550000
+          },
+          {
+            "arm": "bits",
+            "round": 9,
+            "exit_code": 0,
+            "elapsed_ns": 223128895,
+            "checksum": 9931678550000
+          },
+          {
+            "arm": "sccp",
+            "round": 9,
+            "exit_code": 0,
+            "elapsed_ns": 230665041,
+            "checksum": 9931678550000
+          },
+          {
+            "arm": "baseline",
+            "round": 9,
+            "exit_code": 0,
+            "elapsed_ns": 230958341,
+            "checksum": 9931678550000
+          },
+          {
+            "arm": "llvm",
+            "round": 9,
+            "exit_code": 0,
+            "elapsed_ns": 21076538,
+            "checksum": 9931678550000
+          },
+          {
+            "arm": "llvm",
+            "round": 10,
+            "exit_code": 0,
+            "elapsed_ns": 20808175,
+            "checksum": 9931678550000
+          },
+          {
+            "arm": "baseline",
+            "round": 10,
+            "exit_code": 0,
+            "elapsed_ns": 223915777,
+            "checksum": 9931678550000
+          },
+          {
+            "arm": "sccp",
+            "round": 10,
+            "exit_code": 0,
+            "elapsed_ns": 225519668,
+            "checksum": 9931678550000
+          },
+          {
+            "arm": "bits",
+            "round": 10,
+            "exit_code": 0,
+            "elapsed_ns": 221844424,
+            "checksum": 9931678550000
+          }
+        ],
+        "arms": {
+          "llvm": {
+            "runs": 11,
+            "failures": 0,
+            "median_ns": 21017980,
+            "min_ns": 20808175,
+            "max_ns": 22277763,
+            "checksums": [
+              9931678550000
+            ],
+            "instructions": 329609928,
+            "cycles": 78283504
+          },
+          "baseline": {
+            "runs": 11,
+            "failures": 0,
+            "median_ns": 223915777,
+            "min_ns": 222694502,
+            "max_ns": 230958341,
+            "checksums": [
+              9931678550000
+            ],
+            "instructions": 2494762999,
+            "cycles": 824528014
+          },
+          "sccp": {
+            "runs": 11,
+            "failures": 0,
+            "median_ns": 228136231,
+            "min_ns": 225519668,
+            "max_ns": 236063625,
+            "checksums": [
+              9931678550000
+            ],
+            "instructions": 2494762771,
+            "cycles": 827703637
+          },
+          "bits": {
+            "runs": 11,
+            "failures": 0,
+            "median_ns": 223128895,
+            "min_ns": 221844424,
+            "max_ns": 232735343,
+            "checksums": [
+              9931678550000
+            ],
+            "instructions": 2494762854,
+            "cycles": 823170810
+          }
+        }
+      },
+      "dur-format": {
+        "iterations": 100000,
+        "samples": [
+          {
+            "arm": "bits",
+            "round": -1,
+            "exit_code": 0,
+            "elapsed_ns": 26873872,
+            "checksum": 9619162
+          },
+          {
+            "arm": "sccp",
+            "round": -1,
+            "exit_code": 0,
+            "elapsed_ns": 27209567,
+            "checksum": 9619162
+          },
+          {
+            "arm": "baseline",
+            "round": -1,
+            "exit_code": 0,
+            "elapsed_ns": 26905670,
+            "checksum": 9619162
+          },
+          {
+            "arm": "llvm",
+            "round": -1,
+            "exit_code": 0,
+            "elapsed_ns": 22549812,
+            "checksum": 9619162
+          },
+          {
+            "arm": "llvm",
+            "round": 0,
+            "exit_code": 0,
+            "elapsed_ns": 27718941,
+            "checksum": 9619162
+          },
+          {
+            "arm": "baseline",
+            "round": 0,
+            "exit_code": 0,
+            "elapsed_ns": 28071471,
+            "checksum": 9619162
+          },
+          {
+            "arm": "sccp",
+            "round": 0,
+            "exit_code": 0,
+            "elapsed_ns": 28047687,
+            "checksum": 9619162
+          },
+          {
+            "arm": "bits",
+            "round": 0,
+            "exit_code": 0,
+            "elapsed_ns": 28054896,
+            "checksum": 9619162
+          },
+          {
+            "arm": "bits",
+            "round": 1,
+            "exit_code": 0,
+            "elapsed_ns": 27556898,
+            "checksum": 9619162
+          },
+          {
+            "arm": "sccp",
+            "round": 1,
+            "exit_code": 0,
+            "elapsed_ns": 27540313,
+            "checksum": 9619162
+          },
+          {
+            "arm": "baseline",
+            "round": 1,
+            "exit_code": 0,
+            "elapsed_ns": 27738572,
+            "checksum": 9619162
+          },
+          {
+            "arm": "llvm",
+            "round": 1,
+            "exit_code": 0,
+            "elapsed_ns": 23305047,
+            "checksum": 9619162
+          },
+          {
+            "arm": "llvm",
+            "round": 2,
+            "exit_code": 0,
+            "elapsed_ns": 23967393,
+            "checksum": 9619162
+          },
+          {
+            "arm": "baseline",
+            "round": 2,
+            "exit_code": 0,
+            "elapsed_ns": 29081099,
+            "checksum": 9619162
+          },
+          {
+            "arm": "sccp",
+            "round": 2,
+            "exit_code": 0,
+            "elapsed_ns": 27402367,
+            "checksum": 9619162
+          },
+          {
+            "arm": "bits",
+            "round": 2,
+            "exit_code": 0,
+            "elapsed_ns": 27699463,
+            "checksum": 9619162
+          },
+          {
+            "arm": "bits",
+            "round": 3,
+            "exit_code": 0,
+            "elapsed_ns": 28678313,
+            "checksum": 9619162
+          },
+          {
+            "arm": "sccp",
+            "round": 3,
+            "exit_code": 0,
+            "elapsed_ns": 27299081,
+            "checksum": 9619162
+          },
+          {
+            "arm": "baseline",
+            "round": 3,
+            "exit_code": 0,
+            "elapsed_ns": 28305524,
+            "checksum": 9619162
+          },
+          {
+            "arm": "llvm",
+            "round": 3,
+            "exit_code": 0,
+            "elapsed_ns": 24103759,
+            "checksum": 9619162
+          },
+          {
+            "arm": "llvm",
+            "round": 4,
+            "exit_code": 0,
+            "elapsed_ns": 23706050,
+            "checksum": 9619162
+          },
+          {
+            "arm": "baseline",
+            "round": 4,
+            "exit_code": 0,
+            "elapsed_ns": 30206560,
+            "checksum": 9619162
+          },
+          {
+            "arm": "sccp",
+            "round": 4,
+            "exit_code": 0,
+            "elapsed_ns": 26482884,
+            "checksum": 9619162
+          },
+          {
+            "arm": "bits",
+            "round": 4,
+            "exit_code": 0,
+            "elapsed_ns": 29327650,
+            "checksum": 9619162
+          },
+          {
+            "arm": "bits",
+            "round": 5,
+            "exit_code": 0,
+            "elapsed_ns": 39339177,
+            "checksum": 9619162
+          },
+          {
+            "arm": "sccp",
+            "round": 5,
+            "exit_code": 0,
+            "elapsed_ns": 30336155,
+            "checksum": 9619162
+          },
+          {
+            "arm": "baseline",
+            "round": 5,
+            "exit_code": 0,
+            "elapsed_ns": 37678531,
+            "checksum": 9619162
+          },
+          {
+            "arm": "llvm",
+            "round": 5,
+            "exit_code": 0,
+            "elapsed_ns": 23963978,
+            "checksum": 9619162
+          },
+          {
+            "arm": "llvm",
+            "round": 6,
+            "exit_code": 0,
+            "elapsed_ns": 24297099,
+            "checksum": 9619162
+          },
+          {
+            "arm": "baseline",
+            "round": 6,
+            "exit_code": 0,
+            "elapsed_ns": 27856449,
+            "checksum": 9619162
+          },
+          {
+            "arm": "sccp",
+            "round": 6,
+            "exit_code": 0,
+            "elapsed_ns": 27171048,
+            "checksum": 9619162
+          },
+          {
+            "arm": "bits",
+            "round": 6,
+            "exit_code": 0,
+            "elapsed_ns": 31902950,
+            "checksum": 9619162
+          },
+          {
+            "arm": "bits",
+            "round": 7,
+            "exit_code": 0,
+            "elapsed_ns": 27984932,
+            "checksum": 9619162
+          },
+          {
+            "arm": "sccp",
+            "round": 7,
+            "exit_code": 0,
+            "elapsed_ns": 27362556,
+            "checksum": 9619162
+          },
+          {
+            "arm": "baseline",
+            "round": 7,
+            "exit_code": 0,
+            "elapsed_ns": 27770379,
+            "checksum": 9619162
+          },
+          {
+            "arm": "llvm",
+            "round": 7,
+            "exit_code": 0,
+            "elapsed_ns": 25517583,
+            "checksum": 9619162
+          },
+          {
+            "arm": "llvm",
+            "round": 8,
+            "exit_code": 0,
+            "elapsed_ns": 23967164,
+            "checksum": 9619162
+          },
+          {
+            "arm": "baseline",
+            "round": 8,
+            "exit_code": 0,
+            "elapsed_ns": 27034693,
+            "checksum": 9619162
+          },
+          {
+            "arm": "sccp",
+            "round": 8,
+            "exit_code": 0,
+            "elapsed_ns": 27450749,
+            "checksum": 9619162
+          },
+          {
+            "arm": "bits",
+            "round": 8,
+            "exit_code": 0,
+            "elapsed_ns": 28536491,
+            "checksum": 9619162
+          },
+          {
+            "arm": "bits",
+            "round": 9,
+            "exit_code": 0,
+            "elapsed_ns": 33127261,
+            "checksum": 9619162
+          },
+          {
+            "arm": "sccp",
+            "round": 9,
+            "exit_code": 0,
+            "elapsed_ns": 28009017,
+            "checksum": 9619162
+          },
+          {
+            "arm": "baseline",
+            "round": 9,
+            "exit_code": 0,
+            "elapsed_ns": 27415175,
+            "checksum": 9619162
+          },
+          {
+            "arm": "llvm",
+            "round": 9,
+            "exit_code": 0,
+            "elapsed_ns": 23873232,
+            "checksum": 9619162
+          },
+          {
+            "arm": "llvm",
+            "round": 10,
+            "exit_code": 0,
+            "elapsed_ns": 23891298,
+            "checksum": 9619162
+          },
+          {
+            "arm": "baseline",
+            "round": 10,
+            "exit_code": 0,
+            "elapsed_ns": 27884711,
+            "checksum": 9619162
+          },
+          {
+            "arm": "sccp",
+            "round": 10,
+            "exit_code": 0,
+            "elapsed_ns": 27780504,
+            "checksum": 9619162
+          },
+          {
+            "arm": "bits",
+            "round": 10,
+            "exit_code": 0,
+            "elapsed_ns": 28009018,
+            "checksum": 9619162
+          }
+        ],
+        "arms": {
+          "llvm": {
+            "runs": 11,
+            "failures": 0,
+            "median_ns": 23967164,
+            "min_ns": 23305047,
+            "max_ns": 27718941,
+            "checksums": [
+              9619162
+            ],
+            "instructions": 380622919,
+            "cycles": 121953214
+          },
+          "baseline": {
+            "runs": 11,
+            "failures": 0,
+            "median_ns": 27884711,
+            "min_ns": 27034693,
+            "max_ns": 37678531,
+            "checksums": [
+              9619162
+            ],
+            "instructions": 436462773,
+            "cycles": 107131013
+          },
+          "sccp": {
+            "runs": 11,
+            "failures": 0,
+            "median_ns": 27450749,
+            "min_ns": 26482884,
+            "max_ns": 30336155,
+            "checksums": [
+              9619162
+            ],
+            "instructions": 436462413,
+            "cycles": 102025196
+          },
+          "bits": {
+            "runs": 11,
+            "failures": 0,
+            "median_ns": 28536491,
+            "min_ns": 27556898,
+            "max_ns": 39339177,
+            "checksums": [
+              9619162
+            ],
+            "instructions": 436462357,
+            "cycles": 100852456
+          }
+        }
+      },
+      "ts-parse": {
+        "iterations": 1000000,
+        "samples": [
+          {
+            "arm": "bits",
+            "round": -1,
+            "exit_code": 0,
+            "elapsed_ns": 75469713,
+            "checksum": 10339638455182523344
+          },
+          {
+            "arm": "sccp",
+            "round": -1,
+            "exit_code": 0,
+            "elapsed_ns": 73922816,
+            "checksum": 10339638455182523344
+          },
+          {
+            "arm": "baseline",
+            "round": -1,
+            "exit_code": 0,
+            "elapsed_ns": 74010979,
+            "checksum": 10339638455182523344
+          },
+          {
+            "arm": "llvm",
+            "round": -1,
+            "exit_code": 0,
+            "elapsed_ns": 21805684,
+            "checksum": 10339638455182523344
+          },
+          {
+            "arm": "llvm",
+            "round": 0,
+            "exit_code": 0,
+            "elapsed_ns": 21910172,
+            "checksum": 10339638455182523344
+          },
+          {
+            "arm": "baseline",
+            "round": 0,
+            "exit_code": 0,
+            "elapsed_ns": 75053466,
+            "checksum": 10339638455182523344
+          },
+          {
+            "arm": "sccp",
+            "round": 0,
+            "exit_code": 0,
+            "elapsed_ns": 75214788,
+            "checksum": 10339638455182523344
+          },
+          {
+            "arm": "bits",
+            "round": 0,
+            "exit_code": 0,
+            "elapsed_ns": 74279002,
+            "checksum": 10339638455182523344
+          },
+          {
+            "arm": "bits",
+            "round": 1,
+            "exit_code": 0,
+            "elapsed_ns": 74479854,
+            "checksum": 10339638455182523344
+          },
+          {
+            "arm": "sccp",
+            "round": 1,
+            "exit_code": 0,
+            "elapsed_ns": 74893376,
+            "checksum": 10339638455182523344
+          },
+          {
+            "arm": "baseline",
+            "round": 1,
+            "exit_code": 0,
+            "elapsed_ns": 74202937,
+            "checksum": 10339638455182523344
+          },
+          {
+            "arm": "llvm",
+            "round": 1,
+            "exit_code": 0,
+            "elapsed_ns": 21817623,
+            "checksum": 10339638455182523344
+          },
+          {
+            "arm": "llvm",
+            "round": 2,
+            "exit_code": 0,
+            "elapsed_ns": 22834991,
+            "checksum": 10339638455182523344
+          },
+          {
+            "arm": "baseline",
+            "round": 2,
+            "exit_code": 0,
+            "elapsed_ns": 74116588,
+            "checksum": 10339638455182523344
+          },
+          {
+            "arm": "sccp",
+            "round": 2,
+            "exit_code": 0,
+            "elapsed_ns": 74455226,
+            "checksum": 10339638455182523344
+          },
+          {
+            "arm": "bits",
+            "round": 2,
+            "exit_code": 0,
+            "elapsed_ns": 74479743,
+            "checksum": 10339638455182523344
+          },
+          {
+            "arm": "bits",
+            "round": 3,
+            "exit_code": 0,
+            "elapsed_ns": 76070945,
+            "checksum": 10339638455182523344
+          },
+          {
+            "arm": "sccp",
+            "round": 3,
+            "exit_code": 0,
+            "elapsed_ns": 74633906,
+            "checksum": 10339638455182523344
+          },
+          {
+            "arm": "baseline",
+            "round": 3,
+            "exit_code": 0,
+            "elapsed_ns": 74127884,
+            "checksum": 10339638455182523344
+          },
+          {
+            "arm": "llvm",
+            "round": 3,
+            "exit_code": 0,
+            "elapsed_ns": 21597632,
+            "checksum": 10339638455182523344
+          },
+          {
+            "arm": "llvm",
+            "round": 4,
+            "exit_code": 0,
+            "elapsed_ns": 21582358,
+            "checksum": 10339638455182523344
+          },
+          {
+            "arm": "baseline",
+            "round": 4,
+            "exit_code": 0,
+            "elapsed_ns": 74461206,
+            "checksum": 10339638455182523344
+          },
+          {
+            "arm": "sccp",
+            "round": 4,
+            "exit_code": 0,
+            "elapsed_ns": 75371975,
+            "checksum": 10339638455182523344
+          },
+          {
+            "arm": "bits",
+            "round": 4,
+            "exit_code": 0,
+            "elapsed_ns": 81573246,
+            "checksum": 10339638455182523344
+          },
+          {
+            "arm": "bits",
+            "round": 5,
+            "exit_code": 0,
+            "elapsed_ns": 76668002,
+            "checksum": 10339638455182523344
+          },
+          {
+            "arm": "sccp",
+            "round": 5,
+            "exit_code": 0,
+            "elapsed_ns": 74998814,
+            "checksum": 10339638455182523344
+          },
+          {
+            "arm": "baseline",
+            "round": 5,
+            "exit_code": 0,
+            "elapsed_ns": 74305541,
+            "checksum": 10339638455182523344
+          },
+          {
+            "arm": "llvm",
+            "round": 5,
+            "exit_code": 0,
+            "elapsed_ns": 21695949,
+            "checksum": 10339638455182523344
+          },
+          {
+            "arm": "llvm",
+            "round": 6,
+            "exit_code": 0,
+            "elapsed_ns": 21657932,
+            "checksum": 10339638455182523344
+          },
+          {
+            "arm": "baseline",
+            "round": 6,
+            "exit_code": 0,
+            "elapsed_ns": 73891671,
+            "checksum": 10339638455182523344
+          },
+          {
+            "arm": "sccp",
+            "round": 6,
+            "exit_code": 0,
+            "elapsed_ns": 74101926,
+            "checksum": 10339638455182523344
+          },
+          {
+            "arm": "bits",
+            "round": 6,
+            "exit_code": 0,
+            "elapsed_ns": 76662034,
+            "checksum": 10339638455182523344
+          },
+          {
+            "arm": "bits",
+            "round": 7,
+            "exit_code": 0,
+            "elapsed_ns": 74545994,
+            "checksum": 10339638455182523344
+          },
+          {
+            "arm": "sccp",
+            "round": 7,
+            "exit_code": 0,
+            "elapsed_ns": 78533547,
+            "checksum": 10339638455182523344
+          },
+          {
+            "arm": "baseline",
+            "round": 7,
+            "exit_code": 0,
+            "elapsed_ns": 74589579,
+            "checksum": 10339638455182523344
+          },
+          {
+            "arm": "llvm",
+            "round": 7,
+            "exit_code": 0,
+            "elapsed_ns": 22249881,
+            "checksum": 10339638455182523344
+          },
+          {
+            "arm": "llvm",
+            "round": 8,
+            "exit_code": 0,
+            "elapsed_ns": 21727236,
+            "checksum": 10339638455182523344
+          },
+          {
+            "arm": "baseline",
+            "round": 8,
+            "exit_code": 0,
+            "elapsed_ns": 74321486,
+            "checksum": 10339638455182523344
+          },
+          {
+            "arm": "sccp",
+            "round": 8,
+            "exit_code": 0,
+            "elapsed_ns": 74429728,
+            "checksum": 10339638455182523344
+          },
+          {
+            "arm": "bits",
+            "round": 8,
+            "exit_code": 0,
+            "elapsed_ns": 74574707,
+            "checksum": 10339638455182523344
+          },
+          {
+            "arm": "bits",
+            "round": 9,
+            "exit_code": 0,
+            "elapsed_ns": 74171220,
+            "checksum": 10339638455182523344
+          },
+          {
+            "arm": "sccp",
+            "round": 9,
+            "exit_code": 0,
+            "elapsed_ns": 74260484,
+            "checksum": 10339638455182523344
+          },
+          {
+            "arm": "baseline",
+            "round": 9,
+            "exit_code": 0,
+            "elapsed_ns": 74368837,
+            "checksum": 10339638455182523344
+          },
+          {
+            "arm": "llvm",
+            "round": 9,
+            "exit_code": 0,
+            "elapsed_ns": 21511603,
+            "checksum": 10339638455182523344
+          },
+          {
+            "arm": "llvm",
+            "round": 10,
+            "exit_code": 0,
+            "elapsed_ns": 21704902,
+            "checksum": 10339638455182523344
+          },
+          {
+            "arm": "baseline",
+            "round": 10,
+            "exit_code": 0,
+            "elapsed_ns": 74691882,
+            "checksum": 10339638455182523344
+          },
+          {
+            "arm": "sccp",
+            "round": 10,
+            "exit_code": 0,
+            "elapsed_ns": 88393947,
+            "checksum": 10339638455182523344
+          },
+          {
+            "arm": "bits",
+            "round": 10,
+            "exit_code": 0,
+            "elapsed_ns": 74396680,
+            "checksum": 10339638455182523344
+          }
+        ],
+        "arms": {
+          "llvm": {
+            "runs": 11,
+            "failures": 0,
+            "median_ns": 21704902,
+            "min_ns": 21511603,
+            "max_ns": 22834991,
+            "checksums": [
+              10339638455182523344
+            ],
+            "instructions": 295759787,
+            "cycles": 80210674
+          },
+          "baseline": {
+            "runs": 11,
+            "failures": 0,
+            "median_ns": 74321486,
+            "min_ns": 73891671,
+            "max_ns": 75053466,
+            "checksums": [
+              10339638455182523344
+            ],
+            "instructions": 1239263024,
+            "cycles": 272758299
+          },
+          "sccp": {
+            "runs": 11,
+            "failures": 0,
+            "median_ns": 74893376,
+            "min_ns": 74101926,
+            "max_ns": 88393947,
+            "checksums": [
+              10339638455182523344
+            ],
+            "instructions": 1239262399,
+            "cycles": 272598321
+          },
+          "bits": {
+            "runs": 11,
+            "failures": 0,
+            "median_ns": 74545994,
+            "min_ns": 74171220,
+            "max_ns": 81573246,
+            "checksums": [
+              10339638455182523344
+            ],
+            "instructions": 1239262517,
+            "cycles": 279119415
+          }
+        }
+      },
+      "ts-format": {
+        "iterations": 400000,
+        "samples": [
+          {
+            "arm": "bits",
+            "round": -1,
+            "exit_code": 0,
+            "elapsed_ns": 50997129,
+            "checksum": 32966122
+          },
+          {
+            "arm": "sccp",
+            "round": -1,
+            "exit_code": 0,
+            "elapsed_ns": 50943688,
+            "checksum": 32966122
+          },
+          {
+            "arm": "baseline",
+            "round": -1,
+            "exit_code": 0,
+            "elapsed_ns": 51240185,
+            "checksum": 32966122
+          },
+          {
+            "arm": "llvm",
+            "round": -1,
+            "exit_code": 0,
+            "elapsed_ns": 22869222,
+            "checksum": 32966122
+          },
+          {
+            "arm": "llvm",
+            "round": 0,
+            "exit_code": 0,
+            "elapsed_ns": 23053630,
+            "checksum": 32966122
+          },
+          {
+            "arm": "baseline",
+            "round": 0,
+            "exit_code": 0,
+            "elapsed_ns": 51049597,
+            "checksum": 32966122
+          },
+          {
+            "arm": "sccp",
+            "round": 0,
+            "exit_code": 0,
+            "elapsed_ns": 50761594,
+            "checksum": 32966122
+          },
+          {
+            "arm": "bits",
+            "round": 0,
+            "exit_code": 0,
+            "elapsed_ns": 50787203,
+            "checksum": 32966122
+          },
+          {
+            "arm": "bits",
+            "round": 1,
+            "exit_code": 0,
+            "elapsed_ns": 50770999,
+            "checksum": 32966122
+          },
+          {
+            "arm": "sccp",
+            "round": 1,
+            "exit_code": 0,
+            "elapsed_ns": 54716338,
+            "checksum": 32966122
+          },
+          {
+            "arm": "baseline",
+            "round": 1,
+            "exit_code": 0,
+            "elapsed_ns": 50734444,
+            "checksum": 32966122
+          },
+          {
+            "arm": "llvm",
+            "round": 1,
+            "exit_code": 0,
+            "elapsed_ns": 22855432,
+            "checksum": 32966122
+          },
+          {
+            "arm": "llvm",
+            "round": 2,
+            "exit_code": 0,
+            "elapsed_ns": 22791657,
+            "checksum": 32966122
+          },
+          {
+            "arm": "baseline",
+            "round": 2,
+            "exit_code": 0,
+            "elapsed_ns": 50767604,
+            "checksum": 32966122
+          },
+          {
+            "arm": "sccp",
+            "round": 2,
+            "exit_code": 0,
+            "elapsed_ns": 50771680,
+            "checksum": 32966122
+          },
+          {
+            "arm": "bits",
+            "round": 2,
+            "exit_code": 0,
+            "elapsed_ns": 50788485,
+            "checksum": 32966122
+          },
+          {
+            "arm": "bits",
+            "round": 3,
+            "exit_code": 0,
+            "elapsed_ns": 50686704,
+            "checksum": 32966122
+          },
+          {
+            "arm": "sccp",
+            "round": 3,
+            "exit_code": 0,
+            "elapsed_ns": 50742766,
+            "checksum": 32966122
+          },
+          {
+            "arm": "baseline",
+            "round": 3,
+            "exit_code": 0,
+            "elapsed_ns": 50675185,
+            "checksum": 32966122
+          },
+          {
+            "arm": "llvm",
+            "round": 3,
+            "exit_code": 0,
+            "elapsed_ns": 23601132,
+            "checksum": 32966122
+          },
+          {
+            "arm": "llvm",
+            "round": 4,
+            "exit_code": 0,
+            "elapsed_ns": 22861150,
+            "checksum": 32966122
+          },
+          {
+            "arm": "baseline",
+            "round": 4,
+            "exit_code": 0,
+            "elapsed_ns": 50746052,
+            "checksum": 32966122
+          },
+          {
+            "arm": "sccp",
+            "round": 4,
+            "exit_code": 0,
+            "elapsed_ns": 50665560,
+            "checksum": 32966122
+          },
+          {
+            "arm": "bits",
+            "round": 4,
+            "exit_code": 0,
+            "elapsed_ns": 50700193,
+            "checksum": 32966122
+          },
+          {
+            "arm": "bits",
+            "round": 5,
+            "exit_code": 0,
+            "elapsed_ns": 50882297,
+            "checksum": 32966122
+          },
+          {
+            "arm": "sccp",
+            "round": 5,
+            "exit_code": 0,
+            "elapsed_ns": 50726273,
+            "checksum": 32966122
+          },
+          {
+            "arm": "baseline",
+            "round": 5,
+            "exit_code": 0,
+            "elapsed_ns": 50755977,
+            "checksum": 32966122
+          },
+          {
+            "arm": "llvm",
+            "round": 5,
+            "exit_code": 0,
+            "elapsed_ns": 22800089,
+            "checksum": 32966122
+          },
+          {
+            "arm": "llvm",
+            "round": 6,
+            "exit_code": 0,
+            "elapsed_ns": 22792137,
+            "checksum": 32966122
+          },
+          {
+            "arm": "baseline",
+            "round": 6,
+            "exit_code": 0,
+            "elapsed_ns": 50759401,
+            "checksum": 32966122
+          },
+          {
+            "arm": "sccp",
+            "round": 6,
+            "exit_code": 0,
+            "elapsed_ns": 50744820,
+            "checksum": 32966122
+          },
+          {
+            "arm": "bits",
+            "round": 6,
+            "exit_code": 0,
+            "elapsed_ns": 50946994,
+            "checksum": 32966122
+          },
+          {
+            "arm": "bits",
+            "round": 7,
+            "exit_code": 0,
+            "elapsed_ns": 56390967,
+            "checksum": 32966122
+          },
+          {
+            "arm": "sccp",
+            "round": 7,
+            "exit_code": 0,
+            "elapsed_ns": 50819822,
+            "checksum": 32966122
+          },
+          {
+            "arm": "baseline",
+            "round": 7,
+            "exit_code": 0,
+            "elapsed_ns": 52261540,
+            "checksum": 32966122
+          },
+          {
+            "arm": "llvm",
+            "round": 7,
+            "exit_code": 0,
+            "elapsed_ns": 23038357,
+            "checksum": 32966122
+          },
+          {
+            "arm": "llvm",
+            "round": 8,
+            "exit_code": 0,
+            "elapsed_ns": 22897815,
+            "checksum": 32966122
+          },
+          {
+            "arm": "baseline",
+            "round": 8,
+            "exit_code": 0,
+            "elapsed_ns": 50729457,
+            "checksum": 32966122
+          },
+          {
+            "arm": "sccp",
+            "round": 8,
+            "exit_code": 0,
+            "elapsed_ns": 50841746,
+            "checksum": 32966122
+          },
+          {
+            "arm": "bits",
+            "round": 8,
+            "exit_code": 0,
+            "elapsed_ns": 50740393,
+            "checksum": 32966122
+          },
+          {
+            "arm": "bits",
+            "round": 9,
+            "exit_code": 0,
+            "elapsed_ns": 50801254,
+            "checksum": 32966122
+          },
+          {
+            "arm": "sccp",
+            "round": 9,
+            "exit_code": 0,
+            "elapsed_ns": 50865451,
+            "checksum": 32966122
+          },
+          {
+            "arm": "baseline",
+            "round": 9,
+            "exit_code": 0,
+            "elapsed_ns": 50904040,
+            "checksum": 32966122
+          },
+          {
+            "arm": "llvm",
+            "round": 9,
+            "exit_code": 0,
+            "elapsed_ns": 22791246,
+            "checksum": 32966122
+          },
+          {
+            "arm": "llvm",
+            "round": 10,
+            "exit_code": 0,
+            "elapsed_ns": 22999438,
+            "checksum": 32966122
+          },
+          {
+            "arm": "baseline",
+            "round": 10,
+            "exit_code": 0,
+            "elapsed_ns": 51322508,
+            "checksum": 32966122
+          },
+          {
+            "arm": "sccp",
+            "round": 10,
+            "exit_code": 0,
+            "elapsed_ns": 51021777,
+            "checksum": 32966122
+          },
+          {
+            "arm": "bits",
+            "round": 10,
+            "exit_code": 0,
+            "elapsed_ns": 50747914,
+            "checksum": 32966122
+          }
+        ],
+        "arms": {
+          "llvm": {
+            "runs": 11,
+            "failures": 0,
+            "median_ns": 22861150,
+            "min_ns": 22791246,
+            "max_ns": 23601132,
+            "checksums": [
+              32966122
+            ],
+            "instructions": 264257233,
+            "cycles": 84309825
+          },
+          "baseline": {
+            "runs": 11,
+            "failures": 0,
+            "median_ns": 50759401,
+            "min_ns": 50675185,
+            "max_ns": 52261540,
+            "checksums": [
+              32966122
+            ],
+            "instructions": 447939787,
+            "cycles": 187203400
+          },
+          "sccp": {
+            "runs": 11,
+            "failures": 0,
+            "median_ns": 50771680,
+            "min_ns": 50665560,
+            "max_ns": 54716338,
+            "checksums": [
+              32966122
+            ],
+            "instructions": 447939217,
+            "cycles": 186384582
+          },
+          "bits": {
+            "runs": 11,
+            "failures": 0,
+            "median_ns": 50787203,
+            "min_ns": 50686704,
+            "max_ns": 56390967,
+            "checksums": [
+              32966122
+            ],
+            "instructions": 447938928,
+            "cycles": 186293552
+          }
+        }
+      }
+    }
+  },
+  "regex-syntax": {
+    "crate": "regex-syntax",
+    "arms": [
+      "llvm"
+    ],
+    "skipped_arms": [
+      "baseline",
+      "sccp",
+      "bits"
+    ],
+    "rounds": 11,
+    "order": "warm-up round -1, then rounds alternate forward/reverse arm order",
+    "workloads": {
+      "hir": {
+        "iterations": 20000,
+        "samples": [
+          {
+            "arm": "llvm",
+            "round": -1,
+            "exit_code": 0,
+            "elapsed_ns": 24959534,
+            "checksum": 27500
+          },
+          {
+            "arm": "llvm",
+            "round": 0,
+            "exit_code": 0,
+            "elapsed_ns": 24866334,
+            "checksum": 27500
+          },
+          {
+            "arm": "llvm",
+            "round": 1,
+            "exit_code": 0,
+            "elapsed_ns": 24898202,
+            "checksum": 27500
+          },
+          {
+            "arm": "llvm",
+            "round": 2,
+            "exit_code": 0,
+            "elapsed_ns": 24975079,
+            "checksum": 27500
+          },
+          {
+            "arm": "llvm",
+            "round": 3,
+            "exit_code": 0,
+            "elapsed_ns": 25173686,
+            "checksum": 27500
+          },
+          {
+            "arm": "llvm",
+            "round": 4,
+            "exit_code": 0,
+            "elapsed_ns": 25748099,
+            "checksum": 27500
+          },
+          {
+            "arm": "llvm",
+            "round": 5,
+            "exit_code": 0,
+            "elapsed_ns": 24745413,
+            "checksum": 27500
+          },
+          {
+            "arm": "llvm",
+            "round": 6,
+            "exit_code": 0,
+            "elapsed_ns": 25228397,
+            "checksum": 27500
+          },
+          {
+            "arm": "llvm",
+            "round": 7,
+            "exit_code": 0,
+            "elapsed_ns": 24812724,
+            "checksum": 27500
+          },
+          {
+            "arm": "llvm",
+            "round": 8,
+            "exit_code": 0,
+            "elapsed_ns": 24689840,
+            "checksum": 27500
+          },
+          {
+            "arm": "llvm",
+            "round": 9,
+            "exit_code": 0,
+            "elapsed_ns": 25153606,
+            "checksum": 27500
+          },
+          {
+            "arm": "llvm",
+            "round": 10,
+            "exit_code": 0,
+            "elapsed_ns": 24767035,
+            "checksum": 27500
+          }
+        ],
+        "arms": {
+          "llvm": {
+            "runs": 11,
+            "failures": 0,
+            "median_ns": 24898202,
+            "min_ns": 24689840,
+            "max_ns": 25748099,
+            "checksums": [
+              27500
+            ],
+            "instructions": 297848287,
+            "cycles": 91984392
+          }
+        }
+      },
+      "ast": {
+        "iterations": 2000,
+        "samples": [
+          {
+            "arm": "llvm",
+            "round": -1,
+            "exit_code": 0,
+            "elapsed_ns": 31814287,
+            "checksum": 484000
+          },
+          {
+            "arm": "llvm",
+            "round": 0,
+            "exit_code": 0,
+            "elapsed_ns": 31841628,
+            "checksum": 484000
+          },
+          {
+            "arm": "llvm",
+            "round": 1,
+            "exit_code": 0,
+            "elapsed_ns": 31315196,
+            "checksum": 484000
+          },
+          {
+            "arm": "llvm",
+            "round": 2,
+            "exit_code": 0,
+            "elapsed_ns": 30595436,
+            "checksum": 484000
+          },
+          {
+            "arm": "llvm",
+            "round": 3,
+            "exit_code": 0,
+            "elapsed_ns": 33307932,
+            "checksum": 484000
+          },
+          {
+            "arm": "llvm",
+            "round": 4,
+            "exit_code": 0,
+            "elapsed_ns": 30292510,
+            "checksum": 484000
+          },
+          {
+            "arm": "llvm",
+            "round": 5,
+            "exit_code": 0,
+            "elapsed_ns": 31001065,
+            "checksum": 484000
+          },
+          {
+            "arm": "llvm",
+            "round": 6,
+            "exit_code": 0,
+            "elapsed_ns": 33337537,
+            "checksum": 484000
+          },
+          {
+            "arm": "llvm",
+            "round": 7,
+            "exit_code": 0,
+            "elapsed_ns": 31272293,
+            "checksum": 484000
+          },
+          {
+            "arm": "llvm",
+            "round": 8,
+            "exit_code": 0,
+            "elapsed_ns": 31084160,
+            "checksum": 484000
+          },
+          {
+            "arm": "llvm",
+            "round": 9,
+            "exit_code": 0,
+            "elapsed_ns": 30571720,
+            "checksum": 484000
+          },
+          {
+            "arm": "llvm",
+            "round": 10,
+            "exit_code": 0,
+            "elapsed_ns": 30821275,
+            "checksum": 484000
+          }
+        ],
+        "arms": {
+          "llvm": {
+            "runs": 11,
+            "failures": 0,
+            "median_ns": 31084160,
+            "min_ns": 30292510,
+            "max_ns": 33337537,
+            "checksums": [
+              484000
+            ],
+            "instructions": 356523695,
+            "cycles": 112100912
+          }
+        }
+      },
+      "unicode": {
+        "iterations": 5000,
+        "samples": [
+          {
+            "arm": "llvm",
+            "round": -1,
+            "exit_code": 0,
+            "elapsed_ns": 21055076,
+            "checksum": 37490
+          },
+          {
+            "arm": "llvm",
+            "round": 0,
+            "exit_code": 0,
+            "elapsed_ns": 20817159,
+            "checksum": 37490
+          },
+          {
+            "arm": "llvm",
+            "round": 1,
+            "exit_code": 0,
+            "elapsed_ns": 20947544,
+            "checksum": 37490
+          },
+          {
+            "arm": "llvm",
+            "round": 2,
+            "exit_code": 0,
+            "elapsed_ns": 20910859,
+            "checksum": 37490
+          },
+          {
+            "arm": "llvm",
+            "round": 3,
+            "exit_code": 0,
+            "elapsed_ns": 20966664,
+            "checksum": 37490
+          },
+          {
+            "arm": "llvm",
+            "round": 4,
+            "exit_code": 0,
+            "elapsed_ns": 21018070,
+            "checksum": 37490
+          },
+          {
+            "arm": "llvm",
+            "round": 5,
+            "exit_code": 0,
+            "elapsed_ns": 20799771,
+            "checksum": 37490
+          },
+          {
+            "arm": "llvm",
+            "round": 6,
+            "exit_code": 0,
+            "elapsed_ns": 20894404,
+            "checksum": 37490
+          },
+          {
+            "arm": "llvm",
+            "round": 7,
+            "exit_code": 0,
+            "elapsed_ns": 20713423,
+            "checksum": 37490
+          },
+          {
+            "arm": "llvm",
+            "round": 8,
+            "exit_code": 0,
+            "elapsed_ns": 20861415,
+            "checksum": 37490
+          },
+          {
+            "arm": "llvm",
+            "round": 9,
+            "exit_code": 0,
+            "elapsed_ns": 21005442,
+            "checksum": 37490
+          },
+          {
+            "arm": "llvm",
+            "round": 10,
+            "exit_code": 0,
+            "elapsed_ns": 20889166,
+            "checksum": 37490
+          }
+        ],
+        "arms": {
+          "llvm": {
+            "runs": 11,
+            "failures": 0,
+            "median_ns": 20894404,
+            "min_ns": 20713423,
+            "max_ns": 21018070,
+            "checksums": [
+              37490
+            ],
+            "instructions": 314717906,
+            "cycles": 77177405
+          }
+        }
+      }
+    }
+  },
+  "semver": {
+    "crate": "semver",
+    "arms": [
+      "llvm",
+      "baseline",
+      "sccp",
+      "bits"
+    ],
+    "skipped_arms": [],
+    "rounds": 11,
+    "order": "warm-up round -1, then rounds alternate forward/reverse arm order",
+    "workloads": {
+      "parse": {
+        "iterations": 400000,
+        "samples": [
+          {
+            "arm": "bits",
+            "round": -1,
+            "exit_code": 0,
+            "elapsed_ns": 47282799,
+            "checksum": 9666685
+          },
+          {
+            "arm": "sccp",
+            "round": -1,
+            "exit_code": 0,
+            "elapsed_ns": 47426575,
+            "checksum": 9666685
+          },
+          {
+            "arm": "baseline",
+            "round": -1,
+            "exit_code": 0,
+            "elapsed_ns": 48468891,
+            "checksum": 9666685
+          },
+          {
+            "arm": "llvm",
+            "round": -1,
+            "exit_code": 0,
+            "elapsed_ns": 11194135,
+            "checksum": 9666685
+          },
+          {
+            "arm": "llvm",
+            "round": 0,
+            "exit_code": 0,
+            "elapsed_ns": 11261698,
+            "checksum": 9666685
+          },
+          {
+            "arm": "baseline",
+            "round": 0,
+            "exit_code": 0,
+            "elapsed_ns": 46780233,
+            "checksum": 9666685
+          },
+          {
+            "arm": "sccp",
+            "round": 0,
+            "exit_code": 0,
+            "elapsed_ns": 47377872,
+            "checksum": 9666685
+          },
+          {
+            "arm": "bits",
+            "round": 0,
+            "exit_code": 0,
+            "elapsed_ns": 46896749,
+            "checksum": 9666685
+          },
+          {
+            "arm": "bits",
+            "round": 1,
+            "exit_code": 0,
+            "elapsed_ns": 47870079,
+            "checksum": 9666685
+          },
+          {
+            "arm": "sccp",
+            "round": 1,
+            "exit_code": 0,
+            "elapsed_ns": 46760571,
+            "checksum": 9666685
+          },
+          {
+            "arm": "baseline",
+            "round": 1,
+            "exit_code": 0,
+            "elapsed_ns": 46817788,
+            "checksum": 9666685
+          },
+          {
+            "arm": "llvm",
+            "round": 1,
+            "exit_code": 0,
+            "elapsed_ns": 11043638,
+            "checksum": 9666685
+          },
+          {
+            "arm": "llvm",
+            "round": 2,
+            "exit_code": 0,
+            "elapsed_ns": 11108225,
+            "checksum": 9666685
+          },
+          {
+            "arm": "baseline",
+            "round": 2,
+            "exit_code": 0,
+            "elapsed_ns": 46715774,
+            "checksum": 9666685
+          },
+          {
+            "arm": "sccp",
+            "round": 2,
+            "exit_code": 0,
+            "elapsed_ns": 47251700,
+            "checksum": 9666685
+          },
+          {
+            "arm": "bits",
+            "round": 2,
+            "exit_code": 0,
+            "elapsed_ns": 46919961,
+            "checksum": 9666685
+          },
+          {
+            "arm": "bits",
+            "round": 3,
+            "exit_code": 0,
+            "elapsed_ns": 46924528,
+            "checksum": 9666685
+          },
+          {
+            "arm": "sccp",
+            "round": 3,
+            "exit_code": 0,
+            "elapsed_ns": 47312962,
+            "checksum": 9666685
+          },
+          {
+            "arm": "baseline",
+            "round": 3,
+            "exit_code": 0,
+            "elapsed_ns": 47989038,
+            "checksum": 9666685
+          },
+          {
+            "arm": "llvm",
+            "round": 3,
+            "exit_code": 0,
+            "elapsed_ns": 11360365,
+            "checksum": 9666685
+          },
+          {
+            "arm": "llvm",
+            "round": 4,
+            "exit_code": 0,
+            "elapsed_ns": 11733875,
+            "checksum": 9666685
+          },
+          {
+            "arm": "baseline",
+            "round": 4,
+            "exit_code": 0,
+            "elapsed_ns": 47020181,
+            "checksum": 9666685
+          },
+          {
+            "arm": "sccp",
+            "round": 4,
+            "exit_code": 0,
+            "elapsed_ns": 46961423,
+            "checksum": 9666685
+          },
+          {
+            "arm": "bits",
+            "round": 4,
+            "exit_code": 0,
+            "elapsed_ns": 46857718,
+            "checksum": 9666685
+          },
+          {
+            "arm": "bits",
+            "round": 5,
+            "exit_code": 0,
+            "elapsed_ns": 46583856,
+            "checksum": 9666685
+          },
+          {
+            "arm": "sccp",
+            "round": 5,
+            "exit_code": 0,
+            "elapsed_ns": 47206412,
+            "checksum": 9666685
+          },
+          {
+            "arm": "baseline",
+            "round": 5,
+            "exit_code": 0,
+            "elapsed_ns": 48643601,
+            "checksum": 9666685
+          },
+          {
+            "arm": "llvm",
+            "round": 5,
+            "exit_code": 0,
+            "elapsed_ns": 11250238,
+            "checksum": 9666685
+          },
+          {
+            "arm": "llvm",
+            "round": 6,
+            "exit_code": 0,
+            "elapsed_ns": 11410490,
+            "checksum": 9666685
+          },
+          {
+            "arm": "baseline",
+            "round": 6,
+            "exit_code": 0,
+            "elapsed_ns": 47128144,
+            "checksum": 9666685
+          },
+          {
+            "arm": "sccp",
+            "round": 6,
+            "exit_code": 0,
+            "elapsed_ns": 52419938,
+            "checksum": 9666685
+          },
+          {
+            "arm": "bits",
+            "round": 6,
+            "exit_code": 0,
+            "elapsed_ns": 47519502,
+            "checksum": 9666685
+          },
+          {
+            "arm": "bits",
+            "round": 7,
+            "exit_code": 0,
+            "elapsed_ns": 51089368,
+            "checksum": 9666685
+          },
+          {
+            "arm": "sccp",
+            "round": 7,
+            "exit_code": 0,
+            "elapsed_ns": 46765509,
+            "checksum": 9666685
+          },
+          {
+            "arm": "baseline",
+            "round": 7,
+            "exit_code": 0,
+            "elapsed_ns": 47386682,
+            "checksum": 9666685
+          },
+          {
+            "arm": "llvm",
+            "round": 7,
+            "exit_code": 0,
+            "elapsed_ns": 11233734,
+            "checksum": 9666685
+          },
+          {
+            "arm": "llvm",
+            "round": 8,
+            "exit_code": 0,
+            "elapsed_ns": 11331701,
+            "checksum": 9666685
+          },
+          {
+            "arm": "baseline",
+            "round": 8,
+            "exit_code": 0,
+            "elapsed_ns": 47998132,
+            "checksum": 9666685
+          },
+          {
+            "arm": "sccp",
+            "round": 8,
+            "exit_code": 0,
+            "elapsed_ns": 51020875,
+            "checksum": 9666685
+          },
+          {
+            "arm": "bits",
+            "round": 8,
+            "exit_code": 0,
+            "elapsed_ns": 48361367,
+            "checksum": 9666685
+          },
+          {
+            "arm": "bits",
+            "round": 9,
+            "exit_code": 0,
+            "elapsed_ns": 47011989,
+            "checksum": 9666685
+          },
+          {
+            "arm": "sccp",
+            "round": 9,
+            "exit_code": 0,
+            "elapsed_ns": 50760694,
+            "checksum": 9666685
+          },
+          {
+            "arm": "baseline",
+            "round": 9,
+            "exit_code": 0,
+            "elapsed_ns": 47105480,
+            "checksum": 9666685
+          },
+          {
+            "arm": "llvm",
+            "round": 9,
+            "exit_code": 0,
+            "elapsed_ns": 11144230,
+            "checksum": 9666685
+          },
+          {
+            "arm": "llvm",
+            "round": 10,
+            "exit_code": 0,
+            "elapsed_ns": 11532402,
+            "checksum": 9666685
+          },
+          {
+            "arm": "baseline",
+            "round": 10,
+            "exit_code": 0,
+            "elapsed_ns": 46573210,
+            "checksum": 9666685
+          },
+          {
+            "arm": "sccp",
+            "round": 10,
+            "exit_code": 0,
+            "elapsed_ns": 47688967,
+            "checksum": 9666685
+          },
+          {
+            "arm": "bits",
+            "round": 10,
+            "exit_code": 0,
+            "elapsed_ns": 46670747,
+            "checksum": 9666685
+          }
+        ],
+        "arms": {
+          "llvm": {
+            "runs": 11,
+            "failures": 0,
+            "median_ns": 11261698,
+            "min_ns": 11043638,
+            "max_ns": 11733875,
+            "checksums": [
+              9666685
+            ],
+            "instructions": 173125993,
+            "cycles": 41463837
+          },
+          "baseline": {
+            "runs": 11,
+            "failures": 0,
+            "median_ns": 47105480,
+            "min_ns": 46573210,
+            "max_ns": 48643601,
+            "checksums": [
+              9666685
+            ],
+            "instructions": 705264176,
+            "cycles": 172617308
+          },
+          "sccp": {
+            "runs": 11,
+            "failures": 0,
+            "median_ns": 47312962,
+            "min_ns": 46760571,
+            "max_ns": 52419938,
+            "checksums": [
+              9666685
+            ],
+            "instructions": 705264348,
+            "cycles": 172696284
+          },
+          "bits": {
+            "runs": 11,
+            "failures": 0,
+            "median_ns": 46924528,
+            "min_ns": 46583856,
+            "max_ns": 51089368,
+            "checksums": [
+              9666685
+            ],
+            "instructions": 705264168,
+            "cycles": 173972627
+          }
+        }
+      },
+      "req": {
+        "iterations": 400000,
+        "samples": [
+          {
+            "arm": "bits",
+            "round": -1,
+            "exit_code": 0,
+            "elapsed_ns": 130612532,
+            "checksum": 400000
+          },
+          {
+            "arm": "sccp",
+            "round": -1,
+            "exit_code": 0,
+            "elapsed_ns": 128300367,
+            "checksum": 400000
+          },
+          {
+            "arm": "baseline",
+            "round": -1,
+            "exit_code": 0,
+            "elapsed_ns": 127192110,
+            "checksum": 400000
+          },
+          {
+            "arm": "llvm",
+            "round": -1,
+            "exit_code": 0,
+            "elapsed_ns": 16999400,
+            "checksum": 400000
+          },
+          {
+            "arm": "llvm",
+            "round": 0,
+            "exit_code": 0,
+            "elapsed_ns": 17048825,
+            "checksum": 400000
+          },
+          {
+            "arm": "baseline",
+            "round": 0,
+            "exit_code": 0,
+            "elapsed_ns": 127285360,
+            "checksum": 400000
+          },
+          {
+            "arm": "sccp",
+            "round": 0,
+            "exit_code": 0,
+            "elapsed_ns": 128253947,
+            "checksum": 400000
+          },
+          {
+            "arm": "bits",
+            "round": 0,
+            "exit_code": 0,
+            "elapsed_ns": 128314549,
+            "checksum": 400000
+          },
+          {
+            "arm": "bits",
+            "round": 1,
+            "exit_code": 0,
+            "elapsed_ns": 127322678,
+            "checksum": 400000
+          },
+          {
+            "arm": "sccp",
+            "round": 1,
+            "exit_code": 0,
+            "elapsed_ns": 128996194,
+            "checksum": 400000
+          },
+          {
+            "arm": "baseline",
+            "round": 1,
+            "exit_code": 0,
+            "elapsed_ns": 136047231,
+            "checksum": 400000
+          },
+          {
+            "arm": "llvm",
+            "round": 1,
+            "exit_code": 0,
+            "elapsed_ns": 17137457,
+            "checksum": 400000
+          },
+          {
+            "arm": "llvm",
+            "round": 2,
+            "exit_code": 0,
+            "elapsed_ns": 16963405,
+            "checksum": 400000
+          },
+          {
+            "arm": "baseline",
+            "round": 2,
+            "exit_code": 0,
+            "elapsed_ns": 127675647,
+            "checksum": 400000
+          },
+          {
+            "arm": "sccp",
+            "round": 2,
+            "exit_code": 0,
+            "elapsed_ns": 128565876,
+            "checksum": 400000
+          },
+          {
+            "arm": "bits",
+            "round": 2,
+            "exit_code": 0,
+            "elapsed_ns": 127914837,
+            "checksum": 400000
+          },
+          {
+            "arm": "bits",
+            "round": 3,
+            "exit_code": 0,
+            "elapsed_ns": 129893642,
+            "checksum": 400000
+          },
+          {
+            "arm": "sccp",
+            "round": 3,
+            "exit_code": 0,
+            "elapsed_ns": 128468840,
+            "checksum": 400000
+          },
+          {
+            "arm": "baseline",
+            "round": 3,
+            "exit_code": 0,
+            "elapsed_ns": 128116551,
+            "checksum": 400000
+          },
+          {
+            "arm": "llvm",
+            "round": 3,
+            "exit_code": 0,
+            "elapsed_ns": 17011308,
+            "checksum": 400000
+          },
+          {
+            "arm": "llvm",
+            "round": 4,
+            "exit_code": 0,
+            "elapsed_ns": 16998788,
+            "checksum": 400000
+          },
+          {
+            "arm": "baseline",
+            "round": 4,
+            "exit_code": 0,
+            "elapsed_ns": 127250569,
+            "checksum": 400000
+          },
+          {
+            "arm": "sccp",
+            "round": 4,
+            "exit_code": 0,
+            "elapsed_ns": 128531554,
+            "checksum": 400000
+          },
+          {
+            "arm": "bits",
+            "round": 4,
+            "exit_code": 0,
+            "elapsed_ns": 128051283,
+            "checksum": 400000
+          },
+          {
+            "arm": "bits",
+            "round": 5,
+            "exit_code": 0,
+            "elapsed_ns": 128102118,
+            "checksum": 400000
+          },
+          {
+            "arm": "sccp",
+            "round": 5,
+            "exit_code": 0,
+            "elapsed_ns": 128515470,
+            "checksum": 400000
+          },
+          {
+            "arm": "baseline",
+            "round": 5,
+            "exit_code": 0,
+            "elapsed_ns": 127042276,
+            "checksum": 400000
+          },
+          {
+            "arm": "llvm",
+            "round": 5,
+            "exit_code": 0,
+            "elapsed_ns": 17059480,
+            "checksum": 400000
+          },
+          {
+            "arm": "llvm",
+            "round": 6,
+            "exit_code": 0,
+            "elapsed_ns": 16855123,
+            "checksum": 400000
+          },
+          {
+            "arm": "baseline",
+            "round": 6,
+            "exit_code": 0,
+            "elapsed_ns": 128083782,
+            "checksum": 400000
+          },
+          {
+            "arm": "sccp",
+            "round": 6,
+            "exit_code": 0,
+            "elapsed_ns": 128146585,
+            "checksum": 400000
+          },
+          {
+            "arm": "bits",
+            "round": 6,
+            "exit_code": 0,
+            "elapsed_ns": 127590630,
+            "checksum": 400000
+          },
+          {
+            "arm": "bits",
+            "round": 7,
+            "exit_code": 0,
+            "elapsed_ns": 131935260,
+            "checksum": 400000
+          },
+          {
+            "arm": "sccp",
+            "round": 7,
+            "exit_code": 0,
+            "elapsed_ns": 128475760,
+            "checksum": 400000
+          },
+          {
+            "arm": "baseline",
+            "round": 7,
+            "exit_code": 0,
+            "elapsed_ns": 126820863,
+            "checksum": 400000
+          },
+          {
+            "arm": "llvm",
+            "round": 7,
+            "exit_code": 0,
+            "elapsed_ns": 17015605,
+            "checksum": 400000
+          },
+          {
+            "arm": "llvm",
+            "round": 8,
+            "exit_code": 0,
+            "elapsed_ns": 17098910,
+            "checksum": 400000
+          },
+          {
+            "arm": "baseline",
+            "round": 8,
+            "exit_code": 0,
+            "elapsed_ns": 127071319,
+            "checksum": 400000
+          },
+          {
+            "arm": "sccp",
+            "round": 8,
+            "exit_code": 0,
+            "elapsed_ns": 128450291,
+            "checksum": 400000
+          },
+          {
+            "arm": "bits",
+            "round": 8,
+            "exit_code": 0,
+            "elapsed_ns": 130041164,
+            "checksum": 400000
+          },
+          {
+            "arm": "bits",
+            "round": 9,
+            "exit_code": 0,
+            "elapsed_ns": 127871542,
+            "checksum": 400000
+          },
+          {
+            "arm": "sccp",
+            "round": 9,
+            "exit_code": 0,
+            "elapsed_ns": 129543004,
+            "checksum": 400000
+          },
+          {
+            "arm": "baseline",
+            "round": 9,
+            "exit_code": 0,
+            "elapsed_ns": 127803580,
+            "checksum": 400000
+          },
+          {
+            "arm": "llvm",
+            "round": 9,
+            "exit_code": 0,
+            "elapsed_ns": 19809705,
+            "checksum": 400000
+          },
+          {
+            "arm": "llvm",
+            "round": 10,
+            "exit_code": 0,
+            "elapsed_ns": 17056366,
+            "checksum": 400000
+          },
+          {
+            "arm": "baseline",
+            "round": 10,
+            "exit_code": 0,
+            "elapsed_ns": 127555016,
+            "checksum": 400000
+          },
+          {
+            "arm": "sccp",
+            "round": 10,
+            "exit_code": 0,
+            "elapsed_ns": 128727778,
+            "checksum": 400000
+          },
+          {
+            "arm": "bits",
+            "round": 10,
+            "exit_code": 0,
+            "elapsed_ns": 127843861,
+            "checksum": 400000
+          }
+        ],
+        "arms": {
+          "llvm": {
+            "runs": 11,
+            "failures": 0,
+            "median_ns": 17048825,
+            "min_ns": 16855123,
+            "max_ns": 19809705,
+            "checksums": [
+              400000
+            ],
+            "instructions": 262258407,
+            "cycles": 63962895
+          },
+          "baseline": {
+            "runs": 11,
+            "failures": 0,
+            "median_ns": 127555016,
+            "min_ns": 126820863,
+            "max_ns": 136047231,
+            "checksums": [
+              400000
+            ],
+            "instructions": 1658729193,
+            "cycles": 467734009
+          },
+          "sccp": {
+            "runs": 11,
+            "failures": 0,
+            "median_ns": 128515470,
+            "min_ns": 128146585,
+            "max_ns": 129543004,
+            "checksums": [
+              400000
+            ],
+            "instructions": 1658729309,
+            "cycles": 472066716
+          },
+          "bits": {
+            "runs": 11,
+            "failures": 0,
+            "median_ns": 128051283,
+            "min_ns": 127322678,
+            "max_ns": 131935260,
+            "checksums": [
+              400000
+            ],
+            "instructions": 1658728645,
+            "cycles": 472501199
+          }
+        }
+      },
+      "identifier": {
+        "iterations": 30000,
+        "samples": [
+          {
+            "arm": "bits",
+            "round": -1,
+            "exit_code": 0,
+            "elapsed_ns": 55033696,
+            "checksum": 30750000
+          },
+          {
+            "arm": "sccp",
+            "round": -1,
+            "exit_code": 0,
+            "elapsed_ns": 54922570,
+            "checksum": 30750000
+          },
+          {
+            "arm": "baseline",
+            "round": -1,
+            "exit_code": 0,
+            "elapsed_ns": 54997401,
+            "checksum": 30750000
+          },
+          {
+            "arm": "llvm",
+            "round": -1,
+            "exit_code": 0,
+            "elapsed_ns": 28392034,
+            "checksum": 30750000
+          },
+          {
+            "arm": "llvm",
+            "round": 0,
+            "exit_code": 0,
+            "elapsed_ns": 28187055,
+            "checksum": 30750000
+          },
+          {
+            "arm": "baseline",
+            "round": 0,
+            "exit_code": 0,
+            "elapsed_ns": 54909289,
+            "checksum": 30750000
+          },
+          {
+            "arm": "sccp",
+            "round": 0,
+            "exit_code": 0,
+            "elapsed_ns": 56603497,
+            "checksum": 30750000
+          },
+          {
+            "arm": "bits",
+            "round": 0,
+            "exit_code": 0,
+            "elapsed_ns": 54957902,
+            "checksum": 30750000
+          },
+          {
+            "arm": "bits",
+            "round": 1,
+            "exit_code": 0,
+            "elapsed_ns": 56419579,
+            "checksum": 30750000
+          },
+          {
+            "arm": "sccp",
+            "round": 1,
+            "exit_code": 0,
+            "elapsed_ns": 54966366,
+            "checksum": 30750000
+          },
+          {
+            "arm": "baseline",
+            "round": 1,
+            "exit_code": 0,
+            "elapsed_ns": 55080476,
+            "checksum": 30750000
+          },
+          {
+            "arm": "llvm",
+            "round": 1,
+            "exit_code": 0,
+            "elapsed_ns": 28515950,
+            "checksum": 30750000
+          },
+          {
+            "arm": "llvm",
+            "round": 2,
+            "exit_code": 0,
+            "elapsed_ns": 28216590,
+            "checksum": 30750000
+          },
+          {
+            "arm": "baseline",
+            "round": 2,
+            "exit_code": 0,
+            "elapsed_ns": 54838752,
+            "checksum": 30750000
+          },
+          {
+            "arm": "sccp",
+            "round": 2,
+            "exit_code": 0,
+            "elapsed_ns": 54931632,
+            "checksum": 30750000
+          },
+          {
+            "arm": "bits",
+            "round": 2,
+            "exit_code": 0,
+            "elapsed_ns": 59016952,
+            "checksum": 30750000
+          },
+          {
+            "arm": "bits",
+            "round": 3,
+            "exit_code": 0,
+            "elapsed_ns": 54794617,
+            "checksum": 30750000
+          },
+          {
+            "arm": "sccp",
+            "round": 3,
+            "exit_code": 0,
+            "elapsed_ns": 55302671,
+            "checksum": 30750000
+          },
+          {
+            "arm": "baseline",
+            "round": 3,
+            "exit_code": 0,
+            "elapsed_ns": 55004443,
+            "checksum": 30750000
+          },
+          {
+            "arm": "llvm",
+            "round": 3,
+            "exit_code": 0,
+            "elapsed_ns": 28234076,
+            "checksum": 30750000
+          },
+          {
+            "arm": "llvm",
+            "round": 4,
+            "exit_code": 0,
+            "elapsed_ns": 28614528,
+            "checksum": 30750000
+          },
+          {
+            "arm": "baseline",
+            "round": 4,
+            "exit_code": 0,
+            "elapsed_ns": 55870094,
+            "checksum": 30750000
+          },
+          {
+            "arm": "sccp",
+            "round": 4,
+            "exit_code": 0,
+            "elapsed_ns": 54790290,
+            "checksum": 30750000
+          },
+          {
+            "arm": "bits",
+            "round": 4,
+            "exit_code": 0,
+            "elapsed_ns": 54901217,
+            "checksum": 30750000
+          },
+          {
+            "arm": "bits",
+            "round": 5,
+            "exit_code": 0,
+            "elapsed_ns": 54816268,
+            "checksum": 30750000
+          },
+          {
+            "arm": "sccp",
+            "round": 5,
+            "exit_code": 0,
+            "elapsed_ns": 56069392,
+            "checksum": 30750000
+          },
+          {
+            "arm": "baseline",
+            "round": 5,
+            "exit_code": 0,
+            "elapsed_ns": 55086566,
+            "checksum": 30750000
+          },
+          {
+            "arm": "llvm",
+            "round": 5,
+            "exit_code": 0,
+            "elapsed_ns": 28249098,
+            "checksum": 30750000
+          },
+          {
+            "arm": "llvm",
+            "round": 6,
+            "exit_code": 0,
+            "elapsed_ns": 28189680,
+            "checksum": 30750000
+          },
+          {
+            "arm": "baseline",
+            "round": 6,
+            "exit_code": 0,
+            "elapsed_ns": 54867777,
+            "checksum": 30750000
+          },
+          {
+            "arm": "sccp",
+            "round": 6,
+            "exit_code": 0,
+            "elapsed_ns": 55017852,
+            "checksum": 30750000
+          },
+          {
+            "arm": "bits",
+            "round": 6,
+            "exit_code": 0,
+            "elapsed_ns": 55036109,
+            "checksum": 30750000
+          },
+          {
+            "arm": "bits",
+            "round": 7,
+            "exit_code": 0,
+            "elapsed_ns": 54928718,
+            "checksum": 30750000
+          },
+          {
+            "arm": "sccp",
+            "round": 7,
+            "exit_code": 0,
+            "elapsed_ns": 54867246,
+            "checksum": 30750000
+          },
+          {
+            "arm": "baseline",
+            "round": 7,
+            "exit_code": 0,
+            "elapsed_ns": 54944232,
+            "checksum": 30750000
+          },
+          {
+            "arm": "llvm",
+            "round": 7,
+            "exit_code": 0,
+            "elapsed_ns": 28230040,
+            "checksum": 30750000
+          },
+          {
+            "arm": "llvm",
+            "round": 8,
+            "exit_code": 0,
+            "elapsed_ns": 28228618,
+            "checksum": 30750000
+          },
+          {
+            "arm": "baseline",
+            "round": 8,
+            "exit_code": 0,
+            "elapsed_ns": 54862377,
+            "checksum": 30750000
+          },
+          {
+            "arm": "sccp",
+            "round": 8,
+            "exit_code": 0,
+            "elapsed_ns": 55239414,
+            "checksum": 30750000
+          },
+          {
+            "arm": "bits",
+            "round": 8,
+            "exit_code": 0,
+            "elapsed_ns": 55018843,
+            "checksum": 30750000
+          },
+          {
+            "arm": "bits",
+            "round": 9,
+            "exit_code": 0,
+            "elapsed_ns": 54770831,
+            "checksum": 30750000
+          },
+          {
+            "arm": "sccp",
+            "round": 9,
+            "exit_code": 0,
+            "elapsed_ns": 55140347,
+            "checksum": 30750000
+          },
+          {
+            "arm": "baseline",
+            "round": 9,
+            "exit_code": 0,
+            "elapsed_ns": 54973596,
+            "checksum": 30750000
+          },
+          {
+            "arm": "llvm",
+            "round": 9,
+            "exit_code": 0,
+            "elapsed_ns": 28152203,
+            "checksum": 30750000
+          },
+          {
+            "arm": "llvm",
+            "round": 10,
+            "exit_code": 0,
+            "elapsed_ns": 28406375,
+            "checksum": 30750000
+          },
+          {
+            "arm": "baseline",
+            "round": 10,
+            "exit_code": 0,
+            "elapsed_ns": 54807216,
+            "checksum": 30750000
+          },
+          {
+            "arm": "sccp",
+            "round": 10,
+            "exit_code": 0,
+            "elapsed_ns": 55608540,
+            "checksum": 30750000
+          },
+          {
+            "arm": "bits",
+            "round": 10,
+            "exit_code": 0,
+            "elapsed_ns": 54758933,
+            "checksum": 30750000
+          }
+        ],
+        "arms": {
+          "llvm": {
+            "runs": 11,
+            "failures": 0,
+            "median_ns": 28230040,
+            "min_ns": 28152203,
+            "max_ns": 28614528,
+            "checksums": [
+              30750000
+            ],
+            "instructions": 555108913,
+            "cycles": 103858647
+          },
+          "baseline": {
+            "runs": 11,
+            "failures": 0,
+            "median_ns": 54944232,
+            "min_ns": 54807216,
+            "max_ns": 55870094,
+            "checksums": [
+              30750000
+            ],
+            "instructions": 918623088,
+            "cycles": 201333074
+          },
+          "sccp": {
+            "runs": 11,
+            "failures": 0,
+            "median_ns": 55140347,
+            "min_ns": 54790290,
+            "max_ns": 56603497,
+            "checksums": [
+              30750000
+            ],
+            "instructions": 918622880,
+            "cycles": 201073391
+          },
+          "bits": {
+            "runs": 11,
+            "failures": 0,
+            "median_ns": 54928718,
+            "min_ns": 54758933,
+            "max_ns": 59016952,
+            "checksums": [
+              30750000
+            ],
+            "instructions": 918622897,
+            "cycles": 201562905
+          }
+        }
+      }
+    }
+  },
+  "unicode-segmentation": {
+    "crate": "unicode-segmentation",
+    "arms": [
+      "llvm",
+      "baseline",
+      "sccp",
+      "bits"
+    ],
+    "skipped_arms": [],
+    "rounds": 11,
+    "order": "warm-up round -1, then rounds alternate forward/reverse arm order",
+    "workloads": {
+      "graphemes-mixed": {
+        "iterations": 200,
+        "samples": [
+          {
+            "arm": "bits",
+            "round": -1,
+            "exit_code": 0,
+            "elapsed_ns": 24187254,
+            "checksum": 4502913975839704316
+          },
+          {
+            "arm": "sccp",
+            "round": -1,
+            "exit_code": 0,
+            "elapsed_ns": 23956115,
+            "checksum": 4502913975839704316
+          },
+          {
+            "arm": "baseline",
+            "round": -1,
+            "exit_code": 0,
+            "elapsed_ns": 23763276,
+            "checksum": 4502913975839704316
+          },
+          {
+            "arm": "llvm",
+            "round": -1,
+            "exit_code": 0,
+            "elapsed_ns": 17476227,
+            "checksum": 4502913975839704316
+          },
+          {
+            "arm": "llvm",
+            "round": 0,
+            "exit_code": 0,
+            "elapsed_ns": 17494143,
+            "checksum": 4502913975839704316
+          },
+          {
+            "arm": "baseline",
+            "round": 0,
+            "exit_code": 0,
+            "elapsed_ns": 23852610,
+            "checksum": 4502913975839704316
+          },
+          {
+            "arm": "sccp",
+            "round": 0,
+            "exit_code": 0,
+            "elapsed_ns": 32148730,
+            "checksum": 4502913975839704316
+          },
+          {
+            "arm": "bits",
+            "round": 0,
+            "exit_code": 0,
+            "elapsed_ns": 23667312,
+            "checksum": 4502913975839704316
+          },
+          {
+            "arm": "bits",
+            "round": 1,
+            "exit_code": 0,
+            "elapsed_ns": 24365823,
+            "checksum": 4502913975839704316
+          },
+          {
+            "arm": "sccp",
+            "round": 1,
+            "exit_code": 0,
+            "elapsed_ns": 23615986,
+            "checksum": 4502913975839704316
+          },
+          {
+            "arm": "baseline",
+            "round": 1,
+            "exit_code": 0,
+            "elapsed_ns": 23891328,
+            "checksum": 4502913975839704316
+          },
+          {
+            "arm": "llvm",
+            "round": 1,
+            "exit_code": 0,
+            "elapsed_ns": 17401135,
+            "checksum": 4502913975839704316
+          },
+          {
+            "arm": "llvm",
+            "round": 2,
+            "exit_code": 0,
+            "elapsed_ns": 17418671,
+            "checksum": 4502913975839704316
+          },
+          {
+            "arm": "baseline",
+            "round": 2,
+            "exit_code": 0,
+            "elapsed_ns": 24152691,
+            "checksum": 4502913975839704316
+          },
+          {
+            "arm": "sccp",
+            "round": 2,
+            "exit_code": 0,
+            "elapsed_ns": 24089616,
+            "checksum": 4502913975839704316
+          },
+          {
+            "arm": "bits",
+            "round": 2,
+            "exit_code": 0,
+            "elapsed_ns": 23790067,
+            "checksum": 4502913975839704316
+          },
+          {
+            "arm": "bits",
+            "round": 3,
+            "exit_code": 0,
+            "elapsed_ns": 23749315,
+            "checksum": 4502913975839704316
+          },
+          {
+            "arm": "sccp",
+            "round": 3,
+            "exit_code": 0,
+            "elapsed_ns": 23673100,
+            "checksum": 4502913975839704316
+          },
+          {
+            "arm": "baseline",
+            "round": 3,
+            "exit_code": 0,
+            "elapsed_ns": 23863346,
+            "checksum": 4502913975839704316
+          },
+          {
+            "arm": "llvm",
+            "round": 3,
+            "exit_code": 0,
+            "elapsed_ns": 18016520,
+            "checksum": 4502913975839704316
+          },
+          {
+            "arm": "llvm",
+            "round": 4,
+            "exit_code": 0,
+            "elapsed_ns": 17394964,
+            "checksum": 4502913975839704316
+          },
+          {
+            "arm": "baseline",
+            "round": 4,
+            "exit_code": 0,
+            "elapsed_ns": 25746738,
+            "checksum": 4502913975839704316
+          },
+          {
+            "arm": "sccp",
+            "round": 4,
+            "exit_code": 0,
+            "elapsed_ns": 23601202,
+            "checksum": 4502913975839704316
+          },
+          {
+            "arm": "bits",
+            "round": 4,
+            "exit_code": 0,
+            "elapsed_ns": 23883266,
+            "checksum": 4502913975839704316
+          },
+          {
+            "arm": "bits",
+            "round": 5,
+            "exit_code": 0,
+            "elapsed_ns": 23927303,
+            "checksum": 4502913975839704316
+          },
+          {
+            "arm": "sccp",
+            "round": 5,
+            "exit_code": 0,
+            "elapsed_ns": 23621443,
+            "checksum": 4502913975839704316
+          },
+          {
+            "arm": "baseline",
+            "round": 5,
+            "exit_code": 0,
+            "elapsed_ns": 24031549,
+            "checksum": 4502913975839704316
+          },
+          {
+            "arm": "llvm",
+            "round": 5,
+            "exit_code": 0,
+            "elapsed_ns": 17283397,
+            "checksum": 4502913975839704316
+          },
+          {
+            "arm": "llvm",
+            "round": 6,
+            "exit_code": 0,
+            "elapsed_ns": 17289857,
+            "checksum": 4502913975839704316
+          },
+          {
+            "arm": "baseline",
+            "round": 6,
+            "exit_code": 0,
+            "elapsed_ns": 24289447,
+            "checksum": 4502913975839704316
+          },
+          {
+            "arm": "sccp",
+            "round": 6,
+            "exit_code": 0,
+            "elapsed_ns": 23947423,
+            "checksum": 4502913975839704316
+          },
+          {
+            "arm": "bits",
+            "round": 6,
+            "exit_code": 0,
+            "elapsed_ns": 23825731,
+            "checksum": 4502913975839704316
+          },
+          {
+            "arm": "bits",
+            "round": 7,
+            "exit_code": 0,
+            "elapsed_ns": 23712050,
+            "checksum": 4502913975839704316
+          },
+          {
+            "arm": "sccp",
+            "round": 7,
+            "exit_code": 0,
+            "elapsed_ns": 23684998,
+            "checksum": 4502913975839704316
+          },
+          {
+            "arm": "baseline",
+            "round": 7,
+            "exit_code": 0,
+            "elapsed_ns": 23801054,
+            "checksum": 4502913975839704316
+          },
+          {
+            "arm": "llvm",
+            "round": 7,
+            "exit_code": 0,
+            "elapsed_ns": 17418370,
+            "checksum": 4502913975839704316
+          },
+          {
+            "arm": "llvm",
+            "round": 8,
+            "exit_code": 0,
+            "elapsed_ns": 17409887,
+            "checksum": 4502913975839704316
+          },
+          {
+            "arm": "baseline",
+            "round": 8,
+            "exit_code": 0,
+            "elapsed_ns": 24410769,
+            "checksum": 4502913975839704316
+          },
+          {
+            "arm": "sccp",
+            "round": 8,
+            "exit_code": 0,
+            "elapsed_ns": 23651047,
+            "checksum": 4502913975839704316
+          },
+          {
+            "arm": "bits",
+            "round": 8,
+            "exit_code": 0,
+            "elapsed_ns": 23791078,
+            "checksum": 4502913975839704316
+          },
+          {
+            "arm": "bits",
+            "round": 9,
+            "exit_code": 0,
+            "elapsed_ns": 23904759,
+            "checksum": 4502913975839704316
+          },
+          {
+            "arm": "sccp",
+            "round": 9,
+            "exit_code": 0,
+            "elapsed_ns": 23792440,
+            "checksum": 4502913975839704316
+          },
+          {
+            "arm": "baseline",
+            "round": 9,
+            "exit_code": 0,
+            "elapsed_ns": 26779730,
+            "checksum": 4502913975839704316
+          },
+          {
+            "arm": "llvm",
+            "round": 9,
+            "exit_code": 0,
+            "elapsed_ns": 17474926,
+            "checksum": 4502913975839704316
+          },
+          {
+            "arm": "llvm",
+            "round": 10,
+            "exit_code": 0,
+            "elapsed_ns": 19468341,
+            "checksum": 4502913975839704316
+          },
+          {
+            "arm": "baseline",
+            "round": 10,
+            "exit_code": 0,
+            "elapsed_ns": 23691839,
+            "checksum": 4502913975839704316
+          },
+          {
+            "arm": "sccp",
+            "round": 10,
+            "exit_code": 0,
+            "elapsed_ns": 23624949,
+            "checksum": 4502913975839704316
+          },
+          {
+            "arm": "bits",
+            "round": 10,
+            "exit_code": 0,
+            "elapsed_ns": 23812119,
+            "checksum": 4502913975839704316
+          }
+        ],
+        "arms": {
+          "llvm": {
+            "runs": 11,
+            "failures": 0,
+            "median_ns": 17418370,
+            "min_ns": 17283397,
+            "max_ns": 19468341,
+            "checksums": [
+              4502913975839704316
+            ],
+            "instructions": 270091633,
+            "cycles": 64063390
+          },
+          "baseline": {
+            "runs": 11,
+            "failures": 0,
+            "median_ns": 24031549,
+            "min_ns": 23691839,
+            "max_ns": 26779730,
+            "checksums": [
+              4502913975839704316
+            ],
+            "instructions": 361359841,
+            "cycles": 87061847
+          },
+          "sccp": {
+            "runs": 11,
+            "failures": 0,
+            "median_ns": 23673100,
+            "min_ns": 23601202,
+            "max_ns": 32148730,
+            "checksums": [
+              4502913975839704316
+            ],
+            "instructions": 361359537,
+            "cycles": 86836844
+          },
+          "bits": {
+            "runs": 11,
+            "failures": 0,
+            "median_ns": 23812119,
+            "min_ns": 23667312,
+            "max_ns": 24365823,
+            "checksums": [
+              4502913975839704316
+            ],
+            "instructions": 361359778,
+            "cycles": 87102382
+          }
+        }
+      },
+      "graphemes-ascii": {
+        "iterations": 200,
+        "samples": [
+          {
+            "arm": "bits",
+            "round": -1,
+            "exit_code": 0,
+            "elapsed_ns": 30339220,
+            "checksum": 18227791836399012924
+          },
+          {
+            "arm": "sccp",
+            "round": -1,
+            "exit_code": 0,
+            "elapsed_ns": 30268884,
+            "checksum": 18227791836399012924
+          },
+          {
+            "arm": "baseline",
+            "round": -1,
+            "exit_code": 0,
+            "elapsed_ns": 30239429,
+            "checksum": 18227791836399012924
+          },
+          {
+            "arm": "llvm",
+            "round": -1,
+            "exit_code": 0,
+            "elapsed_ns": 27804761,
+            "checksum": 18227791836399012924
+          },
+          {
+            "arm": "llvm",
+            "round": 0,
+            "exit_code": 0,
+            "elapsed_ns": 33317747,
+            "checksum": 18227791836399012924
+          },
+          {
+            "arm": "baseline",
+            "round": 0,
+            "exit_code": 0,
+            "elapsed_ns": 30182355,
+            "checksum": 18227791836399012924
+          },
+          {
+            "arm": "sccp",
+            "round": 0,
+            "exit_code": 0,
+            "elapsed_ns": 30162565,
+            "checksum": 18227791836399012924
+          },
+          {
+            "arm": "bits",
+            "round": 0,
+            "exit_code": 0,
+            "elapsed_ns": 30278969,
+            "checksum": 18227791836399012924
+          },
+          {
+            "arm": "bits",
+            "round": 1,
+            "exit_code": 0,
+            "elapsed_ns": 30149303,
+            "checksum": 18227791836399012924
+          },
+          {
+            "arm": "sccp",
+            "round": 1,
+            "exit_code": 0,
+            "elapsed_ns": 30495625,
+            "checksum": 18227791836399012924
+          },
+          {
+            "arm": "baseline",
+            "round": 1,
+            "exit_code": 0,
+            "elapsed_ns": 30112740,
+            "checksum": 18227791836399012924
+          },
+          {
+            "arm": "llvm",
+            "round": 1,
+            "exit_code": 0,
+            "elapsed_ns": 46621512,
+            "checksum": 18227791836399012924
+          },
+          {
+            "arm": "llvm",
+            "round": 2,
+            "exit_code": 0,
+            "elapsed_ns": 27617830,
+            "checksum": 18227791836399012924
+          },
+          {
+            "arm": "baseline",
+            "round": 2,
+            "exit_code": 0,
+            "elapsed_ns": 30175995,
+            "checksum": 18227791836399012924
+          },
+          {
+            "arm": "sccp",
+            "round": 2,
+            "exit_code": 0,
+            "elapsed_ns": 30458149,
+            "checksum": 18227791836399012924
+          },
+          {
+            "arm": "bits",
+            "round": 2,
+            "exit_code": 0,
+            "elapsed_ns": 31595268,
+            "checksum": 18227791836399012924
+          },
+          {
+            "arm": "bits",
+            "round": 3,
+            "exit_code": 0,
+            "elapsed_ns": 30103736,
+            "checksum": 18227791836399012924
+          },
+          {
+            "arm": "sccp",
+            "round": 3,
+            "exit_code": 0,
+            "elapsed_ns": 30859842,
+            "checksum": 18227791836399012924
+          },
+          {
+            "arm": "baseline",
+            "round": 3,
+            "exit_code": 0,
+            "elapsed_ns": 32018444,
+            "checksum": 18227791836399012924
+          },
+          {
+            "arm": "llvm",
+            "round": 3,
+            "exit_code": 0,
+            "elapsed_ns": 28183340,
+            "checksum": 18227791836399012924
+          },
+          {
+            "arm": "llvm",
+            "round": 4,
+            "exit_code": 0,
+            "elapsed_ns": 27829979,
+            "checksum": 18227791836399012924
+          },
+          {
+            "arm": "baseline",
+            "round": 4,
+            "exit_code": 0,
+            "elapsed_ns": 30223186,
+            "checksum": 18227791836399012924
+          },
+          {
+            "arm": "sccp",
+            "round": 4,
+            "exit_code": 0,
+            "elapsed_ns": 31094496,
+            "checksum": 18227791836399012924
+          },
+          {
+            "arm": "bits",
+            "round": 4,
+            "exit_code": 0,
+            "elapsed_ns": 30264458,
+            "checksum": 18227791836399012924
+          },
+          {
+            "arm": "bits",
+            "round": 5,
+            "exit_code": 0,
+            "elapsed_ns": 30119620,
+            "checksum": 18227791836399012924
+          },
+          {
+            "arm": "sccp",
+            "round": 5,
+            "exit_code": 0,
+            "elapsed_ns": 30037687,
+            "checksum": 18227791836399012924
+          },
+          {
+            "arm": "baseline",
+            "round": 5,
+            "exit_code": 0,
+            "elapsed_ns": 30096065,
+            "checksum": 18227791836399012924
+          },
+          {
+            "arm": "llvm",
+            "round": 5,
+            "exit_code": 0,
+            "elapsed_ns": 27645421,
+            "checksum": 18227791836399012924
+          },
+          {
+            "arm": "llvm",
+            "round": 6,
+            "exit_code": 0,
+            "elapsed_ns": 27703719,
+            "checksum": 18227791836399012924
+          },
+          {
+            "arm": "baseline",
+            "round": 6,
+            "exit_code": 0,
+            "elapsed_ns": 30202454,
+            "checksum": 18227791836399012924
+          },
+          {
+            "arm": "sccp",
+            "round": 6,
+            "exit_code": 0,
+            "elapsed_ns": 30846843,
+            "checksum": 18227791836399012924
+          },
+          {
+            "arm": "bits",
+            "round": 6,
+            "exit_code": 0,
+            "elapsed_ns": 30045319,
+            "checksum": 18227791836399012924
+          },
+          {
+            "arm": "bits",
+            "round": 7,
+            "exit_code": 0,
+            "elapsed_ns": 30108603,
+            "checksum": 18227791836399012924
+          },
+          {
+            "arm": "sccp",
+            "round": 7,
+            "exit_code": 0,
+            "elapsed_ns": 30099490,
+            "checksum": 18227791836399012924
+          },
+          {
+            "arm": "baseline",
+            "round": 7,
+            "exit_code": 0,
+            "elapsed_ns": 30179430,
+            "checksum": 18227791836399012924
+          },
+          {
+            "arm": "llvm",
+            "round": 7,
+            "exit_code": 0,
+            "elapsed_ns": 27636778,
+            "checksum": 18227791836399012924
+          },
+          {
+            "arm": "llvm",
+            "round": 8,
+            "exit_code": 0,
+            "elapsed_ns": 27732191,
+            "checksum": 18227791836399012924
+          },
+          {
+            "arm": "baseline",
+            "round": 8,
+            "exit_code": 0,
+            "elapsed_ns": 30634153,
+            "checksum": 18227791836399012924
+          },
+          {
+            "arm": "sccp",
+            "round": 8,
+            "exit_code": 0,
+            "elapsed_ns": 30200592,
+            "checksum": 18227791836399012924
+          },
+          {
+            "arm": "bits",
+            "round": 8,
+            "exit_code": 0,
+            "elapsed_ns": 30094222,
+            "checksum": 18227791836399012924
+          },
+          {
+            "arm": "bits",
+            "round": 9,
+            "exit_code": 0,
+            "elapsed_ns": 30661784,
+            "checksum": 18227791836399012924
+          },
+          {
+            "arm": "sccp",
+            "round": 9,
+            "exit_code": 0,
+            "elapsed_ns": 30170827,
+            "checksum": 18227791836399012924
+          },
+          {
+            "arm": "baseline",
+            "round": 9,
+            "exit_code": 0,
+            "elapsed_ns": 30560633,
+            "checksum": 18227791836399012924
+          },
+          {
+            "arm": "llvm",
+            "round": 9,
+            "exit_code": 0,
+            "elapsed_ns": 27675516,
+            "checksum": 18227791836399012924
+          },
+          {
+            "arm": "llvm",
+            "round": 10,
+            "exit_code": 0,
+            "elapsed_ns": 27655887,
+            "checksum": 18227791836399012924
+          },
+          {
+            "arm": "baseline",
+            "round": 10,
+            "exit_code": 0,
+            "elapsed_ns": 30146481,
+            "checksum": 18227791836399012924
+          },
+          {
+            "arm": "sccp",
+            "round": 10,
+            "exit_code": 0,
+            "elapsed_ns": 30143336,
+            "checksum": 18227791836399012924
+          },
+          {
+            "arm": "bits",
+            "round": 10,
+            "exit_code": 0,
+            "elapsed_ns": 30121934,
+            "checksum": 18227791836399012924
+          }
+        ],
+        "arms": {
+          "llvm": {
+            "runs": 11,
+            "failures": 0,
+            "median_ns": 27703719,
+            "min_ns": 27617830,
+            "max_ns": 46621512,
+            "checksums": [
+              18227791836399012924
+            ],
+            "instructions": 469605252,
+            "cycles": 102134015
+          },
+          "baseline": {
+            "runs": 11,
+            "failures": 0,
+            "median_ns": 30182355,
+            "min_ns": 30096065,
+            "max_ns": 32018444,
+            "checksums": [
+              18227791836399012924
+            ],
+            "instructions": 490908001,
+            "cycles": 110914067
+          },
+          "sccp": {
+            "runs": 11,
+            "failures": 0,
+            "median_ns": 30200592,
+            "min_ns": 30037687,
+            "max_ns": 31094496,
+            "checksums": [
+              18227791836399012924
+            ],
+            "instructions": 490907763,
+            "cycles": 112250485
+          },
+          "bits": {
+            "runs": 11,
+            "failures": 0,
+            "median_ns": 30121934,
+            "min_ns": 30045319,
+            "max_ns": 31595268,
+            "checksums": [
+              18227791836399012924
+            ],
+            "instructions": 490907513,
+            "cycles": 111880995
+          }
+        }
+      },
+      "graphemes-rev": {
+        "iterations": 400,
+        "samples": [
+          {
+            "arm": "bits",
+            "round": -1,
+            "exit_code": 0,
+            "elapsed_ns": 81906696,
+            "checksum": 12754887892209847992
+          },
+          {
+            "arm": "sccp",
+            "round": -1,
+            "exit_code": 0,
+            "elapsed_ns": 82259006,
+            "checksum": 12754887892209847992
+          },
+          {
+            "arm": "baseline",
+            "round": -1,
+            "exit_code": 0,
+            "elapsed_ns": 83437467,
+            "checksum": 12754887892209847992
+          },
+          {
+            "arm": "llvm",
+            "round": -1,
+            "exit_code": 0,
+            "elapsed_ns": 23000090,
+            "checksum": 12754887892209847992
+          },
+          {
+            "arm": "llvm",
+            "round": 0,
+            "exit_code": 0,
+            "elapsed_ns": 23355864,
+            "checksum": 12754887892209847992
+          },
+          {
+            "arm": "baseline",
+            "round": 0,
+            "exit_code": 0,
+            "elapsed_ns": 80128273,
+            "checksum": 12754887892209847992
+          },
+          {
+            "arm": "sccp",
+            "round": 0,
+            "exit_code": 0,
+            "elapsed_ns": 81078752,
+            "checksum": 12754887892209847992
+          },
+          {
+            "arm": "bits",
+            "round": 0,
+            "exit_code": 0,
+            "elapsed_ns": 80341413,
+            "checksum": 12754887892209847992
+          },
+          {
+            "arm": "bits",
+            "round": 1,
+            "exit_code": 0,
+            "elapsed_ns": 80788918,
+            "checksum": 12754887892209847992
+          },
+          {
+            "arm": "sccp",
+            "round": 1,
+            "exit_code": 0,
+            "elapsed_ns": 80185630,
+            "checksum": 12754887892209847992
+          },
+          {
+            "arm": "baseline",
+            "round": 1,
+            "exit_code": 0,
+            "elapsed_ns": 80281375,
+            "checksum": 12754887892209847992
+          },
+          {
+            "arm": "llvm",
+            "round": 1,
+            "exit_code": 0,
+            "elapsed_ns": 22825687,
+            "checksum": 12754887892209847992
+          },
+          {
+            "arm": "llvm",
+            "round": 2,
+            "exit_code": 0,
+            "elapsed_ns": 23497286,
+            "checksum": 12754887892209847992
+          },
+          {
+            "arm": "baseline",
+            "round": 2,
+            "exit_code": 0,
+            "elapsed_ns": 80030106,
+            "checksum": 12754887892209847992
+          },
+          {
+            "arm": "sccp",
+            "round": 2,
+            "exit_code": 0,
+            "elapsed_ns": 81284502,
+            "checksum": 12754887892209847992
+          },
+          {
+            "arm": "bits",
+            "round": 2,
+            "exit_code": 0,
+            "elapsed_ns": 80319731,
+            "checksum": 12754887892209847992
+          },
+          {
+            "arm": "bits",
+            "round": 3,
+            "exit_code": 0,
+            "elapsed_ns": 80370457,
+            "checksum": 12754887892209847992
+          },
+          {
+            "arm": "sccp",
+            "round": 3,
+            "exit_code": 0,
+            "elapsed_ns": 80428384,
+            "checksum": 12754887892209847992
+          },
+          {
+            "arm": "baseline",
+            "round": 3,
+            "exit_code": 0,
+            "elapsed_ns": 79843064,
+            "checksum": 12754887892209847992
+          },
+          {
+            "arm": "llvm",
+            "round": 3,
+            "exit_code": 0,
+            "elapsed_ns": 22831325,
+            "checksum": 12754887892209847992
+          },
+          {
+            "arm": "llvm",
+            "round": 4,
+            "exit_code": 0,
+            "elapsed_ns": 22548009,
+            "checksum": 12754887892209847992
+          },
+          {
+            "arm": "baseline",
+            "round": 4,
+            "exit_code": 0,
+            "elapsed_ns": 80032969,
+            "checksum": 12754887892209847992
+          },
+          {
+            "arm": "sccp",
+            "round": 4,
+            "exit_code": 0,
+            "elapsed_ns": 100807504,
+            "checksum": 12754887892209847992
+          },
+          {
+            "arm": "bits",
+            "round": 4,
+            "exit_code": 0,
+            "elapsed_ns": 80084588,
+            "checksum": 12754887892209847992
+          },
+          {
+            "arm": "bits",
+            "round": 5,
+            "exit_code": 0,
+            "elapsed_ns": 90985262,
+            "checksum": 12754887892209847992
+          },
+          {
+            "arm": "sccp",
+            "round": 5,
+            "exit_code": 0,
+            "elapsed_ns": 80253602,
+            "checksum": 12754887892209847992
+          },
+          {
+            "arm": "baseline",
+            "round": 5,
+            "exit_code": 0,
+            "elapsed_ns": 80665391,
+            "checksum": 12754887892209847992
+          },
+          {
+            "arm": "llvm",
+            "round": 5,
+            "exit_code": 0,
+            "elapsed_ns": 23129192,
+            "checksum": 12754887892209847992
+          },
+          {
+            "arm": "llvm",
+            "round": 6,
+            "exit_code": 0,
+            "elapsed_ns": 22926308,
+            "checksum": 12754887892209847992
+          },
+          {
+            "arm": "baseline",
+            "round": 6,
+            "exit_code": 0,
+            "elapsed_ns": 79906261,
+            "checksum": 12754887892209847992
+          },
+          {
+            "arm": "sccp",
+            "round": 6,
+            "exit_code": 0,
+            "elapsed_ns": 81146284,
+            "checksum": 12754887892209847992
+          },
+          {
+            "arm": "bits",
+            "round": 6,
+            "exit_code": 0,
+            "elapsed_ns": 86747513,
+            "checksum": 12754887892209847992
+          },
+          {
+            "arm": "bits",
+            "round": 7,
+            "exit_code": 0,
+            "elapsed_ns": 80806112,
+            "checksum": 12754887892209847992
+          },
+          {
+            "arm": "sccp",
+            "round": 7,
+            "exit_code": 0,
+            "elapsed_ns": 80560954,
+            "checksum": 12754887892209847992
+          },
+          {
+            "arm": "baseline",
+            "round": 7,
+            "exit_code": 0,
+            "elapsed_ns": 80223597,
+            "checksum": 12754887892209847992
+          },
+          {
+            "arm": "llvm",
+            "round": 7,
+            "exit_code": 0,
+            "elapsed_ns": 23395253,
+            "checksum": 12754887892209847992
+          },
+          {
+            "arm": "llvm",
+            "round": 8,
+            "exit_code": 0,
+            "elapsed_ns": 23269795,
+            "checksum": 12754887892209847992
+          },
+          {
+            "arm": "baseline",
+            "round": 8,
+            "exit_code": 0,
+            "elapsed_ns": 80455286,
+            "checksum": 12754887892209847992
+          },
+          {
+            "arm": "sccp",
+            "round": 8,
+            "exit_code": 0,
+            "elapsed_ns": 81356419,
+            "checksum": 12754887892209847992
+          },
+          {
+            "arm": "bits",
+            "round": 8,
+            "exit_code": 0,
+            "elapsed_ns": 80518709,
+            "checksum": 12754887892209847992
+          },
+          {
+            "arm": "bits",
+            "round": 9,
+            "exit_code": 0,
+            "elapsed_ns": 80192770,
+            "checksum": 12754887892209847992
+          },
+          {
+            "arm": "sccp",
+            "round": 9,
+            "exit_code": 0,
+            "elapsed_ns": 81746786,
+            "checksum": 12754887892209847992
+          },
+          {
+            "arm": "baseline",
+            "round": 9,
+            "exit_code": 0,
+            "elapsed_ns": 80006570,
+            "checksum": 12754887892209847992
+          },
+          {
+            "arm": "llvm",
+            "round": 9,
+            "exit_code": 0,
+            "elapsed_ns": 23347841,
+            "checksum": 12754887892209847992
+          },
+          {
+            "arm": "llvm",
+            "round": 10,
+            "exit_code": 0,
+            "elapsed_ns": 22916234,
+            "checksum": 12754887892209847992
+          },
+          {
+            "arm": "baseline",
+            "round": 10,
+            "exit_code": 0,
+            "elapsed_ns": 80268024,
+            "checksum": 12754887892209847992
+          },
+          {
+            "arm": "sccp",
+            "round": 10,
+            "exit_code": 0,
+            "elapsed_ns": 80869578,
+            "checksum": 12754887892209847992
+          },
+          {
+            "arm": "bits",
+            "round": 10,
+            "exit_code": 0,
+            "elapsed_ns": 80616558,
+            "checksum": 12754887892209847992
+          }
+        ],
+        "arms": {
+          "llvm": {
+            "runs": 11,
+            "failures": 0,
+            "median_ns": 23129192,
+            "min_ns": 22548009,
+            "max_ns": 23497286,
+            "checksums": [
+              12754887892209847992
+            ],
+            "instructions": 364549424,
+            "cycles": 85551474
+          },
+          "baseline": {
+            "runs": 11,
+            "failures": 0,
+            "median_ns": 80128273,
+            "min_ns": 79843064,
+            "max_ns": 80665391,
+            "checksums": [
+              12754887892209847992
+            ],
+            "instructions": 1305242446,
+            "cycles": 299269924
+          },
+          "sccp": {
+            "runs": 11,
+            "failures": 0,
+            "median_ns": 81078752,
+            "min_ns": 80185630,
+            "max_ns": 100807504,
+            "checksums": [
+              12754887892209847992
+            ],
+            "instructions": 1305242131,
+            "cycles": 295855342
+          },
+          "bits": {
+            "runs": 11,
+            "failures": 0,
+            "median_ns": 80518709,
+            "min_ns": 80084588,
+            "max_ns": 90985262,
+            "checksums": [
+              12754887892209847992
+            ],
+            "instructions": 1305242031,
+            "cycles": 303914390
+          }
+        }
+      }
+    }
+  }
+}

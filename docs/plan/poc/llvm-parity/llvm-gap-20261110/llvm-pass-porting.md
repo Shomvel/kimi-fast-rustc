@@ -2,7 +2,7 @@
 
 本轮聚焦优化 pass，暂不扩展成本模型。结论是先增强 **InstCombine → SCCP/SimplifyCFG → KnownBits/DemandedBits**，随后扩展已有的局部存储提升和内存优化，再处理后端模式与循环变换。每项独立落地和验收，不一次替换整条流水线。
 
-**实施更新**：P1 的嵌套常量合并、共享 rewrite 和 GVN 交换律匹配已实现并验收，见 [InstCombine 结果](results/instcombine/validation.md)。普通操作数的全图排序因性能回退撤回；SCCP、KnownBits、cast 链及其余工作仍是计划。以下现状表和路线保留制定时的固定基线。
+**实施更新**：P1 的嵌套常量合并、共享 rewrite 和 GVN 交换律匹配，以及 P2 的整数/布尔 SCCP、P3 的首组 KnownBits 冗余掩码规则已实现。见 [InstCombine 结果](results/instcombine/validation.md) 和 [SCCP/KnownBits 结果](results/sccp/validation.md)。DemandedBits、通用 cast 链及其余工作仍是计划。用户最新优先级改为编译墙钟时间降低约 50%，后续工作先按该指标分析瓶颈。以下现状表和路线保留制定时的固定基线。
 
 以下是实施前的移植计划与基线描述；新增实现和测量以上方更新为准。当前实现基线为 `7fb04aab2659e39dfa871b235fceb30bc0a5999b`（PR #8）；沿用已验收的早期优化。参考资料是本地 `llvm-study/README.md` 及 22 篇专题，研究源码固定为 LLVM 21.1.0 / `3623fe661ae35c6c80ac221f14d85be76aa870f1`。此前性能对照使用 LLVM 21.1.8，两者不混为同一实验版本。
 

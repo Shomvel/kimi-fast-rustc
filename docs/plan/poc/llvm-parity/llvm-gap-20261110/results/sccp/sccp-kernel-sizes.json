@@ -1,0 +1,23 @@
+{
+  "llvm": {
+    "narrow_merge": 3,
+    "changing_loop": 5,
+    "constant_branch": 6,
+    "constant_merge": 6,
+    "dynamic_merge": 16
+  },
+  "baseline": {
+    "constant_branch": 11,
+    "dynamic_merge": 21,
+    "constant_merge": 22,
+    "narrow_merge": 25,
+    "changing_loop": 52
+  },
+  "sccp": {
+    "constant_branch": 11,
+    "constant_merge": 11,
+    "narrow_merge": 11,
+    "dynamic_merge": 21,
+    "changing_loop": 33
+  }
+}

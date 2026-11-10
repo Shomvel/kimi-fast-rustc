@@ -7,7 +7,7 @@
 
 use crate::analysis::memory::MemoryFacts;
 use crate::graph::{FunctionGraph, GraphLevel, GraphState, NodeId, Opcode};
-use crate::transforms::control::{conditions, simplify, thread_variants, variants};
+use crate::transforms::control::{conditions, sccp, simplify, thread_variants, variants};
 use crate::transforms::memory::{forward, observation, partition, promotion};
 use crate::transforms::scalar::{aggregate, division, gvn, instcombine, ranges, seam};
 pub use crate::transforms::utils::cfg::CfgEditError;
@@ -53,6 +53,9 @@ pub struct OptimizeStats {
     pub division_proof_visits: usize,
     pub branches_folded: usize,
     pub conditions_folded: usize,
+    pub sccp_constants: usize,
+    pub sccp_visits: usize,
+    pub sccp_budget_bailouts: usize,
     pub fact_queries: usize,
     pub fact_node_visits: usize,
     pub condition_receipts_checked: usize,
@@ -160,6 +163,7 @@ pub fn optimize_specialized_graph(
     let range_dirty = fold_range_conditions(graph, &mut stats);
     optimize_seeds(graph, &range_dirty, &mut stats);
     fold_scoped_conditions(graph, &mut stats)?;
+    propagate_constants(graph, &mut stats);
     let control = simplify::run(graph).map_err(PipelineError::Control)?;
     // Check the atomic CFG mutation before allowing another value transform.
     verify_pipeline_step(graph).map_err(PipelineError::Verification)?;
@@ -272,6 +276,14 @@ pub fn optimize_specialized_seams(
         stats.predecessor_edges_removed += control.predecessor_edges_removed;
         stats.nodes_removed += control.nodes_removed;
     }
+    let propagated = propagate_constants(graph, &mut stats);
+    if !propagated.is_empty() {
+        let control = simplify::run(graph).map_err(PipelineError::Control)?;
+        stats.branches_folded += control.branches_folded;
+        stats.predecessor_edges_removed += control.predecessor_edges_removed;
+        stats.nodes_removed += control.nodes_removed;
+        optimize_seeds(graph, &propagated, &mut stats);
+    }
     graph.compact();
     stats.nodes_after = graph.len();
     partition_memory(graph, &mut stats);
@@ -360,4 +372,12 @@ fn partition_memory(graph: &mut FunctionGraph, stats: &mut OptimizeStats) {
     stats.const_loads += partitions.const_loads;
     stats.memory_node_visits += partitions.node_visits;
     stats.memory_edge_visits += partitions.edge_visits;
+}
+
+fn propagate_constants(graph: &mut FunctionGraph, stats: &mut OptimizeStats) -> Vec<NodeId> {
+    let propagated = sccp::run(graph);
+    stats.sccp_constants += propagated.constants;
+    stats.sccp_visits += propagated.visits;
+    stats.sccp_budget_bailouts += propagated.budget_bailouts;
+    propagated.dirty
 }

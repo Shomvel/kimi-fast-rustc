@@ -7,3 +7,4 @@ pub mod memory;
 pub mod ranges;
 pub mod refinement;
 pub mod uses;
+pub(crate) mod known_bits;

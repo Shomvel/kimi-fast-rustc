@@ -1,0 +1,10 @@
+{
+  "llvm-SCCPSolver.cpp": {
+    "url": "https://github.com/llvm/llvm-project/blob/3623fe661ae35c6c80ac221f14d85be76aa870f1/llvm/lib/Transforms/Utils/SCCPSolver.cpp",
+    "sha256": "f39a4d9074f90d1028787781d2764bd2d3091fcdb68f77e410beabea4eee1658"
+  },
+  "llvm-KnownBits.h": {
+    "url": "https://github.com/llvm/llvm-project/blob/3623fe661ae35c6c80ac221f14d85be76aa870f1/llvm/include/llvm/Support/KnownBits.h",
+    "sha256": "8071ab685b878c1c3166d91c9d0ee02ba3b2785033383093ffc073b81a31f843"
+  }
+}

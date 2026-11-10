@@ -203,10 +203,22 @@ fn arithmetic_and_disjoint_contracts_block_reassociation() {
             let before = f.graph.clone();
             optimize_graph(&mut f.graph);
             verify_graph(&mut f.graph).unwrap();
-            assert_eq!(count(&f.graph, op), 2);
+            // Keep the original contract even if a redundant, unflagged outer
+            // mask can now disappear using known bits of the flagged result.
+            assert!(
+                f.graph
+                    .ids()
+                    .any(|n| f.graph.op(n) == op && f.graph.payload(n) == flag)
+            );
             for input in 0..=255 {
                 let args = [Value::Scalar(input)];
-                assert_eq!(run(&f.graph, &args), run(&before, &args));
+                match (run(&f.graph, &args), run(&before, &args)) {
+                    (
+                        Err(kfrc_son::InterpretError::PoisonObserved(_)),
+                        Err(kfrc_son::InterpretError::PoisonObserved(_)),
+                    ) => {}
+                    (after, before) => assert_eq!(after, before),
+                }
             }
         }
     }
@@ -247,4 +259,196 @@ fn splice_seams_apply_the_same_combination_rules() {
         run(&f.graph, &[Value::Scalar(30)]).unwrap(),
         SemanticOutcome::Return(Value::Scalar(42))
     );
+}
+
+#[test]
+fn known_bits_remove_shift_masks_without_discarding_poison() {
+    for op in [Opcode::ShiftLeft, Opcode::ShiftRightLogical] {
+        for width in [
+            IntegerWidth::W8,
+            IntegerWidth::W16,
+            IntegerWidth::W32,
+            IntegerWidth::W64,
+        ] {
+            let bits = width.bits(64);
+            let full = u64::MAX >> (64 - bits);
+            for amount in [0, 1, bits - 1, bits, bits + 1] {
+                let mut f = Function::new(width, false, 1);
+                let shift = f.constant(u64::from(amount));
+                let value = f.binary(op, f.args[0], shift, 0);
+                let k = amount % bits;
+                let mask = if op == Opcode::ShiftLeft {
+                    full.wrapping_shl(u32::from(k)) & full
+                } else {
+                    full >> k
+                };
+                let mask = f.constant(mask);
+                let result = f.binary(Opcode::BitAnd, value, mask, 0);
+                f.finish(result);
+                let original = f.graph.clone();
+                optimize_graph(&mut f.graph);
+                verify_graph(&mut f.graph).unwrap();
+                assert_eq!(count(&f.graph, Opcode::BitAnd), 0);
+                for input in [0, 1, 17, full / 2, full - 1, full] {
+                    assert_eq!(
+                        run(&f.graph, &[Value::Scalar(input)]),
+                        run(&original, &[Value::Scalar(input)])
+                    );
+                }
+                assert!(run(&original, &[Value::Poison]).is_err());
+                assert!(run(&f.graph, &[Value::Poison]).is_err());
+            }
+        }
+    }
+}
+
+#[test]
+fn known_bits_follow_bitwise_operations_and_preserve_shared_uses() {
+    for op in [
+        Opcode::BitAnd,
+        Opcode::BitOr,
+        Opcode::BitXor,
+        Opcode::BitNot,
+    ] {
+        let mut f = Function::new(IntegerWidth::W8, false, 1);
+        let low = f.constant(15);
+        let limited = f.binary(Opcode::BitAnd, f.args[0], low, 0);
+        let c = f.constant(3);
+        let value = if op == Opcode::BitNot {
+            f.graph
+                .add_node(op, NodeId::NONE, &[limited], 0, ValueType::Rust(f.ty))
+        } else {
+            f.binary(op, limited, c, 0)
+        };
+        let mask = f.constant(if op == Opcode::BitNot { 240 } else { 15 });
+        let masked = f.binary(
+            if op == Opcode::BitNot {
+                Opcode::BitOr
+            } else {
+                Opcode::BitAnd
+            },
+            value,
+            mask,
+            0,
+        );
+        let result = f.binary(Opcode::Sub, masked, value, 0);
+        f.finish(result);
+        let original = f.graph.clone();
+        optimize_graph(&mut f.graph);
+        verify_graph(&mut f.graph).unwrap();
+        assert_eq!(
+            count(&f.graph, Opcode::BitOr),
+            usize::from(op == Opcode::BitOr)
+        );
+        for n in 0..=255 {
+            assert_eq!(
+                run(&f.graph, &[Value::Scalar(n)]),
+                run(&original, &[Value::Scalar(n)])
+            );
+        }
+        assert!(run(&f.graph, &[Value::Poison]).is_err());
+    }
+}
+
+#[test]
+fn known_bits_distinguish_unsigned_extension_from_signed_extension() {
+    for signed in [false, true] {
+        let mut f = Function::new(IntegerWidth::W8, signed, 1);
+        let wide = f.graph.oracle.intern(
+            TypeShape::Int {
+                width: IntegerWidth::W64,
+                signed: false,
+            },
+            Some(SizeAlign { size: 8, align: 8 }),
+        );
+        let cast = f.graph.add_node(
+            Opcode::IntCast,
+            NodeId::NONE,
+            &[f.args[0]],
+            0,
+            ValueType::Rust(wide),
+        );
+        let mask = f.graph.add_constant(255, wide);
+        let masked = f.graph.add_node(
+            Opcode::BitAnd,
+            NodeId::NONE,
+            &[cast, mask],
+            0,
+            ValueType::Rust(wide),
+        );
+        f.finish(masked);
+        let original = f.graph.clone();
+        optimize_graph(&mut f.graph);
+        verify_graph(&mut f.graph).unwrap();
+        assert_eq!(count(&f.graph, Opcode::BitAnd), usize::from(signed));
+        for n in 0..=255 {
+            assert_eq!(
+                run(&f.graph, &[Value::Scalar(n)]),
+                run(&original, &[Value::Scalar(n)])
+            );
+        }
+        assert!(run(&f.graph, &[Value::Poison]).is_err());
+    }
+}
+
+#[test]
+fn known_bits_keep_invalid_shift_and_disjoint_observations() {
+    let mut f = Function::new(IntegerWidth::W8, false, 1);
+    let shift = f.constant(1);
+    let value = f.binary(Opcode::ShiftLeft, f.args[0], shift, ArithmeticFlags::NUW);
+    let mask = f.constant(254);
+    let masked = f.binary(Opcode::BitAnd, value, mask, 0);
+    f.finish(masked);
+    let original = f.graph.clone();
+    optimize_graph(&mut f.graph);
+    verify_graph(&mut f.graph).unwrap();
+    assert_eq!(count(&f.graph, Opcode::BitAnd), 0);
+    for n in 0..=255 {
+        let before = run(&original, &[Value::Scalar(n)]);
+        let after = run(&f.graph, &[Value::Scalar(n)]);
+        assert_eq!(before.is_err(), after.is_err());
+        if before.is_ok() {
+            assert_eq!(before, after);
+        }
+    }
+    let mut f = Function::new(IntegerWidth::W8, false, 1);
+    let low = f.constant(15);
+    let limited = f.binary(Opcode::BitAnd, f.args[0], low, 0);
+    let inverse = f.graph.add_node(
+        Opcode::BitNot,
+        NodeId::NONE,
+        &[limited],
+        0,
+        ValueType::Rust(f.ty),
+    );
+    let high = f.constant(240);
+    let result = f.binary(Opcode::BitOr, inverse, high, ArithmeticFlags::DISJOINT);
+    f.finish(result);
+    optimize_graph(&mut f.graph);
+    verify_graph(&mut f.graph).unwrap();
+    assert_eq!(count(&f.graph, Opcode::BitOr), 1);
+    assert!(run(&f.graph, &[Value::Scalar(0)]).is_err());
+}
+
+#[test]
+fn known_sign_bits_survive_arithmetic_right_shift() {
+    let mut f = Function::new(IntegerWidth::W8, true, 1);
+    let sign = f.constant(128);
+    let negative = f.binary(Opcode::BitOr, f.args[0], sign, 0);
+    let amount = f.constant(3);
+    let shifted = f.binary(Opcode::ShiftRightArithmetic, negative, amount, 0);
+    let high = f.constant(224);
+    let result = f.binary(Opcode::BitOr, shifted, high, 0);
+    f.finish(result);
+    let original = f.graph.clone();
+    optimize_graph(&mut f.graph);
+    verify_graph(&mut f.graph).unwrap();
+    assert_eq!(count(&f.graph, Opcode::BitOr), 1);
+    for n in 0..=255 {
+        assert_eq!(
+            run(&f.graph, &[Value::Scalar(n)]),
+            run(&original, &[Value::Scalar(n)])
+        );
+    }
+    assert!(run(&f.graph, &[Value::Poison]).is_err());
 }
