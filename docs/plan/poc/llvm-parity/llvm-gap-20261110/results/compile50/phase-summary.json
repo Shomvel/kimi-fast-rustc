@@ -1,0 +1,46 @@
+[
+  {
+    "crate": "semver",
+    "baseline": {
+      "backend_ms": 216.743762,
+      "instructions": 1477339873
+    },
+    "candidate": {
+      "backend_ms": 103.294976,
+      "instructions": 1490803099
+    }
+  },
+  {
+    "crate": "base64",
+    "baseline": {
+      "backend_ms": 142.882073,
+      "instructions": 1018969624
+    },
+    "candidate": {
+      "backend_ms": 97.916983,
+      "instructions": 1029109604
+    }
+  },
+  {
+    "crate": "unicode-segmentation",
+    "baseline": {
+      "backend_ms": 117.89659,
+      "instructions": 795255398
+    },
+    "candidate": {
+      "backend_ms": 79.449347,
+      "instructions": 807294407
+    }
+  },
+  {
+    "crate": "humantime",
+    "baseline": {
+      "backend_ms": 243.897122,
+      "instructions": 1920032214
+    },
+    "candidate": {
+      "backend_ms": 184.561301,
+      "instructions": 1757315936
+    }
+  }
+]

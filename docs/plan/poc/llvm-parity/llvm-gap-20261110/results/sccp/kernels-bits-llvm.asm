@@ -21,7 +21,7 @@ Disassembly of section .text.low_shift:
 
 0000000000000000 <low_shift>:
    0:	48 8d 04 fd 00 00 00 	lea    0x0(,%rdi,8),%rax
-   7:	00 
+   7:	00
    8:	c3                   	ret
 
 Disassembly of section .text.sign_shift:

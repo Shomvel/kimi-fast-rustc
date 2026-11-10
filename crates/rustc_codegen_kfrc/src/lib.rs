@@ -32,12 +32,14 @@ extern crate rustc_driver;
 
 mod abi;
 mod allocator;
+mod codegen;
 mod constants;
 mod convert;
 mod definitions;
 mod emission;
 mod enum_layout;
 mod inline_cost;
+mod parallel;
 mod permissions;
 mod profile;
 mod shell_entry;
@@ -57,7 +59,8 @@ use rustc_session::Session;
 use rustc_session::config::{CrateType, OutputFilenames, OutputType};
 use rustc_target::spec::PanicStrategy;
 
-use kfrc_x86::{FunctionCode, SymbolBinding};
+use codegen::CrateGraphs;
+use kfrc_x86::SymbolBinding;
 
 pub struct KfrcCodegenBackend;
 
@@ -108,6 +111,7 @@ impl CodegenBackend for KfrcCodegenBackend {
     }
 
     fn codegen_crate<'tcx>(&self, tcx: TyCtxt<'tcx>) -> Box<dyn Any> {
+        let threads = parallel::thread_limit().unwrap_or_else(|error| tcx.dcx().fatal(error));
         let measurement =
             profile::start_total(tcx.crate_name(rustc_hir::def_id::LOCAL_CRATE).as_str());
         let outputs = tcx.output_filenames(());
@@ -120,6 +124,9 @@ impl CodegenBackend for KfrcCodegenBackend {
         // only after optimized machine/data references prove them unreachable.
         let partition = tcx.collect_and_partition_mono_items(());
         let mut graphs = CrateGraphs::default();
+        let mut graph_jobs = Vec::new();
+        let mut graph_instances = Vec::new();
+        let mut graph_symbols = BTreeSet::new();
         let mut definitions = definitions::Definitions::default();
         let mut permission_totals = permissions::PermissionTotals::default();
         let mut adapters = BTreeMap::new();
@@ -129,7 +136,7 @@ impl CodegenBackend for KfrcCodegenBackend {
                     continue;
                 };
                 let symbol = tcx.symbol_name(instance).name.to_string();
-                if graphs.bodies.contains_key(&symbol) || adapters.contains_key(&symbol) {
+                if graph_symbols.contains(&symbol) || adapters.contains_key(&symbol) {
                     continue;
                 }
                 if let Some(adapter) = entry_plan.as_ref().and_then(|plan| {
@@ -144,14 +151,26 @@ impl CodegenBackend for KfrcCodegenBackend {
                 ) {
                     graphs.no_inline.insert(symbol.clone());
                 }
-                let graph = rustc_middle::ty::print::with_no_trimmed_paths!(build_instance_graph(
-                    tcx,
-                    instance,
-                    &mut definitions,
-                    &mut permission_totals
-                ));
-                graphs.bodies.insert(symbol, graph);
+                let graph = rustc_middle::ty::print::with_no_trimmed_paths!(
+                    prepare_instance_input(tcx, instance, &mut definitions, &mut permission_totals)
+                );
+                graph_symbols.insert(symbol);
+                graph_instances.push(instance);
+                graph_jobs.push(graph);
             }
+        }
+        for (instance, result) in graph_instances.into_iter().zip(parallel::map(
+            graph_jobs,
+            threads,
+            codegen::prepare_graph,
+        )) {
+            let graph = result.unwrap_or_else(|error| {
+                rustc_middle::ty::print::with_no_trimmed_paths!(tcx.dcx().fatal(format!(
+                    "kfrc: cannot compile `{instance}` ({}): {}",
+                    error.symbol, error.message
+                )))
+            });
+            graphs.bodies.insert(graph.symbol.clone(), graph);
         }
         definitions.report();
         permission_totals.report(tcx.crate_name(rustc_hir::def_id::LOCAL_CRATE).as_str());
@@ -172,6 +191,7 @@ impl CodegenBackend for KfrcCodegenBackend {
             }
         }
         graphs.collect_references();
+        let mut jobs = Vec::new();
         for cgu in partition.codegen_units {
             let available: BTreeSet<String> = cgu
                 .items_in_deterministic_order(tcx)
@@ -186,11 +206,6 @@ impl CodegenBackend for KfrcCodegenBackend {
                     _ => None,
                 })
                 .collect();
-            let provider = CguGraphs {
-                all: &graphs,
-                available: &available,
-            };
-            let mut functions = Vec::new();
             let mut data_objects: Vec<kfrc_body::DataObject> = Vec::new();
             let mut pending_functions = BTreeMap::new();
             let mut needed = BTreeSet::new();
@@ -215,7 +230,7 @@ impl CodegenBackend for KfrcCodegenBackend {
                         {
                             needed.insert(symbol.clone());
                         }
-                        pending_functions.insert(symbol, (instance, binding));
+                        pending_functions.insert(symbol, binding);
                     }
                     MonoItem::Static(def_id) => {
                         let binding = match (data.linkage, data.visibility) {
@@ -253,42 +268,54 @@ impl CodegenBackend for KfrcCodegenBackend {
                     MonoItem::GlobalAsm(_) => tcx.dcx().fatal("kfrc: global_asm! is not supported"),
                 }
             }
-            emission::data_references(&data_objects, &mut needed);
-            while let Some(symbol) = needed.pop_first() {
-                let Some((instance, binding)) = pending_functions.remove(&symbol) else {
-                    continue;
-                };
-                let (function, objects) = if let Some(adapter) = adapters.get(&symbol) {
-                    adapter.clone()
-                } else {
-                    rustc_middle::ty::print::with_no_trimmed_paths!(compile_instance_graph(
-                        tcx,
-                        instance,
-                        graphs.bodies[&symbol].clone(),
-                        &provider
-                    ))
-                };
-                emission::function_references(&function, &mut needed);
-                emission::data_references(&objects, &mut needed);
-                merge_data_objects(tcx, &mut data_objects, objects);
-                functions.push(FunctionCode { function, binding });
-            }
+            jobs.push(emission::CguJob {
+                available,
+                pending_functions,
+                needed,
+                data_objects,
+            });
+        }
+        let compiled = emission::compile(jobs, threads, &graphs, &adapters);
+        for (cgu, result) in partition.codegen_units.iter().zip(compiled) {
+            let mut compiled = result.unwrap_or_else(|error| {
+                let instance =
+                    cgu.items_in_deterministic_order(tcx)
+                        .into_iter()
+                        .find_map(|(item, _)| {
+                            if let MonoItem::Fn(instance) = item
+                                && tcx.symbol_name(instance).name == error.symbol
+                            {
+                                Some(instance)
+                            } else {
+                                None
+                            }
+                        });
+                rustc_middle::ty::print::with_no_trimmed_paths!({
+                    let context = instance
+                        .map(|instance| format!("`{instance}` ({})", error.symbol))
+                        .unwrap_or(error.symbol);
+                    tcx.dcx()
+                        .fatal(format!("kfrc: cannot compile {context}: {}", error.message))
+                })
+            });
             if std::env::var_os("KFRC_SPECIALIZATION_STATS").is_some() {
                 eprintln!(
                     "kfrc emission {}: functions={} internal_omitted={}",
                     cgu.name(),
-                    functions.len(),
-                    pending_functions.len()
+                    compiled.functions.len(),
+                    compiled.internal_omitted
                 );
             }
+            let functions = &mut compiled.functions;
+            let data_objects = &compiled.data_objects;
             if tcx.crate_types().contains(&CrateType::Executable) {
-                if let Some(wrapper) = shell_entry::entry_wrapper(tcx, cgu.is_primary(), &functions)
+                if let Some(wrapper) = shell_entry::entry_wrapper(tcx, cgu.is_primary(), functions)
                 {
                     functions.push(wrapper);
                 }
             }
             let bytes = profile::measure("object", cgu.name().as_str(), || {
-                kfrc_x86::write_object_with_data(&functions, &data_objects)
+                kfrc_x86::write_object_with_data(functions, data_objects)
             })
             .unwrap_or_else(|error| tcx.dcx().fatal(format!("kfrc: {error}")));
             let name = cgu.name().to_string();
@@ -370,292 +397,56 @@ fn merge_data_objects(
     }
 }
 
-#[derive(Default)]
-struct CrateGraphs {
-    bodies: BTreeMap<String, kfrc_son::FunctionGraph>,
-    no_inline: BTreeSet<String>,
-    internal: BTreeSet<String>,
-    references: BTreeMap<String, BTreeSet<String>>,
-    /// Direct call sites per callee, by calling function.
-    call_sites: BTreeMap<String, BTreeMap<String, usize>>,
-    /// Symbols referenced other than by a direct call.
-    address_taken: BTreeSet<String>,
-}
-
-impl CrateGraphs {
-    fn collect_references(&mut self) {
-        for (symbol, graph) in &self.bodies {
-            let mut references = BTreeSet::new();
-            for node in graph.ids() {
-                match graph.op(node) {
-                    kfrc_son::Opcode::Call => {
-                        let callee = &graph.callees[graph.payload(node) as usize].symbol;
-                        references.insert(callee.clone());
-                        *self
-                            .call_sites
-                            .entry(callee.clone())
-                            .or_default()
-                            .entry(symbol.clone())
-                            .or_default() += 1;
-                    }
-                    kfrc_son::Opcode::SymbolAddress => {
-                        let target = &graph.symbols[graph.payload(node) as usize].0;
-                        references.insert(target.clone());
-                        self.address_taken.insert(target.clone());
-                    }
-                    _ => {}
-                }
-            }
-            for object in &graph.data_objects {
-                for relocation in &object.relocations {
-                    references.insert(relocation.target.clone());
-                    self.address_taken.insert(relocation.target.clone());
-                }
-            }
-            self.references.insert(symbol.clone(), references);
-        }
-    }
-}
-
-/// Inlining must not create relocations to another object's local functions.
-/// Pure bodies remain available across CGUs; private symbol dependencies do not.
-struct CguGraphs<'a> {
-    all: &'a CrateGraphs,
-    available: &'a BTreeSet<String>,
-}
-
-impl kfrc_son::GraphProvider for CguGraphs<'_> {
-    fn graph(&self, symbol: &str) -> Option<&kfrc_son::FunctionGraph> {
-        if self.all.no_inline.contains(symbol)
-            || self.all.references.get(symbol).is_some_and(|references| {
-                references.iter().any(|reference| {
-                    self.all.internal.contains(reference) && !self.available.contains(reference)
-                })
-            })
-        {
-            None
-        } else {
-            self.all.bodies.get(symbol)
-        }
-    }
-
-    // Each CGU owns its copy of an internal function, so count its callers there.
-    fn sole_call_site(&self, symbol: &str) -> bool {
-        self.all.internal.contains(symbol)
-            && !self.all.address_taken.contains(symbol)
-            && self.all.call_sites.get(symbol).is_some_and(|callers| {
-                callers
-                    .iter()
-                    .filter(|(caller, _)| self.available.contains(*caller))
-                    .map(|(_, count)| count)
-                    .sum::<usize>()
-                    == 1
-            })
-    }
-}
-
-fn build_instance_graph<'tcx>(
+fn prepare_instance_input<'tcx>(
     tcx: TyCtxt<'tcx>,
     instance: Instance<'tcx>,
     definitions: &mut definitions::Definitions<'tcx>,
     permission_totals: &mut permissions::PermissionTotals,
-) -> kfrc_son::FunctionGraph {
+) -> codegen::GraphJob {
     let symbol = tcx.symbol_name(instance).name.to_string();
     let fail = |stage: &str, error: String| -> ! {
         tcx.dcx().fatal(format!(
             "kfrc: cannot compile `{instance}` ({symbol}): {stage}: {error}"
         ))
     };
-    let (mut graph, specialization_seeds) = match definitions.specialize(tcx, instance) {
-        Ok(Some(specialized)) => (
-            specialized.graph,
-            Some((specialized.dirty_nodes, specialized.local_slots)),
-        ),
+    let input = match definitions.specialize(tcx, instance) {
+        Ok(Some(specialized)) => codegen::GraphInput::Specialized {
+            graph: specialized.graph,
+            dirty_nodes: specialized.dirty_nodes,
+            local_slots: specialized.local_slots,
+        },
         Ok(None) => {
             let body = convert::convert_instance(tcx, instance)
                 .unwrap_or_else(|error| fail("MIR conversion", error));
             if std::env::var_os("KFRC_DUMP_BODY").is_some() {
                 eprintln!("{body}");
             }
-            let graph = profile::measure("build", &symbol, || kfrc_son::build_graph(&body))
-                .unwrap_or_else(|error| fail("SoN construction", error.to_string()));
-            (graph, None)
+            codegen::GraphInput::Body(body)
         }
         Err(error) => fail("definition specialization", error),
     };
     // RS5.1: R carries no permissions; the S instance receives them here,
     // before its first optimization, from the instance's own rustc types.
-    if permissions::enabled().unwrap_or_else(|error| fail("argument permissions", error)) {
-        let (arguments, calls) = profile::measure("permissions_s", &symbol, || {
-            (
-                permissions::definition_permissions(tcx, instance, permission_totals),
-                permissions::callee_permissions(tcx, instance),
-            )
-        });
-        graph.arg_permissions =
-            arguments.unwrap_or_else(|error| fail("argument permissions", error));
-        graph.callee_permissions = calls
-            .unwrap_or_else(|error| fail("call permissions", error))
-            .into_iter()
-            .filter(|(symbol, _)| graph.callees.iter().any(|target| &target.symbol == symbol))
-            .collect();
-    }
-    profile::measure("verify_s_input", &symbol, || {
-        kfrc_son::verify_graph(&mut graph)
-    })
-    .unwrap_or_else(|error| {
-        fail(
-            "semantic verification",
-            format!("{error}\n{}", graph.dump()),
-        )
-    });
-    if std::env::var_os("KFRC_DUMP_GRAPH").is_some() {
-        eprintln!("kfrc semantic input {symbol}:\n{}", graph.dump());
-    }
-    // R has already optimized the unchanged definition. Only substitutions,
-    // pruned control and type-dependent users seed its instance's scalar work.
-    // Concrete Body input has no prepared R and needs the full S pipeline.
-    // Both paths cache their simplified source once for all inline consumers.
-    if std::env::var("KFRC_OPTIMIZE").as_deref() != Ok("0") {
-        let stats = profile::measure("optimize_s", &symbol, || match specialization_seeds {
-            Some((dirty_nodes, local_slots)) => {
-                kfrc_son::optimize_specialized_seams(&mut graph, &dirty_nodes, &local_slots)
-            }
-            None => kfrc_son::optimize_specialized_graph(&mut graph),
-        })
-        .unwrap_or_else(|error| fail("semantic optimization", error.to_string()));
-        if std::env::var_os("KFRC_DUMP_GRAPH").is_some() {
-            eprintln!("kfrc optimization {symbol}: {stats:?}");
-        }
-    }
-    graph
-}
-
-fn compile_instance_graph<'tcx>(
-    tcx: TyCtxt<'tcx>,
-    instance: Instance<'tcx>,
-    mut graph: kfrc_son::FunctionGraph,
-    provider: &CguGraphs<'_>,
-) -> (kfrc_x86::MachineFunction, Vec<kfrc_body::DataObject>) {
-    let symbol = graph.symbol.clone();
-    let fail = |stage: &str, error: String| -> ! {
-        tcx.dcx().fatal(format!(
-            "kfrc: cannot compile `{instance}` ({symbol}): {stage}: {error}"
-        ))
-    };
-    if std::env::var("KFRC_OPTIMIZE").as_deref() != Ok("0") {
-        let identities = profile::measure("identity_s", &symbol, || {
-            kfrc_son::fold_identity_calls(&mut graph, provider, None)
-        })
-        .unwrap_or_else(|error| fail("identity call simplification", error.to_string()));
-        let mut changed = identities.calls_folded > 0;
-        let mut dirty_nodes = identities.dirty_nodes.clone();
-        let mut argument_slots = identities.argument_slots.clone();
-        if std::env::var_os("KFRC_DUMP_GRAPH").is_some() {
-            eprintln!("kfrc identity simplification {symbol}: {identities:?}");
-        }
-        if std::env::var("KFRC_INLINE").as_deref() != Ok("0") {
-            // Inlining retains node identities. Only its new call sites need
-            // another identity-summary query; pre-existing calls were checked.
-            let before_inline = graph.len();
-            let cost_policy = inline_cost::policy()
-                .unwrap_or_else(|error| fail("inline cost configuration", error));
-            let inlined = profile::measure("inline_s", &symbol, || {
-                kfrc_son::inline_calls_with_cost(
-                    &mut graph, provider, kfrc_son::InlineBudget::default(),
-                    cost_policy, &kfrc_son::analysis::cost::GenericCostModel,
+    let permissions =
+        if permissions::enabled().unwrap_or_else(|error| fail("argument permissions", error)) {
+            let (arguments, calls) = profile::measure("permissions_s", &symbol, || {
+                (
+                    permissions::definition_permissions(tcx, instance, permission_totals),
+                    permissions::callee_permissions(tcx, instance),
                 )
+            });
+            Some(codegen::Permissions {
+                arguments: arguments.unwrap_or_else(|error| fail("argument permissions", error)),
+                calls: calls.unwrap_or_else(|error| fail("call permissions", error)),
             })
-            .unwrap_or_else(|error| fail("semantic inlining", error.to_string()));
-            inline_cost::report(&symbol, &inlined);
-            if inlined.calls_inlined > 0 {
-                changed = true;
-                dirty_nodes.extend_from_slice(&inlined.dirty_nodes);
-                argument_slots.extend_from_slice(&inlined.argument_slots);
-                let new_calls: Vec<_> = (before_inline..graph.len())
-                    .map(|index| kfrc_son::NodeId(index as u32))
-                    .filter(|node| {
-                        !graph.is_dead(*node) && graph.op(*node) == kfrc_son::Opcode::Call
-                    })
-                    .collect();
-                if !new_calls.is_empty() {
-                    let nested = profile::measure("post_inline_identity_s", &symbol, || {
-                        kfrc_son::fold_identity_calls(&mut graph, provider, Some(&new_calls))
-                    })
-                    .unwrap_or_else(|error| {
-                        fail("nested identity simplification", error.to_string())
-                    });
-                    dirty_nodes.extend_from_slice(&nested.dirty_nodes);
-                    argument_slots.extend_from_slice(&nested.argument_slots);
-                    if std::env::var_os("KFRC_DUMP_GRAPH").is_some() {
-                        eprintln!("kfrc nested identity simplification {symbol}: {nested:?}");
-                    }
-                }
-            }
-            if std::env::var_os("KFRC_DUMP_GRAPH").is_some() {
-                eprintln!("kfrc inlining {symbol}: {inlined:?}");
-            }
-        }
-        if changed {
-            let seams = profile::measure("post_inline_optimize_s", &symbol, || {
-                kfrc_son::optimize_specialized_seams(&mut graph, &dirty_nodes, &argument_slots)
-            })
-            .unwrap_or_else(|error| fail("call seam optimization", error.to_string()));
-            if std::env::var_os("KFRC_DUMP_GRAPH").is_some() {
-                eprintln!("kfrc seam optimization {symbol}: {seams:?}");
-            }
-        }
-    }
-    profile::measure("verify_s_output", &symbol, || {
-        kfrc_son::verify_graph(&mut graph)
-    })
-    .unwrap_or_else(|error| fail("verification", format!("{error}\n{}", graph.dump())));
-    if std::env::var_os("KFRC_DUMP_GRAPH").is_some() {
-        eprintln!("{}", graph.dump());
-    }
-    // `KFRC_INTERPRET=<symbol substring>=<arg>,<arg>`: run the reference
-    // interpreter on the verified graph to separate graph bugs from
-    // lowering bugs.
-    if let Ok(request) = std::env::var("KFRC_INTERPRET")
-        && let Some((pattern, arguments)) = request.split_once('=')
-        && symbol.contains(pattern)
-    {
-        let arguments: Vec<u64> = arguments
-            .split(',')
-            .filter(|text| !text.is_empty())
-            .map(|text| {
-                text.trim()
-                    .parse::<i128>()
-                    .map(|value| value as u64)
-                    .unwrap_or(0)
-            })
-            .collect();
-        let values: Vec<_> = arguments
-            .iter()
-            .copied()
-            .map(kfrc_son::Value::Scalar)
-            .collect();
-        let mut no_calls = |callee: &str, _: &[kfrc_son::Value]| {
-            Err(kfrc_son::InterpretError::UnknownCallee(callee.to_owned()))
+        } else {
+            None
         };
-        let outcome = kfrc_son::Interpreter::new(&graph).run_values(&values, &mut no_calls);
-        eprintln!("kfrc semantic interpret {symbol}{arguments:?} = {outcome:?}");
+    codegen::GraphJob {
+        symbol,
+        input,
+        permissions,
     }
-    let layout_stats = profile::measure("layout", &symbol, || kfrc_son::lower_layout(&mut graph))
-        .unwrap_or_else(|error| fail("layout lowering", error.to_string()));
-    if std::env::var_os("KFRC_DUMP_GRAPH").is_some()
-        || std::env::var_os("KFRC_SPECIALIZATION_STATS").is_some()
-    {
-        eprintln!("kfrc layout statistics {symbol}: {layout_stats:?}");
-    }
-    profile::measure("verify_l", &symbol, || kfrc_son::verify_graph(&mut graph))
-        .unwrap_or_else(|error| fail("layout verification", format!("{error}\n{}", graph.dump())));
-    if std::env::var_os("KFRC_DUMP_GRAPH").is_some() {
-        eprintln!("kfrc layout output {symbol}:\n{}", graph.dump());
-    }
-    let function = profile::measure("x86", &symbol, || kfrc_x86::lower_function(&graph))
-        .unwrap_or_else(|error| fail("x86 lowering", error.to_string()));
-    (function, graph.data_objects)
 }
 
 /// Entry point looked up by rustc for `-Zcodegen-backend=<path>`.
