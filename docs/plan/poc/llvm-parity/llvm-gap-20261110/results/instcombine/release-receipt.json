@@ -1,0 +1,28 @@
+{
+  "archive": "/Users/shom/Downloads/kfrc-instcombine-20261110/evidence.tar.gz",
+  "sha256": "aa9c53a0691a21d1286a2634424aafd8daa794c418cbbe6c768e509aedc99ffc",
+  "bytes": 113648577,
+  "verified_files": 4186,
+  "verified_at": "2026-11-10T05:08:55.868534+00:00",
+  "sandbox": {
+    "sandbox_id": "i8gu8esap92nljgqiuh7h",
+    "template": "mirx-rust1941-linux",
+    "lease_seconds": 14400,
+    "created_at": 1794285524.3485508,
+    "killed": true,
+    "killed_at": 1794287351.847583
+  },
+  "source": {
+    "base": "e3c6295",
+    "files": {
+      "crates/kfrc-son/src/transforms/scalar/instcombine.rs": "830f07b46920d74a414cdde66bcee516eb2a34c210fb182aef088b299f13e6be",
+      "crates/kfrc-son/src/transforms/scalar/gvn.rs": "e6df7e144764eb7f5c940c0f98a741a23d74512ff2b111215d7d44a6560b41da",
+      "crates/kfrc-son/tests/semantic_instcombine.rs": "5d5e196852b7b79f8083efcbde0b69e919467b7fe2783a167b51e6f82821f1e2"
+    }
+  },
+  "local_workspace": {
+    "passed": 804,
+    "ignored": 1,
+    "log_sha256": "1d564f65dcd000ff7e2702367bae296fc246bb5e5053e51c5f2ffd6a73cc43b1"
+  }
+}

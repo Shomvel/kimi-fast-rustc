@@ -10,7 +10,7 @@
 //! whose proof point is dominated by an equal proof's point is that proof:
 //! the subject is an immutable SSA value, so the dominating proof holds there.
 
-use kfrc_body::fx_hash::HashMap;
+use kfrc_body::{TypeOracle, TypeShape, fx_hash::HashMap};
 
 use crate::analysis::cfg::ControlFlow;
 use crate::analysis::dominators::Dominators;
@@ -43,6 +43,26 @@ pub(crate) fn run(graph: &mut FunctionGraph) -> GvnStats {
             continue;
         }
         let constant = (graph.op(node) == Opcode::Const).then(|| graph.constant_value(node));
+        let mut inputs: Vec<_> = graph
+            .inputs(node)
+            .iter()
+            .map(|&input| graph.resolve(input))
+            .collect();
+        // Compare commutative integer expressions without changing the operand
+        // order used by instruction selection and tied-register allocation.
+        if matches!(
+            graph.op(node),
+            Opcode::Add | Opcode::Mul | Opcode::BitAnd | Opcode::BitOr | Opcode::BitXor
+        ) && graph.payload(node) == 0
+            && graph.rust_type(node).is_some_and(|ty| {
+                matches!(
+                    graph.oracle.shape(ty),
+                    TypeShape::Int { .. } | TypeShape::Bool
+                )
+            })
+        {
+            inputs.sort_unstable();
+        }
         let expression = Expression {
             opcode: graph.op(node),
             ty: graph.value_type(node).clone(),
@@ -52,11 +72,7 @@ pub(crate) fn run(graph: &mut FunctionGraph) -> GvnStats {
                 graph.payload(node)
             },
             constant,
-            inputs: graph
-                .inputs(node)
-                .iter()
-                .map(|&input| graph.resolve(input))
-                .collect(),
+            inputs,
         };
         if let Some(&existing) = expressions.get(&expression) {
             graph.replace(node, existing);

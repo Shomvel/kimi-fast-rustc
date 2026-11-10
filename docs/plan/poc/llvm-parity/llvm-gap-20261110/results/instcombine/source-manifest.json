@@ -1,0 +1,8 @@
+{
+  "base": "e3c6295",
+  "files": {
+    "crates/kfrc-son/src/transforms/scalar/instcombine.rs": "830f07b46920d74a414cdde66bcee516eb2a34c210fb182aef088b299f13e6be",
+    "crates/kfrc-son/src/transforms/scalar/gvn.rs": "e6df7e144764eb7f5c940c0f98a741a23d74512ff2b111215d7d44a6560b41da",
+    "crates/kfrc-son/tests/semantic_instcombine.rs": "5d5e196852b7b79f8083efcbde0b69e919467b7fe2783a167b51e6f82821f1e2"
+  }
+}

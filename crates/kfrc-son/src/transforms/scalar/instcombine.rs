@@ -23,20 +23,13 @@ pub(crate) fn run(graph: &mut FunctionGraph) -> InstCombineStats {
         let mut changed = false;
         let nodes: Vec<_> = graph.ids().collect();
         for node in nodes {
-            let Some(ty) = graph.rust_type(node) else {
-                continue;
-            };
-            let Some(result) = integer(graph, ty) else {
-                continue;
-            };
-            if let Some(bits) = fold(graph, node, result) {
-                let replacement = graph.add_constant(u128::from(result.normalize(bits)), ty);
+            if let Some((replacement, constant)) = rewrite(graph, node) {
                 graph.replace(node, replacement);
-                stats.constants_folded += 1;
-                changed = true;
-            } else if let Some(replacement) = identity(graph, node, ty, result) {
-                graph.replace(node, replacement);
-                stats.identities_simplified += 1;
+                if constant {
+                    stats.constants_folded += 1;
+                } else {
+                    stats.identities_simplified += 1;
+                }
                 changed = true;
             }
         }
@@ -64,8 +57,82 @@ pub(super) fn rewrite(graph: &mut FunctionGraph, node: NodeId) -> Option<(NodeId
             true,
         ))
     } else {
-        identity(graph, node, ty, result).map(|replacement| (replacement, false))
+        identity(graph, node, ty, result)
+            .or_else(|| combine(graph, node, ty, result))
+            .map(|replacement| (replacement, false))
     }
+}
+
+/// Canonicalize the associative, commutative integer operations. Reassociation
+/// retains the possibly-poisoned operand and never duplicates its computation.
+/// The shared inner value is left intact for any other consumers.
+fn combine(graph: &mut FunctionGraph, node: NodeId, ty: TyId, scalar: Integer) -> Option<NodeId> {
+    use Opcode::*;
+    let op = graph.op(node);
+    if !matches!(op, Add | Mul | BitAnd | BitOr | BitXor)
+        || !matches!(
+            graph.oracle.shape(ty),
+            TypeShape::Int { .. } | TypeShape::Bool
+        )
+        || graph.payload(node) != 0
+        || !graph.control(node).is_none()
+    {
+        return None;
+    }
+    let left = graph.resolve(graph.input(node, 0));
+    let right = graph.resolve(graph.input(node, 1));
+    let a = constant(graph, left);
+    let b = constant(graph, right);
+    let outer = match (a, b) {
+        (None, Some(bits)) => Some((left, bits)),
+        (Some(bits), None) => Some((right, bits)),
+        _ => None,
+    };
+    if let Some((inner, outer_bits)) = outer
+        && graph.op(inner) == op
+        && graph.payload(inner) == 0
+        && graph.control(inner).is_none()
+        && graph.rust_type(inner) == Some(ty)
+    {
+        let x = graph.resolve(graph.input(inner, 0));
+        let y = graph.resolve(graph.input(inner, 1));
+        let pair = match (constant(graph, x), constant(graph, y)) {
+            (None, Some(bits)) => Some((x, bits)),
+            (Some(bits), None) => Some((y, bits)),
+            _ => None,
+        };
+        if let Some((value, inner_bits)) = pair {
+            let bits = scalar.normalize(match op {
+                Add => inner_bits.wrapping_add(outer_bits),
+                Mul => inner_bits.wrapping_mul(outer_bits),
+                BitAnd => inner_bits & outer_bits,
+                BitOr => inner_bits | outer_bits,
+                BitXor => inner_bits ^ outer_bits,
+                _ => unreachable!(),
+            });
+            let constant = graph.add_constant(u128::from(bits), ty);
+            return Some(graph.add_node(
+                op,
+                NodeId::NONE,
+                &[value, constant],
+                0,
+                graph.value_type(node).clone(),
+            ));
+        }
+    }
+    // Constants go on the right for instruction selection. General commutative
+    // matching belongs in GVN's key: reordering unrelated values here can
+    // perturb tied-register allocation without removing any computation.
+    let swap = a.is_some() && b.is_none();
+    swap.then(|| {
+        graph.add_node(
+            op,
+            NodeId::NONE,
+            &[right, left],
+            0,
+            graph.value_type(node).clone(),
+        )
+    })
 }
 
 impl Integer {
