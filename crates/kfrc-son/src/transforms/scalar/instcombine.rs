@@ -23,20 +23,13 @@ pub(crate) fn run(graph: &mut FunctionGraph) -> InstCombineStats {
         let mut changed = false;
         let nodes: Vec<_> = graph.ids().collect();
         for node in nodes {
-            let Some(ty) = graph.rust_type(node) else {
-                continue;
-            };
-            let Some(result) = integer(graph, ty) else {
-                continue;
-            };
-            if let Some(bits) = fold(graph, node, result) {
-                let replacement = graph.add_constant(u128::from(result.normalize(bits)), ty);
+            if let Some((replacement, constant)) = rewrite(graph, node) {
                 graph.replace(node, replacement);
-                stats.constants_folded += 1;
-                changed = true;
-            } else if let Some(replacement) = identity(graph, node, ty, result) {
-                graph.replace(node, replacement);
-                stats.identities_simplified += 1;
+                if constant {
+                    stats.constants_folded += 1;
+                } else {
+                    stats.identities_simplified += 1;
+                }
                 changed = true;
             }
         }
@@ -58,14 +51,122 @@ struct Integer {
 pub(super) fn rewrite(graph: &mut FunctionGraph, node: NodeId) -> Option<(NodeId, bool)> {
     let ty = graph.rust_type(node)?;
     let result = integer(graph, ty)?;
-    if let Some(bits) = fold(graph, node, result) {
+    if let Some(bits) = fold(graph, node) {
         Some((
             graph.add_constant(u128::from(result.normalize(bits)), ty),
             true,
         ))
     } else {
-        identity(graph, node, ty, result).map(|replacement| (replacement, false))
+        identity(graph, node, ty, result)
+            .or_else(|| combine(graph, node, ty, result))
+            .or_else(|| redundant_mask(graph, node, ty, result))
+            .map(|replacement| (replacement, false))
     }
+}
+
+/// Canonicalize the associative, commutative integer operations. Reassociation
+/// retains the possibly-poisoned operand and never duplicates its computation.
+/// The shared inner value is left intact for any other consumers.
+fn combine(graph: &mut FunctionGraph, node: NodeId, ty: TyId, scalar: Integer) -> Option<NodeId> {
+    use Opcode::*;
+    let op = graph.op(node);
+    if !matches!(op, Add | Mul | BitAnd | BitOr | BitXor)
+        || !matches!(
+            graph.oracle.shape(ty),
+            TypeShape::Int { .. } | TypeShape::Bool
+        )
+        || graph.payload(node) != 0
+        || !graph.control(node).is_none()
+    {
+        return None;
+    }
+    let left = graph.resolve(graph.input(node, 0));
+    let right = graph.resolve(graph.input(node, 1));
+    let a = constant(graph, left);
+    let b = constant(graph, right);
+    let outer = match (a, b) {
+        (None, Some(bits)) => Some((left, bits)),
+        (Some(bits), None) => Some((right, bits)),
+        _ => None,
+    };
+    if let Some((inner, outer_bits)) = outer
+        && graph.op(inner) == op
+        && graph.payload(inner) == 0
+        && graph.control(inner).is_none()
+        && graph.rust_type(inner) == Some(ty)
+    {
+        let x = graph.resolve(graph.input(inner, 0));
+        let y = graph.resolve(graph.input(inner, 1));
+        let pair = match (constant(graph, x), constant(graph, y)) {
+            (None, Some(bits)) => Some((x, bits)),
+            (Some(bits), None) => Some((y, bits)),
+            _ => None,
+        };
+        if let Some((value, inner_bits)) = pair {
+            let bits = scalar.normalize(match op {
+                Add => inner_bits.wrapping_add(outer_bits),
+                Mul => inner_bits.wrapping_mul(outer_bits),
+                BitAnd => inner_bits & outer_bits,
+                BitOr => inner_bits | outer_bits,
+                BitXor => inner_bits ^ outer_bits,
+                _ => unreachable!(),
+            });
+            let constant = graph.add_constant(u128::from(bits), ty);
+            return Some(graph.add_node(
+                op,
+                NodeId::NONE,
+                &[value, constant],
+                0,
+                graph.value_type(node).clone(),
+            ));
+        }
+    }
+    // Constants go on the right for instruction selection. General commutative
+    // matching belongs in GVN's key: reordering unrelated values here can
+    // perturb tied-register allocation without removing any computation.
+    let swap = a.is_some() && b.is_none();
+    swap.then(|| {
+        graph.add_node(
+            op,
+            NodeId::NONE,
+            &[right, left],
+            0,
+            graph.value_type(node).clone(),
+        )
+    })
+}
+
+/// A redundant mask may be removed even if its input is poison: keep the
+/// original input, including its flags, control dependencies and observation.
+fn redundant_mask(
+    graph: &FunctionGraph,
+    node: NodeId,
+    ty: TyId,
+    scalar: Integer,
+) -> Option<NodeId> {
+    if !matches!(graph.op(node), Opcode::BitAnd | Opcode::BitOr)
+        || graph.payload(node) != 0
+        || !graph.control(node).is_none()
+    {
+        return None;
+    }
+    let left = graph.resolve(graph.input(node, 0));
+    let right = graph.resolve(graph.input(node, 1));
+    let (value, mask) = if let Some(mask) = constant(graph, right) {
+        (left, mask)
+    } else {
+        (right, constant(graph, left)?)
+    };
+    if graph.rust_type(value) != Some(ty) {
+        return None;
+    }
+    let known = crate::analysis::known_bits::of(graph, value)?;
+    let redundant = match graph.op(node) {
+        Opcode::BitAnd => (!mask & scalar.mask()) & !known.zero == 0,
+        Opcode::BitOr => mask & !known.one == 0,
+        _ => unreachable!(),
+    };
+    redundant.then_some(value)
 }
 
 impl Integer {
@@ -99,7 +200,7 @@ fn integer(graph: &FunctionGraph, ty: TyId) -> Option<Integer> {
     }
 }
 
-fn constant(graph: &FunctionGraph, node: NodeId) -> Option<u64> {
+pub(crate) fn constant(graph: &FunctionGraph, node: NodeId) -> Option<u64> {
     let node = graph.resolve(node);
     if graph.op(node) != Opcode::Const {
         return None;
@@ -108,7 +209,36 @@ fn constant(graph: &FunctionGraph, node: NodeId) -> Option<u64> {
     Some(scalar.normalize(graph.constant_value(node) as u64))
 }
 
-fn fold(graph: &FunctionGraph, node: NodeId, result: Integer) -> Option<u64> {
+fn fold(graph: &FunctionGraph, node: NodeId) -> Option<u64> {
+    evaluate(graph, node, |input| constant(graph, input))
+}
+
+pub(crate) fn supports_evaluation(op: Opcode) -> bool {
+    use Opcode::*;
+    op.integer_intrinsic_arity().is_some()
+        || matches!(
+            op,
+            Add | Sub
+                | Mul
+                | BitAnd
+                | BitOr
+                | BitXor
+                | ShiftLeft
+                | ShiftRightArithmetic
+                | ShiftRightLogical
+                | Negate
+                | BitNot
+                | IntCast
+                | Compare
+        )
+}
+
+pub(crate) fn evaluate(
+    graph: &FunctionGraph,
+    node: NodeId,
+    constant: impl Fn(NodeId) -> Option<u64>,
+) -> Option<u64> {
+    let result = integer(graph, graph.rust_type(node)?)?;
     use Opcode::*;
     let op = graph.op(node);
     if op.integer_intrinsic_arity().is_some() {
@@ -116,7 +246,7 @@ fn fold(graph: &FunctionGraph, node: NodeId, result: Integer) -> Option<u64> {
         let source = integer(graph, graph.rust_type(inputs[0])?)?;
         let values = inputs
             .iter()
-            .map(|&input| constant(graph, input))
+            .map(|&input| constant(input))
             .collect::<Option<Vec<_>>>()?;
         let (value, poison) = crate::intrinsic::evaluate(
             op,
@@ -127,28 +257,14 @@ fn fold(graph: &FunctionGraph, node: NodeId, result: Integer) -> Option<u64> {
         );
         return (!poison).then_some(value);
     }
-    if !matches!(
-        op,
-        Add | Sub
-            | Mul
-            | BitAnd
-            | BitOr
-            | BitXor
-            | ShiftLeft
-            | ShiftRightArithmetic
-            | ShiftRightLogical
-            | Negate
-            | BitNot
-            | IntCast
-            | Compare
-    ) {
+    if !supports_evaluation(op) {
         return None;
     }
     let inputs = graph.inputs(node);
     let source = integer(graph, graph.rust_type(graph.resolve(*inputs.first()?))?)?;
-    let a = constant(graph, inputs[0])?;
+    let a = constant(inputs[0])?;
     let b = if inputs.len() == 2 {
-        constant(graph, inputs[1])?
+        constant(inputs[1])?
     } else {
         0
     };
@@ -197,6 +313,13 @@ fn fold(graph: &FunctionGraph, node: NodeId, result: Integer) -> Option<u64> {
 
 fn identity(graph: &FunctionGraph, node: NodeId, ty: TyId, scalar: Integer) -> Option<NodeId> {
     use Opcode::*;
+    if graph.op(node) == BitNot {
+        let inner = graph.resolve(graph.input(node, 0));
+        if graph.op(inner) == BitNot {
+            let original = graph.resolve(graph.input(inner, 0));
+            return (graph.rust_type(original) == Some(ty)).then_some(original);
+        }
+    }
     let inputs = graph.inputs(node);
     if matches!(graph.op(node), ByteSwap | BitReverse) {
         let inner = graph.resolve(inputs[0]);

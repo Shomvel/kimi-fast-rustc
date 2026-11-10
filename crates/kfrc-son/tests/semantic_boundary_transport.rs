@@ -47,6 +47,15 @@ fn fixture(observe_duplicate: bool, cyclic: bool) -> FunctionGraph {
 }
 
 fn fixture_with_raw_field(observe_duplicate: bool, cyclic: bool, raw_field: bool) -> FunctionGraph {
+    fixture_with_field_kind(observe_duplicate, cyclic, raw_field, false)
+}
+
+fn fixture_with_field_kind(
+    observe_duplicate: bool,
+    cyclic: bool,
+    raw_field: bool,
+    scalar_product: bool,
+) -> FunctionGraph {
     let mut types = RecordedTypes::new();
     let word = types.intern(
         TypeShape::Int {
@@ -101,6 +110,31 @@ fn fixture_with_raw_field(observe_duplicate: bool, cyclic: bool, raw_field: bool
             }],
         ],
     );
+    let nested = if scalar_product {
+        let pair = types.intern(
+            TypeShape::Tuple(vec![small, small]),
+            Some(SizeAlign { size: 8, align: 4 }),
+        );
+        types.record_aggregate(
+            pair,
+            AggregateLayout {
+                fields: vec![
+                    FieldLayout {
+                        ty: small,
+                        offset: 0,
+                    },
+                    FieldLayout {
+                        ty: small,
+                        offset: 4,
+                    },
+                ],
+                variants: vec![],
+            },
+        );
+        pair
+    } else {
+        nested
+    };
     let outer = enumeration(
         &mut types,
         "Outer",
@@ -397,6 +431,13 @@ fn check(mut graph: FunctionGraph, expected_captures: usize) {
 fn direct_call_subfield_is_captured_once_and_nested_variant_bytes_survive() {
     check(fixture(false, false), 1);
 }
+
+#[test]
+fn small_scalar_product_returns_without_a_boundary_snapshot() {
+    // The same 8-byte ABI field as the nested-enum test, but two scalar lanes:
+    // preserve both lane values without introducing owned temporary storage.
+    check(fixture_with_field_kind(false, false, false, true), 0);
+}
 #[test]
 fn any_observed_duplicate_extractor_disables_the_entire_field_certificate() {
     check(fixture(true, false), 0);
@@ -409,4 +450,121 @@ fn whole_function_control_cycle_disables_boundary_snapshot_transport() {
 #[test]
 fn nested_maybe_uninit_subtree_keeps_existing_raw_snapshot_semantics() {
     check(fixture_with_raw_field(false, false, true), 0);
+}
+
+#[test]
+fn complete_constructor_can_be_passed_to_call_and_returned_again() {
+    let mut g = fixture(false, false);
+    let returns: Vec<_> = g.ids().filter(|&n| g.op(n) == Opcode::Return).collect();
+    let unit = g
+        .oracle
+        .intern(TypeShape::Unit, Some(SizeAlign { size: 0, align: 1 }));
+    let target = g.add_callee(CallTarget {
+        symbol: "consume".into(),
+        abi: FunctionAbi {
+            args: vec![PassMode::Pair],
+            ret: PassMode::Ignore,
+            c_variadic: false,
+        },
+    });
+    for ret in returns {
+        let result = g.input(ret, 1);
+        let call = g.add_node(
+            Opcode::Call,
+            g.control(ret),
+            &[g.input(ret, 0), result],
+            target,
+            ValueType::Tuple(vec![
+                ValueType::Control,
+                ValueType::Effect,
+                ValueType::Rust(unit),
+            ]),
+        );
+        let control = g.add_node(
+            Opcode::Projection,
+            NodeId::NONE,
+            &[call],
+            0,
+            ValueType::Control,
+        );
+        let effect = g.add_node(
+            Opcode::Projection,
+            NodeId::NONE,
+            &[call],
+            1,
+            ValueType::Effect,
+        );
+        g.set_control(ret, control);
+        g.set_input(ret, 0, effect);
+    }
+    verify_graph(&mut g).unwrap();
+    let stats = lower_layout(&mut g).unwrap();
+    verify_graph(&mut g).unwrap();
+    assert_eq!(stats.transported_boundary_fields, 1);
+    struct Consumer {
+        expected: (u64, u64),
+        calls: usize,
+    }
+    impl CallHandler for Consumer {
+        fn call(&mut self, name: &str, args: &[u64]) -> Result<u64, InterpretError> {
+            assert_eq!(name, "consume");
+            assert_eq!(args, &[self.expected.0, self.expected.1]);
+            self.calls += 1;
+            Ok(0)
+        }
+        fn call_pair(&mut self, name: &str, args: &[u64]) -> Result<(u64, u64), InterpretError> {
+            Calls.call_pair(name, args)
+        }
+    }
+    for (input, expected) in [(0, (0, 123)), (1, (1, 0)), (2, (1, (987 << 32) | 1))] {
+        let mut consumer = Consumer { expected, calls: 0 };
+        assert_eq!(
+            Interpreter::new(&g).run(&[input], &mut consumer).unwrap(),
+            Outcome::ReturnPair(expected.0, expected.1)
+        );
+        assert_eq!(consumer.calls, 1);
+    }
+}
+
+#[test]
+fn parameter_subfields_use_the_same_immutable_snapshot_contract() {
+    let mut g = fixture(false, false);
+    let source = g.ids().find(|&n| g.op(n) == Opcode::Call).unwrap();
+    let root = g.find_projection(source, 2).unwrap();
+    let outer = g.rust_type(root).unwrap();
+    let argument = g.input(source, 1);
+    g.set_value_type(argument, ValueType::Rust(outer));
+    g.set_value_type(
+        g.start,
+        ValueType::Tuple(vec![
+            ValueType::Control,
+            ValueType::Effect,
+            ValueType::Rust(outer),
+        ]),
+    );
+    g.abi.args = vec![PassMode::Pair];
+    g.replace(root, argument);
+    let control = g.find_projection(source, 0).unwrap();
+    let effect = g.find_projection(source, 1).unwrap();
+    g.replace(control, g.control(source));
+    g.replace(effect, g.input(source, 0));
+    g.remove_node(source);
+    g.resolve_edges();
+    g.compact();
+    verify_graph(&mut g).unwrap();
+    assert_eq!(lower_layout(&mut g).unwrap().transported_boundary_fields, 1);
+    verify_graph(&mut g).unwrap();
+    for (tag, payload) in [(0, 123), (1, 0), (1, (987 << 32) | 1)] {
+        assert_eq!(
+            Interpreter::new(&g)
+                .run(
+                    &[tag, payload],
+                    &mut |_: &str, _: &[u64]| -> Result<u64, InterpretError> {
+                        panic!("unexpected call")
+                    }
+                )
+                .unwrap(),
+            Outcome::ReturnPair(tag, payload)
+        );
+    }
 }

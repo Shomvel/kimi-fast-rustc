@@ -1,0 +1,58 @@
+[
+  {
+    "crate": "semver",
+    "mode": "default",
+    "objects_identical_to_baseline": true,
+    "objects": 14,
+    "decision_records": 0
+  },
+  {
+    "crate": "semver",
+    "mode": "observe",
+    "objects_identical_to_baseline": true,
+    "objects": 14,
+    "decision_records": 2186
+  },
+  {
+    "crate": "base64",
+    "mode": "default",
+    "objects_identical_to_baseline": true,
+    "objects": 14,
+    "decision_records": 0
+  },
+  {
+    "crate": "base64",
+    "mode": "observe",
+    "objects_identical_to_baseline": true,
+    "objects": 14,
+    "decision_records": 1054
+  },
+  {
+    "crate": "unicode-segmentation",
+    "mode": "default",
+    "objects_identical_to_baseline": true,
+    "objects": 9,
+    "decision_records": 0
+  },
+  {
+    "crate": "unicode-segmentation",
+    "mode": "observe",
+    "objects_identical_to_baseline": true,
+    "objects": 9,
+    "decision_records": 1113
+  },
+  {
+    "crate": "humantime",
+    "mode": "default",
+    "objects_identical_to_baseline": true,
+    "objects": 13,
+    "decision_records": 0
+  },
+  {
+    "crate": "humantime",
+    "mode": "observe",
+    "objects_identical_to_baseline": true,
+    "objects": 13,
+    "decision_records": 1354
+  }
+]

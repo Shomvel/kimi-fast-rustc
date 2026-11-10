@@ -60,6 +60,7 @@ pub(super) enum Operation {
     Divide {
         signed: bool,
     },
+    MulHigh,
     Compare(Condition),
     CompareImm(Condition, i32),
     Test(bool),
@@ -192,6 +193,14 @@ pub(super) fn select(stream: Vec<LowerInstr>) -> Vec<Instruction> {
                     Rem { dst, lhs, rhs } => divide(true, true, dst, lhs, rhs),
                     UDiv { dst, lhs, rhs } => divide(false, false, dst, lhs, rhs),
                     URem { dst, lhs, rhs } => divide(false, true, dst, lhs, rhs),
+                    MulHigh { dst, lhs, rhs } => {
+                        let mut i = Instruction::new(Operation::MulHigh);
+                        i.input(lhs, Constraint::Fixed(Reg::Rax), Phase::Early);
+                        i.input(rhs, Constraint::Any, Phase::Late);
+                        i.output(dst, Constraint::Fixed(Reg::Rdx));
+                        i.clobbers = vec![Reg::Rax, Reg::Rdx];
+                        i
+                    }
                     Compare {
                         dst,
                         condition,
@@ -351,6 +360,7 @@ pub(super) fn select(stream: Vec<LowerInstr>) -> Vec<Instruction> {
             }
             LowerInstr::MulOverflow {
                 dst,
+                product,
                 lhs,
                 rhs,
                 signed,
@@ -360,6 +370,9 @@ pub(super) fn select(stream: Vec<LowerInstr>) -> Vec<Instruction> {
                 inst.input(lhs, Any, Early);
                 inst.input(rhs, Any, Late);
                 inst.output(dst, Reuse(0));
+                if let Some(product) = product {
+                    inst.output(product, Fixed(Reg::Rax));
+                }
                 inst.clobbers = vec![Reg::Rax, Reg::Rdx];
                 inst
             }

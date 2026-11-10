@@ -1,0 +1,1417 @@
+{
+  "base": "e3c6295",
+  "backends": {
+    "baseline": "fcb4dc20d17e2ab3004a858c8b0e25ad98f73da311605bea26581fcb2fa341ad",
+    "instcombine-v2": "53a87ea4948de415e347eb99721b9e1ed1a717de444a7fcb1ad38d4fc42451a2"
+  },
+  "linux_tests": {
+    "passed": 837,
+    "ignored": 1
+  },
+  "preflight": [
+    {
+      "crate": "semver",
+      "arm": "baseline",
+      "status": "ok",
+      "checker": 1,
+      "upstream_incomplete": {},
+      "corpus_equal": true,
+      "checksums_equal": true
+    },
+    {
+      "crate": "semver",
+      "arm": "instcombine-v2",
+      "status": "ok",
+      "checker": 1,
+      "upstream_incomplete": {},
+      "corpus_equal": true,
+      "checksums_equal": true
+    },
+    {
+      "crate": "regex-syntax",
+      "arm": "baseline",
+      "status": "compile_failed",
+      "checker": 1,
+      "expected_unsupported": [
+        "error: kfrc: cannot compile `core::core_simd::swizzle::<impl core::simd::Simd<i8, 16>>::resize::<16>` (_RINvMNtNtCshX3mvxHm3fC_4core9core_simd7swizzleINtNtB5_6vector4SimdaKj10_E6resizeKB14_ECsgtqDAkISWhW_12regex_syntax): SoN construction: unsupported: union and SIMD values are outside the semantic path",
+        "error: aborting due to 1 previous error"
+      ]
+    },
+    {
+      "crate": "regex-syntax",
+      "arm": "instcombine-v2",
+      "status": "compile_failed",
+      "checker": 1,
+      "expected_unsupported": [
+        "error: kfrc: cannot compile `core::core_simd::swizzle::<impl core::simd::Simd<i8, 16>>::resize::<16>` (_RINvMNtNtCshX3mvxHm3fC_4core9core_simd7swizzleINtNtB5_6vector4SimdaKj10_E6resizeKB14_ECsgtqDAkISWhW_12regex_syntax): SoN construction: unsupported: union and SIMD values are outside the semantic path",
+        "error: aborting due to 1 previous error"
+      ]
+    },
+    {
+      "crate": "base64",
+      "arm": "baseline",
+      "status": "ok",
+      "checker": 1,
+      "upstream_incomplete": {
+        "unit": [
+          "error: kfrc: cannot compile `std::hash::RandomState::new::KEYS::{constant#0}::{closure#1}` (_RNCNKNvNvMNtNtCskdEs339NOXv_3std4hash6randomNtB8_11RandomState3new4KEYS0s_0Csfmw7w5XwWdq_6base64): SoN construction: unsupported: TLS is outside the semantic path"
+        ]
+      },
+      "corpus_equal": true,
+      "checksums_equal": true
+    },
+    {
+      "crate": "base64",
+      "arm": "instcombine-v2",
+      "status": "ok",
+      "checker": 1,
+      "upstream_incomplete": {
+        "unit": [
+          "error: kfrc: cannot compile `std::hash::RandomState::new::KEYS::{constant#0}::{closure#1}` (_RNCNKNvNvMNtNtCskdEs339NOXv_3std4hash6randomNtB8_11RandomState3new4KEYS0s_0CscGIOovf6s58_6base64): SoN construction: unsupported: TLS is outside the semantic path"
+        ]
+      },
+      "corpus_equal": true,
+      "checksums_equal": true
+    },
+    {
+      "crate": "unicode-segmentation",
+      "arm": "baseline",
+      "status": "ok",
+      "checker": 1,
+      "upstream_incomplete": {
+        "unit": [
+          "error: kfrc: cannot compile `core::sync::atomic::atomic_sub::<usize, usize>` (_RINvNtNtCshX3mvxHm3fC_4core4sync6atomic10atomic_subjjECs87syuzlRB8g_20unicode_segmentation): MIR conversion: intrinsic `atomic_xsub` is not implemented"
+        ]
+      },
+      "corpus_equal": true,
+      "checksums_equal": true
+    },
+    {
+      "crate": "unicode-segmentation",
+      "arm": "instcombine-v2",
+      "status": "ok",
+      "checker": 1,
+      "upstream_incomplete": {
+        "unit": [
+          "error: kfrc: cannot compile `core::sync::atomic::atomic_sub::<usize, usize>` (_RINvNtNtCshX3mvxHm3fC_4core4sync6atomic10atomic_subjjECs5pounxGCxDh_20unicode_segmentation): MIR conversion: intrinsic `atomic_xsub` is not implemented"
+        ]
+      },
+      "corpus_equal": true,
+      "checksums_equal": true
+    },
+    {
+      "crate": "humantime",
+      "arm": "baseline",
+      "status": "ok",
+      "checker": 1,
+      "upstream_incomplete": {
+        "unit": [
+          "error: kfrc: cannot compile `<u64 as rand::distr::utils::WideningMultiply>::wmul` (_RNvXs4_NtNtCs9WOZcrf9gIs_4rand5distr5utilsyNtB5_16WideningMultiply4wmul): SoN construction: unsupported: unsupported semantic type u128"
+        ]
+      },
+      "corpus_equal": true,
+      "checksums_equal": true
+    },
+    {
+      "crate": "humantime",
+      "arm": "instcombine-v2",
+      "status": "ok",
+      "checker": 1,
+      "upstream_incomplete": {
+        "unit": [
+          "error: kfrc: cannot compile `<u64 as rand::distr::utils::WideningMultiply>::wmul` (_RNvXs4_NtNtCs9WOZcrf9gIs_4rand5distr5utilsyNtB5_16WideningMultiply4wmul): SoN construction: unsupported: unsupported semantic type u128"
+        ]
+      },
+      "corpus_equal": true,
+      "checksums_equal": true
+    }
+  ],
+  "sizes": [
+    {
+      "crate": "semver",
+      "size": {
+        "llvm": {
+          "text_bytes": 18515,
+          "func_symbol_bytes": 19015,
+          "func_symbols": 81,
+          "rodata_bytes": 2029,
+          "object_count": 14,
+          "object_bytes": 85256,
+          "rlib_bytes": 238670
+        },
+        "baseline": {
+          "text_bytes": 34148,
+          "func_symbol_bytes": 32795,
+          "func_symbols": 196,
+          "rodata_bytes": 12211,
+          "object_count": 14,
+          "object_bytes": 151304,
+          "rlib_bytes": 304078
+        },
+        "instcombine-v2": {
+          "text_bytes": 34148,
+          "func_symbol_bytes": 32791,
+          "func_symbols": 196,
+          "rodata_bytes": 12211,
+          "object_count": 14,
+          "object_bytes": 151304,
+          "rlib_bytes": 304078
+        }
+      },
+      "text_ratio": 1.0
+    },
+    {
+      "crate": "base64",
+      "size": {
+        "llvm": {
+          "text_bytes": 8648,
+          "func_symbol_bytes": 8648,
+          "func_symbols": 35,
+          "rodata_bytes": 1982,
+          "object_count": 14,
+          "object_bytes": 53704,
+          "rlib_bytes": 411962
+        },
+        "baseline": {
+          "text_bytes": 29651,
+          "func_symbol_bytes": 29025,
+          "func_symbols": 92,
+          "rodata_bytes": 11262,
+          "object_count": 14,
+          "object_bytes": 130784,
+          "rlib_bytes": 488858
+        },
+        "instcombine-v2": {
+          "text_bytes": 29651,
+          "func_symbol_bytes": 29025,
+          "func_symbols": 92,
+          "rodata_bytes": 11262,
+          "object_count": 14,
+          "object_bytes": 130784,
+          "rlib_bytes": 488858
+        }
+      },
+      "text_ratio": 1.0
+    },
+    {
+      "crate": "unicode-segmentation",
+      "size": {
+        "llvm": {
+          "text_bytes": 8398,
+          "func_symbol_bytes": 8398,
+          "func_symbols": 24,
+          "rodata_bytes": 75916,
+          "object_count": 9,
+          "object_bytes": 112600,
+          "rlib_bytes": 1268848
+        },
+        "baseline": {
+          "text_bytes": 18618,
+          "func_symbol_bytes": 18087,
+          "func_symbols": 78,
+          "rodata_bytes": 90617,
+          "object_count": 9,
+          "object_bytes": 180168,
+          "rlib_bytes": 1335588
+        },
+        "instcombine-v2": {
+          "text_bytes": 18618,
+          "func_symbol_bytes": 18087,
+          "func_symbols": 78,
+          "rodata_bytes": 90617,
+          "object_count": 9,
+          "object_bytes": 180168,
+          "rlib_bytes": 1335588
+        }
+      },
+      "text_ratio": 1.0
+    },
+    {
+      "crate": "humantime",
+      "size": {
+        "llvm": {
+          "text_bytes": 10426,
+          "func_symbol_bytes": 10426,
+          "func_symbols": 32,
+          "rodata_bytes": 1670,
+          "object_count": 13,
+          "object_bytes": 53784,
+          "rlib_bytes": 148752
+        },
+        "baseline": {
+          "text_bytes": 57477,
+          "func_symbol_bytes": 56816,
+          "func_symbols": 100,
+          "rodata_bytes": 11494,
+          "object_count": 13,
+          "object_bytes": 165984,
+          "rlib_bytes": 261196
+        },
+        "instcombine-v2": {
+          "text_bytes": 57477,
+          "func_symbol_bytes": 56816,
+          "func_symbols": 100,
+          "rodata_bytes": 11494,
+          "object_count": 13,
+          "object_bytes": 165984,
+          "rlib_bytes": 261196
+        }
+      },
+      "text_ratio": 1.0
+    }
+  ],
+  "runtime": [
+    {
+      "crate": "semver",
+      "workload": "parse",
+      "paired_ratios": [
+        0.9920131772739018,
+        0.9689139338492326,
+        0.9090397987828207,
+        1.0181602074740435,
+        1.0106077061438061,
+        1.0217819195040665,
+        0.8811696874841771,
+        0.9998030145242279,
+        0.9943735677500366,
+        0.9841780497064879,
+        0.9980055788332828
+      ],
+      "paired_median": 0.9943735677500366,
+      "arms": {
+        "llvm": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 11254301,
+          "min_ns": 11109343,
+          "max_ns": 16683020,
+          "checksums": [
+            9666685
+          ],
+          "instructions": 173125406,
+          "cycles": 41207849
+        },
+        "baseline": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 47440511,
+          "min_ns": 46871476,
+          "max_ns": 53087616,
+          "checksums": [
+            9666685
+          ],
+          "instructions": 705263918,
+          "cycles": 173164387
+        },
+        "instcombine-v2": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 46948342,
+          "min_ns": 46699588,
+          "max_ns": 48712130,
+          "checksums": [
+            9666685
+          ],
+          "instructions": 705263782,
+          "cycles": 172289445
+        }
+      },
+      "instruction_ratio": 0.999999807164387
+    },
+    {
+      "crate": "semver",
+      "workload": "req",
+      "paired_ratios": [
+        1.0096291862749125,
+        0.9498027865584406,
+        1.0144294439967654,
+        0.9978275520496978,
+        0.9936515656459678,
+        1.0100304540421252,
+        0.9835443631391448,
+        0.9919434481267945,
+        1.064880374872611,
+        0.976235031899866,
+        1.014569182608508
+      ],
+      "paired_median": 0.9978275520496978,
+      "arms": {
+        "llvm": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 16946103,
+          "min_ns": 16819904,
+          "max_ns": 18381798,
+          "checksums": [
+            400000
+          ],
+          "instructions": 262258494,
+          "cycles": 62049086
+        },
+        "baseline": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 130062955,
+          "min_ns": 127474219,
+          "max_ns": 134719012,
+          "checksums": [
+            400000
+          ],
+          "instructions": 1658729075,
+          "cycles": 471564516
+        },
+        "instcombine-v2": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 128781611,
+          "min_ns": 127956493,
+          "max_ns": 138594890,
+          "checksums": [
+            400000
+          ],
+          "instructions": 1658728834,
+          "cycles": 477494330
+        }
+      },
+      "instruction_ratio": 0.9999998547080391
+    },
+    {
+      "crate": "semver",
+      "workload": "identifier",
+      "paired_ratios": [
+        0.9980294147352853,
+        1.0025294516368362,
+        0.99764266937213,
+        1.0169972131665457,
+        1.0171336192502287,
+        1.00067596158206,
+        1.002363088050339,
+        1.0021741227162417,
+        1.0191653266725127,
+        1.0002269982053738,
+        1.0100103324938485
+      ],
+      "paired_median": 1.002363088050339,
+      "arms": {
+        "llvm": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 28200635,
+          "min_ns": 28059604,
+          "max_ns": 30632073,
+          "checksums": [
+            30750000
+          ],
+          "instructions": 555108492,
+          "cycles": 107372233
+        },
+        "baseline": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 54873987,
+          "min_ns": 54713577,
+          "max_ns": 56398256,
+          "checksums": [
+            30750000
+          ],
+          "instructions": 918623065,
+          "cycles": 201461095
+        },
+        "instcombine-v2": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 55070202,
+          "min_ns": 54842870,
+          "max_ns": 57479147,
+          "checksums": [
+            30750000
+          ],
+          "instructions": 918623446,
+          "cycles": 201354942
+        }
+      },
+      "instruction_ratio": 1.0000004147511798
+    },
+    {
+      "crate": "base64",
+      "workload": "encode",
+      "paired_ratios": [
+        0.9510884261392077,
+        1.0113485946758283,
+        0.9993716774688118,
+        1.0173437290311473,
+        0.9967481550905708,
+        1.0155129976228199,
+        1.0042100905480544,
+        0.9170747230797898,
+        1.0044019168818932,
+        0.9932231349082128,
+        0.9729073808596708
+      ],
+      "paired_median": 0.9993716774688118,
+      "arms": {
+        "llvm": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 17526124,
+          "min_ns": 17443049,
+          "max_ns": 17630030,
+          "checksums": [
+            55493921
+          ],
+          "instructions": 292760413,
+          "cycles": 64818726
+        },
+        "baseline": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 172619856,
+          "min_ns": 171824462,
+          "max_ns": 187765909,
+          "checksums": [
+            55493921
+          ],
+          "instructions": 1870916073,
+          "cycles": 632453955
+        },
+        "instcombine-v2": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 172905314,
+          "min_ns": 172058523,
+          "max_ns": 175039879,
+          "checksums": [
+            55493921
+          ],
+          "instructions": 1870915530,
+          "cycles": 632587962
+        }
+      },
+      "instruction_ratio": 0.999999709767847
+    },
+    {
+      "crate": "base64",
+      "workload": "decode",
+      "paired_ratios": [
+        1.0330288042912374,
+        0.9874791282046883,
+        1.0237006116286453,
+        1.0441989370537939,
+        1.0108634707146291,
+        1.0330077942642035,
+        1.0007372022226668,
+        0.9802946528194,
+        0.7387785599001346,
+        1.0100131293320531,
+        0.9936713838674365
+      ],
+      "paired_median": 1.0100131293320531,
+      "arms": {
+        "llvm": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 18505654,
+          "min_ns": 18397071,
+          "max_ns": 25606211,
+          "checksums": [
+            42229339
+          ],
+          "instructions": 385642743,
+          "cycles": 68171429
+        },
+        "baseline": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 154198248,
+          "min_ns": 150513117,
+          "max_ns": 206361147,
+          "checksums": [
+            42229339
+          ],
+          "instructions": 2429135749,
+          "cycles": 559728943
+        },
+        "instcombine-v2": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 155191759,
+          "min_ns": 152431715,
+          "max_ns": 160793267,
+          "checksums": [
+            42229339
+          ],
+          "instructions": 2429135581,
+          "cycles": 614206989
+        }
+      },
+      "instruction_ratio": 0.9999999308396
+    },
+    {
+      "crate": "base64",
+      "workload": "short",
+      "paired_ratios": [
+        1.0008526719543909,
+        0.9890480804972474,
+        1.0146031386796532,
+        0.8595616557600082,
+        0.9945500059989576,
+        1.1497394975455697,
+        0.9684352681462848,
+        1.01290302293138,
+        1.004116934903984,
+        1.0406206864463496,
+        0.9860539391607069
+      ],
+      "paired_median": 1.0008526719543909,
+      "arms": {
+        "llvm": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 17062538,
+          "min_ns": 17002067,
+          "max_ns": 17249918,
+          "checksums": [
+            55990625
+          ],
+          "instructions": 335776127,
+          "cycles": 65321018
+        },
+        "baseline": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 78830362,
+          "min_ns": 77609299,
+          "max_ns": 92914190,
+          "checksums": [
+            55990625
+          ],
+          "instructions": 1172203046,
+          "cycles": 289498827
+        },
+        "instcombine-v2": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 78936972,
+          "min_ns": 78013948,
+          "max_ns": 90028168,
+          "checksums": [
+            55990625
+          ],
+          "instructions": 1172203023,
+          "cycles": 286578293
+        }
+      },
+      "instruction_ratio": 0.999999980378826
+    },
+    {
+      "crate": "unicode-segmentation",
+      "workload": "graphemes-mixed",
+      "paired_ratios": [
+        1.0194977913380217,
+        0.9908995645671471,
+        0.9911294104386716,
+        0.8487524727131864,
+        0.991499948795875,
+        0.8625353782178362,
+        1.0180893126489736,
+        0.9951594207234947,
+        0.9905573501893211,
+        1.009595896054581,
+        1.0075032240250967
+      ],
+      "paired_median": 0.991499948795875,
+      "arms": {
+        "llvm": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 17437592,
+          "min_ns": 17291401,
+          "max_ns": 30771033,
+          "checksums": [
+            4502913975839704316
+          ],
+          "instructions": 270091216,
+          "cycles": 64142999
+        },
+        "baseline": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 24031267,
+          "min_ns": 23662303,
+          "max_ns": 28886065,
+          "checksums": [
+            4502913975839704316
+          ],
+          "instructions": 361360063,
+          "cycles": 89158487
+        },
+        "instcombine-v2": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 23889364,
+          "min_ns": 23805519,
+          "max_ns": 24915253,
+          "checksums": [
+            4502913975839704316
+          ],
+          "instructions": 361360398,
+          "cycles": 87962715
+        }
+      },
+      "instruction_ratio": 1.0000009270531924
+    },
+    {
+      "crate": "unicode-segmentation",
+      "workload": "graphemes-ascii",
+      "paired_ratios": [
+        0.9749775661540985,
+        0.9867540222908644,
+        0.9957424489520674,
+        1.0118608545395782,
+        1.030351364591204,
+        0.9967684751029818,
+        1.1340902140040559,
+        0.9681690694347316,
+        1.0147836807276476,
+        0.9942061752458703,
+        1.0003025020055687
+      ],
+      "paired_median": 0.9967684751029818,
+      "arms": {
+        "llvm": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 27774084,
+          "min_ns": 27611531,
+          "max_ns": 29714006,
+          "checksums": [
+            18227791836399012924
+          ],
+          "instructions": 469605175,
+          "cycles": 102134697
+        },
+        "baseline": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 30236631,
+          "min_ns": 30040247,
+          "max_ns": 32535461,
+          "checksums": [
+            18227791836399012924
+          ],
+          "instructions": 490908372,
+          "cycles": 113581445
+        },
+        "instcombine-v2": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 30233736,
+          "min_ns": 30104823,
+          "max_ns": 34148240,
+          "checksums": [
+            18227791836399012924
+          ],
+          "instructions": 490908205,
+          "cycles": 110581962
+        }
+      },
+      "instruction_ratio": 0.9999996598143166
+    },
+    {
+      "crate": "unicode-segmentation",
+      "workload": "graphemes-rev",
+      "paired_ratios": [
+        1.039922639243872,
+        0.9973824765029763,
+        0.9981631894875367,
+        1.0060561747651866,
+        0.9708134903054492,
+        0.9965583594421715,
+        1.0152945214738565,
+        1.014190859945041,
+        1.0114788143057614,
+        0.9880783812553575,
+        1.0245592792066598
+      ],
+      "paired_median": 1.0060561747651866,
+      "arms": {
+        "llvm": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 23160812,
+          "min_ns": 22415311,
+          "max_ns": 24601512,
+          "checksums": [
+            12754887892209847992
+          ],
+          "instructions": 364549437,
+          "cycles": 85647464
+        },
+        "baseline": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 80694769,
+          "min_ns": 79586086,
+          "max_ns": 82726370,
+          "checksums": [
+            12754887892209847992
+          ],
+          "instructions": 1305242319,
+          "cycles": 293876328
+        },
+        "instcombine-v2": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 80715481,
+          "min_ns": 80311876,
+          "max_ns": 84118918,
+          "checksums": [
+            12754887892209847992
+          ],
+          "instructions": 1305242047,
+          "cycles": 296175799
+        }
+      },
+      "instruction_ratio": 0.9999997916095762
+    },
+    {
+      "crate": "humantime",
+      "workload": "dur-parse",
+      "paired_ratios": [
+        1.0445881740896965,
+        1.0216718494773325,
+        0.9329226229468556,
+        1.0226377574276984,
+        1.0217262249706294,
+        1.0466147016970377,
+        1.0167052668497334,
+        1.016615332039923,
+        1.0166927517476576,
+        1.0108889296318897,
+        1.0217283027247357
+      ],
+      "paired_median": 1.0216718494773325,
+      "arms": {
+        "llvm": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 20963152,
+          "min_ns": 20688610,
+          "max_ns": 25628845,
+          "checksums": [
+            9931678550000
+          ],
+          "instructions": 329609999,
+          "cycles": 77244584
+        },
+        "baseline": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 221283081,
+          "min_ns": 220143702,
+          "max_ns": 240356879,
+          "checksums": [
+            9931678550000
+          ],
+          "instructions": 2494762845,
+          "cycles": 832682066
+        },
+        "instcombine-v2": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 225827782,
+          "min_ns": 224090616,
+          "max_ns": 231567787,
+          "checksums": [
+            9931678550000
+          ],
+          "instructions": 2494763204,
+          "cycles": 836336628
+        }
+      },
+      "instruction_ratio": 1.0000001439014536
+    },
+    {
+      "crate": "humantime",
+      "workload": "dur-format",
+      "paired_ratios": [
+        0.9470500875886656,
+        1.0045372844686236,
+        0.9667394828487118,
+        0.8192921407749149,
+        0.9433282546543383,
+        0.9769638629836255,
+        0.9484269828828743,
+        1.0160570144550767,
+        0.937744446748494,
+        1.00206292674978,
+        0.8677312053093273
+      ],
+      "paired_median": 0.9484269828828743,
+      "arms": {
+        "llvm": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 23896595,
+          "min_ns": 22993809,
+          "max_ns": 25635345,
+          "checksums": [
+            9619162
+          ],
+          "instructions": 380622625,
+          "cycles": 87979510
+        },
+        "baseline": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 29190151,
+          "min_ns": 27340014,
+          "max_ns": 34060699,
+          "checksums": [
+            9619162
+          ],
+          "instructions": 436462750,
+          "cycles": 127556155
+        },
+        "instcombine-v2": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 27790790,
+          "min_ns": 27094996,
+          "max_ns": 29171532,
+          "checksums": [
+            9619162
+          ],
+          "instructions": 436462471,
+          "cycles": 100319331
+        }
+      },
+      "instruction_ratio": 0.9999993607701917
+    },
+    {
+      "crate": "humantime",
+      "workload": "ts-parse",
+      "paired_ratios": [
+        0.8454392241743195,
+        1.1325465312180791,
+        0.8698520969436402,
+        1.0216999207952284,
+        0.989000343877925,
+        0.9950090818988528,
+        0.9941071952796693,
+        1.000149962381151,
+        0.7563665711020147,
+        1.0026434370587423,
+        1.0006566700372121
+      ],
+      "paired_median": 0.9950090818988528,
+      "arms": {
+        "llvm": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 21633408,
+          "min_ns": 21293489,
+          "max_ns": 29898203,
+          "checksums": [
+            10339638455182523344
+          ],
+          "instructions": 295759840,
+          "cycles": 79769582
+        },
+        "baseline": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 74270778,
+          "min_ns": 73730017,
+          "max_ns": 97884519,
+          "checksums": [
+            10339638455182523344
+          ],
+          "instructions": 1239262500,
+          "cycles": 271563788
+        },
+        "instcombine-v2": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 74036578,
+          "min_ns": 73750818,
+          "max_ns": 83502675,
+          "checksums": [
+            10339638455182523344
+          ],
+          "instructions": 1239262746,
+          "cycles": 273282842
+        }
+      },
+      "instruction_ratio": 1.0000001985051594
+    },
+    {
+      "crate": "humantime",
+      "workload": "ts-format",
+      "paired_ratios": [
+        0.9952620667267623,
+        1.033037428357617,
+        0.9806223548568329,
+        1.0012030962134792,
+        0.9968835275753327,
+        0.9248711025247514,
+        1.006799570050578,
+        0.9992498082544425,
+        1.0007163489312536,
+        1.032356025546633,
+        0.9990671603870044
+      ],
+      "paired_median": 0.9992498082544425,
+      "arms": {
+        "llvm": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 22920170,
+          "min_ns": 22728452,
+          "max_ns": 24037828,
+          "checksums": [
+            32966122
+          ],
+          "instructions": 264257973,
+          "cycles": 83955889
+        },
+        "baseline": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 50804850,
+          "min_ns": 50645991,
+          "max_ns": 54859104,
+          "checksums": [
+            32966122
+          ],
+          "instructions": 447939262,
+          "cycles": 186644180
+        },
+        "instcombine-v2": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 50841244,
+          "min_ns": 50619572,
+          "max_ns": 52380445,
+          "checksums": [
+            32966122
+          ],
+          "instructions": 447939496,
+          "cycles": 186186901
+        }
+      },
+      "instruction_ratio": 1.0000005223922523
+    }
+  ],
+  "runtime_geomean": 0.9970605631739966,
+  "confirm_regressions": [],
+  "compile": [
+    {
+      "crate": "semver",
+      "rounds": 3,
+      "checker": 0,
+      "order": "forward/reverse/forward",
+      "arms": {
+        "baseline": [
+          {
+            "exit_code": 0,
+            "wall_seconds": 0.37045682699999816,
+            "user_seconds": 0.292359,
+            "sys_seconds": 0.050495,
+            "maxrss_kib": 148728,
+            "instructions": 1850444333,
+            "instructions_running_pct": 100.0,
+            "cycles": 1015722455,
+            "cycles_running_pct": 100.0,
+            "objects_identical_to_own_reference": true
+          },
+          {
+            "exit_code": 0,
+            "wall_seconds": 0.3348465120000128,
+            "user_seconds": 0.268563,
+            "sys_seconds": 0.066428,
+            "maxrss_kib": 148592,
+            "instructions": 1850368706,
+            "instructions_running_pct": 100.0,
+            "cycles": 1018819019,
+            "cycles_running_pct": 100.0,
+            "objects_identical_to_own_reference": true
+          },
+          {
+            "exit_code": 0,
+            "wall_seconds": 0.3549705550001363,
+            "user_seconds": 0.29129099999999997,
+            "sys_seconds": 0.043053999999999995,
+            "maxrss_kib": 148524,
+            "instructions": 1850442388,
+            "instructions_running_pct": 100.0,
+            "cycles": 1018460896,
+            "cycles_running_pct": 100.0,
+            "objects_identical_to_own_reference": true
+          }
+        ],
+        "instcombine-v2": [
+          {
+            "exit_code": 0,
+            "wall_seconds": 0.3347894760001964,
+            "user_seconds": 0.29622499999999996,
+            "sys_seconds": 0.038689999999999995,
+            "maxrss_kib": 148436,
+            "instructions": 1851990914,
+            "instructions_running_pct": 100.0,
+            "cycles": 1016401009,
+            "cycles_running_pct": 100.0,
+            "objects_identical_to_own_reference": true
+          },
+          {
+            "exit_code": 0,
+            "wall_seconds": 0.33979496899996775,
+            "user_seconds": 0.307732,
+            "sys_seconds": 0.028520999999999998,
+            "maxrss_kib": 148332,
+            "instructions": 1851969262,
+            "instructions_running_pct": 100.0,
+            "cycles": 1024673435,
+            "cycles_running_pct": 100.0,
+            "objects_identical_to_own_reference": true
+          },
+          {
+            "exit_code": 0,
+            "wall_seconds": 0.3397138069999528,
+            "user_seconds": 0.283267,
+            "sys_seconds": 0.054678,
+            "maxrss_kib": 148424,
+            "instructions": 1852037141,
+            "instructions_running_pct": 100.0,
+            "cycles": 1030511544,
+            "cycles_running_pct": 100.0,
+            "objects_identical_to_own_reference": true
+          }
+        ]
+      },
+      "medians": {
+        "baseline": {
+          "instructions": 1850442388,
+          "cycles": 1018460896,
+          "wall_seconds": 0.3549705550001363,
+          "user_seconds": 0.29129099999999997,
+          "maxrss_kib": 148592
+        },
+        "instcombine-v2": {
+          "instructions": 1851990914,
+          "cycles": 1024673435,
+          "wall_seconds": 0.3397138069999528,
+          "user_seconds": 0.29622499999999996,
+          "maxrss_kib": 148424
+        }
+      },
+      "paired_instruction_ratio": 1.000861822562184
+    },
+    {
+      "crate": "base64",
+      "rounds": 3,
+      "checker": 0,
+      "order": "forward/reverse/forward",
+      "arms": {
+        "baseline": [
+          {
+            "exit_code": 0,
+            "wall_seconds": 0.2841808499999843,
+            "user_seconds": 0.23829599999999998,
+            "sys_seconds": 0.046558999999999996,
+            "maxrss_kib": 143796,
+            "instructions": 1498363527,
+            "instructions_running_pct": 100.0,
+            "cycles": 841568034,
+            "cycles_running_pct": 100.0,
+            "objects_identical_to_own_reference": true
+          },
+          {
+            "exit_code": 0,
+            "wall_seconds": 0.27894360999994205,
+            "user_seconds": 0.213939,
+            "sys_seconds": 0.065589,
+            "maxrss_kib": 143724,
+            "instructions": 1498340373,
+            "instructions_running_pct": 100.0,
+            "cycles": 820584360,
+            "cycles_running_pct": 100.0,
+            "objects_identical_to_own_reference": true
+          },
+          {
+            "exit_code": 0,
+            "wall_seconds": 0.27904829799990694,
+            "user_seconds": 0.219573,
+            "sys_seconds": 0.060377,
+            "maxrss_kib": 143888,
+            "instructions": 1498412113,
+            "instructions_running_pct": 100.0,
+            "cycles": 825329153,
+            "cycles_running_pct": 100.0,
+            "objects_identical_to_own_reference": true
+          }
+        ],
+        "instcombine-v2": [
+          {
+            "exit_code": 0,
+            "wall_seconds": 0.2893158070000936,
+            "user_seconds": 0.234373,
+            "sys_seconds": 0.052066999999999995,
+            "maxrss_kib": 143900,
+            "instructions": 1499489114,
+            "instructions_running_pct": 100.0,
+            "cycles": 845451786,
+            "cycles_running_pct": 100.0,
+            "objects_identical_to_own_reference": true
+          },
+          {
+            "exit_code": 0,
+            "wall_seconds": 0.28920012399998996,
+            "user_seconds": 0.231871,
+            "sys_seconds": 0.056421,
+            "maxrss_kib": 143760,
+            "instructions": 1499430538,
+            "instructions_running_pct": 100.0,
+            "cycles": 848531664,
+            "cycles_running_pct": 100.0,
+            "objects_identical_to_own_reference": true
+          },
+          {
+            "exit_code": 0,
+            "wall_seconds": 0.28406920299994454,
+            "user_seconds": 0.21101499999999998,
+            "sys_seconds": 0.069931,
+            "maxrss_kib": 143632,
+            "instructions": 1499425097,
+            "instructions_running_pct": 100.0,
+            "cycles": 825425298,
+            "cycles_running_pct": 100.0,
+            "objects_identical_to_own_reference": true
+          }
+        ]
+      },
+      "medians": {
+        "baseline": {
+          "instructions": 1498363527,
+          "cycles": 825329153,
+          "wall_seconds": 0.27904829799990694,
+          "user_seconds": 0.219573,
+          "maxrss_kib": 143796
+        },
+        "instcombine-v2": {
+          "instructions": 1499430538,
+          "cycles": 845451786,
+          "wall_seconds": 0.28920012399998996,
+          "user_seconds": 0.231871,
+          "maxrss_kib": 143760
+        }
+      },
+      "paired_instruction_ratio": 1.0007275816761296
+    },
+    {
+      "crate": "unicode-segmentation",
+      "rounds": 3,
+      "checker": 0,
+      "order": "forward/reverse/forward",
+      "arms": {
+        "baseline": [
+          {
+            "exit_code": 0,
+            "wall_seconds": 0.3246604840001055,
+            "user_seconds": 0.251029,
+            "sys_seconds": 0.072028,
+            "maxrss_kib": 137696,
+            "instructions": 1839380580,
+            "instructions_running_pct": 100.0,
+            "cycles": 954701066,
+            "cycles_running_pct": 100.0,
+            "objects_identical_to_own_reference": true
+          },
+          {
+            "exit_code": 0,
+            "wall_seconds": 0.35513362899996537,
+            "user_seconds": 0.278786,
+            "sys_seconds": 0.07475799999999999,
+            "maxrss_kib": 138016,
+            "instructions": 1839999963,
+            "instructions_running_pct": 100.0,
+            "cycles": 963355897,
+            "cycles_running_pct": 100.0,
+            "objects_identical_to_own_reference": true
+          },
+          {
+            "exit_code": 0,
+            "wall_seconds": 0.3308925269998326,
+            "user_seconds": 0.286229,
+            "sys_seconds": 0.043762999999999996,
+            "maxrss_kib": 138004,
+            "instructions": 1839376963,
+            "instructions_running_pct": 100.0,
+            "cycles": 968084530,
+            "cycles_running_pct": 100.0,
+            "objects_identical_to_own_reference": true
+          }
+        ],
+        "instcombine-v2": [
+          {
+            "exit_code": 0,
+            "wall_seconds": 0.32470865599998433,
+            "user_seconds": 0.266801,
+            "sys_seconds": 0.055268,
+            "maxrss_kib": 137968,
+            "instructions": 1840812189,
+            "instructions_running_pct": 100.0,
+            "cycles": 945858917,
+            "cycles_running_pct": 100.0,
+            "objects_identical_to_own_reference": true
+          },
+          {
+            "exit_code": 0,
+            "wall_seconds": 0.32988902199986114,
+            "user_seconds": 0.289101,
+            "sys_seconds": 0.040491,
+            "maxrss_kib": 137924,
+            "instructions": 1840466182,
+            "instructions_running_pct": 100.0,
+            "cycles": 968213547,
+            "cycles_running_pct": 100.0,
+            "objects_identical_to_own_reference": true
+          },
+          {
+            "exit_code": 0,
+            "wall_seconds": 0.32571422600017286,
+            "user_seconds": 0.276308,
+            "sys_seconds": 0.0477,
+            "maxrss_kib": 137800,
+            "instructions": 1840682924,
+            "instructions_running_pct": 100.0,
+            "cycles": 960095829,
+            "cycles_running_pct": 100.0,
+            "objects_identical_to_own_reference": true
+          }
+        ]
+      },
+      "medians": {
+        "baseline": {
+          "instructions": 1839380580,
+          "cycles": 963355897,
+          "wall_seconds": 0.3308925269998326,
+          "user_seconds": 0.278786,
+          "maxrss_kib": 138004
+        },
+        "instcombine-v2": {
+          "instructions": 1840682924,
+          "cycles": 960095829,
+          "wall_seconds": 0.32571422600017286,
+          "user_seconds": 0.276308,
+          "maxrss_kib": 137924
+        }
+      },
+      "paired_instruction_ratio": 1.0007100018246777
+    },
+    {
+      "crate": "humantime",
+      "rounds": 3,
+      "checker": 0,
+      "order": "forward/reverse/forward",
+      "arms": {
+        "baseline": [
+          {
+            "exit_code": 0,
+            "wall_seconds": 0.34025145400005385,
+            "user_seconds": 0.285908,
+            "sys_seconds": 0.055914,
+            "maxrss_kib": 165084,
+            "instructions": 2228801330,
+            "instructions_running_pct": 100.0,
+            "cycles": 1004098535,
+            "cycles_running_pct": 100.0,
+            "objects_identical_to_own_reference": true
+          },
+          {
+            "exit_code": 0,
+            "wall_seconds": 0.3507971209999141,
+            "user_seconds": 0.271954,
+            "sys_seconds": 0.076546,
+            "maxrss_kib": 165480,
+            "instructions": 2228538006,
+            "instructions_running_pct": 100.0,
+            "cycles": 1029349905,
+            "cycles_running_pct": 100.0,
+            "objects_identical_to_own_reference": true
+          },
+          {
+            "exit_code": 0,
+            "wall_seconds": 0.35029860300005566,
+            "user_seconds": 0.274008,
+            "sys_seconds": 0.073839,
+            "maxrss_kib": 165472,
+            "instructions": 2228796773,
+            "instructions_running_pct": 100.0,
+            "cycles": 1024018215,
+            "cycles_running_pct": 100.0,
+            "objects_identical_to_own_reference": true
+          }
+        ],
+        "instcombine-v2": [
+          {
+            "exit_code": 0,
+            "wall_seconds": 0.3346979090001696,
+            "user_seconds": 0.29836799999999997,
+            "sys_seconds": 0.035539,
+            "maxrss_kib": 164864,
+            "instructions": 2229392897,
+            "instructions_running_pct": 100.0,
+            "cycles": 981438311,
+            "cycles_running_pct": 100.0,
+            "objects_identical_to_own_reference": true
+          },
+          {
+            "exit_code": 0,
+            "wall_seconds": 0.35019298399993204,
+            "user_seconds": 0.281096,
+            "sys_seconds": 0.065806,
+            "maxrss_kib": 165172,
+            "instructions": 2229380570,
+            "instructions_running_pct": 100.0,
+            "cycles": 1023365477,
+            "cycles_running_pct": 100.0,
+            "objects_identical_to_own_reference": true
+          },
+          {
+            "exit_code": 0,
+            "wall_seconds": 0.32970532499984984,
+            "user_seconds": 0.26631499999999997,
+            "sys_seconds": 0.063009,
+            "maxrss_kib": 164812,
+            "instructions": 2229583794,
+            "instructions_running_pct": 100.0,
+            "cycles": 964806545,
+            "cycles_running_pct": 100.0,
+            "objects_identical_to_own_reference": true
+          }
+        ]
+      },
+      "medians": {
+        "baseline": {
+          "instructions": 2228796773,
+          "cycles": 1024018215,
+          "wall_seconds": 0.35029860300005566,
+          "user_seconds": 0.274008,
+          "maxrss_kib": 165472
+        },
+        "instcombine-v2": {
+          "instructions": 2229392897,
+          "cycles": 981438311,
+          "wall_seconds": 0.3346979090001696,
+          "user_seconds": 0.281096,
+          "maxrss_kib": 164864
+        }
+      },
+      "paired_instruction_ratio": 1.000353114743136
+    }
+  ],
+  "llvm_runtime_geomean": 3.4973731484894035,
+  "baseline_llvm_runtime_geomean": 3.509320681310878,
+  "compile_instruction_geomean": 1.0006631124690955
+}

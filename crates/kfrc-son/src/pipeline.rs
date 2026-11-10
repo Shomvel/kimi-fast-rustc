@@ -7,7 +7,7 @@
 
 use crate::analysis::memory::MemoryFacts;
 use crate::graph::{FunctionGraph, GraphLevel, GraphState, NodeId, Opcode};
-use crate::transforms::control::{conditions, simplify, thread_variants, variants};
+use crate::transforms::control::{conditions, sccp, simplify, thread_variants, variants};
 use crate::transforms::memory::{forward, observation, partition, promotion};
 use crate::transforms::scalar::{aggregate, division, gvn, instcombine, ranges, seam};
 pub use crate::transforms::utils::cfg::CfgEditError;
@@ -53,6 +53,9 @@ pub struct OptimizeStats {
     pub division_proof_visits: usize,
     pub branches_folded: usize,
     pub conditions_folded: usize,
+    pub sccp_constants: usize,
+    pub sccp_visits: usize,
+    pub sccp_budget_bailouts: usize,
     pub fact_queries: usize,
     pub fact_node_visits: usize,
     pub condition_receipts_checked: usize,
@@ -150,6 +153,7 @@ pub fn optimize_specialized_graph(
     }
     verify_pipeline_step(graph).map_err(PipelineError::Verification)?;
     let mut stats = optimize_graph(graph);
+    fold_identity_transmutes(graph);
     verify_pipeline_step(graph).map_err(PipelineError::Verification)?;
     promote(graph, None, &mut stats);
     remove_redundant_observations(graph, &mut stats);
@@ -160,6 +164,7 @@ pub fn optimize_specialized_graph(
     let range_dirty = fold_range_conditions(graph, &mut stats);
     optimize_seeds(graph, &range_dirty, &mut stats);
     fold_scoped_conditions(graph, &mut stats)?;
+    propagate_constants(graph, &mut stats);
     let control = simplify::run(graph).map_err(PipelineError::Control)?;
     // Check the atomic CFG mutation before allowing another value transform.
     verify_pipeline_step(graph).map_err(PipelineError::Verification)?;
@@ -208,6 +213,7 @@ pub fn optimize_specialized_seams(
         ..OptimizeStats::default()
     };
     let mut pending = seeds.to_vec();
+    pending.extend(fold_identity_transmutes(graph));
     let candidates = argument_slots
         .iter()
         .chain(seeds)
@@ -271,6 +277,14 @@ pub fn optimize_specialized_seams(
         stats.branches_folded += control.branches_folded;
         stats.predecessor_edges_removed += control.predecessor_edges_removed;
         stats.nodes_removed += control.nodes_removed;
+    }
+    let propagated = propagate_constants(graph, &mut stats);
+    if !propagated.is_empty() {
+        let control = simplify::run(graph).map_err(PipelineError::Control)?;
+        stats.branches_folded += control.branches_folded;
+        stats.predecessor_edges_removed += control.predecessor_edges_removed;
+        stats.nodes_removed += control.nodes_removed;
+        optimize_seeds(graph, &propagated, &mut stats);
     }
     graph.compact();
     stats.nodes_after = graph.len();
@@ -360,4 +374,46 @@ fn partition_memory(graph: &mut FunctionGraph, stats: &mut OptimizeStats) {
     stats.const_loads += partitions.const_loads;
     stats.memory_node_visits += partitions.node_visits;
     stats.memory_edge_visits += partitions.edge_visits;
+}
+
+fn propagate_constants(graph: &mut FunctionGraph, stats: &mut OptimizeStats) -> Vec<NodeId> {
+    let propagated = sccp::run(graph);
+    stats.sccp_constants += propagated.constants;
+    stats.sccp_visits += propagated.visits;
+    stats.sccp_budget_bailouts += propagated.budget_bailouts;
+    propagated.dirty
+}
+
+/// Same-type transmute observes its input but cannot change its representation.
+/// Retaining RequireDefined preserves the S poison contract while releasing
+/// pointer users from an opaque conversion, which can expose private storage.
+fn fold_identity_transmutes(graph: &mut FunctionGraph) -> Vec<NodeId> {
+    let uses = crate::analysis::uses::Uses::new(graph);
+    let nodes: Vec<_> = graph
+        .ids()
+        .filter(|&n| graph.op(n) == Opcode::TransmuteValue)
+        .collect();
+    let mut dirty = Vec::new();
+    for node in nodes {
+        let value = graph.input(node, 1);
+        let crate::ValueType::Tuple(fields) = graph.value_type(node) else {
+            continue;
+        };
+        if fields.get(2) != Some(graph.value_type(value)) {
+            continue;
+        }
+        for usage in uses.of(node) {
+            if graph.op(usage.user) == Opcode::Projection && graph.payload(usage.user) == 2 {
+                dirty.extend(uses.of(usage.user).iter().map(|u| u.user));
+                graph.replace(usage.user, value);
+            }
+        }
+        graph.set_opcode(node, Opcode::RequireDefined);
+        graph.set_value_type(
+            node,
+            crate::ValueType::Tuple(vec![crate::ValueType::Control, crate::ValueType::Effect]),
+        );
+    }
+    graph.resolve_edges();
+    dirty
 }

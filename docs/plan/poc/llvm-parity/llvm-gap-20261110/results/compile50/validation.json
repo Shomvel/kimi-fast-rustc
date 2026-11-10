@@ -1,0 +1,31 @@
+{
+  "workspace-tests": {
+    "passed": 849,
+    "failed": 0,
+    "ignored": 1
+  },
+  "backend-tests": {
+    "passed": 6,
+    "failed": 0,
+    "ignored": 0
+  },
+  "semantic": {
+    "tail": "PASS: three arms, 824 lines each, cross-backend Pair/Indirect calls, explicit S->L, borrow/index/enum/niche behavior, three scope rejections, O1 permission guard 316/340 noalias\n"
+  },
+  "pressure": {
+    "tail": "[\n  {\n    \"arm\": \"llvm\",\n    \"output_lines\": 2048,\n    \"stdout_sha256\": \"d93b7d80444943445da3860f97308020a150a85c746f5063b63e4f0c63e3f5d2\",\n    \"library_sha256\": \"86a5cc6dbed5fc2da074311228ec388bfff38cfffa67d6c070191b1db963062a\"\n  },\n  {\n    \"arm\": \"off\",\n    \"output_lines\": 2048,\n    \"stdout_sha256\": \"d93b7d80444943445da3860f97308020a150a85c746f5063b63e4f0c63e3f5d2\",\n    \"library_sha256\": \"e0421f85049af9beee10ceb21f7776eeaedc88d4f7f3ebc70563d445628a56be\"\n  },\n  {\n    \"arm\": \"on\",\n    \"output_lines\": 2048,\n    \"stdout_sha256\": \"d93b7d80444943445da3860f97308020a150a85c746f5063b63e4f0c63e3f5d2\",\n    \"library_sha256\": \"2dd892d63f1b58a8f949535adec5e78cc85e2f6831009e74b523dd3c3286aea2\"\n  }\n]\n"
+  },
+  "scalar": {
+    "tail": "provenance: scalar object written by kfrc\nb4b8150685d9df0099ff17d22804fa7c097af8ac4323dca635c1529be754eb97  /workspace/results/compile50/parallel-body/validation/scalar/kfrc/objects/scalar.scalar.8e3808b8838d6a2d-cgu.0.rcgu.o\n0afbc490832bdb6eb1bc66d07e7a278a37770f32837bdb1e711fe8162cd71f26  /workspace/results/compile50/parallel-body/validation/scalar/kfrc/driver\n7b9e5679bd00650f662e395333982c5ff51019a40f623e5ceec1900e1849d6cb  /workspace/results/compile50/parallel-body/validation/scalar/llvm/driver\nPASS: 565 lines identical\n"
+  },
+  "generated": {
+    "tail": "PASS: 5 programs x 40 functions, outputs identical\n"
+  },
+  "entry": {
+    "tail": "-body/validation/entry/kfrc/main.main.dd7691706bc9aaf3-cgu.0.rcgu.o\n709c343a64c3e8d1039288999d44be8571ef36e1b56f98d0b09ee183d5477d6d  /workspace/results/compile50/parallel-body/validation/entry/kfrc/main\nb7e4d094f4a1afb579ed3f4945d9337f9af661ad89f72c35266a77b69f0ce5f9  /workspace/results/compile50/parallel-body/validation/entry/llvm/main\nPASS: main executable matches LLVM (exit 0)\n8196ad802cf37421d9ca42b5a7223c9636b476a5f427fe40726ae64af690c1a1  /workspace/results/compile50/parallel-body/validation/entry/kfrc/alloc_main.5iicnzqf9cizxeq0yf502ilw4.rcgu.o\n21f618e9c02f34fdcb015239cc658a13ad7ccbde43c8fd2cb726590e80577b29  /workspace/results/compile50/parallel-body/validation/entry/kfrc/alloc_main.alloc_main.7587205fcdcc079a-cgu.0.rcgu.o\ndf38fdafd4c98f73f89f6346edfc4249776639da26b8eb95f3453f920ccdbd1b  /workspace/results/compile50/parallel-body/validation/entry/kfrc/alloc_main\nf6b208e494fd7cd7c6fad097174c99786a4055f927e1dd85cef5a4489ccee7c9  /workspace/results/compile50/parallel-body/validation/entry/llvm/alloc_main\nPASS: alloc_main executable matches LLVM (exit 0)\n8196ad802cf37421d9ca42b5a7223c9636b476a5f427fe40726ae64af690c1a1  /workspace/results/compile50/parallel-body/validation/entry/kfrc/alloc_fail_main.7tm61q7q3uabz30fn8gjy1ar0.rcgu.o\ndcf30c849b1d26fe2e07b61ad83f0bb5beb98bf4afebfd176055ef98357f7d73  /workspace/results/compile50/parallel-body/validation/entry/kfrc/alloc_fail_main.alloc_fail_main.b0230c62164b69e8-cgu.0.rcgu.o\n23341c1f11397fcf1251cbd7a8050023ddc40554f0c2d503b18e27a34f062c75  /workspace/results/compile50/parallel-body/validation/entry/kfrc/alloc_fail_main\n4c3029e4941de2bd70715a45de9343ee64c813eb6b8cba24348ff10c361a2ab5  /workspace/results/compile50/parallel-body/validation/entry/llvm/alloc_fail_main\nPASS: alloc_fail_main executable matches LLVM (exit 134)\n"
+  },
+  "extended_memory": {
+    "status": "unsupported-in-baseline-and-candidate",
+    "reason": "union/SIMD select_unpredictable::<select::Word>"
+  }
+}

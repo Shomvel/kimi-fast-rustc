@@ -1,0 +1,18 @@
+{
+  "archive": "/Users/shom/Downloads/kfrc-sccp-20261110/compile50-evidence.tar.gz",
+  "bytes": 101150055,
+  "sha256": "475a4f77b855a4d897dc472699f5747547de37af28bb165c1f6ab027202ce731",
+  "verified_files": 5399,
+  "sandbox_id": "io1338cbw3i20cg5iurs5",
+  "sandbox_status": "released after both SCCP/KnownBits and compile50 archives were downloaded and verified",
+  "released_at_unix": 1794292626.3673658,
+  "base_commit": "09cb657",
+  "baseline_backend_sha256": "2867f89c8e5030b114ab97140b42287c174dca07335e3f9237e77e248ae3ab0b",
+  "candidate_backend_sha256": "d403e72ed5e4c61b50b33955159d586c40f6b653eab1d5767ab803897b18d5ea",
+  "source_manifest": "parallel-body-source.json",
+  "local_tests": {
+    "passed": 816,
+    "ignored": 1,
+    "log_sha256": "2344bc6663644e754c38ae79d4b43fc96f917354639e1f3d2f4ac6e8bb31f9d1"
+  }
+}

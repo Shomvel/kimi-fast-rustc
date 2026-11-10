@@ -1,0 +1,266 @@
+[
+  {
+    "crate": "semver",
+    "workload": "parse",
+    "v2_over_baseline": 1.035977568988475,
+    "v2_over_combined": 1.0103891165584067,
+    "perf": {
+      "baseline": {
+        "runs": 11,
+        "failures": 0,
+        "median_ns": 47786743,
+        "min_ns": 47190032,
+        "max_ns": 69924613,
+        "checksums": [
+          9666685
+        ],
+        "instructions": 705266337,
+        "cycles": 172513633
+      },
+      "combined": {
+        "runs": 11,
+        "failures": 0,
+        "median_ns": 48644695,
+        "min_ns": 48487990,
+        "max_ns": 52738468,
+        "checksums": [
+          9666685
+        ],
+        "instructions": 704732708,
+        "cycles": 181222055
+      },
+      "v2": {
+        "runs": 11,
+        "failures": 0,
+        "median_ns": 49262707,
+        "min_ns": 48913856,
+        "max_ns": 61145503,
+        "checksums": [
+          9666685
+        ],
+        "instructions": 704732453,
+        "cycles": 226561939
+      }
+    }
+  },
+  {
+    "crate": "semver",
+    "workload": "req",
+    "v2_over_baseline": 0.9786765397663869,
+    "v2_over_combined": 0.9222682067485476,
+    "perf": {
+      "baseline": {
+        "runs": 11,
+        "failures": 0,
+        "median_ns": 129326291,
+        "min_ns": 127947783,
+        "max_ns": 140252469,
+        "checksums": [
+          400000
+        ],
+        "instructions": 1658730547,
+        "cycles": 469321637
+      },
+      "combined": {
+        "runs": 11,
+        "failures": 0,
+        "median_ns": 136575928,
+        "min_ns": 134660548,
+        "max_ns": 154502399,
+        "checksums": [
+          400000
+        ],
+        "instructions": 1660264368,
+        "cycles": 494352857
+      },
+      "v2": {
+        "runs": 11,
+        "failures": 0,
+        "median_ns": 126563366,
+        "min_ns": 125724503,
+        "max_ns": 130369750,
+        "checksums": [
+          400000
+        ],
+        "instructions": 1660330752,
+        "cycles": 468325082
+      }
+    }
+  },
+  {
+    "crate": "semver",
+    "workload": "identifier",
+    "v2_over_baseline": 1.1530723300385401,
+    "v2_over_combined": 1.1556579580324358,
+    "perf": {
+      "baseline": {
+        "runs": 11,
+        "failures": 0,
+        "median_ns": 55084511,
+        "min_ns": 54788209,
+        "max_ns": 65950058,
+        "checksums": [
+          30750000
+        ],
+        "instructions": 918624950,
+        "cycles": 202447928
+      },
+      "combined": {
+        "runs": 11,
+        "failures": 0,
+        "median_ns": 55072002,
+        "min_ns": 54755620,
+        "max_ns": 55769444,
+        "checksums": [
+          30750000
+        ],
+        "instructions": 918025341,
+        "cycles": 202258344
+      },
+      "v2": {
+        "runs": 11,
+        "failures": 0,
+        "median_ns": 63622502,
+        "min_ns": 63229985,
+        "max_ns": 66104498,
+        "checksums": [
+          30750000
+        ],
+        "instructions": 918025225,
+        "cycles": 251245335
+      }
+    }
+  },
+  {
+    "crate": "base64",
+    "workload": "encode",
+    "v2_over_baseline": 0.9430514581505124,
+    "v2_over_combined": 0.9900267094422899,
+    "perf": {
+      "baseline": {
+        "runs": 11,
+        "failures": 0,
+        "median_ns": 172591473,
+        "min_ns": 172051306,
+        "max_ns": 179344688,
+        "checksums": [
+          55493921
+        ],
+        "instructions": 1870917871,
+        "cycles": 632534753
+      },
+      "combined": {
+        "runs": 11,
+        "failures": 0,
+        "median_ns": 163887735,
+        "min_ns": 162315437,
+        "max_ns": 226296906,
+        "checksums": [
+          55493921
+        ],
+        "instructions": 1549757652,
+        "cycles": 595332803
+      },
+      "v2": {
+        "runs": 11,
+        "failures": 0,
+        "median_ns": 162740813,
+        "min_ns": 162253235,
+        "max_ns": 176211159,
+        "checksums": [
+          55493921
+        ],
+        "instructions": 1549757217,
+        "cycles": 595491057
+      }
+    }
+  },
+  {
+    "crate": "base64",
+    "workload": "decode",
+    "v2_over_baseline": 0.9973051789160815,
+    "v2_over_combined": 1.0075826592967503,
+    "perf": {
+      "baseline": {
+        "runs": 11,
+        "failures": 0,
+        "median_ns": 152940547,
+        "min_ns": 150693552,
+        "max_ns": 155169826,
+        "checksums": [
+          42229339
+        ],
+        "instructions": 2429137485,
+        "cycles": 560401874
+      },
+      "combined": {
+        "runs": 11,
+        "failures": 0,
+        "median_ns": 152828560,
+        "min_ns": 146632847,
+        "max_ns": 158553408,
+        "checksums": [
+          42229339
+        ],
+        "instructions": 2306275939,
+        "cycles": 544007505
+      },
+      "v2": {
+        "runs": 11,
+        "failures": 0,
+        "median_ns": 152250686,
+        "min_ns": 149867338,
+        "max_ns": 195624910,
+        "checksums": [
+          42229339
+        ],
+        "instructions": 2306275859,
+        "cycles": 555672370
+      }
+    }
+  },
+  {
+    "crate": "base64",
+    "workload": "short",
+    "v2_over_baseline": 0.9423903244179928,
+    "v2_over_combined": 0.99741888550656,
+    "perf": {
+      "baseline": {
+        "runs": 11,
+        "failures": 0,
+        "median_ns": 78315625,
+        "min_ns": 77764532,
+        "max_ns": 95761088,
+        "checksums": [
+          55990625
+        ],
+        "instructions": 1172204789,
+        "cycles": 287799680
+      },
+      "combined": {
+        "runs": 11,
+        "failures": 0,
+        "median_ns": 73886630,
+        "min_ns": 73144291,
+        "max_ns": 93215716,
+        "checksums": [
+          55990625
+        ],
+        "instructions": 1077167592,
+        "cycles": 290783775
+      },
+      "v2": {
+        "runs": 11,
+        "failures": 0,
+        "median_ns": 73808814,
+        "min_ns": 73493102,
+        "max_ns": 76727942,
+        "checksums": [
+          55990625
+        ],
+        "instructions": 1077167642,
+        "cycles": 273463349
+      }
+    }
+  }
+]

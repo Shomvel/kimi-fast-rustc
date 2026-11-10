@@ -1,0 +1,131 @@
+{
+  "base_commit": "bc718cca4a4c0e26af6e3695f13d1878e61d3bd1",
+  "current_head": "bc718cca4a4c0e26af6e3695f13d1878e61d3bd1",
+  "arms": {
+    "initial": {
+      "source_patch": "/Users/shom/Downloads/kfrc-artifact-fixes-20261110/initial-source.json",
+      "sha256": "66de1bd68178a4ec9dc0fbd333aa5de3264fa57133eaa65518093aea3c70188c",
+      "files": [
+        "crates/kfrc-son/src/lower_layout/boundary_transport.rs",
+        "crates/kfrc-son/src/transforms/control/mod.rs",
+        "crates/kfrc-son/src/transforms/control/simplify.rs",
+        "crates/kfrc-son/tests/semantic_control.rs",
+        "crates/kfrc-x86/src/object_file.rs",
+        "crates/kfrc-x86/tests/multi_function.rs",
+        "crates/kfrc-x86/tests/short_jumps.rs",
+        "crates/rustc_codegen_kfrc/src/codegen.rs",
+        "crates/rustc_codegen_kfrc/src/lib.rs",
+        "crates/kfrc-son/src/transforms/control/diamonds.rs"
+      ]
+    },
+    "layout": {
+      "source_patch": "/Users/shom/Downloads/kfrc-artifact-fixes-20261110/layout-source.json",
+      "sha256": "2627f94bcdf068a8f280fba8e3da758154e54b7b5833bdf9cdf40cddde43a93f",
+      "files": [
+        "crates/kfrc-son/src/lower_layout.rs",
+        "crates/kfrc-son/src/lower_layout/boundary_transport.rs",
+        "crates/kfrc-son/src/transforms/control/mod.rs",
+        "crates/kfrc-son/src/transforms/control/simplify.rs",
+        "crates/kfrc-son/tests/semantic_control.rs",
+        "crates/kfrc-son/tests/semantic_memory_optimize.rs",
+        "crates/kfrc-x86/src/object_file.rs",
+        "crates/kfrc-x86/tests/multi_function.rs",
+        "crates/kfrc-x86/tests/short_jumps.rs",
+        "crates/rustc_codegen_kfrc/src/codegen.rs",
+        "crates/rustc_codegen_kfrc/src/lib.rs",
+        "crates/kfrc-son/src/transforms/control/diamonds.rs",
+        "crates/kfrc-son/src/lower_layout/private_memory.rs"
+      ]
+    },
+    "cleanup": {
+      "source_patch": "/Users/shom/Downloads/kfrc-artifact-fixes-20261110/cleanup-source.json",
+      "sha256": "6b451d61ac1adfc087a3729c7a217af2a3885830f3b9f166af7f8e47ecf7d96c",
+      "files": [
+        "crates/kfrc-son/src/analysis/known_bits.rs",
+        "crates/kfrc-son/src/lower_layout.rs",
+        "crates/kfrc-son/src/lower_layout/boundary_transport.rs",
+        "crates/kfrc-son/src/pipeline.rs",
+        "crates/kfrc-son/src/transforms/control/conditions.rs",
+        "crates/kfrc-son/src/transforms/control/mod.rs",
+        "crates/kfrc-son/src/transforms/control/simplify.rs",
+        "crates/kfrc-son/tests/semantic_control.rs",
+        "crates/kfrc-son/tests/semantic_memory_optimize.rs",
+        "crates/kfrc-son/tests/semantic_variant_lanes.rs",
+        "crates/kfrc-x86/src/object_file.rs",
+        "crates/kfrc-x86/tests/arithmetic_contracts.rs",
+        "crates/kfrc-x86/tests/multi_function.rs",
+        "crates/kfrc-x86/tests/short_jumps.rs",
+        "crates/rustc_codegen_kfrc/src/codegen.rs",
+        "crates/rustc_codegen_kfrc/src/lib.rs",
+        "crates/kfrc-son/src/lower_layout/cleanup.rs",
+        "crates/kfrc-son/src/lower_layout/private_memory.rs",
+        "crates/kfrc-son/src/transforms/control/diamonds.rs"
+      ]
+    },
+    "wrappers": {
+      "source_patch": "/Users/shom/Downloads/kfrc-artifact-fixes-20261110/wrappers-source.json",
+      "sha256": "c617090901e998853db591fbf23c41c1cb5fbc1f2dccf6be8eea9926ba361982",
+      "files": [
+        "crates/kfrc-son/src/analysis/known_bits.rs",
+        "crates/kfrc-son/src/lower_layout.rs",
+        "crates/kfrc-son/src/lower_layout/boundary_transport.rs",
+        "crates/kfrc-son/src/pipeline.rs",
+        "crates/kfrc-son/src/transforms/control/conditions.rs",
+        "crates/kfrc-son/src/transforms/control/mod.rs",
+        "crates/kfrc-son/src/transforms/control/simplify.rs",
+        "crates/kfrc-son/tests/semantic_control.rs",
+        "crates/kfrc-son/tests/semantic_memory_optimize.rs",
+        "crates/kfrc-son/tests/semantic_variant_lanes.rs",
+        "crates/kfrc-x86/src/object_file.rs",
+        "crates/kfrc-x86/tests/arithmetic_contracts.rs",
+        "crates/kfrc-x86/tests/multi_function.rs",
+        "crates/kfrc-x86/tests/short_jumps.rs",
+        "crates/rustc_codegen_kfrc/src/codegen.rs",
+        "crates/rustc_codegen_kfrc/src/lib.rs",
+        "crates/kfrc-son/src/lower_layout/cleanup.rs",
+        "crates/kfrc-son/src/lower_layout/private_memory.rs",
+        "crates/kfrc-son/src/transforms/control/diamonds.rs"
+      ]
+    },
+    "transport": {
+      "source_patch": "/Users/shom/Downloads/kfrc-artifact-fixes-20261110/transport-source.json",
+      "sha256": "42f1f2f4364d54e40c2dedd46d93b89e01e7953315d35135910017a172851366",
+      "files": [
+        "crates/kfrc-son/src/analysis/known_bits.rs",
+        "crates/kfrc-son/src/lower_layout.rs",
+        "crates/kfrc-son/src/lower_layout/boundary_transport.rs",
+        "crates/kfrc-son/src/pipeline.rs",
+        "crates/kfrc-son/src/transforms/control/conditions.rs",
+        "crates/kfrc-son/src/transforms/control/mod.rs",
+        "crates/kfrc-son/src/transforms/control/simplify.rs",
+        "crates/kfrc-son/src/transforms/scalar/instcombine.rs",
+        "crates/kfrc-son/tests/semantic_boundary_transport.rs",
+        "crates/kfrc-son/tests/semantic_control.rs",
+        "crates/kfrc-son/tests/semantic_instcombine.rs",
+        "crates/kfrc-son/tests/semantic_memory_optimize.rs",
+        "crates/kfrc-son/tests/semantic_variant_lanes.rs",
+        "crates/kfrc-x86/src/object_file.rs",
+        "crates/kfrc-x86/tests/arithmetic_contracts.rs",
+        "crates/kfrc-x86/tests/multi_function.rs",
+        "crates/kfrc-x86/tests/short_jumps.rs",
+        "crates/rustc_codegen_kfrc/src/codegen.rs",
+        "crates/rustc_codegen_kfrc/src/lib.rs",
+        "crates/kfrc-son/src/lower_layout/cleanup.rs",
+        "crates/kfrc-son/src/lower_layout/private_memory.rs",
+        "crates/kfrc-son/src/lower_layout/private_memory_tests.rs",
+        "crates/kfrc-son/src/transforms/control/diamonds.rs"
+      ]
+    },
+    "ranges": {
+      "source_patch": "/Users/shom/Downloads/kfrc-artifact-fixes-20261110/ranges-source.json",
+      "sha256": "6b467de60b44809e4a8b43bd99874b8dd31242f3b74822a31a1c8977347abcbd",
+      "files": [
+        "crates/kfrc-son/src/analysis/known_bits.rs",
+        "crates/kfrc-son/tests/semantic_control.rs"
+      ]
+    }
+  },
+  "ranges_scope": "Incremental overlay on transport; correctness checks passed, no ranges runtime or compile-cost comparison yet. Current workspace adds a cycle test only to this arm.",
+  "transport_scope": "21 alternating runtime rounds with 4x workloads; 21 paired compile rounds; compact evidence SHA-verified and archived locally.",
+  "evidence_root": "/Users/shom/Downloads/kfrc-artifact-fixes-20261110/systematic-review-evidence/evidence/results"
+}

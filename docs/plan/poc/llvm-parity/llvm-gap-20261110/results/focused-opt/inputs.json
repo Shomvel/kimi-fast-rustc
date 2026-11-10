@@ -1,0 +1,37 @@
+{
+  "baseline": "start-source.json: prior ranges production code plus cycle regression test",
+  "base_commit": "bc718cca4a4c0e26af6e3695f13d1878e61d3bd1",
+  "results_directory": "/Users/shom/Downloads/kfrc-focused-opt-20261110",
+  "candidates": {
+    "start-source.json": {
+      "sha256": "71e7450b258ae8381fc1534a0b9ff5f7fcc0307b440b6b85d1234bffbf295975",
+      "file_count": 1066
+    },
+    "h1-source.json": {
+      "sha256": "87a7e08199fb0f7d96a8e91fa078484795ff2fb9632e669312b719ee3fa56936",
+      "file_count": 4
+    },
+    "address-cleanup-source.json": {
+      "sha256": "ad1e7fbfd08ddef1769849089a3732449a462f4c1e9a8d5744e953fc6f037574",
+      "file_count": 3
+    },
+    "address-only-source.json": {
+      "sha256": "9717dabb452c8d09e2ed484e098aef7e26e0052ec126f4312010ba7af166bb99",
+      "file_count": 2
+    },
+    "bool-only-source.json": {
+      "sha256": "df94f2bb26dc93939fd55cb95c9a25896aa8a853ca4dfb7c2d6f854e3add91d9",
+      "file_count": 1
+    },
+    "checked-source.json": {
+      "sha256": "a18e38e7328e924693f91761512fad5eb732d2be8c261c088dae5541bae6c79c",
+      "file_count": 6
+    }
+  },
+  "selected_source": "/Users/shom/Downloads/kfrc-focused-opt-20261110/selected-source.json",
+  "selected_overlay_sha256": "d9e67d51da7b7b79bc2c01e96a952814eda4e0a113196c12416abe3af9b67929",
+  "selected_alignment": 16,
+  "accepted_source": "/Users/shom/Downloads/kfrc-focused-opt-20261110/accepted-source.json",
+  "accepted_overlay_sha256": "ea9ed9e00a5caa56555810585fb9e6faed5b473a4134d34a83193c275d690562",
+  "loop_headers": "natural headers from existing scheduler dominance analysis"
+}

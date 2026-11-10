@@ -1,0 +1,506 @@
+[
+  {
+    "crate": "humantime",
+    "caller": "<humantime[7c8d5c717cf60a7d]::duration::Unit as core[d11a8dfb3c524a76]::str::traits::FromStr>::from_str",
+    "callee": "<str as core[d11a8dfb3c524a76]::cmp::PartialEq>::eq",
+    "source_nodes": 40,
+    "depth": 0,
+    "outcome": "Budget",
+    "calls": 22
+  },
+  {
+    "crate": "humantime",
+    "caller": "<humantime[7c8d5c717cf60a7d]::duration::Unit as core[d11a8dfb3c524a76]::str::traits::FromStr>::from_str",
+    "callee": "<[u8] as core[d11a8dfb3c524a76]::slice::cmp::SlicePartialEq<u8>>::equal",
+    "source_nodes": 68,
+    "depth": 3,
+    "outcome": "Size",
+    "calls": 18
+  },
+  {
+    "crate": "humantime",
+    "caller": "<humantime[7c8d5c717cf60a7d]::wrapper::Duration as core[d11a8dfb3c524a76]::str::traits::FromStr>::from_str",
+    "callee": "humantime[7c8d5c717cf60a7d]::duration::parse_duration",
+    "source_nodes": 0,
+    "depth": 0,
+    "outcome": "Missing",
+    "calls": 1
+  },
+  {
+    "crate": "humantime",
+    "caller": "<humantime[7c8d5c717cf60a7d]::wrapper::Timestamp as core[d11a8dfb3c524a76]::str::traits::FromStr>::from_str",
+    "callee": "humantime[7c8d5c717cf60a7d]::date::parse_rfc3339_weak",
+    "source_nodes": 0,
+    "depth": 0,
+    "outcome": "Missing",
+    "calls": 1
+  },
+  {
+    "crate": "humantime",
+    "caller": "<humantime[7c8d5c717cf60a7d]::duration::Parser>::parse_unit",
+    "callee": "<[u8] as alloc[1bd1a2b3be26e650]::borrow::ToOwned>::to_owned",
+    "source_nodes": 0,
+    "depth": 1,
+    "outcome": "Missing",
+    "calls": 1
+  },
+  {
+    "crate": "humantime",
+    "caller": "<humantime[7c8d5c717cf60a7d]::duration::Parser>::parse_unit",
+    "callee": "core[d11a8dfb3c524a76]::str::slice_error_fail",
+    "source_nodes": 0,
+    "depth": 2,
+    "outcome": "Missing",
+    "calls": 2
+  },
+  {
+    "crate": "humantime",
+    "caller": "<humantime[7c8d5c717cf60a7d]::duration::Parser>::parse_unit",
+    "callee": "core[d11a8dfb3c524a76]::intrinsics::unlikely",
+    "source_nodes": 15,
+    "depth": 2,
+    "outcome": "Budget",
+    "calls": 1
+  },
+  {
+    "crate": "humantime",
+    "caller": "<humantime[7c8d5c717cf60a7d]::duration::Parser>::parse_unit",
+    "callee": "<u64>::checked_mul",
+    "source_nodes": 26,
+    "depth": 1,
+    "outcome": "Budget",
+    "calls": 1
+  },
+  {
+    "crate": "humantime",
+    "caller": "<humantime[7c8d5c717cf60a7d]::duration::Parser>::parse_unit",
+    "callee": "<u64 as humantime[7c8d5c717cf60a7d]::duration::OverflowOp>::div",
+    "source_nodes": 29,
+    "depth": 0,
+    "outcome": "Budget",
+    "calls": 9
+  },
+  {
+    "crate": "humantime",
+    "caller": "<humantime[7c8d5c717cf60a7d]::duration::Parser>::parse_unit",
+    "callee": "<core[d11a8dfb3c524a76]::result::Result<u64, humantime[7c8d5c717cf60a7d]::duration::Error> as core[d11a8dfb3c524a76]::ops::try_trait::Try>::branch",
+    "source_nodes": 35,
+    "depth": 0,
+    "outcome": "Budget",
+    "calls": 26
+  },
+  {
+    "crate": "humantime",
+    "caller": "<humantime[7c8d5c717cf60a7d]::duration::Parser>::parse_unit",
+    "callee": "<core[d11a8dfb3c524a76]::result::Result<(), humantime[7c8d5c717cf60a7d]::duration::Error> as core[d11a8dfb3c524a76]::ops::try_trait::Try>::branch",
+    "source_nodes": 35,
+    "depth": 0,
+    "outcome": "Budget",
+    "calls": 2
+  },
+  {
+    "crate": "humantime",
+    "caller": "<humantime[7c8d5c717cf60a7d]::duration::Parser>::parse_unit",
+    "callee": "<core[d11a8dfb3c524a76]::option::Option<u64>>::ok_or::<humantime[7c8d5c717cf60a7d]::duration::Error>",
+    "source_nodes": 43,
+    "depth": 1,
+    "outcome": "Budget",
+    "calls": 17
+  },
+  {
+    "crate": "humantime",
+    "caller": "<humantime[7c8d5c717cf60a7d]::duration::Parser>::parse_unit",
+    "callee": "<core[d11a8dfb3c524a76]::ops::range::Range<usize> as core[d11a8dfb3c524a76]::slice::index::SliceIndex<str>>::get",
+    "source_nodes": 52,
+    "depth": 2,
+    "outcome": "Budget",
+    "calls": 2
+  },
+  {
+    "crate": "humantime",
+    "caller": "<humantime[7c8d5c717cf60a7d]::duration::Parser>::parse_unit",
+    "callee": "humantime[7c8d5c717cf60a7d]::duration::add_current",
+    "source_nodes": 124,
+    "depth": 0,
+    "outcome": "Size",
+    "calls": 2
+  },
+  {
+    "crate": "humantime",
+    "caller": "<humantime[7c8d5c717cf60a7d]::duration::Parser>::parse_unit",
+    "callee": "<humantime[7c8d5c717cf60a7d]::duration::Unit as core[d11a8dfb3c524a76]::str::traits::FromStr>::from_str",
+    "source_nodes": 508,
+    "depth": 0,
+    "outcome": "Size",
+    "calls": 1
+  },
+  {
+    "crate": "base64",
+    "caller": "<base64[1a75627b77da3786]::engine::general_purpose::GeneralPurpose as base64[1a75627b77da3786]::engine::Engine>::internal_encode",
+    "callee": "core[d11a8dfb3c524a76]::panicking::panic_bounds_check",
+    "source_nodes": 0,
+    "depth": 0,
+    "outcome": "Missing",
+    "calls": 56
+  },
+  {
+    "crate": "base64",
+    "caller": "<base64[1a75627b77da3786]::engine::general_purpose::GeneralPurpose as base64[1a75627b77da3786]::engine::Engine>::internal_encode",
+    "callee": "base64[1a75627b77da3786]::engine::general_purpose::read_u64",
+    "source_nodes": 25,
+    "depth": 0,
+    "outcome": "DataConflict",
+    "calls": 4
+  },
+  {
+    "crate": "base64",
+    "caller": "<base64[1a75627b77da3786]::engine::general_purpose::GeneralPurpose as base64[1a75627b77da3786]::engine::Engine>::internal_encode",
+    "callee": "core[d11a8dfb3c524a76]::slice::index::slice_index_fail",
+    "source_nodes": 0,
+    "depth": 2,
+    "outcome": "Missing",
+    "calls": 8
+  },
+  {
+    "crate": "base64",
+    "caller": "base64[1a75627b77da3786]::engine::general_purpose::decode::decode_helper",
+    "callee": "base64[1a75627b77da3786]::engine::general_purpose::decode::complete_quads_len",
+    "source_nodes": 0,
+    "depth": 0,
+    "outcome": "Missing",
+    "calls": 1
+  },
+  {
+    "crate": "base64",
+    "caller": "base64[1a75627b77da3786]::engine::general_purpose::decode::decode_helper",
+    "callee": "base64[1a75627b77da3786]::engine::general_purpose::decode_suffix::decode_suffix",
+    "source_nodes": 0,
+    "depth": 0,
+    "outcome": "Missing",
+    "calls": 1
+  },
+  {
+    "crate": "base64",
+    "caller": "base64[1a75627b77da3786]::engine::general_purpose::decode::decode_helper",
+    "callee": "<[u8]>::chunks_exact",
+    "source_nodes": 27,
+    "depth": 0,
+    "outcome": "DataConflict",
+    "calls": 2
+  },
+  {
+    "crate": "base64",
+    "caller": "base64[1a75627b77da3786]::engine::general_purpose::decode::decode_helper",
+    "callee": "core[d11a8dfb3c524a76]::slice::index::slice_index_fail",
+    "source_nodes": 0,
+    "depth": 2,
+    "outcome": "Missing",
+    "calls": 7
+  },
+  {
+    "crate": "base64",
+    "caller": "base64[1a75627b77da3786]::engine::general_purpose::decode::decode_helper",
+    "callee": "core[d11a8dfb3c524a76]::slice::index::slice_index_fail",
+    "source_nodes": 0,
+    "depth": 3,
+    "outcome": "Missing",
+    "calls": 1
+  },
+  {
+    "crate": "base64",
+    "caller": "base64[1a75627b77da3786]::engine::general_purpose::decode::decode_helper",
+    "callee": "core[d11a8dfb3c524a76]::ptr::metadata::metadata::<[u8]>",
+    "source_nodes": 6,
+    "depth": 4,
+    "outcome": "Budget",
+    "calls": 2
+  },
+  {
+    "crate": "base64",
+    "caller": "base64[1a75627b77da3786]::engine::general_purpose::decode::decode_helper",
+    "callee": "<[u8]>::split_at_checked",
+    "source_nodes": 27,
+    "depth": 2,
+    "outcome": "DataConflict",
+    "calls": 2
+  },
+  {
+    "crate": "base64",
+    "caller": "base64[1a75627b77da3786]::engine::general_purpose::decode::decode_helper",
+    "callee": "<[u8]>::len",
+    "source_nodes": 12,
+    "depth": 2,
+    "outcome": "Budget",
+    "calls": 1
+  },
+  {
+    "crate": "base64",
+    "caller": "base64[1a75627b77da3786]::engine::general_purpose::decode::decode_helper",
+    "callee": "core[d11a8dfb3c524a76]::slice::index::get_offset_len_mut_noubcheck::<u8>",
+    "source_nodes": 13,
+    "depth": 2,
+    "outcome": "Budget",
+    "calls": 1
+  },
+  {
+    "crate": "base64",
+    "caller": "base64[1a75627b77da3786]::engine::general_purpose::decode::decode_helper",
+    "callee": "<usize>::checked_sub",
+    "source_nodes": 18,
+    "depth": 2,
+    "outcome": "Budget",
+    "calls": 1
+  },
+  {
+    "crate": "base64",
+    "caller": "base64[1a75627b77da3786]::engine::general_purpose::decode::decode_helper",
+    "callee": "<core[d11a8dfb3c524a76]::ops::range::Range<usize> as core[d11a8dfb3c524a76]::slice::index::SliceIndex<[u8]>>::index_mut",
+    "source_nodes": 49,
+    "depth": 1,
+    "outcome": "Budget",
+    "calls": 5
+  },
+  {
+    "crate": "base64",
+    "caller": "base64[1a75627b77da3786]::engine::general_purpose::decode::decode_helper",
+    "callee": "base64[1a75627b77da3786]::engine::general_purpose::decode::decode_chunk_4",
+    "source_nodes": 254,
+    "depth": 0,
+    "outcome": "Budget",
+    "calls": 1
+  },
+  {
+    "crate": "base64",
+    "caller": "base64[1a75627b77da3786]::engine::general_purpose::decode::decode_helper",
+    "callee": "base64[1a75627b77da3786]::engine::general_purpose::decode::decode_chunk_8",
+    "source_nodes": 466,
+    "depth": 0,
+    "outcome": "Size",
+    "calls": 4
+  },
+  {
+    "crate": "base64",
+    "caller": "base64[1a75627b77da3786]::engine::general_purpose::decode::decode_chunk_4",
+    "callee": "core[d11a8dfb3c524a76]::panicking::panic_bounds_check",
+    "source_nodes": 0,
+    "depth": 0,
+    "outcome": "Missing",
+    "calls": 8
+  },
+  {
+    "crate": "base64",
+    "caller": "base64[1a75627b77da3786]::engine::general_purpose::decode::decode_chunk_4",
+    "callee": "core[d11a8dfb3c524a76]::slice::copy_from_slice_impl::<u8>",
+    "source_nodes": 0,
+    "depth": 1,
+    "outcome": "Missing",
+    "calls": 1
+  },
+  {
+    "crate": "base64",
+    "caller": "base64[1a75627b77da3786]::engine::general_purpose::decode::decode_chunk_4",
+    "callee": "core[d11a8dfb3c524a76]::slice::index::slice_index_fail",
+    "source_nodes": 0,
+    "depth": 4,
+    "outcome": "Budget",
+    "calls": 1
+  },
+  {
+    "crate": "base64",
+    "caller": "base64[1a75627b77da3786]::engine::general_purpose::decode::decode_chunk_4",
+    "callee": "<[u8]>::len",
+    "source_nodes": 12,
+    "depth": 4,
+    "outcome": "Budget",
+    "calls": 2
+  },
+  {
+    "crate": "base64",
+    "caller": "base64[1a75627b77da3786]::engine::general_purpose::decode::decode_chunk_4",
+    "callee": "core[d11a8dfb3c524a76]::slice::index::get_offset_len_noubcheck::<u8>",
+    "source_nodes": 13,
+    "depth": 4,
+    "outcome": "Budget",
+    "calls": 1
+  },
+  {
+    "crate": "base64",
+    "caller": "base64[1a75627b77da3786]::engine::general_purpose::decode::decode_chunk_4",
+    "callee": "<usize>::checked_sub",
+    "source_nodes": 18,
+    "depth": 4,
+    "outcome": "Budget",
+    "calls": 1
+  },
+  {
+    "crate": "base64",
+    "caller": "base64[1a75627b77da3786]::engine::general_purpose::decode::decode_chunk_4",
+    "callee": "core[d11a8dfb3c524a76]::slice::index::slice_index_fail",
+    "source_nodes": 0,
+    "depth": 3,
+    "outcome": "Missing",
+    "calls": 1
+  },
+  {
+    "crate": "base64",
+    "caller": "base64[1a75627b77da3786]::engine::general_purpose::decode::decode_chunk_4",
+    "callee": "core[d11a8dfb3c524a76]::ptr::metadata::metadata::<[u8]>",
+    "source_nodes": 6,
+    "depth": 4,
+    "outcome": "Budget",
+    "calls": 2
+  },
+  {
+    "crate": "base64",
+    "caller": "base64[1a75627b77da3786]::engine::general_purpose::decode::decode_chunk_8",
+    "callee": "core[d11a8dfb3c524a76]::panicking::panic_bounds_check",
+    "source_nodes": 0,
+    "depth": 0,
+    "outcome": "Missing",
+    "calls": 16
+  },
+  {
+    "crate": "base64",
+    "caller": "base64[1a75627b77da3786]::engine::general_purpose::decode::decode_chunk_8",
+    "callee": "core[d11a8dfb3c524a76]::slice::copy_from_slice_impl::<u8>",
+    "source_nodes": 0,
+    "depth": 1,
+    "outcome": "Missing",
+    "calls": 1
+  },
+  {
+    "crate": "base64",
+    "caller": "base64[1a75627b77da3786]::engine::general_purpose::decode::decode_chunk_8",
+    "callee": "core[d11a8dfb3c524a76]::slice::index::slice_index_fail",
+    "source_nodes": 0,
+    "depth": 4,
+    "outcome": "Budget",
+    "calls": 1
+  },
+  {
+    "crate": "base64",
+    "caller": "base64[1a75627b77da3786]::engine::general_purpose::decode::decode_chunk_8",
+    "callee": "<[u8]>::len",
+    "source_nodes": 12,
+    "depth": 4,
+    "outcome": "Budget",
+    "calls": 2
+  },
+  {
+    "crate": "base64",
+    "caller": "base64[1a75627b77da3786]::engine::general_purpose::decode::decode_chunk_8",
+    "callee": "core[d11a8dfb3c524a76]::slice::index::get_offset_len_noubcheck::<u8>",
+    "source_nodes": 13,
+    "depth": 4,
+    "outcome": "Budget",
+    "calls": 1
+  },
+  {
+    "crate": "base64",
+    "caller": "base64[1a75627b77da3786]::engine::general_purpose::decode::decode_chunk_8",
+    "callee": "<usize>::checked_sub",
+    "source_nodes": 18,
+    "depth": 4,
+    "outcome": "Budget",
+    "calls": 1
+  },
+  {
+    "crate": "base64",
+    "caller": "base64[1a75627b77da3786]::engine::general_purpose::decode::decode_chunk_8",
+    "callee": "core[d11a8dfb3c524a76]::slice::index::slice_index_fail",
+    "source_nodes": 0,
+    "depth": 3,
+    "outcome": "Missing",
+    "calls": 1
+  },
+  {
+    "crate": "base64",
+    "caller": "base64[1a75627b77da3786]::engine::general_purpose::decode::decode_chunk_8",
+    "callee": "core[d11a8dfb3c524a76]::ptr::metadata::metadata::<[u8]>",
+    "source_nodes": 6,
+    "depth": 4,
+    "outcome": "Budget",
+    "calls": 2
+  },
+  {
+    "crate": "semver",
+    "caller": "semver[fd940cb7d3d8ab00]::parse::numeric_identifier",
+    "callee": "core[d11a8dfb3c524a76]::str::slice_error_fail",
+    "source_nodes": 0,
+    "depth": 2,
+    "outcome": "Missing",
+    "calls": 2
+  },
+  {
+    "crate": "semver",
+    "caller": "semver[fd940cb7d3d8ab00]::parse::numeric_identifier",
+    "callee": "core[d11a8dfb3c524a76]::ptr::metadata::metadata::<[u8]>",
+    "source_nodes": 6,
+    "depth": 4,
+    "outcome": "Budget",
+    "calls": 2
+  },
+  {
+    "crate": "semver",
+    "caller": "semver[fd940cb7d3d8ab00]::parse::numeric_identifier",
+    "callee": "<core[d11a8dfb3c524a76]::slice::iter::Iter<u8>>::new",
+    "source_nodes": 29,
+    "depth": 2,
+    "outcome": "DataConflict",
+    "calls": 1
+  },
+  {
+    "crate": "semver",
+    "caller": "semver[fd940cb7d3d8ab00]::parse::numeric_identifier",
+    "callee": "<core[d11a8dfb3c524a76]::ops::range::RangeFrom<usize> as core[d11a8dfb3c524a76]::slice::index::SliceIndex<str>>::get_unchecked",
+    "source_nodes": 21,
+    "depth": 3,
+    "outcome": "DataConflict",
+    "calls": 2
+  },
+  {
+    "crate": "semver",
+    "caller": "semver[fd940cb7d3d8ab00]::parse::numeric_identifier",
+    "callee": "<char>::from_u32_unchecked",
+    "source_nodes": 10,
+    "depth": 3,
+    "outcome": "DataConflict",
+    "calls": 1
+  },
+  {
+    "crate": "semver",
+    "caller": "semver[fd940cb7d3d8ab00]::parse::numeric_identifier",
+    "callee": "<str>::is_char_boundary",
+    "source_nodes": 61,
+    "depth": 3,
+    "outcome": "DataConflict",
+    "calls": 2
+  },
+  {
+    "crate": "semver",
+    "caller": "semver[fd940cb7d3d8ab00]::parse::numeric_identifier",
+    "callee": "core[d11a8dfb3c524a76]::str::validations::next_code_point::<core[d11a8dfb3c524a76]::slice::iter::Iter<u8>>",
+    "source_nodes": 142,
+    "depth": 1,
+    "outcome": "Size",
+    "calls": 1
+  },
+  {
+    "crate": "unicode-segmentation",
+    "caller": "core[d11a8dfb3c524a76]::str::validations::next_code_point_reverse::<core[d11a8dfb3c524a76]::slice::iter::Iter<u8>>",
+    "callee": "core[d11a8dfb3c524a76]::hint::unreachable_unchecked",
+    "source_nodes": 18,
+    "depth": 1,
+    "outcome": "Unsupported",
+    "calls": 3
+  },
+  {
+    "crate": "unicode-segmentation",
+    "caller": "core[d11a8dfb3c524a76]::str::validations::next_code_point_reverse::<core[d11a8dfb3c524a76]::slice::iter::Iter<u8>>",
+    "callee": "<core[d11a8dfb3c524a76]::ptr::non_null::NonNull<u8>>::sub",
+    "source_nodes": 16,
+    "depth": 3,
+    "outcome": "DataConflict",
+    "calls": 4
+  }
+]

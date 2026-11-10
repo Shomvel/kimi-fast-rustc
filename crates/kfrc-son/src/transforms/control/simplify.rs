@@ -21,6 +21,7 @@ pub fn run(graph: &mut FunctionGraph) -> Result<ControlStats, CfgEditError> {
     graph.resolve_edges();
     let before = graph.ids().count();
     let mut stats = ControlStats::default();
+    stats.branches_folded += super::diamonds::run(graph);
     // Branch folding only forwards/removes existing nodes, so one immutable
     // projection index remains valid through this loop. Avoid rescanning the
     // entire graph for every selected edge.

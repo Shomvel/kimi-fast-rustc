@@ -215,6 +215,40 @@ impl DefinedBefore {
         let earlier = positions.partition_point(|&definition| definition < position);
         earlier > 0 && positions[earlier - 1] >= self.block_start[block]
     }
+
+    /// A bulk forward sweep shares the block-entry fact instead of querying
+    /// definition positions separately for every live value at every point.
+    fn restrict_snapshots(
+        &self,
+        instructions: &[InstructionLiveness],
+        before: &mut [Vec<VirtualReg>],
+        after: &mut [Vec<VirtualReg>],
+    ) {
+        let mut available = vec![0u64; self.words];
+        let contains = |bits: &[u64], register: VirtualReg| {
+            self.dense.get(register.0 as usize).is_some_and(|&value| {
+                value != u32::MAX && bits[value as usize / 64] & (1 << (value % 64)) != 0
+            })
+        };
+        for (block, &start) in self.block_start.iter().enumerate() {
+            available.copy_from_slice(&self.entry[block * self.words..(block + 1) * self.words]);
+            let end = self
+                .block_start
+                .get(block + 1)
+                .copied()
+                .unwrap_or(instructions.len());
+            for position in start..end {
+                let instruction = &instructions[position];
+                before[position]
+                    .retain(|&v| contains(&available, v) || instruction.uses.contains(&v));
+                for v in &instruction.definitions {
+                    let value = self.dense[v.0 as usize] as usize;
+                    available[value / 64] |= 1 << (value % 64);
+                }
+                after[position].retain(|&v| contains(&available, v));
+            }
+        }
+    }
 }
 
 /// Live ranges restricted to values that hold a program value. Every use must
@@ -341,11 +375,7 @@ pub(crate) fn analyze(instructions: &[InstructionLiveness]) -> Liveness {
     // A value live only along paths where it is undefined holds no program
     // value. Dropping those points removes garbage homes and edge copies.
     let defined = DefinedBefore::new(instructions);
-    for (position, instruction) in instructions.iter().enumerate() {
-        let contains = |v: &VirtualReg| defined.contains(position, *v);
-        before[position].retain(|v| contains(v) || instruction.uses.contains(v));
-        after[position].retain(|v| contains(v) || instruction.definitions.contains(v));
-    }
+    defined.restrict_snapshots(instructions, &mut before, &mut after);
     // A value needs a home at its uses, at definitions (including dead ones),
     // and while live through an instruction. Live-before plus definitions
     // equals that union because live-after - definitions is live-before.
@@ -583,6 +613,34 @@ mod tests {
                     assert_eq!(before[position], expected, "before {position}");
                 }
             }
+        }
+    }
+
+    #[test]
+    fn restricted_liveness_matches_independent_defined_sets() {
+        let mut streams = generated_streams(300);
+        streams.push((Vec::new(), 0));
+        streams.push((
+            vec![InstructionLiveness {
+                uses: vec![VirtualReg(1000)],
+                ..Default::default()
+            }],
+            1001,
+        ));
+        for (instructions, _) in streams {
+            let defined = reference(&instructions);
+            let (mut before, mut after) =
+                live_snapshots(&instructions, &Blocks::new(&instructions));
+            for (position, instruction) in instructions.iter().enumerate() {
+                before[position]
+                    .retain(|v| defined[position].contains(v) || instruction.uses.contains(v));
+                after[position].retain(|v| {
+                    defined[position].contains(v) || instruction.definitions.contains(v)
+                });
+            }
+            let actual = analyze(&instructions);
+            assert_eq!(actual.before, before);
+            assert_eq!(actual.after, after);
         }
     }
 

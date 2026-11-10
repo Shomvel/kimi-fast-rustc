@@ -1,0 +1,26 @@
+{
+  "llvm": {
+    "invert_mask": 7,
+    "sign_shift": 8,
+    "byte_shift": 9,
+    "low_shift": 9
+  },
+  "baseline": {
+    "low_shift": 16,
+    "byte_shift": 17,
+    "sign_shift": 21,
+    "invert_mask": 22
+  },
+  "sccp": {
+    "low_shift": 16,
+    "byte_shift": 17,
+    "sign_shift": 21,
+    "invert_mask": 22
+  },
+  "bits": {
+    "low_shift": 12,
+    "byte_shift": 13,
+    "invert_mask": 15,
+    "sign_shift": 17
+  }
+}

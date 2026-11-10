@@ -384,7 +384,11 @@ fn conflicting_nominal_field_types_skip_atomically() {
 }
 
 /// Inlines `address() -> &private_static` for a local object with `flags`.
-fn inline_local_object(unnamed_address: bool, writable: bool) -> (usize, Vec<InlineSkip>, usize) {
+fn inline_local_object(
+    unnamed_address: bool,
+    writable: bool,
+    mutable_child: bool,
+) -> (usize, Vec<InlineSkip>, usize) {
     let mut callee = Function::new("address", 0, true);
     let pointer = callee.graph.oracle.intern(
         TypeShape::RawPointer {
@@ -402,6 +406,22 @@ fn inline_local_object(unnamed_address: bool, writable: bool) -> (usize, Vec<Inl
         writable,
         ..Default::default()
     });
+    if mutable_child {
+        callee.graph.data_objects[0]
+            .relocations
+            .push(kfrc_body::DataRelocation {
+                offset: 0,
+                target: "mutable_child".into(),
+                addend: 0,
+            });
+        callee.graph.data_objects.push(kfrc_body::DataObject {
+            symbol: "mutable_child".into(),
+            bytes: vec![0; 8],
+            align: 8,
+            writable: true,
+            ..Default::default()
+        });
+    }
     let address = callee.node(Opcode::SymbolAddress, &[], 0, pointer);
     callee.ret(address);
     callee.verify();
@@ -423,15 +443,24 @@ fn inline_local_object(unnamed_address: bool, writable: bool) -> (usize, Vec<Inl
     };
     let stats = inline_calls(&mut caller.graph, &provider, budget).unwrap();
     let reasons = stats.skipped.iter().map(|(_, reason)| *reason).collect();
-    (stats.calls_inlined, reasons, caller.graph.data_objects.len())
+    (
+        stats.calls_inlined,
+        reasons,
+        caller.graph.data_objects.len(),
+    )
 }
 
 #[test]
 fn read_only_anonymous_constants_copy_into_the_caller() {
-    assert_eq!(inline_local_object(true, false), (1, vec![], 1));
+    assert_eq!(inline_local_object(true, false, false), (1, vec![], 1));
     // Writable memory keeps its single identity even when anonymous.
     assert_eq!(
-        inline_local_object(true, true),
+        inline_local_object(true, true, false),
+        (0, vec![InlineSkip::DataConflict], 0)
+    );
+    // A copyable constant may still point at state with a unique identity.
+    assert_eq!(
+        inline_local_object(true, false, true),
         (0, vec![InlineSkip::DataConflict], 0)
     );
 }
@@ -474,6 +503,37 @@ fn local_data_identity_is_not_duplicated_into_another_cgu() {
     assert_eq!(stats.skipped[0].1, InlineSkip::DataConflict);
     assert_eq!(caller.graph.dump(), before);
     assert!(caller.graph.data_objects.is_empty());
+}
+
+#[test]
+fn dead_local_data_does_not_prevent_inlining_a_pure_wrapper() {
+    let mut callee = Function::new("increment", 1, true);
+    callee.graph.data_objects.push(kfrc_body::DataObject {
+        symbol: "dead_private_state".into(),
+        bytes: vec![0; 8],
+        align: 8,
+        writable: true,
+        ..Default::default()
+    });
+    let one = callee.graph.add_constant(1, callee.int);
+    let value = callee.node(Opcode::Add, &[callee.args[0], one], 0, callee.int);
+    callee.ret(value);
+    callee.verify();
+    let mut caller = Function::new("caller", 1, false);
+    let arg = caller.args[0];
+    let result = caller.call(&callee.graph, &[arg], caller.int);
+    caller.ret(result);
+    caller.verify();
+    let provider = HashMap::from_iter([(callee.graph.symbol.clone(), callee.graph)]);
+    let stats = inline_calls(&mut caller.graph, &provider, InlineBudget::default()).unwrap();
+    assert_eq!(stats.calls_inlined, 1, "{:?}", stats.skipped);
+    assert!(caller.graph.data_objects.is_empty());
+    for n in [0u64, 1, u64::MAX] {
+        assert_eq!(
+            run(&caller.graph, &[n]).unwrap(),
+            SemanticOutcome::Return(Value::Scalar(n.wrapping_add(1)))
+        );
+    }
 }
 
 #[test]
@@ -896,4 +956,270 @@ fn a_sole_call_site_inlines_regardless_of_callee_size() {
     inline_calls(&mut caller.graph, &provider, budget).unwrap();
     // `small` exceeds the limit and has other callers; `big` is local and sole.
     assert_eq!(remaining_calls(&caller.graph), ["small"]);
+}
+
+#[test]
+fn observe_costs_preserves_legacy_choices_and_semantics() {
+    use kfrc_son::analysis::cost::GenericCostModel;
+    use kfrc_son::{InlineCostPolicy, inline_calls_with_cost};
+    let big = chain("big", 60);
+    let small = chain("small", 3);
+    let provider = HashMap::from_iter([
+        ("big".into(), big.graph.clone()),
+        ("small".into(), small.graph.clone()),
+    ]);
+    let mut legacy = two_calls(&big, &small);
+    let mut observed = legacy.graph.clone();
+    let budget = InlineBudget {
+        max_calls: 1,
+        free_nodes: 0,
+        ..InlineBudget::default()
+    };
+    let old = inline_calls(&mut legacy.graph, &provider, budget).unwrap();
+    let new = inline_calls_with_cost(
+        &mut observed,
+        &provider,
+        budget,
+        InlineCostPolicy::Observe,
+        &GenericCostModel,
+    )
+    .unwrap();
+    assert_eq!(observed.dump(), legacy.graph.dump());
+    assert_eq!(old.skipped, new.skipped);
+    assert_eq!(old.calls_inlined, new.calls_inlined);
+    assert_eq!(new.decisions.len(), 2);
+    assert!(new.decisions.iter().all(|d| d.estimate.is_some()));
+    assert!(new.cost_nodes_visited <= budget.max_nodes);
+}
+
+#[test]
+fn size_cost_policy_is_distinct_from_node_limits_but_keeps_growth_budget() {
+    use kfrc_son::analysis::cost::GenericCostModel;
+    use kfrc_son::{InlineCostPolicy, inline_calls_with_cost};
+    let callee = chain("big", 4);
+    let provider = HashMap::from_iter([("big".into(), callee.graph.clone())]);
+    let mut caller = Function::new("caller", 1, false);
+    let value = caller.call(&callee.graph, &[caller.args[0]], caller.int);
+    caller.ret(value);
+    caller.verify();
+    let original = caller.graph.clone();
+    let budget = InlineBudget {
+        max_callee_nodes: 0,
+        ..InlineBudget::default()
+    };
+    let policy = InlineCostPolicy::CodeSize {
+        max_units: 12,
+        free_units: 0,
+    };
+    let stats = inline_calls_with_cost(
+        &mut caller.graph,
+        &provider,
+        budget,
+        policy,
+        &GenericCostModel,
+    )
+    .unwrap();
+    assert_eq!(stats.calls_inlined, 1);
+    for x in [0, 5, u64::MAX] {
+        assert_eq!(
+            run(&caller.graph, &[x]).unwrap(),
+            SemanticOutcome::Return(Value::Scalar(x.wrapping_add(4)))
+        );
+    }
+    let mut rejected = original.clone();
+    let stats = inline_calls_with_cost(
+        &mut rejected,
+        &provider,
+        budget,
+        InlineCostPolicy::CodeSize {
+            max_units: 0,
+            free_units: 0,
+        },
+        &GenericCostModel,
+    )
+    .unwrap();
+    assert_eq!(stats.skipped, [("big".into(), InlineSkip::Cost)]);
+    assert_eq!(stats.decisions[0].rejection, Some(InlineSkip::Cost));
+    assert_eq!(rejected.dump(), original.dump());
+    let mut rejected = original.clone();
+    let stats = inline_calls_with_cost(
+        &mut rejected,
+        &provider,
+        InlineBudget {
+            max_nodes: 1,
+            ..budget
+        },
+        policy,
+        &GenericCostModel,
+    )
+    .unwrap();
+    assert_eq!(stats.skipped, [("big".into(), InlineSkip::Budget)]);
+    assert_eq!(stats.cost_nodes_visited, 0);
+    assert_eq!(rejected.dump(), original.dump());
+}
+
+#[test]
+fn unknown_cost_is_not_free_and_summaries_are_cached_for_repeated_calls() {
+    use kfrc_son::analysis::cost::{CostKind, CostModel, InstructionCost};
+    use kfrc_son::{InlineCostPolicy, inline_calls_with_cost};
+    struct Unknown;
+    impl CostModel for Unknown {
+        fn name(&self) -> &'static str {
+            "test-unknown"
+        }
+        fn instruction_cost(&self, _: &FunctionGraph, _: NodeId, _: CostKind) -> InstructionCost {
+            InstructionCost::Unknown
+        }
+    }
+    let callee = chain("same", 2);
+    let provider = HashMap::from_iter([("same".into(), callee.graph.clone())]);
+    let mut caller = two_calls(&callee, &callee);
+    let original = caller.graph.dump();
+    let stats = inline_calls_with_cost(
+        &mut caller.graph,
+        &provider,
+        InlineBudget::default(),
+        InlineCostPolicy::CodeSize {
+            max_units: u64::MAX,
+            free_units: u64::MAX,
+        },
+        &Unknown,
+    )
+    .unwrap();
+    assert_eq!(stats.calls_inlined, 0);
+    assert_eq!(stats.skipped.len(), 2);
+    assert!(
+        stats
+            .skipped
+            .iter()
+            .all(|(_, reason)| *reason == InlineSkip::UnknownCost)
+    );
+    assert!(stats.decisions.iter().all(|decision| !decision.free));
+    assert_eq!(stats.cost_nodes_visited, callee.graph.live_count());
+    assert_eq!(caller.graph.dump(), original);
+}
+
+#[test]
+fn ir_costs_separate_static_work_structure_and_unknown_callee_time() {
+    use kfrc_son::analysis::cost::{
+        CostKind, CostModel, GenericCostModel, InstructionCost, estimate_graph,
+    };
+    let mut f = Function::new("costs", 2, false);
+    let add = f.node(Opcode::Add, &f.args.clone(), 0, f.int);
+    let mul = f.node(Opcode::Mul, &f.args.clone(), 0, f.int);
+    let model = GenericCostModel;
+    assert_eq!(
+        model.instruction_cost(&f.graph, add, CostKind::CodeSize),
+        model.instruction_cost(&f.graph, mul, CostKind::CodeSize)
+    );
+    let InstructionCost::Known(add_work) =
+        model.instruction_cost(&f.graph, add, CostKind::ReciprocalThroughput)
+    else {
+        panic!()
+    };
+    let InstructionCost::Known(mul_work) =
+        model.instruction_cost(&f.graph, mul, CostKind::ReciprocalThroughput)
+    else {
+        panic!()
+    };
+    assert!(mul_work > add_work);
+    f.ret(mul);
+    f.verify();
+    let before = estimate_graph(&f.graph, &model);
+    // Structural proof/control bookkeeping does not have the same cost as an
+    // arithmetic operation. It still contributes to compiler work.
+    f.graph
+        .add_node(Opcode::Region, NodeId::NONE, &[], 0, ValueType::Control);
+    let after = estimate_graph(&f.graph, &model);
+    assert_eq!(after.nodes, before.nodes + 1);
+    assert_eq!(after.code_size, before.code_size);
+    assert_eq!(after.static_work, before.static_work);
+    let callee = chain("callee", 2);
+    let mut caller = Function::new("caller", 1, false);
+    let value = caller.call(&callee.graph, &[caller.args[0]], caller.int);
+    caller.ret(value);
+    caller.verify();
+    let call = caller
+        .graph
+        .ids()
+        .find(|&n| caller.graph.op(n) == Opcode::Call)
+        .unwrap();
+    assert!(matches!(
+        model.instruction_cost(&caller.graph, call, CostKind::CodeSize),
+        InstructionCost::Known(_)
+    ));
+    assert_eq!(
+        model.instruction_cost(&caller.graph, call, CostKind::Latency),
+        InstructionCost::Unknown
+    );
+    assert!(
+        estimate_graph(&caller.graph, &model)
+            .static_work
+            .total()
+            .is_none()
+    );
+}
+
+#[test]
+fn cost_arithmetic_overflow_cannot_make_a_graph_look_cheaper() {
+    use kfrc_son::analysis::cost::{CostKind, CostModel, InstructionCost, estimate_graph};
+    struct Huge;
+    impl CostModel for Huge {
+        fn name(&self) -> &'static str {
+            "test-overflow"
+        }
+        fn instruction_cost(&self, _: &FunctionGraph, _: NodeId, _: CostKind) -> InstructionCost {
+            InstructionCost::Known(u64::MAX)
+        }
+    }
+    let f = chain("overflow", 2);
+    let estimate = estimate_graph(&f.graph, &Huge);
+    assert!(estimate.code_size.total().is_none());
+    assert!(estimate.static_work.total().is_none());
+}
+
+#[test]
+fn modeled_size_orders_calls_by_cost_instead_of_node_count() {
+    use kfrc_son::analysis::cost::GenericCostModel;
+    use kfrc_son::{InlineCostPolicy, inline_calls_with_cost};
+    let mut shifts = Function::new("shifts", 1, false);
+    let mut x = shifts.args[0];
+    for _ in 0..2 {
+        x = shifts.node(Opcode::ShiftLeft, &[x, shifts.args[0]], 0, shifts.int);
+    }
+    shifts.ret(x);
+    shifts.verify();
+    let mut adds = Function::new("adds", 1, false);
+    let mut x = adds.args[0];
+    for _ in 0..3 {
+        x = adds.node(Opcode::Add, &[x, adds.args[0]], 0, adds.int);
+    }
+    adds.ret(x);
+    adds.verify();
+    assert!(shifts.graph.live_count() < adds.graph.live_count());
+    let provider = HashMap::from_iter([
+        ("shifts".into(), shifts.graph.clone()),
+        ("adds".into(), adds.graph.clone()),
+    ]);
+    let mut caller = two_calls(&shifts, &adds);
+    let stats = inline_calls_with_cost(
+        &mut caller.graph,
+        &provider,
+        InlineBudget {
+            max_calls: 1,
+            free_nodes: 0,
+            ..InlineBudget::default()
+        },
+        InlineCostPolicy::CodeSize {
+            max_units: 64,
+            free_units: 0,
+        },
+        &GenericCostModel,
+    )
+    .unwrap();
+    assert_eq!(stats.calls_inlined, 1);
+    assert_eq!(remaining_calls(&caller.graph), ["shifts"]);
+    assert_eq!(stats.decisions[0].symbol, "adds");
+    assert_eq!(stats.decisions[1].rejection, Some(InlineSkip::Budget));
+    verify_graph(&mut caller.graph).unwrap();
 }

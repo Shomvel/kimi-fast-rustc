@@ -367,6 +367,13 @@ fn execute(function: &MachineFunction, arguments: &[i64]) -> Result<Execution, M
                 machine.set_reg(Reg::Rdx, (lhs % rhs) as i64);
                 machine.comparison = None;
             }
+            MachineInstr::MulHigh { src } => {
+                let product =
+                    u128::from(machine.reg(Reg::Rax) as u64) * u128::from(machine.reg(src) as u64);
+                machine.set_reg(Reg::Rax, product as i64);
+                machine.set_reg(Reg::Rdx, (product >> 64) as i64);
+                machine.comparison = None;
+            }
             MachineInstr::Cmp { lhs, rhs } => {
                 machine.comparison = Some((
                     machine.reg(lhs),
@@ -594,6 +601,14 @@ fn validate_instruction(
                 Ok(())
             }
         }
+        MulHigh { src } => {
+            validate_reg(src)?;
+            if matches!(src, Reg::Rax | Reg::Rdx) {
+                Err(MachineEvalError::InvalidDivisor(src))
+            } else {
+                Ok(())
+            }
+        }
         Cmp { lhs, rhs } => {
             validate_reg(lhs)?;
             validate_operand(rhs)
@@ -667,6 +682,7 @@ mod tests {
             stack_slots: 0,
             callee_saved: Vec::new(),
             symbols: Vec::new(),
+            loop_headers: Vec::new(),
         }
     }
 

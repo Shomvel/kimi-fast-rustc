@@ -1,0 +1,191 @@
+{
+  "source_overlay_sha256": "ea9ed9e00a5caa56555810585fb9e6faed5b473a4134d34a83193c275d690562",
+  "backend_sha256": "f91aea279fe60f02e5aa456958d348f9323e4c7b943ce10d363e5b9214894d1e",
+  "runtime_inheritance": {
+    "semver": {
+      "objects_identical": true,
+      "driver_identical": true,
+      "driver_objects_identical": true,
+      "natural_driver_sha256": "e37ca06e6e4c3b8ff2c45eeb0ed39b83fba0d533e17d61ac837ac3abe533f382"
+    },
+    "base64": {
+      "objects_identical": true,
+      "driver_identical": true,
+      "driver_objects_identical": true,
+      "natural_driver_sha256": "fe53cd18ed472da706bd728c7b591abc98630e7ed41a8b628d375d6db5ea49aa"
+    },
+    "unicode-segmentation": {
+      "objects_identical": true,
+      "driver_identical": true,
+      "driver_objects_identical": true,
+      "natural_driver_sha256": "a812d794dca13ef0696803b320cda6883f81d15dd9adc74bdcecf2bd408f96c1"
+    },
+    "humantime": {
+      "objects_identical": true,
+      "driver_identical": true,
+      "driver_objects_identical": true,
+      "natural_driver_sha256": "9f70bd789055c91191821c155308c87bb8e8764c6194bf6582462914113adebc"
+    }
+  },
+  "ascii_confirmation": {
+    "candidate_over_start": {
+      "median": 1.0003716328002306,
+      "bootstrap_95": [
+        0.9901601103725532,
+        1.0168676459580521
+      ],
+      "pairs": 21
+    },
+    "instructions_over_start": 0.9999997396540536,
+    "cycles_over_start": 0.9983963412237559,
+    "samples_source": "suite/runtime/unicode-segmentation-ascii-recheck.json"
+  },
+  "compile": [
+    {
+      "crate": "semver",
+      "wall": {
+        "median": 0.9847227640334113,
+        "bootstrap_95": [
+          0.9518383458917662,
+          1.011527079963461
+        ],
+        "pairs": 21
+      },
+      "cpu": {
+        "median": 0.992710379378076,
+        "bootstrap_95": [
+          0.9761449810056375,
+          1.0083279707923953
+        ],
+        "pairs": 21
+      },
+      "rss": {
+        "median": 0.9990362041270233,
+        "bootstrap_95": [
+          0.9963016839665673,
+          1.0010142489610132
+        ],
+        "pairs": 21
+      },
+      "instructions": {
+        "median": 1.0005488789613934,
+        "bootstrap_95": [
+          1.0004420489822619,
+          1.0006525643897934
+        ],
+        "pairs": 21
+      }
+    },
+    {
+      "crate": "base64",
+      "wall": {
+        "median": 0.9812572890154552,
+        "bootstrap_95": [
+          0.9445462842743935,
+          0.9999402828431667
+        ],
+        "pairs": 21
+      },
+      "cpu": {
+        "median": 0.9877267299485187,
+        "bootstrap_95": [
+          0.9612550645434843,
+          1.003872097269661
+        ],
+        "pairs": 21
+      },
+      "rss": {
+        "median": 0.998202864844865,
+        "bootstrap_95": [
+          0.9975511493798879,
+          1.0010550192541015
+        ],
+        "pairs": 21
+      },
+      "instructions": {
+        "median": 0.9837969965298634,
+        "bootstrap_95": [
+          0.9836790945954059,
+          0.9838975539488897
+        ],
+        "pairs": 21
+      }
+    },
+    {
+      "crate": "unicode-segmentation",
+      "wall": {
+        "median": 1.0118476339464246,
+        "bootstrap_95": [
+          0.9845214028445377,
+          1.0306707961821986
+        ],
+        "pairs": 21
+      },
+      "cpu": {
+        "median": 1.0015134025289245,
+        "bootstrap_95": [
+          0.9869022435559553,
+          1.0221805476227364
+        ],
+        "pairs": 21
+      },
+      "rss": {
+        "median": 0.9995569462520422,
+        "bootstrap_95": [
+          0.9987245251629003,
+          1.0011094161697407
+        ],
+        "pairs": 21
+      },
+      "instructions": {
+        "median": 1.000540689236457,
+        "bootstrap_95": [
+          1.0004122152992787,
+          1.0005988455111745
+        ],
+        "pairs": 21
+      }
+    },
+    {
+      "crate": "humantime",
+      "wall": {
+        "median": 0.9996030583877535,
+        "bootstrap_95": [
+          0.963356756061579,
+          1.038982086322756
+        ],
+        "pairs": 21
+      },
+      "cpu": {
+        "median": 1.0024022420926197,
+        "bootstrap_95": [
+          0.9776310664672762,
+          1.0250657551249593
+        ],
+        "pairs": 21
+      },
+      "rss": {
+        "median": 1.000349744417541,
+        "bootstrap_95": [
+          0.9984127411153857,
+          1.0030626225720656
+        ],
+        "pairs": 21
+      },
+      "instructions": {
+        "median": 0.9997361622386404,
+        "bootstrap_95": [
+          0.9995896572603611,
+          0.9998112275874463
+        ],
+        "pairs": 21
+      }
+    }
+  ],
+  "method": {
+    "runtime": "Other 12 workloads inherit selected exact executable bytes; original 13-workload measurements remain separately published. ASCII has a distinct 21-pair confirmation, not pooled with original samples.",
+    "compile": "21 alternating start/natural pairs per crate; same source/sysroot/flags; produced objects hash-identical to each arm reference",
+    "bootstrap": "4000 bootstrap samples of paired ratios, seed20261110, within-run uncertainty only"
+  },
+  "compile_geomean_ratio": 0.9942827219207869
+}

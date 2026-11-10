@@ -59,7 +59,7 @@ pub fn measure<T>(stage: &str, symbol: &str, work: impl FnOnce() -> T) -> T {
     result
 }
 
-fn json_string(value: &str) -> String {
+pub(crate) fn json_string(value: &str) -> String {
     let mut escaped = String::with_capacity(value.len() + 2);
     escaped.push('"');
     for ch in value.chars() {

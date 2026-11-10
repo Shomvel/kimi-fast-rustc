@@ -1,0 +1,207 @@
+{
+  "backend_hashes": {
+    "ranges.so": "a06f9f1fcbb248f5b64ae0f7328ab78355e4bbd3d6803faf676e8ddc6eb997dd",
+    "transport.so": "d04a0c96fff22749c4724cb31f57e23ffd56faaedc6df941bd445e570dfcb6d7",
+    "start.so": "125525f71fab946573e704021bfe2763fba8bece49cd1055ebaefbac5563cec3",
+    "h1.so": "43fbd1bfa28d1690ea9c611fb51780078b3a8f75a89d9c69c9bfa351c15d7531",
+    "address.so": "6ec63b22f959c4a6cdf8509bded8d09789e5d26bab850b197ac07b902fac03f2",
+    "h1_address.so": "8ce4454cccfa16fd5024deaab0e834d50fd0f342ed0807da445694e988e1363a",
+    "checked.so": "d67243c0099195ded51841f3a33d720b0e01d684ef324b2f47b96497e8846897",
+    "all.so": "084edb75119fbc32403c8d72bbd006a2d805eb9a3ab9ca7d88ac5ea1027971b7",
+    "align32.so": "b433d23877c99519f0eabf685ed208498dfc8fca6e11399ae794b943034dfce2",
+    "align16.so": "4ac9a678c7cdef9fbbb759b406d171fd53903b1aebced17d812ce39ad25c5af1",
+    "align64.so": "279b5488cb2eba184cdb3e3b419e4313d7c32132df39a6d0470ad377f42320ad",
+    "selected.so": "5b309877a792055cadff2d8dd0f40d0452dc0e317282897b7bc4693a3848cb94"
+  },
+  "source_hashes": {
+    "crates/kfrc-son/src/lower_layout/boundary_transport.rs": "c33ed8d8de49e2e5d99144138d891e73929e51c65c6953ebf7ad0f248d8be793",
+    "crates/kfrc-son/tests/semantic_boundary_transport.rs": "d24d7f893fff5faaf1e1a84d66c9836db72b0d1a2cc64673e04d1954b85a403a",
+    "scripts/poc-validation/fixtures/enum-boundary-snapshot.rs": "7d28c1e87970cd196ce5cceee71f922839a8136ebb48264603002a880fafa653",
+    "scripts/poc-validation/fixtures/enum-boundary-snapshot-driver.rs": "52d358236dc286622f13db658849c18e00a2aee8de7dedb2e21b2ce2edc69b43",
+    "crates/kfrc-son/src/lower_layout/cleanup.rs": "143adf28b7e64c349717bc0f9549f2f0171e8679a1d8e06e972af96fdb78882f",
+    "crates/kfrc-son/src/lower_layout/address_cse.rs": "a6a7c14ee04118d6e92091a2b57ed49e3b2f37352f4b87334d19a01cfc4ac76e",
+    "crates/kfrc-son/src/lower_layout/cleanup_tests.rs": "4014147d5d56c22de4381cc177cc91fbed10ecdeff43d8e281407fad4da0a3a6",
+    "crates/kfrc-x86/src/lower.rs": "2e449962087d0e2a778967bb9ef73b23b847949c6f50c6d6d97dd246c3103d6c",
+    "crates/kfrc-x86/src/lower/checked.rs": "c784696449c2cafb0f7dadaac77041732f239ddea6d0fc1719d61cc357a8de29",
+    "crates/kfrc-x86/src/lower/schedule.rs": "afd8c953012d8a93b89656089b0630b395f0d186685c55cf501b0b6f16cc13d5",
+    "crates/kfrc-x86/src/lower/private_slots.rs": "b2d81de523e58e88c2fff94f3987958c1a3e0b1d25adff244a97a4cfb8c26021",
+    "crates/kfrc-x86/src/lower/allocated/constraints.rs": "36a3ef06304555ed17b9fb73845a5aa8044e2b7bb65cba7e53be6b2358bae429",
+    "crates/kfrc-x86/tests/checked_arithmetic.rs": "73d7706e397905b11f6260a24efaf72b4fa15226a18e83b9e0f31082d2a4ebee",
+    "crates/kfrc-x86/src/machine/x86_encode.rs": "2d41cd6cb4c80761d6379dd8edc388fcadb8d3bf55e007d71e91dfa14b0816e1",
+    "crates/kfrc-x86/src/machine/x86_encode/layout.rs": "0ba3d55e104227c9a645b5c10a79b0f2754d384b6ba3f70330e95c7317104209",
+    "crates/kfrc-x86/src/object_file.rs": "9dc5f39aa2730d0f64e3f46764581b7305f18f283385496bcdecf442be296a00",
+    "crates/kfrc-x86/tests/loop_alignment.rs": "f82373de8a6150379e3df04835038a9010d8cb834af7fc37e93bf52870f711e1"
+  },
+  "suite_config": {
+    "toolchain": "1.94.1",
+    "target": "x86_64-unknown-linux-gnu",
+    "sysroot": "/workspace/shared-std-mir0/sysroot",
+    "perf": "/usr/lib/linux-tools/6.8.0-149-generic/perf",
+    "library_flags": [
+      "-Cpanic=abort",
+      "-Copt-level=3",
+      "-Ccodegen-units=16",
+      "-Cembed-bitcode=no",
+      "-Cdebuginfo=0",
+      "-Coverflow-checks=off",
+      "-Cdebug-assertions=off",
+      "-Zmir-opt-level=0"
+    ],
+    "driver_flags": [
+      "-Cpanic=abort",
+      "-Copt-level=3",
+      "-Cdebuginfo=0",
+      "-Zmir-opt-level=0"
+    ],
+    "crates": [
+      {
+        "name": "semver",
+        "version": "1.0.28",
+        "lib": "semver",
+        "edition": "2021",
+        "sha256": "8a7852d02fc848982e0c167ef163aaff9cd91dc640ba85e263cb1ce46fae51cd",
+        "features": [
+          "std"
+        ],
+        "driver": "drivers/semver.rs",
+        "itest_dev_deps": [],
+        "unit_tests": false,
+        "workloads": [
+          [
+            "parse",
+            400000
+          ],
+          [
+            "req",
+            400000
+          ],
+          [
+            "identifier",
+            30000
+          ]
+        ]
+      },
+      {
+        "name": "regex-syntax",
+        "version": "0.8.8",
+        "lib": "regex_syntax",
+        "edition": "2021",
+        "sha256": "7a2d987857b319362043e95f5353c0535c1f58eec5336fdfcf626430af7def58",
+        "features": [
+          "std",
+          "unicode",
+          "unicode-age",
+          "unicode-bool",
+          "unicode-case",
+          "unicode-gencat",
+          "unicode-perl",
+          "unicode-script",
+          "unicode-segment"
+        ],
+        "driver": "drivers/regex_syntax.rs",
+        "itest_dev_deps": [],
+        "unit_tests": true,
+        "workloads": [
+          [
+            "hir",
+            20000
+          ],
+          [
+            "ast",
+            2000
+          ],
+          [
+            "unicode",
+            5000
+          ]
+        ]
+      },
+      {
+        "name": "base64",
+        "version": "0.22.1",
+        "lib": "base64",
+        "edition": "2021",
+        "sha256": "72b3254f16251a8381aa12e40e3c4d2f0199f8c6508fbecb9d91f575e0fbb8c6",
+        "features": [
+          "alloc",
+          "std"
+        ],
+        "driver": "drivers/base64.rs",
+        "itest_dev_deps": [
+          "rand"
+        ],
+        "unit_tests": true,
+        "workloads": [
+          [
+            "encode",
+            10000
+          ],
+          [
+            "decode",
+            10000
+          ],
+          [
+            "short",
+            200000
+          ]
+        ]
+      },
+      {
+        "name": "unicode-segmentation",
+        "version": "1.13.3",
+        "lib": "unicode_segmentation",
+        "edition": "2018",
+        "sha256": "c6f5d3c3b1bf09027a88a6bc961fc00497d651009560b5463668dc81b0fa87a8",
+        "features": [],
+        "driver": "drivers/unicode_segmentation.rs",
+        "itest_dev_deps": [
+          "quickcheck"
+        ],
+        "unit_tests": true,
+        "workloads": [
+          [
+            "graphemes-mixed",
+            200
+          ],
+          [
+            "graphemes-ascii",
+            200
+          ],
+          [
+            "graphemes-rev",
+            400
+          ]
+        ]
+      },
+      {
+        "name": "humantime",
+        "version": "2.4.0",
+        "lib": "humantime",
+        "edition": "2021",
+        "sha256": "15cdd26707701c53297e2fa6afb323d55fbc1d0810c3aec078ae3ef0424c3c15",
+        "features": [],
+        "driver": "drivers/humantime.rs",
+        "itest_dev_deps": [],
+        "unit_tests": true,
+        "workloads": [
+          [
+            "dur-parse",
+            500000
+          ],
+          [
+            "dur-format",
+            100000
+          ],
+          [
+            "ts-parse",
+            1000000
+          ],
+          [
+            "ts-format",
+            400000
+          ]
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,146 @@
+[
+  {
+    "crate": "base64",
+    "arm": "baseline",
+    "function_bodies": 90,
+    "bytes": 28175,
+    "instructions": 6860,
+    "calls": 279,
+    "branches": 778
+  },
+  {
+    "crate": "base64",
+    "arm": "llvm",
+    "function_bodies": 35,
+    "bytes": 8648,
+    "instructions": 2168,
+    "calls": 53,
+    "branches": 277
+  },
+  {
+    "crate": "base64",
+    "arm": "ranges",
+    "function_bodies": 72,
+    "bytes": 24444,
+    "instructions": 5961,
+    "calls": 180,
+    "branches": 614
+  },
+  {
+    "crate": "base64",
+    "arm": "transport",
+    "function_bodies": 72,
+    "bytes": 26196,
+    "instructions": 6336,
+    "calls": 219,
+    "branches": 698
+  },
+  {
+    "crate": "humantime",
+    "arm": "baseline",
+    "function_bodies": 98,
+    "bytes": 58034,
+    "instructions": 14423,
+    "calls": 317,
+    "branches": 2835
+  },
+  {
+    "crate": "humantime",
+    "arm": "llvm",
+    "function_bodies": 32,
+    "bytes": 10426,
+    "instructions": 2651,
+    "calls": 60,
+    "branches": 450
+  },
+  {
+    "crate": "humantime",
+    "arm": "ranges",
+    "function_bodies": 82,
+    "bytes": 36305,
+    "instructions": 9136,
+    "calls": 322,
+    "branches": 1479
+  },
+  {
+    "crate": "humantime",
+    "arm": "transport",
+    "function_bodies": 82,
+    "bytes": 37393,
+    "instructions": 9442,
+    "calls": 322,
+    "branches": 1551
+  },
+  {
+    "crate": "semver",
+    "arm": "baseline",
+    "function_bodies": 194,
+    "bytes": 32705,
+    "instructions": 9500,
+    "calls": 512,
+    "branches": 1390
+  },
+  {
+    "crate": "semver",
+    "arm": "llvm",
+    "function_bodies": 75,
+    "bytes": 18515,
+    "instructions": 5061,
+    "calls": 189,
+    "branches": 831
+  },
+  {
+    "crate": "semver",
+    "arm": "ranges",
+    "function_bodies": 171,
+    "bytes": 31089,
+    "instructions": 9014,
+    "calls": 459,
+    "branches": 1310
+  },
+  {
+    "crate": "semver",
+    "arm": "transport",
+    "function_bodies": 171,
+    "bytes": 31114,
+    "instructions": 9021,
+    "calls": 459,
+    "branches": 1312
+  },
+  {
+    "crate": "unicode-segmentation",
+    "arm": "baseline",
+    "function_bodies": 78,
+    "bytes": 17878,
+    "instructions": 5314,
+    "calls": 218,
+    "branches": 936
+  },
+  {
+    "crate": "unicode-segmentation",
+    "arm": "llvm",
+    "function_bodies": 24,
+    "bytes": 8398,
+    "instructions": 2356,
+    "calls": 46,
+    "branches": 450
+  },
+  {
+    "crate": "unicode-segmentation",
+    "arm": "ranges",
+    "function_bodies": 76,
+    "bytes": 17535,
+    "instructions": 5225,
+    "calls": 211,
+    "branches": 926
+  },
+  {
+    "crate": "unicode-segmentation",
+    "arm": "transport",
+    "function_bodies": 76,
+    "bytes": 17535,
+    "instructions": 5225,
+    "calls": 211,
+    "branches": 926
+  }
+]

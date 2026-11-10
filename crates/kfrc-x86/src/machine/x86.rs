@@ -99,6 +99,11 @@ pub enum VirtualInstr {
         lhs: VirtualValue,
         rhs: VirtualValue,
     },
+    MulHigh {
+        dst: VirtualReg,
+        lhs: VirtualValue,
+        rhs: VirtualValue,
+    },
     And {
         dst: VirtualReg,
         lhs: VirtualValue,
@@ -502,6 +507,10 @@ pub enum MachineInstr {
     UDiv {
         src: Operand,
     },
+    /// Unsigned 64-bit RAX * src, with the high half in RDX.
+    MulHigh {
+        src: Reg,
+    },
     Cmp {
         lhs: Reg,
         rhs: Operand,
@@ -612,6 +621,9 @@ pub struct MachineFunction {
     pub stack_slots: u32,
     pub callee_saved: Vec<Reg>,
     pub symbols: Vec<String>,
+    /// Labels proved to be natural-loop headers by the source CFG scheduler.
+    /// Allocation may append backward critical edges that are not loops.
+    pub loop_headers: Vec<u32>,
 }
 
 /// An architectural SSE register. All XMM registers are caller-saved on SysV.
@@ -626,6 +638,7 @@ impl MachineFunction {
             stack_slots: 0,
             callee_saved: Vec::new(),
             symbols: Vec::new(),
+            loop_headers: Vec::new(),
         }
     }
 
@@ -750,6 +763,7 @@ pub fn optimize_zero_idioms(instructions: &mut [MachineInstr]) -> usize {
                     | MachineInstr::LShr { .. }
                     | MachineInstr::IDiv { .. }
                     | MachineInstr::UDiv { .. }
+                    | MachineInstr::MulHigh { .. }
                     | MachineInstr::Cmp { .. }
                     | MachineInstr::Test { .. }
                     | MachineInstr::TestByte { .. }
@@ -999,6 +1013,12 @@ fn validate_instruction(
                 return Err(AsmError::InvalidDivisor(reg));
             }
         }
+        MulHigh { src } => {
+            validate_reg(src)?;
+            if matches!(src, Reg::Rax | Reg::Rdx) {
+                return Err(AsmError::InvalidMultiplyRegister(src));
+            }
+        }
         Cmp { lhs, rhs } => {
             validate_reg(lhs)?;
             validate_operand(rhs)?;
@@ -1201,6 +1221,7 @@ fn emit_instruction(
             emit_operand(out, src, stack_slots)?;
             out.push('\n');
         }
+        MulHigh { src } => out.push_str(&format!("\tmul {}\n", src.name())),
         Cmp {
             lhs,
             rhs: Operand::Imm(0),
@@ -1450,6 +1471,7 @@ mod tests {
             stack_slots: 0,
             callee_saved: Vec::new(),
             symbols: Vec::new(),
+            loop_headers: Vec::new(),
         }
     }
 
@@ -1596,6 +1618,7 @@ mod tests {
             stack_slots: 1,
             callee_saved: vec![Reg::Rbx, Reg::R12],
             symbols: Vec::new(),
+            loop_headers: Vec::new(),
         }
         .emit_gnu_assembly()
         .unwrap();

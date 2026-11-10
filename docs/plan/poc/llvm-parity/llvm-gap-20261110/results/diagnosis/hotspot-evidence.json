@@ -1,0 +1,2323 @@
+{
+  "objdump_version": "Apple LLVM version 15.0.0\n  Optimized build.\n  Default target: arm64-apple-darwin23.4.0\n  Host CPU: apple-m1\n\n  Registered Targets:\n    aarch64    - AArch64 (little endian)\n    aarch64_32 - AArch64 (little endian ILP32)\n    aarch64_be - AArch64 (big endian)\n    arm        - ARM\n    arm64      - ARM64 (little endian)\n    arm64_32   - ARM64 (little endian ILP32)\n    armeb      - ARM (big endian)\n    thumb      - Thumb\n    thumbeb    - Thumb (big endian)\n    x86        - 32-bit X86: Pentium-Pro and above\n    x86-64     - 64-bit X86: EM64T and AMD64\n",
+  "scope": "Static instructions within ELF function symbol extents; stack operands are not spill counts.",
+  "inputs": {
+    "llvm/semver/ref/objects/lib.semver.fd940cb7d3d8ab00-cgu.00.rcgu.o": "53f6b6645b82265ea60865820844560dd47a1010322c3ebfca064659e7664804",
+    "llvm/semver/ref/objects/lib.semver.fd940cb7d3d8ab00-cgu.01.rcgu.o": "1189f070ed4fb01367e6eb36915f734f55ef03604d085d91bef00593209e3bcc",
+    "llvm/semver/ref/objects/lib.semver.fd940cb7d3d8ab00-cgu.02.rcgu.o": "c3c30bbfbd32a5f60fec930ec0b4f00963fb72b1fa120dd555d78c54c78cd32c",
+    "llvm/semver/ref/objects/lib.semver.fd940cb7d3d8ab00-cgu.03.rcgu.o": "c231d885a9e8906dbddc14742541353fc5d6ce2e94eca174805eaf431a5121b1",
+    "llvm/semver/ref/objects/lib.semver.fd940cb7d3d8ab00-cgu.04.rcgu.o": "09522d3ef4348430c5b056b38bbb04797b14e02a3f3f1066e3a3b2ba58587d91",
+    "llvm/semver/ref/objects/lib.semver.fd940cb7d3d8ab00-cgu.05.rcgu.o": "7e10e312905070dd22b31f2d2a74ce5ca49cc94c8d0d876ed123ebdadef47fbf",
+    "llvm/semver/ref/objects/lib.semver.fd940cb7d3d8ab00-cgu.06.rcgu.o": "5178c3f3b73c5e955e156977ee42faba005464e776b6cc80869ed4171066f45b",
+    "llvm/semver/ref/objects/lib.semver.fd940cb7d3d8ab00-cgu.07.rcgu.o": "2700a88da8131bddca884d3abe4ffe219a878b0f7aad1be2e9462e1c5122ba88",
+    "llvm/semver/ref/objects/lib.semver.fd940cb7d3d8ab00-cgu.08.rcgu.o": "0dc94d97b01ef702b6008cb02f2c9266df7b1303c69619da12080162c38f24ca",
+    "llvm/semver/ref/objects/lib.semver.fd940cb7d3d8ab00-cgu.09.rcgu.o": "dcf146a336f9b54f44be035eb7c5af7e2c7077d7124ca09993bd986f662a530c",
+    "llvm/semver/ref/objects/lib.semver.fd940cb7d3d8ab00-cgu.10.rcgu.o": "a4cdd614e7ebb872e2b24bfa89eaf10a34b6887d9937cf7d8308461d601a03cc",
+    "llvm/semver/ref/objects/lib.semver.fd940cb7d3d8ab00-cgu.11.rcgu.o": "bdf69c6cb830409bda4134941d98f5c69ff44f7a57eb9d667166a4c36f57b46e",
+    "llvm/semver/ref/objects/lib.semver.fd940cb7d3d8ab00-cgu.12.rcgu.o": "697069820890ec67a42cfc2f55a6b88f4938d226ddfba9a584a78639dec4e3f6",
+    "llvm/semver/ref/objects/lib.semver.fd940cb7d3d8ab00-cgu.13.rcgu.o": "bcf99083ab881922b514c092db19a0e4a48f2c91d9ab987df108c43ef39e77c4",
+    "llvm/base64/ref/objects/lib.base64.1a75627b77da3786-cgu.00.rcgu.o": "95be117e27068f115cb30c239d66b17a0b4401c28a9e46f0e519f12ae4dcf67a",
+    "llvm/base64/ref/objects/lib.base64.1a75627b77da3786-cgu.01.rcgu.o": "e69258473915dcc4c35ce909e6de4d7fccc19fd500728a13ddba029fcb045afe",
+    "llvm/base64/ref/objects/lib.base64.1a75627b77da3786-cgu.02.rcgu.o": "b5fe37cdbe3b19842d58d5196f666ae342d2bc4c2c78ef4ca9f032e35e1ac8bb",
+    "llvm/base64/ref/objects/lib.base64.1a75627b77da3786-cgu.03.rcgu.o": "2c4266a4447afc6c07129a34680543291926f6f8124103dfae08a72f1c291cca",
+    "llvm/base64/ref/objects/lib.base64.1a75627b77da3786-cgu.04.rcgu.o": "5f0b0234fdf106f1d8105fc59d20fa7e8c58761a6d9688f26e899d03803551bd",
+    "llvm/base64/ref/objects/lib.base64.1a75627b77da3786-cgu.05.rcgu.o": "d97e454998facef524a5d89482185628e2b54a39722e348f0642bc8c2bcbca76",
+    "llvm/base64/ref/objects/lib.base64.1a75627b77da3786-cgu.06.rcgu.o": "0482ee927a569eb45c9130a5c5916d37c4c7230ee2e4dea92ee05a03ca4156c0",
+    "llvm/base64/ref/objects/lib.base64.1a75627b77da3786-cgu.07.rcgu.o": "523ad988d09b13c5d4f853238e12d66f48d493d00b7d5d0bbefbdf0399a7d4fe",
+    "llvm/base64/ref/objects/lib.base64.1a75627b77da3786-cgu.08.rcgu.o": "afed31dad407414305e40ff6bc0e5a48e02c54c60204faf8aa6d989df168e0ad",
+    "llvm/base64/ref/objects/lib.base64.1a75627b77da3786-cgu.09.rcgu.o": "14f97551151670468632189b10b37e3f4f22d30780726d68bb9be59fc6f33999",
+    "llvm/base64/ref/objects/lib.base64.1a75627b77da3786-cgu.10.rcgu.o": "499568a4dfc626d6397ada593b725c69153ef40ef456910006c8ff15eb3b59a6",
+    "llvm/base64/ref/objects/lib.base64.1a75627b77da3786-cgu.11.rcgu.o": "20f78f3452e8e7a7ad5aa49f1b54d399127c2db79003782559860a9afd6d1a70",
+    "llvm/base64/ref/objects/lib.base64.1a75627b77da3786-cgu.12.rcgu.o": "f3611e91217be9665a65d5f70cfdda0efa8a0f577bff27d8c05067c20ee32a54",
+    "llvm/base64/ref/objects/lib.base64.1a75627b77da3786-cgu.13.rcgu.o": "8f4549bef454557ccacec9a0d16770ab52b4c185f1beb23dc5e47c36bbee472a",
+    "llvm/unicode-segmentation/ref/objects/lib.unicode_segmentation.2cc1058ac2cfbdd3-cgu.0.rcgu.o": "78f77ead070bd31c5fd3602a83f73307a3259d9245d61f3a08eff1c73f9339db",
+    "llvm/unicode-segmentation/ref/objects/lib.unicode_segmentation.2cc1058ac2cfbdd3-cgu.1.rcgu.o": "fb61208ab27afebdf20c158026120fa42c2acaa6296c03f16574ab55b818ae69",
+    "llvm/unicode-segmentation/ref/objects/lib.unicode_segmentation.2cc1058ac2cfbdd3-cgu.2.rcgu.o": "4fdf668a4099a8e5da64f2458ac84665dc8e99aacac463cbc174ec624980b3da",
+    "llvm/unicode-segmentation/ref/objects/lib.unicode_segmentation.2cc1058ac2cfbdd3-cgu.3.rcgu.o": "376dac3572ff4bb39d545326b1aaa751d2be80c5492e0f25f3315d3410f6d5cf",
+    "llvm/unicode-segmentation/ref/objects/lib.unicode_segmentation.2cc1058ac2cfbdd3-cgu.4.rcgu.o": "e9c5a01afcb595632e8cd5373c56e184612763d1ec0ebb69d51a75116425d194",
+    "llvm/unicode-segmentation/ref/objects/lib.unicode_segmentation.2cc1058ac2cfbdd3-cgu.5.rcgu.o": "55556f2d6bd4b506bf6a592f2951bd45857fab90032af81686024380b5fcedaf",
+    "llvm/unicode-segmentation/ref/objects/lib.unicode_segmentation.2cc1058ac2cfbdd3-cgu.6.rcgu.o": "1a20ab7076fc9c5f25fa3aef8fc2552586658060f63c8afa52214a70320c1957",
+    "llvm/unicode-segmentation/ref/objects/lib.unicode_segmentation.2cc1058ac2cfbdd3-cgu.7.rcgu.o": "f02f556996542ad0d23532d3965ae1f97214dfb91c90fa15951b9d99e40ca96f",
+    "llvm/unicode-segmentation/ref/objects/lib.unicode_segmentation.2cc1058ac2cfbdd3-cgu.8.rcgu.o": "77cfdf17a4b5c205a2bc3f12b7e7222e8e6a92bfbf38fd06bfa5de616f18a3aa",
+    "llvm/humantime/ref/objects/lib.humantime.7c8d5c717cf60a7d-cgu.00.rcgu.o": "7d7598e6b950ffba1a98dddd649de5a99038ec3f72d550ee3d0db74506b15fa2",
+    "llvm/humantime/ref/objects/lib.humantime.7c8d5c717cf60a7d-cgu.01.rcgu.o": "6911fdcf42d9de07e6d48fce952c37e5029cb1fd29bca296ff288ea602ff3195",
+    "llvm/humantime/ref/objects/lib.humantime.7c8d5c717cf60a7d-cgu.02.rcgu.o": "b7a223587e2d26969cc5aa049336c6c04181ed96437b4766228bec64562226d0",
+    "llvm/humantime/ref/objects/lib.humantime.7c8d5c717cf60a7d-cgu.03.rcgu.o": "18eeb57b3346832e062a11745a3e3132098bec6d4a55cfddb3ec04f7eb5e4870",
+    "llvm/humantime/ref/objects/lib.humantime.7c8d5c717cf60a7d-cgu.04.rcgu.o": "32066819d3b35e1d88e3b645614ceb5bb3e05b561a88d44652a751fe746ae692",
+    "llvm/humantime/ref/objects/lib.humantime.7c8d5c717cf60a7d-cgu.05.rcgu.o": "5f9726e34a9aa9dad53556ca3670a13eccd62c9e360e6416942191e5e75e2241",
+    "llvm/humantime/ref/objects/lib.humantime.7c8d5c717cf60a7d-cgu.06.rcgu.o": "522f41e61beddc7f098f05701faf5b7f0b54b91ad9847dc812a086e6b63a9ef5",
+    "llvm/humantime/ref/objects/lib.humantime.7c8d5c717cf60a7d-cgu.07.rcgu.o": "8f1489c63978d303247f1e335eed572c8760941c64b18c8a4948bddb6551c8d6",
+    "llvm/humantime/ref/objects/lib.humantime.7c8d5c717cf60a7d-cgu.08.rcgu.o": "5201d40c42d2068fd01b51bbfc1e74a989f026948d853953b0f08594d3ea3646",
+    "llvm/humantime/ref/objects/lib.humantime.7c8d5c717cf60a7d-cgu.09.rcgu.o": "5e390342f127ea7e8ae4431ba7fe4bfd7bf3587b7c9761653467ef9b6c98d07b",
+    "llvm/humantime/ref/objects/lib.humantime.7c8d5c717cf60a7d-cgu.10.rcgu.o": "0dda3976347a00c7c121be11ce2db5061c2a2d63b15f84d30a96d856b8edd90d",
+    "llvm/humantime/ref/objects/lib.humantime.7c8d5c717cf60a7d-cgu.11.rcgu.o": "158dda8071495d593c6540fd376c0ad02beaafc5806b05dcc3450b6f6f7a697b",
+    "llvm/humantime/ref/objects/lib.humantime.7c8d5c717cf60a7d-cgu.12.rcgu.o": "ef67a570bb620ce376a8fbe759b97d4421691293a603c6512956fcc24b6dced5",
+    "bits/semver/ref/objects/lib.semver.fd940cb7d3d8ab00-cgu.00.rcgu.o": "170b9e490ce33a41b8043025ce81dbd347ca77ecde8ab2547c7638b3daca4c21",
+    "bits/semver/ref/objects/lib.semver.fd940cb7d3d8ab00-cgu.01.rcgu.o": "82b7486626efca7350677b183a9f44d93c27be4d5f376f5022e5e49a2348dbd9",
+    "bits/semver/ref/objects/lib.semver.fd940cb7d3d8ab00-cgu.02.rcgu.o": "f427318ffa8c95945794b61d14f0a3278718202df885bdc5745b012e022a9903",
+    "bits/semver/ref/objects/lib.semver.fd940cb7d3d8ab00-cgu.03.rcgu.o": "449e51f209bcf51b5c98b01a7bdcaf63ec2738811e1f0d9faeda0b92c899c04d",
+    "bits/semver/ref/objects/lib.semver.fd940cb7d3d8ab00-cgu.04.rcgu.o": "86d8c041e7e90dc6a1584158c0699559e097e5717b9cf2a6e6f49eb37a678e45",
+    "bits/semver/ref/objects/lib.semver.fd940cb7d3d8ab00-cgu.05.rcgu.o": "8478e1147af8594c488fd3fc57592526a4b1da9973717ecba8a11a23222993d2",
+    "bits/semver/ref/objects/lib.semver.fd940cb7d3d8ab00-cgu.06.rcgu.o": "a3606680d8b610928f7811fd1314dafdd5f99d85215b19fabb538a993b527efc",
+    "bits/semver/ref/objects/lib.semver.fd940cb7d3d8ab00-cgu.07.rcgu.o": "9e14a6ac3a14643eeb343fb7aafbcfb195cc4801eb9a49de23b6bc57f262ce68",
+    "bits/semver/ref/objects/lib.semver.fd940cb7d3d8ab00-cgu.08.rcgu.o": "7a23ba83997da80575f82aeefd42fd88e9f83e676d682482507b6b1f342dcd49",
+    "bits/semver/ref/objects/lib.semver.fd940cb7d3d8ab00-cgu.09.rcgu.o": "c792450192fbefef024f07b3c559072e55bca83602523078faa221db4497a701",
+    "bits/semver/ref/objects/lib.semver.fd940cb7d3d8ab00-cgu.10.rcgu.o": "d0891100c70618fa232ad55777e8f2c851482f1221798e034aab47ffaf6d09c3",
+    "bits/semver/ref/objects/lib.semver.fd940cb7d3d8ab00-cgu.11.rcgu.o": "c27b92c11cd84e3cef0cec4e0129134d0a9727113e953d28c4754943f50be18f",
+    "bits/semver/ref/objects/lib.semver.fd940cb7d3d8ab00-cgu.12.rcgu.o": "76d605d059d363ce57a4e540dee9f9e0e7eaec6a4fb397dd5c490f7888a10254",
+    "bits/semver/ref/objects/lib.semver.fd940cb7d3d8ab00-cgu.13.rcgu.o": "e9ddc72d0317eed2c04b78f5747cf49a815818774e3342e28aaf8d738832c776",
+    "bits/base64/ref/objects/lib.base64.1a75627b77da3786-cgu.00.rcgu.o": "83072edf187311950e61a81d404fe2710ea7453b65a79267c48f089cd37a78fa",
+    "bits/base64/ref/objects/lib.base64.1a75627b77da3786-cgu.01.rcgu.o": "c4d0d9a48aec1037998af1690009cc7c7b3f719e9971a20806bc492a1c836e35",
+    "bits/base64/ref/objects/lib.base64.1a75627b77da3786-cgu.02.rcgu.o": "501921985abe25a28a3316f9097919f419f868ac43b34b0f9028a1c06e978c49",
+    "bits/base64/ref/objects/lib.base64.1a75627b77da3786-cgu.03.rcgu.o": "9b0ec968d05412883b8078e27866b7c2c523f1e28f252bab3f726f22ca770388",
+    "bits/base64/ref/objects/lib.base64.1a75627b77da3786-cgu.04.rcgu.o": "0c831f5093d090149d980515208eaa53b15653c3b425291c752d277158ed0516",
+    "bits/base64/ref/objects/lib.base64.1a75627b77da3786-cgu.05.rcgu.o": "e7a0e39b6fd0faee3748a3c8177486271aa3dacbe1bcf90448f975869af51351",
+    "bits/base64/ref/objects/lib.base64.1a75627b77da3786-cgu.06.rcgu.o": "3ec1f13a27836923c94a34383a3b4fa83552765412358da403f43e6c7ca30334",
+    "bits/base64/ref/objects/lib.base64.1a75627b77da3786-cgu.07.rcgu.o": "819cf641719c6117b459046db8fd1dcbfadcc26a63a91343f939c6a5a1038eca",
+    "bits/base64/ref/objects/lib.base64.1a75627b77da3786-cgu.08.rcgu.o": "046e40d6897a0a7df4e526eed24f476e2e6fffec026361e60949e3b52fd4f584",
+    "bits/base64/ref/objects/lib.base64.1a75627b77da3786-cgu.09.rcgu.o": "0dfe063ffc8069bf7ccd47b639ba05f9d487bee196dab8736ca7ae51dccd8bef",
+    "bits/base64/ref/objects/lib.base64.1a75627b77da3786-cgu.10.rcgu.o": "f58f37f3debf98c62c1fc79cfe03348e1129e0dd0f956e8e7a0c9a7aade69894",
+    "bits/base64/ref/objects/lib.base64.1a75627b77da3786-cgu.11.rcgu.o": "828f64083f1327df75dd9f30ab8b23e364ea7ef9cc365a2a719e257c8b27bf6b",
+    "bits/base64/ref/objects/lib.base64.1a75627b77da3786-cgu.12.rcgu.o": "11c9d2b5b76974d683b7b3489466c6074e50b8bab7151168872c33901125b73c",
+    "bits/base64/ref/objects/lib.base64.1a75627b77da3786-cgu.13.rcgu.o": "803488a51e69c69cd9a8177d36d987e5af11c5c34ae3574aedc4c29ab19ce5de",
+    "bits/unicode-segmentation/ref/objects/lib.unicode_segmentation.2cc1058ac2cfbdd3-cgu.0.rcgu.o": "ca8f95c608921d5605ffe1c8f0beec772caf10593a749902d23fc867aa6994e2",
+    "bits/unicode-segmentation/ref/objects/lib.unicode_segmentation.2cc1058ac2cfbdd3-cgu.1.rcgu.o": "9893984defbd398a354f2fa08ec1fa65fc9ef1888f981a5e474c2b17bc1b74ad",
+    "bits/unicode-segmentation/ref/objects/lib.unicode_segmentation.2cc1058ac2cfbdd3-cgu.2.rcgu.o": "4e2a457a10236ecf603c00c9c67e5da8bef1509c69b832d9824e67a98c996fe6",
+    "bits/unicode-segmentation/ref/objects/lib.unicode_segmentation.2cc1058ac2cfbdd3-cgu.3.rcgu.o": "de947ba15d7a4a96af320ca3270c9b1518b9e6596e9d4487308f439cb2c773e7",
+    "bits/unicode-segmentation/ref/objects/lib.unicode_segmentation.2cc1058ac2cfbdd3-cgu.4.rcgu.o": "fbf00b636ed9fee92b775217ee20f4c9541f64954402432f37e76d0f24891747",
+    "bits/unicode-segmentation/ref/objects/lib.unicode_segmentation.2cc1058ac2cfbdd3-cgu.5.rcgu.o": "ef2c82d3720231cb4a0629e8d926e6b39b1b5912a32bbe678bfd82c0137d6dd2",
+    "bits/unicode-segmentation/ref/objects/lib.unicode_segmentation.2cc1058ac2cfbdd3-cgu.6.rcgu.o": "58c5638afc04d3e79653bee6724793991e825d8f06e2557a2f7f2e3ac0cf0f16",
+    "bits/unicode-segmentation/ref/objects/lib.unicode_segmentation.2cc1058ac2cfbdd3-cgu.7.rcgu.o": "77605a033bd3c39fad0ee7b0ff1f6202d91f68086ebfefcc6ded5c2bacbdb8b6",
+    "bits/unicode-segmentation/ref/objects/lib.unicode_segmentation.2cc1058ac2cfbdd3-cgu.8.rcgu.o": "1015bf93af1ccb3d8e30ed9f912bca75764842bdfdd52a06d69552cb9b2bc7fd",
+    "bits/humantime/ref/objects/lib.humantime.7c8d5c717cf60a7d-cgu.00.rcgu.o": "73179d28d1ef74c9c910aa68ac7707fec80aa177597a976971edc03bdc6ce572",
+    "bits/humantime/ref/objects/lib.humantime.7c8d5c717cf60a7d-cgu.01.rcgu.o": "cf9e75d29cd05835f5525f9e801a6a58617e918cf90a3d052bfe3997d2bd5214",
+    "bits/humantime/ref/objects/lib.humantime.7c8d5c717cf60a7d-cgu.02.rcgu.o": "36f3f7aecc52834494f61093d3c20640ff8233de359a7c21fb3c743d1822f807",
+    "bits/humantime/ref/objects/lib.humantime.7c8d5c717cf60a7d-cgu.03.rcgu.o": "dbab7c255e73c63735c71ef569b22eea460db7c8417b6f90651e48a230fa95cf",
+    "bits/humantime/ref/objects/lib.humantime.7c8d5c717cf60a7d-cgu.04.rcgu.o": "c872ad653783815b33c8cb62e7bf0cfcd68ba4d8e9267235c2b3340f6fb9717c",
+    "bits/humantime/ref/objects/lib.humantime.7c8d5c717cf60a7d-cgu.05.rcgu.o": "71bd7a40fd698102064dd311c5a290027452be38e13d70f2a5fbb5911eeb6ed9",
+    "bits/humantime/ref/objects/lib.humantime.7c8d5c717cf60a7d-cgu.06.rcgu.o": "f88cad61807c82f461ae1432bc596488503b4ab6603fff01935d11db4a7ba35a",
+    "bits/humantime/ref/objects/lib.humantime.7c8d5c717cf60a7d-cgu.07.rcgu.o": "76d52cace890fad490a0a26ad056bf63791d3aa262550149797e91a3707c0849",
+    "bits/humantime/ref/objects/lib.humantime.7c8d5c717cf60a7d-cgu.08.rcgu.o": "7c1ebfabd3338f6423a5faf4199587972e54422f0a9266e5d9614298de4b886c",
+    "bits/humantime/ref/objects/lib.humantime.7c8d5c717cf60a7d-cgu.09.rcgu.o": "440f564f427d3fc534b6066183d9408898f9457cccda2cf17c9eaf43e909602a",
+    "bits/humantime/ref/objects/lib.humantime.7c8d5c717cf60a7d-cgu.10.rcgu.o": "0c97779ddf723df9061980f6adc43d928ccce71397821ee9870dfb98f4172dbc",
+    "bits/humantime/ref/objects/lib.humantime.7c8d5c717cf60a7d-cgu.11.rcgu.o": "edabda068ab00ce662185c5449a96bcadddce51f676338f9eec49e8f266b24d9",
+    "bits/humantime/ref/objects/lib.humantime.7c8d5c717cf60a7d-cgu.12.rcgu.o": "d8875c643aabce42ffbe52d8c06d3cda39613eeb48cfa2464c8f274d29b0105e"
+  },
+  "crates": {
+    "semver": {
+      "llvm": [
+        {
+          "name": "<semver::Version as core::str::traits::FromStr>::from_str",
+          "start": 0,
+          "bytes": 917,
+          "section": ".text._RNvXNtCslLN4iPamcnI_6semver5parseNtB4_7VersionNtNtNtCshX3mvxHm3fC_4core3str6traits7FromStr8from_str",
+          "aliases": [],
+          "counts": {
+            "instructions": 232,
+            "branches": 45,
+            "calls": 9,
+            "memory_operand_instructions": 59,
+            "direct_stack_operand_instructions": 25,
+            "non_cl_shifts": 13
+          },
+          "opcodes": {
+            "push": 6,
+            "sub": 1,
+            "mov": 62,
+            "test": 12,
+            "je": 13,
+            "lea": 10,
+            "xor": 2,
+            "call": 9,
+            "movzx": 14,
+            "cmp": 13,
+            "jne": 6,
+            "inc": 4,
+            "dec": 4,
+            "jmp": 20,
+            "pxor": 1,
+            "movdqu": 2,
+            "js": 2,
+            "and": 10,
+            "jb": 4,
+            "shl": 13,
+            "or": 14,
+            "add": 2,
+            "pop": 6,
+            "ret": 1,
+            "pcmpeqd": 1
+          },
+          "call_targets": {
+            "semver::parse::numeric_identifier": 3,
+            "semver::parse::prerelease_identifier": 1,
+            "semver::parse::build_identifier": 1,
+            "<semver::identifier::Identifier as core::ops::drop::Drop>::drop": 3,
+            ".text._RNvXNtNtCshX3mvxHm3fC_4core3str4iterNtB2_5CharsNtNtNtNtB6_4iter6traits8iterator8Iterator4next": 1
+          },
+          "stack_reservations": [
+            "56"
+          ],
+          "object": "llvm/semver/ref/objects/lib.semver.fd940cb7d3d8ab00-cgu.00.rcgu.o"
+        },
+        {
+          "name": "<semver::Prerelease as core::cmp::Ord>::cmp",
+          "start": 0,
+          "bytes": 657,
+          "section": ".text._RNvXs5_NtCslLN4iPamcnI_6semver5implsNtB7_10PrereleaseNtNtCshX3mvxHm3fC_4core3cmp3Ord3cmp",
+          "aliases": [],
+          "counts": {
+            "instructions": 173,
+            "memory_operand_instructions": 29,
+            "branches": 27,
+            "non_cl_shifts": 4,
+            "direct_stack_operand_instructions": 18,
+            "calls": 6
+          },
+          "opcodes": {
+            "push": 6,
+            "sub": 7,
+            "mov": 47,
+            "cmp": 11,
+            "je": 8,
+            "test": 10,
+            "js": 4,
+            "bsr": 4,
+            "xor": 8,
+            "shr": 4,
+            "jns": 1,
+            "movzx": 6,
+            "add": 7,
+            "and": 2,
+            "imul": 2,
+            "jmp": 9,
+            "movabs": 1,
+            "lea": 4,
+            "nop": 4,
+            "cmovb": 1,
+            "call": 6,
+            "cdqe": 1,
+            "cmovne": 1,
+            "sets": 1,
+            "setg": 1,
+            "jne": 3,
+            "ja": 2,
+            "inc": 1,
+            "seta": 1,
+            "sbb": 2,
+            "neg": 1,
+            "pop": 6,
+            "ret": 1
+          },
+          "call_targets": {
+            ".text._RNvXsX_NtNtCshX3mvxHm3fC_4core3str4iterINtB5_5SplitcENtNtNtNtB9_4iter6traits8iterator8Iterator4nextCslLN4iPamcnI_6semver": 3,
+            "semver::identifier::decode_len::decode_len_cold (.llvm.9181827420358309959)": 2
+          },
+          "stack_reservations": [
+            "152"
+          ],
+          "object": "llvm/semver/ref/objects/lib.semver.fd940cb7d3d8ab00-cgu.00.rcgu.o"
+        },
+        {
+          "name": "semver::parse::comparator",
+          "start": 0,
+          "bytes": 1824,
+          "section": ".text._RNvNtCslLN4iPamcnI_6semver5parse10comparator",
+          "aliases": [],
+          "counts": {
+            "instructions": 459,
+            "branches": 97,
+            "memory_operand_instructions": 100,
+            "non_cl_shifts": 10,
+            "calls": 16,
+            "direct_stack_operand_instructions": 40
+          },
+          "opcodes": {
+            "push": 6,
+            "sub": 7,
+            "mov": 133,
+            "test": 17,
+            "je": 31,
+            "movzx": 19,
+            "lea": 31,
+            "cmp": 47,
+            "ja": 1,
+            "movsxd": 1,
+            "add": 20,
+            "jmp": 35,
+            "inc": 9,
+            "jne": 12,
+            "jb": 5,
+            "jle": 9,
+            "xor": 13,
+            "nop": 2,
+            "jns": 2,
+            "and": 10,
+            "jbe": 2,
+            "shl": 10,
+            "or": 10,
+            "call": 16,
+            "cmovne": 2,
+            "pop": 6,
+            "ret": 1,
+            "dec": 2
+          },
+          "call_targets": {
+            "semver::parse::numeric_identifier": 3,
+            "semver::parse::identifier (.llvm.8336472345116524729)": 1,
+            "<semver::identifier::Identifier>::new_unchecked": 1,
+            "semver::parse::build_identifier": 1,
+            "<semver::identifier::Identifier as core::ops::drop::Drop>::drop": 4,
+            "core::str::slice_error_fail": 6
+          },
+          "stack_reservations": [
+            "72"
+          ],
+          "object": "llvm/semver/ref/objects/lib.semver.fd940cb7d3d8ab00-cgu.01.rcgu.o"
+        },
+        {
+          "name": "semver::parse::numeric_identifier",
+          "start": 0,
+          "bytes": 337,
+          "section": ".text._RNvNtCslLN4iPamcnI_6semver5parse18numeric_identifier",
+          "aliases": [],
+          "counts": {
+            "instructions": 103,
+            "branches": 19,
+            "memory_operand_instructions": 12,
+            "non_cl_shifts": 10,
+            "calls": 1
+          },
+          "opcodes": {
+            "push": 1,
+            "test": 3,
+            "je": 2,
+            "mov": 19,
+            "movzx": 11,
+            "lea": 4,
+            "cmp": 8,
+            "jae": 1,
+            "jns": 1,
+            "and": 5,
+            "jbe": 1,
+            "shl": 10,
+            "or": 7,
+            "jb": 3,
+            "jne": 3,
+            "inc": 2,
+            "jmp": 6,
+            "add": 6,
+            "sub": 1,
+            "pop": 2,
+            "ret": 2,
+            "nop": 1,
+            "mul": 1,
+            "jo": 1,
+            "jle": 1,
+            "call": 1
+          },
+          "call_targets": {
+            "core::str::slice_error_fail": 1
+          },
+          "stack_reservations": [],
+          "object": "llvm/semver/ref/objects/lib.semver.fd940cb7d3d8ab00-cgu.01.rcgu.o"
+        },
+        {
+          "name": "semver::eval::matches_impl (.llvm.7962582167459111606)",
+          "start": 0,
+          "bytes": 1377,
+          "section": ".text._RNvNtCslLN4iPamcnI_6semver4eval12matches_impl.llvm.7962582167459111606",
+          "aliases": [],
+          "counts": {
+            "instructions": 373,
+            "memory_operand_instructions": 96,
+            "branches": 88,
+            "non_cl_shifts": 4,
+            "calls": 12,
+            "direct_stack_operand_instructions": 4
+          },
+          "opcodes": {
+            "push": 7,
+            "movzx": 13,
+            "lea": 1,
+            "movsxd": 1,
+            "add": 20,
+            "jmp": 16,
+            "mov": 104,
+            "cmp": 58,
+            "jne": 31,
+            "je": 32,
+            "setge": 6,
+            "or": 3,
+            "test": 22,
+            "js": 6,
+            "and": 6,
+            "bsr": 3,
+            "xor": 5,
+            "sub": 3,
+            "imul": 3,
+            "shr": 4,
+            "call": 12,
+            "sete": 2,
+            "setg": 1,
+            "setb": 1,
+            "setae": 1,
+            "seta": 1,
+            "setns": 1,
+            "jns": 3,
+            "pop": 6,
+            "ret": 1
+          },
+          "call_targets": {
+            "bcmp": 3,
+            "<semver::Prerelease as core::cmp::Ord>::cmp": 3,
+            "semver::identifier::decode_len::decode_len_cold (.llvm.9181827420358309959)": 6
+          },
+          "stack_reservations": [],
+          "object": "llvm/semver/ref/objects/lib.semver.fd940cb7d3d8ab00-cgu.06.rcgu.o"
+        }
+      ],
+      "bits": [
+        {
+          "name": "<semver::Version as core::str::traits::FromStr>::from_str",
+          "start": 1184,
+          "bytes": 1934,
+          "section": ".text",
+          "aliases": [],
+          "counts": {
+            "instructions": 538,
+            "branches": 94,
+            "memory_operand_instructions": 143,
+            "direct_stack_operand_instructions": 15,
+            "calls": 25
+          },
+          "opcodes": {
+            "push": 6,
+            "mov": 298,
+            "sub": 2,
+            "test": 40,
+            "jne": 15,
+            "lea": 43,
+            "jmp": 49,
+            "call": 25,
+            "je": 30,
+            "pop": 5,
+            "leave": 1,
+            "ret": 1,
+            "and": 6,
+            "xor": 10,
+            "cmp": 5,
+            "add": 2
+          },
+          "call_targets": {
+            "semver::parse::numeric_identifier": 3,
+            "<str>::strip_prefix::<char>": 4,
+            "<core::slice::iter::Iter<u8>>::new": 3,
+            "core::str::validations::next_code_point::<core::slice::iter::Iter<u8>>": 3,
+            "<char>::from_u32_unchecked": 3,
+            "<semver::Version>::new": 1,
+            "semver::parse::prerelease_identifier": 1,
+            "<semver::identifier::Identifier>::is_empty": 2,
+            "<semver::identifier::Identifier as core::ops::drop::Drop>::drop": 4,
+            "semver::parse::build_identifier": 1
+          },
+          "stack_reservations": [
+            "896",
+            "8"
+          ],
+          "object": "bits/semver/ref/objects/lib.semver.fd940cb7d3d8ab00-cgu.00.rcgu.o"
+        },
+        {
+          "name": "<semver::Prerelease as core::cmp::Ord>::cmp",
+          "start": 6576,
+          "bytes": 1085,
+          "section": ".text",
+          "aliases": [],
+          "counts": {
+            "instructions": 287,
+            "calls": 18,
+            "branches": 35,
+            "memory_operand_instructions": 118,
+            "direct_stack_operand_instructions": 51
+          },
+          "opcodes": {
+            "push": 6,
+            "mov": 171,
+            "sub": 2,
+            "call": 18,
+            "test": 13,
+            "je": 5,
+            "xor": 5,
+            "jmp": 19,
+            "lea": 11,
+            "movzx": 12,
+            "jne": 9,
+            "cmp": 3,
+            "jae": 1,
+            "jbe": 1,
+            "movsx": 3,
+            "and": 1,
+            "pop": 5,
+            "leave": 1,
+            "ret": 1
+          },
+          "call_targets": {
+            "<semver::identifier::Identifier>::ptr_eq": 1,
+            "<semver::identifier::Identifier>::is_empty": 2,
+            "<semver::identifier::Identifier>::as_str": 2,
+            "<char as core::str::pattern::Pattern>::into_searcher": 2,
+            "<core::str::iter::SplitInternal<char>>::next": 3,
+            "<core::slice::iter::Iter<u8>>::new": 2,
+            "<core::slice::iter::Iter<u8> as core::iter::traits::iterator::Iterator>::copied::<u8>": 2,
+            "<core::iter::adapters::copied::Copied<core::slice::iter::Iter<u8>> as core::iter::traits::iterator::Iterator>::all::<<semver::Prerelease as core::cmp::Ord>::cmp::{closure#1}>": 2,
+            "<semver::Prerelease as core::cmp::Ord>::cmp::{closure#0}": 1,
+            "<[u8] as core::cmp::Ord>::cmp": 1
+          },
+          "stack_reservations": [
+            "416",
+            "8"
+          ],
+          "object": "bits/semver/ref/objects/lib.semver.fd940cb7d3d8ab00-cgu.00.rcgu.o"
+        },
+        {
+          "name": "<core::iter::adapters::copied::Copied<core::slice::iter::Iter<u8>> as core::iter::traits::iterator::Iterator>::all::<<semver::Prerelease as core::cmp::Ord>::cmp::{closure#1}>",
+          "start": 7664,
+          "bytes": 43,
+          "section": ".text",
+          "aliases": [],
+          "counts": {
+            "instructions": 12,
+            "calls": 2,
+            "memory_operand_instructions": 1
+          },
+          "opcodes": {
+            "push": 1,
+            "mov": 2,
+            "sub": 1,
+            "call": 2,
+            "and": 1,
+            "lea": 2,
+            "movzx": 1,
+            "leave": 1,
+            "ret": 1
+          },
+          "call_targets": {
+            "<core::iter::adapters::copied::Copied<core::slice::iter::Iter<u8>> as core::iter::traits::iterator::Iterator>::try_fold::<(), core::iter::traits::iterator::Iterator::all::check<u8, <semver::Prerelease as core::cmp::Ord>::cmp::{closure#1}>::{closure#0}, core::ops::control_flow::ControlFlow<()>>": 1,
+            "<core::ops::control_flow::ControlFlow<()> as core::cmp::PartialEq>::eq": 1
+          },
+          "stack_reservations": [
+            "16"
+          ],
+          "object": "bits/semver/ref/objects/lib.semver.fd940cb7d3d8ab00-cgu.00.rcgu.o"
+        },
+        {
+          "name": "<semver::Prerelease as core::cmp::Ord>::cmp::{closure#0}",
+          "start": 7712,
+          "bytes": 40,
+          "section": ".text",
+          "aliases": [],
+          "counts": {
+            "instructions": 12,
+            "memory_operand_instructions": 4,
+            "calls": 1
+          },
+          "opcodes": {
+            "push": 1,
+            "mov": 6,
+            "call": 1,
+            "movsx": 1,
+            "and": 1,
+            "leave": 1,
+            "ret": 1
+          },
+          "call_targets": {
+            "<[u8] as core::cmp::Ord>::cmp": 1
+          },
+          "stack_reservations": [],
+          "object": "bits/semver/ref/objects/lib.semver.fd940cb7d3d8ab00-cgu.00.rcgu.o"
+        },
+        {
+          "name": "semver::parse::comparator",
+          "start": 0,
+          "bytes": 2156,
+          "section": ".text",
+          "aliases": [],
+          "counts": {
+            "instructions": 597,
+            "calls": 32,
+            "memory_operand_instructions": 156,
+            "branches": 102,
+            "direct_stack_operand_instructions": 23
+          },
+          "opcodes": {
+            "push": 6,
+            "mov": 347,
+            "sub": 2,
+            "lea": 40,
+            "call": 32,
+            "movzx": 2,
+            "test": 45,
+            "jne": 24,
+            "jmp": 53,
+            "je": 25,
+            "pop": 5,
+            "leave": 1,
+            "ret": 1,
+            "cmp": 5,
+            "sete": 1,
+            "xor": 6,
+            "add": 2
+          },
+          "call_targets": {
+            "semver::parse::op": 1,
+            "<str>::trim_start_matches::<char>": 2,
+            "semver::parse::numeric_identifier": 3,
+            "<str>::strip_prefix::<char>": 8,
+            "<str>::starts_with::<char>": 2,
+            "core::ptr::metadata::metadata::<[u8]>": 2,
+            "<str>::is_char_boundary": 2,
+            "<core::ops::range::RangeFrom<usize> as core::slice::index::SliceIndex<str>>::get_unchecked": 2,
+            "semver::parse::prerelease_identifier": 1,
+            "<semver::identifier::Identifier>::is_empty": 2,
+            "<semver::identifier::Identifier as core::ops::drop::Drop>::drop": 4,
+            "core::str::slice_error_fail": 2,
+            "semver::parse::build_identifier": 1
+          },
+          "stack_reservations": [
+            "1104",
+            "8"
+          ],
+          "object": "bits/semver/ref/objects/lib.semver.fd940cb7d3d8ab00-cgu.01.rcgu.o"
+        },
+        {
+          "name": "semver::parse::numeric_identifier",
+          "start": 5232,
+          "bytes": 804,
+          "section": ".text",
+          "aliases": [],
+          "counts": {
+            "instructions": 236,
+            "branches": 36,
+            "memory_operand_instructions": 36,
+            "calls": 11,
+            "direct_stack_operand_instructions": 9
+          },
+          "opcodes": {
+            "push": 6,
+            "mov": 121,
+            "sub": 2,
+            "and": 3,
+            "lea": 10,
+            "cmp": 6,
+            "jb": 1,
+            "jmp": 19,
+            "add": 4,
+            "xor": 8,
+            "test": 13,
+            "seta": 1,
+            "movzx": 5,
+            "je": 12,
+            "jae": 2,
+            "jbe": 1,
+            "call": 11,
+            "pop": 5,
+            "leave": 1,
+            "ret": 1,
+            "mul": 1,
+            "setne": 1,
+            "imul": 1,
+            "jne": 1
+          },
+          "call_targets": {
+            "core::ptr::metadata::metadata::<[u8]>": 2,
+            "<str>::is_char_boundary": 2,
+            "<core::ops::range::RangeFrom<usize> as core::slice::index::SliceIndex<str>>::get_unchecked": 2,
+            "core::str::slice_error_fail": 2,
+            "<core::slice::iter::Iter<u8>>::new": 1,
+            "core::str::validations::next_code_point::<core::slice::iter::Iter<u8>>": 1,
+            "<char>::from_u32_unchecked": 1
+          },
+          "stack_reservations": [
+            "168"
+          ],
+          "object": "bits/semver/ref/objects/lib.semver.fd940cb7d3d8ab00-cgu.01.rcgu.o"
+        },
+        {
+          "name": "semver::eval::matches_impl",
+          "start": 192,
+          "bytes": 593,
+          "section": ".text",
+          "aliases": [],
+          "counts": {
+            "instructions": 186,
+            "memory_operand_instructions": 23,
+            "branches": 54,
+            "calls": 11
+          },
+          "opcodes": {
+            "push": 3,
+            "mov": 46,
+            "movzx": 15,
+            "test": 7,
+            "je": 21,
+            "cmp": 26,
+            "jne": 4,
+            "jmp": 28,
+            "xor": 6,
+            "seta": 5,
+            "setae": 1,
+            "sete": 1,
+            "jbe": 1,
+            "add": 2,
+            "call": 11,
+            "movsx": 2,
+            "and": 2,
+            "lea": 1,
+            "pop": 2,
+            "leave": 1,
+            "ret": 1
+          },
+          "call_targets": {
+            "<semver::Prerelease as core::cmp::Ord>::cmp": 2,
+            "<core::cmp::Ordering>::is_ge": 2,
+            "semver::eval::matches_exact": 3,
+            "semver::eval::matches_less": 2,
+            "semver::eval::matches_greater": 2
+          },
+          "stack_reservations": [],
+          "object": "bits/semver/ref/objects/lib.semver.fd940cb7d3d8ab00-cgu.06.rcgu.o"
+        },
+        {
+          "name": "<core::iter::adapters::copied::Copied<core::slice::iter::Iter<u8>> as core::iter::traits::iterator::Iterator>::try_fold::<(), core::iter::traits::iterator::Iterator::all::check<u8, <semver::Prerelease as core::cmp::Ord>::cmp::{closure#1}>::{closure#0}, core::ops::control_flow::ControlFlow<()>>",
+          "start": 0,
+          "bytes": 78,
+          "section": ".text",
+          "aliases": [],
+          "counts": {
+            "instructions": 27,
+            "calls": 2,
+            "branches": 4,
+            "memory_operand_instructions": 1
+          },
+          "opcodes": {
+            "push": 3,
+            "mov": 5,
+            "sub": 2,
+            "lea": 2,
+            "call": 2,
+            "test": 2,
+            "jne": 1,
+            "xor": 1,
+            "jmp": 2,
+            "movzx": 1,
+            "je": 1,
+            "and": 1,
+            "pop": 2,
+            "leave": 1,
+            "ret": 1
+          },
+          "call_targets": {
+            "<core::slice::iter::Iter<u8> as core::iter::traits::iterator::Iterator>::next": 1,
+            "<semver::Prerelease as core::cmp::Ord>::cmp::{closure#1}": 1
+          },
+          "stack_reservations": [
+            "8",
+            "8"
+          ],
+          "object": "bits/semver/ref/objects/lib.semver.fd940cb7d3d8ab00-cgu.08.rcgu.o"
+        },
+        {
+          "name": "<semver::Prerelease as core::cmp::Ord>::cmp::{closure#1}",
+          "start": 160,
+          "bytes": 26,
+          "section": ".text",
+          "aliases": [],
+          "counts": {
+            "instructions": 9,
+            "branches": 3
+          },
+          "opcodes": {
+            "movzx": 1,
+            "cmp": 2,
+            "jb": 1,
+            "ja": 1,
+            "mov": 1,
+            "jmp": 1,
+            "xor": 1,
+            "ret": 1
+          },
+          "call_targets": {},
+          "stack_reservations": [],
+          "object": "bits/semver/ref/objects/lib.semver.fd940cb7d3d8ab00-cgu.08.rcgu.o"
+        }
+      ]
+    },
+    "base64": {
+      "llvm": [
+        {
+          "name": "<base64::engine::general_purpose::GeneralPurpose as base64::engine::Engine>::internal_decode",
+          "start": 0,
+          "bytes": 2205,
+          "section": ".text._RNvXs_NtNtCs2gPXRUVJHRq_6base646engine15general_purposeNtB4_14GeneralPurposeNtB6_6Engine15internal_decode",
+          "aliases": [],
+          "counts": {
+            "instructions": 494,
+            "memory_operand_instructions": 149,
+            "direct_stack_operand_instructions": 40,
+            "branches": 88,
+            "non_cl_shifts": 44,
+            "calls": 7
+          },
+          "opcodes": {
+            "push": 10,
+            "sub": 5,
+            "mov": 119,
+            "lea": 15,
+            "movzx": 77,
+            "cmp": 47,
+            "jne": 4,
+            "jb": 2,
+            "je": 41,
+            "xor": 9,
+            "cmovae": 1,
+            "test": 2,
+            "cmovb": 1,
+            "shr": 8,
+            "jae": 1,
+            "jmp": 37,
+            "movabs": 2,
+            "and": 2,
+            "ja": 3,
+            "mul": 1,
+            "shl": 36,
+            "or": 31,
+            "bswap": 5,
+            "add": 18,
+            "nop": 1,
+            "call": 7,
+            "inc": 2,
+            "pop": 6,
+            "ret": 1
+          },
+          "call_targets": {
+            "base64::engine::general_purpose::decode_suffix::decode_suffix": 1,
+            "core::slice::index::slice_index_fail": 5,
+            "core::panicking::panic_bounds_check": 1
+          },
+          "stack_reservations": [
+            "88"
+          ],
+          "object": "llvm/base64/ref/objects/lib.base64.1a75627b77da3786-cgu.00.rcgu.o"
+        },
+        {
+          "name": "<base64::engine::general_purpose::GeneralPurpose as base64::engine::Engine>::internal_encode",
+          "start": 0,
+          "bytes": 1376,
+          "section": ".text._RNvXs_NtNtCs2gPXRUVJHRq_6base646engine15general_purposeNtB4_14GeneralPurposeNtB6_6Engine15internal_encode",
+          "aliases": [],
+          "counts": {
+            "instructions": 327,
+            "branches": 17,
+            "memory_operand_instructions": 101,
+            "non_cl_shifts": 44,
+            "calls": 9
+          },
+          "opcodes": {
+            "push": 5,
+            "mov": 107,
+            "xor": 3,
+            "sub": 3,
+            "cmovb": 1,
+            "jbe": 2,
+            "nop": 2,
+            "lea": 20,
+            "cmp": 15,
+            "ja": 4,
+            "bswap": 4,
+            "shr": 39,
+            "movzx": 50,
+            "and": 34,
+            "add": 3,
+            "movabs": 1,
+            "mul": 1,
+            "jae": 6,
+            "shl": 5,
+            "or": 3,
+            "jb": 1,
+            "je": 1,
+            "jne": 2,
+            "jmp": 1,
+            "pop": 4,
+            "ret": 1,
+            "call": 9
+          },
+          "call_targets": {
+            "core::slice::index::slice_index_fail": 4,
+            "core::panicking::panic_bounds_check": 5
+          },
+          "stack_reservations": [],
+          "object": "llvm/base64/ref/objects/lib.base64.1a75627b77da3786-cgu.00.rcgu.o"
+        },
+        {
+          "name": "<base64::engine::general_purpose::GeneralPurpose as base64::engine::Engine>::internal_decoded_len_estimate",
+          "start": 0,
+          "bytes": 27,
+          "section": ".text._RNvXs_NtNtCs2gPXRUVJHRq_6base646engine15general_purposeNtB4_14GeneralPurposeNtB6_6Engine29internal_decoded_len_estimate",
+          "aliases": [],
+          "counts": {
+            "instructions": 9,
+            "non_cl_shifts": 1
+          },
+          "opcodes": {
+            "mov": 2,
+            "shr": 1,
+            "xor": 1,
+            "and": 1,
+            "setne": 1,
+            "add": 1,
+            "lea": 1,
+            "ret": 1
+          },
+          "call_targets": {},
+          "stack_reservations": [],
+          "object": "llvm/base64/ref/objects/lib.base64.1a75627b77da3786-cgu.00.rcgu.o"
+        }
+      ],
+      "bits": [
+        {
+          "name": "<base64::engine::general_purpose::GeneralPurpose as base64::engine::Engine>::internal_decode",
+          "start": 960,
+          "bytes": 267,
+          "section": ".text",
+          "aliases": [],
+          "counts": {
+            "instructions": 77,
+            "memory_operand_instructions": 30,
+            "direct_stack_operand_instructions": 6,
+            "calls": 1,
+            "branches": 14
+          },
+          "opcodes": {
+            "push": 3,
+            "mov": 34,
+            "sub": 2,
+            "movzx": 6,
+            "lea": 3,
+            "add": 1,
+            "call": 1,
+            "cmp": 7,
+            "jne": 3,
+            "jmp": 7,
+            "je": 4,
+            "sete": 1,
+            "test": 1,
+            "pop": 2,
+            "leave": 1,
+            "ret": 1
+          },
+          "call_targets": {
+            "base64::engine::general_purpose::decode::decode_helper": 1
+          },
+          "stack_reservations": [
+            "48",
+            "32"
+          ],
+          "object": "bits/base64/ref/objects/lib.base64.1a75627b77da3786-cgu.00.rcgu.o"
+        },
+        {
+          "name": "base64::engine::general_purpose::decode::decode_helper",
+          "start": 1232,
+          "bytes": 3316,
+          "section": ".text",
+          "aliases": [],
+          "counts": {
+            "instructions": 808,
+            "memory_operand_instructions": 262,
+            "direct_stack_operand_instructions": 168,
+            "calls": 29,
+            "branches": 122
+          },
+          "opcodes": {
+            "push": 6,
+            "mov": 482,
+            "sub": 5,
+            "movzx": 26,
+            "and": 1,
+            "lea": 39,
+            "call": 29,
+            "cmp": 45,
+            "je": 14,
+            "jmp": 67,
+            "jne": 30,
+            "sete": 3,
+            "pop": 5,
+            "leave": 1,
+            "ret": 1,
+            "xor": 16,
+            "div": 3,
+            "test": 13,
+            "jb": 6,
+            "ja": 3,
+            "imul": 7,
+            "jae": 2,
+            "add": 4
+          },
+          "call_targets": {
+            "base64::engine::general_purpose::decode::complete_quads_len": 1,
+            "core::ptr::metadata::metadata::<[u8]>": 2,
+            "<[u8]>::chunks_exact": 2,
+            "<[u8]>::split_at_checked": 2,
+            "<usize>::checked_sub": 1,
+            "core::slice::index::get_offset_len_mut_noubcheck::<u8>": 1,
+            "base64::engine::general_purpose::decode::decode_chunk_8": 4,
+            "<core::ops::range::Range<usize> as core::slice::index::SliceIndex<[u8]>>::index_mut": 5,
+            "core::slice::index::slice_index_fail": 8,
+            "<[u8]>::len": 1,
+            "base64::engine::general_purpose::decode::decode_chunk_4": 1,
+            "base64::engine::general_purpose::decode_suffix::decode_suffix": 1
+          },
+          "stack_reservations": [
+            "680",
+            "32"
+          ],
+          "object": "bits/base64/ref/objects/lib.base64.1a75627b77da3786-cgu.00.rcgu.o"
+        },
+        {
+          "name": "base64::engine::general_purpose::decode::decode_chunk_8",
+          "start": 5936,
+          "bytes": 1604,
+          "section": ".text",
+          "aliases": [],
+          "counts": {
+            "instructions": 392,
+            "memory_operand_instructions": 76,
+            "direct_stack_operand_instructions": 14,
+            "branches": 57,
+            "calls": 25,
+            "cl_shifts": 8
+          },
+          "opcodes": {
+            "push": 6,
+            "mov": 182,
+            "sub": 2,
+            "test": 1,
+            "ja": 8,
+            "lea": 31,
+            "call": 25,
+            "pop": 5,
+            "leave": 1,
+            "ret": 1,
+            "movzx": 24,
+            "cmp": 26,
+            "jb": 9,
+            "jmp": 30,
+            "add": 15,
+            "jne": 8,
+            "jae": 1,
+            "je": 1,
+            "shl": 8,
+            "or": 7,
+            "bswap": 1
+          },
+          "call_targets": {
+            "core::panicking::panic_bounds_check": 16,
+            "core::ptr::metadata::metadata::<[u8]>": 2,
+            "<usize>::checked_sub": 1,
+            "<[u8]>::len": 2,
+            "core::slice::index::get_offset_len_noubcheck::<u8>": 1,
+            "core::slice::copy_from_slice_impl::<u8>": 1,
+            "core::slice::index::slice_index_fail": 2
+          },
+          "stack_reservations": [
+            "208",
+            "8"
+          ],
+          "object": "bits/base64/ref/objects/lib.base64.1a75627b77da3786-cgu.00.rcgu.o"
+        },
+        {
+          "name": "<base64::engine::general_purpose::GeneralPurpose as base64::engine::Engine>::internal_encode",
+          "start": 7632,
+          "bytes": 6079,
+          "section": ".text",
+          "aliases": [],
+          "counts": {
+            "instructions": 1398,
+            "memory_operand_instructions": 357,
+            "direct_stack_operand_instructions": 266,
+            "branches": 165,
+            "calls": 68,
+            "cl_shifts": 43
+          },
+          "opcodes": {
+            "push": 6,
+            "mov": 734,
+            "sub": 7,
+            "lea": 117,
+            "cmp": 70,
+            "setb": 4,
+            "movzx": 59,
+            "xor": 10,
+            "and": 35,
+            "test": 11,
+            "ja": 39,
+            "jmp": 88,
+            "jbe": 6,
+            "jae": 5,
+            "je": 5,
+            "jb": 15,
+            "call": 68,
+            "pop": 5,
+            "leave": 1,
+            "ret": 1,
+            "add": 58,
+            "shr": 38,
+            "div": 1,
+            "shl": 5,
+            "or": 3,
+            "jne": 7
+          },
+          "call_targets": {
+            "core::slice::index::slice_index_fail": 8,
+            "base64::engine::general_purpose::read_u64": 4,
+            "core::panicking::panic_bounds_check": 56
+          },
+          "stack_reservations": [
+            "376"
+          ],
+          "object": "bits/base64/ref/objects/lib.base64.1a75627b77da3786-cgu.00.rcgu.o"
+        },
+        {
+          "name": "base64::engine::general_purpose::read_u64",
+          "start": 13712,
+          "bytes": 397,
+          "section": ".text",
+          "aliases": [],
+          "counts": {
+            "instructions": 108,
+            "calls": 7,
+            "branches": 13,
+            "memory_operand_instructions": 35
+          },
+          "opcodes": {
+            "push": 3,
+            "mov": 46,
+            "sub": 1,
+            "call": 7,
+            "cmp": 3,
+            "jb": 1,
+            "jne": 1,
+            "jmp": 6,
+            "xor": 4,
+            "test": 4,
+            "je": 5,
+            "lea": 6,
+            "pop": 2,
+            "leave": 1,
+            "ret": 1,
+            "movzx": 16,
+            "bswap": 1
+          },
+          "call_targets": {
+            "core::ptr::metadata::metadata::<[u8]>": 2,
+            "<[u8]>::len": 1,
+            "<[u8]>::as_ptr": 1,
+            "<*const u8>::cast_array::<8>": 1,
+            "<core::result::Result<[u8; 8], core::array::TryFromSliceError>>::unwrap": 1,
+            "core::slice::index::slice_index_fail": 1
+          },
+          "stack_reservations": [
+            "32"
+          ],
+          "object": "bits/base64/ref/objects/lib.base64.1a75627b77da3786-cgu.00.rcgu.o"
+        },
+        {
+          "name": "<base64::engine::general_purpose::GeneralPurpose as base64::engine::Engine>::internal_decoded_len_estimate",
+          "start": 14304,
+          "bytes": 14,
+          "section": ".text",
+          "aliases": [],
+          "counts": {
+            "instructions": 6,
+            "calls": 1
+          },
+          "opcodes": {
+            "push": 1,
+            "mov": 2,
+            "call": 1,
+            "leave": 1,
+            "ret": 1
+          },
+          "call_targets": {
+            "<base64::engine::general_purpose::decode::GeneralPurposeEstimate>::new": 1
+          },
+          "stack_reservations": [],
+          "object": "bits/base64/ref/objects/lib.base64.1a75627b77da3786-cgu.00.rcgu.o"
+        }
+      ]
+    },
+    "unicode-segmentation": {
+      "llvm": [
+        {
+          "name": "<unicode_segmentation::grapheme::GraphemeCursor>::prev_boundary",
+          "start": 0,
+          "bytes": 2906,
+          "section": ".text._RNvMs4_NtCs3QdUL2vdWVj_20unicode_segmentation8graphemeNtB5_14GraphemeCursor13prev_boundary",
+          "aliases": [],
+          "counts": {
+            "instructions": 761,
+            "memory_operand_instructions": 197,
+            "branches": 159,
+            "direct_stack_operand_instructions": 71,
+            "calls": 19,
+            "non_cl_shifts": 14
+          },
+          "opcodes": {
+            "push": 6,
+            "sub": 10,
+            "mov": 212,
+            "test": 12,
+            "je": 36,
+            "cmp": 123,
+            "jne": 21,
+            "jmp": 49,
+            "xorps": 1,
+            "movups": 1,
+            "xor": 24,
+            "cmovae": 2,
+            "jbe": 10,
+            "jae": 8,
+            "jg": 6,
+            "lea": 28,
+            "call": 19,
+            "movsx": 3,
+            "js": 2,
+            "add": 14,
+            "dec": 3,
+            "movzx": 38,
+            "jge": 3,
+            "and": 25,
+            "shl": 14,
+            "or": 16,
+            "nop": 5,
+            "jb": 14,
+            "setb": 3,
+            "ja": 8,
+            "cmovb": 3,
+            "cmova": 16,
+            "setbe": 2,
+            "cmovne": 2,
+            "sete": 5,
+            "cmove": 4,
+            "setae": 1,
+            "jns": 2,
+            "bt": 2,
+            "movsxd": 1,
+            "pop": 6,
+            "ret": 1
+          },
+          "call_targets": {
+            "core::str::slice_error_fail": 3,
+            ".text._RNvNtCs3QdUL2vdWVj_20unicode_segmentation6tables14is_incb_linker": 1,
+            "unicode_segmentation::tables::grapheme::grapheme_category": 5,
+            ".text._RNvXs2_NtNtCshX3mvxHm3fC_4core3str6traitseINtNtNtB9_3ops5index5IndexINtNtBJ_5range7RangeTojEE5indexCs3QdUL2vdWVj_20unicode_segmentation": 3,
+            ".text._RNvMs4_NtCs3QdUL2vdWVj_20unicode_segmentation8graphemeNtB5_14GraphemeCursor12handle_emoji": 1,
+            ".text._RNvMs4_NtCs3QdUL2vdWVj_20unicode_segmentation8graphemeNtB5_14GraphemeCursor21handle_incb_consonant": 1,
+            ".text._RNvMs4_NtCs3QdUL2vdWVj_20unicode_segmentation8graphemeNtB5_14GraphemeCursor18is_boundary_result": 1,
+            ".text._RNvMs4_NtCs3QdUL2vdWVj_20unicode_segmentation8graphemeNtB5_14GraphemeCursor15handle_regional": 1,
+            "core::option::unwrap_failed": 3
+          },
+          "stack_reservations": [
+            "120"
+          ],
+          "object": "llvm/unicode-segmentation/ref/objects/lib.unicode_segmentation.2cc1058ac2cfbdd3-cgu.0.rcgu.o"
+        },
+        {
+          "name": "<unicode_segmentation::grapheme::GraphemeCursor>::grapheme_category",
+          "start": 0,
+          "bytes": 111,
+          "section": ".text._RNvMs4_NtCs3QdUL2vdWVj_20unicode_segmentation8graphemeNtB5_14GraphemeCursor17grapheme_category",
+          "aliases": [],
+          "counts": {
+            "instructions": 39,
+            "branches": 4,
+            "memory_operand_instructions": 8,
+            "calls": 1,
+            "direct_stack_operand_instructions": 2
+          },
+          "opcodes": {
+            "cmp": 6,
+            "jae": 1,
+            "jbe": 1,
+            "xor": 1,
+            "ret": 4,
+            "jb": 1,
+            "ja": 1,
+            "movzx": 3,
+            "push": 2,
+            "sub": 2,
+            "lea": 2,
+            "mov": 9,
+            "call": 1,
+            "add": 1,
+            "pop": 2,
+            "sete": 1,
+            "cmovne": 1
+          },
+          "call_targets": {
+            "unicode_segmentation::tables::grapheme::grapheme_category": 1
+          },
+          "stack_reservations": [
+            "24"
+          ],
+          "object": "llvm/unicode-segmentation/ref/objects/lib.unicode_segmentation.2cc1058ac2cfbdd3-cgu.0.rcgu.o"
+        },
+        {
+          "name": "<unicode_segmentation::grapheme::GraphemeCursor>::is_boundary_result",
+          "start": 0,
+          "bytes": 84,
+          "section": ".text._RNvMs4_NtCs3QdUL2vdWVj_20unicode_segmentation8graphemeNtB5_14GraphemeCursor18is_boundary_result",
+          "aliases": [],
+          "counts": {
+            "instructions": 25,
+            "memory_operand_instructions": 9,
+            "branches": 3,
+            "calls": 1
+          },
+          "opcodes": {
+            "movzx": 3,
+            "lea": 1,
+            "cmp": 4,
+            "mov": 8,
+            "cmovae": 1,
+            "je": 2,
+            "jne": 1,
+            "ret": 3,
+            "push": 1,
+            "call": 1
+          },
+          "call_targets": {
+            ".text.unlikely._RINvNtCshX3mvxHm3fC_4core9panicking19unreachable_displayReECs3QdUL2vdWVj_20unicode_segmentation": 1
+          },
+          "stack_reservations": [],
+          "object": "llvm/unicode-segmentation/ref/objects/lib.unicode_segmentation.2cc1058ac2cfbdd3-cgu.0.rcgu.o"
+        },
+        {
+          "name": "unicode_segmentation::tables::grapheme::grapheme_category",
+          "start": 0,
+          "bytes": 324,
+          "section": ".text._RNvNtNtCs3QdUL2vdWVj_20unicode_segmentation6tables8grapheme17grapheme_category",
+          "aliases": [],
+          "counts": {
+            "instructions": 94,
+            "branches": 15,
+            "non_cl_shifts": 2,
+            "memory_operand_instructions": 14,
+            "calls": 1
+          },
+          "opcodes": {
+            "push": 3,
+            "cmp": 12,
+            "jbe": 1,
+            "mov": 21,
+            "jmp": 4,
+            "shr": 2,
+            "lea": 11,
+            "movzx": 4,
+            "inc": 2,
+            "sub": 2,
+            "jb": 3,
+            "jae": 2,
+            "and": 1,
+            "test": 1,
+            "je": 4,
+            "xor": 5,
+            "nop": 1,
+            "cmovbe": 1,
+            "cmova": 1,
+            "ja": 1,
+            "seta": 3,
+            "or": 2,
+            "add": 2,
+            "dec": 1,
+            "pop": 2,
+            "ret": 1,
+            "call": 1
+          },
+          "call_targets": {
+            "core::slice::index::slice_index_fail": 1
+          },
+          "stack_reservations": [],
+          "object": "llvm/unicode-segmentation/ref/objects/lib.unicode_segmentation.2cc1058ac2cfbdd3-cgu.2.rcgu.o"
+        }
+      ],
+      "bits": [
+        {
+          "name": "<unicode_segmentation::grapheme::GraphemeCursor>::prev_boundary",
+          "start": 0,
+          "bytes": 1326,
+          "section": ".text",
+          "aliases": [],
+          "counts": {
+            "instructions": 363,
+            "memory_operand_instructions": 100,
+            "direct_stack_operand_instructions": 43,
+            "branches": 64,
+            "calls": 15
+          },
+          "opcodes": {
+            "push": 6,
+            "mov": 202,
+            "sub": 6,
+            "test": 14,
+            "jne": 11,
+            "lea": 11,
+            "jmp": 35,
+            "cmp": 16,
+            "je": 13,
+            "setb": 1,
+            "movzx": 5,
+            "xor": 8,
+            "and": 8,
+            "call": 15,
+            "jae": 3,
+            "ja": 2,
+            "pop": 5,
+            "leave": 1,
+            "ret": 1
+          },
+          "call_targets": {
+            "<str>::is_char_boundary": 1,
+            "<core::ops::range::RangeTo<usize> as core::slice::index::SliceIndex<str>>::get_unchecked": 1,
+            "<core::slice::iter::Iter<u8>>::new": 1,
+            "core::str::validations::next_code_point_reverse::<core::slice::iter::Iter<u8>>": 2,
+            "<char>::from_u32_unchecked": 2,
+            "<unicode_segmentation::grapheme::GraphemeCursor>::grapheme_category": 3,
+            "unicode_segmentation::tables::is_incb_linker": 1,
+            "unicode_segmentation::tables::derived_property::InCB_Extend": 1,
+            "<unicode_segmentation::grapheme::GraphemeCursor>::is_boundary": 1,
+            "core::option::unwrap_failed": 1,
+            "core::str::slice_error_fail": 1
+          },
+          "stack_reservations": [
+            "264"
+          ],
+          "object": "bits/unicode-segmentation/ref/objects/lib.unicode_segmentation.2cc1058ac2cfbdd3-cgu.0.rcgu.o"
+        },
+        {
+          "name": "core::str::validations::next_code_point_reverse::<core::slice::iter::Iter<u8>>",
+          "start": 1328,
+          "bytes": 496,
+          "section": ".text",
+          "aliases": [],
+          "counts": {
+            "instructions": 143,
+            "memory_operand_instructions": 27,
+            "branches": 22,
+            "calls": 7,
+            "cl_shifts": 3
+          },
+          "opcodes": {
+            "push": 5,
+            "mov": 51,
+            "sub": 2,
+            "cmp": 7,
+            "sete": 4,
+            "movzx": 8,
+            "test": 7,
+            "jne": 1,
+            "jmp": 12,
+            "lea": 7,
+            "call": 7,
+            "jb": 1,
+            "je": 6,
+            "xor": 3,
+            "movsx": 2,
+            "jge": 2,
+            "and": 6,
+            "shl": 3,
+            "or": 3,
+            "pop": 4,
+            "leave": 1,
+            "ret": 1
+          },
+          "call_targets": {
+            "<core::ptr::non_null::NonNull<u8>>::sub": 4,
+            "core::hint::unreachable_unchecked": 3
+          },
+          "stack_reservations": [
+            "24",
+            "8"
+          ],
+          "object": "bits/unicode-segmentation/ref/objects/lib.unicode_segmentation.2cc1058ac2cfbdd3-cgu.0.rcgu.o"
+        },
+        {
+          "name": "<core::ptr::non_null::NonNull<u8>>::sub",
+          "start": 1936,
+          "bytes": 12,
+          "section": ".text",
+          "aliases": [],
+          "counts": {
+            "instructions": 5
+          },
+          "opcodes": {
+            "xor": 1,
+            "sub": 1,
+            "add": 1,
+            "mov": 1,
+            "ret": 1
+          },
+          "call_targets": {},
+          "stack_reservations": [],
+          "object": "bits/unicode-segmentation/ref/objects/lib.unicode_segmentation.2cc1058ac2cfbdd3-cgu.0.rcgu.o"
+        },
+        {
+          "name": "<unicode_segmentation::grapheme::GraphemeCursor>::is_boundary",
+          "start": 1952,
+          "bytes": 2111,
+          "section": ".text",
+          "aliases": [],
+          "counts": {
+            "instructions": 577,
+            "memory_operand_instructions": 71,
+            "direct_stack_operand_instructions": 11,
+            "calls": 37,
+            "branches": 137
+          },
+          "opcodes": {
+            "push": 6,
+            "mov": 204,
+            "sub": 6,
+            "lea": 25,
+            "call": 37,
+            "test": 21,
+            "je": 57,
+            "xor": 30,
+            "jmp": 63,
+            "cmp": 60,
+            "jae": 1,
+            "add": 4,
+            "setb": 3,
+            "movzx": 23,
+            "and": 9,
+            "jb": 1,
+            "jbe": 1,
+            "jne": 14,
+            "pop": 5,
+            "leave": 1,
+            "ret": 1,
+            "setne": 3,
+            "div": 1,
+            "sete": 1
+          },
+          "call_targets": {
+            "<unicode_segmentation::grapheme::GraphemeState as core::cmp::PartialEq>::eq": 2,
+            "core::ptr::metadata::metadata::<[u8]>": 1,
+            "<str>::is_char_boundary": 5,
+            "<core::ops::range::RangeFrom<usize> as core::slice::index::SliceIndex<str>>::get_unchecked": 1,
+            "<core::slice::iter::Iter<u8>>::new": 2,
+            "core::str::validations::next_code_point::<core::slice::iter::Iter<u8>>": 1,
+            "<char>::from_u32_unchecked": 2,
+            "<unicode_segmentation::grapheme::GraphemeCursor>::grapheme_category": 2,
+            "core::option::unwrap_failed": 5,
+            "core::str::slice_error_fail": 5,
+            "<core::ops::range::RangeTo<usize> as core::slice::index::SliceIndex<str>>::get_unchecked": 4,
+            "core::str::validations::next_code_point_reverse::<core::slice::iter::Iter<u8>>": 1,
+            "<unicode_segmentation::grapheme::GraphemeCursor>::handle_regional": 1,
+            "<unicode_segmentation::grapheme::GraphemeCursor>::is_boundary_result": 3,
+            "<unicode_segmentation::grapheme::GraphemeCursor>::handle_incb_consonant": 1,
+            "<unicode_segmentation::grapheme::GraphemeCursor>::handle_emoji": 1
+          },
+          "stack_reservations": [
+            "128",
+            "8"
+          ],
+          "object": "bits/unicode-segmentation/ref/objects/lib.unicode_segmentation.2cc1058ac2cfbdd3-cgu.0.rcgu.o"
+        },
+        {
+          "name": "<unicode_segmentation::grapheme::GraphemeCursor>::grapheme_category",
+          "start": 5888,
+          "bytes": 145,
+          "section": ".text",
+          "aliases": [],
+          "counts": {
+            "instructions": 48,
+            "branches": 12,
+            "memory_operand_instructions": 9,
+            "calls": 1
+          },
+          "opcodes": {
+            "push": 3,
+            "mov": 15,
+            "sub": 1,
+            "cmp": 6,
+            "jbe": 2,
+            "jmp": 6,
+            "jb": 1,
+            "xor": 1,
+            "jne": 2,
+            "jae": 1,
+            "lea": 2,
+            "call": 1,
+            "movzx": 2,
+            "and": 1,
+            "pop": 2,
+            "leave": 1,
+            "ret": 1
+          },
+          "call_targets": {
+            "unicode_segmentation::tables::grapheme::grapheme_category": 1
+          },
+          "stack_reservations": [
+            "16"
+          ],
+          "object": "bits/unicode-segmentation/ref/objects/lib.unicode_segmentation.2cc1058ac2cfbdd3-cgu.0.rcgu.o"
+        },
+        {
+          "name": "<unicode_segmentation::grapheme::GraphemeCursor>::is_boundary_result",
+          "start": 6048,
+          "bytes": 182,
+          "section": ".text",
+          "aliases": [],
+          "counts": {
+            "instructions": 50,
+            "calls": 3,
+            "branches": 6,
+            "memory_operand_instructions": 12
+          },
+          "opcodes": {
+            "push": 3,
+            "mov": 20,
+            "sub": 1,
+            "lea": 10,
+            "call": 3,
+            "test": 2,
+            "je": 3,
+            "jmp": 3,
+            "cmp": 1,
+            "pop": 2,
+            "leave": 1,
+            "ret": 1
+          },
+          "call_targets": {
+            "<unicode_segmentation::grapheme::GraphemeState as core::cmp::PartialEq>::eq": 2,
+            "core::panicking::unreachable_display::<&str>": 1
+          },
+          "stack_reservations": [
+            "48"
+          ],
+          "object": "bits/unicode-segmentation/ref/objects/lib.unicode_segmentation.2cc1058ac2cfbdd3-cgu.0.rcgu.o"
+        },
+        {
+          "name": "unicode_segmentation::tables::grapheme::grapheme_category",
+          "start": 0,
+          "bytes": 356,
+          "section": ".text",
+          "aliases": [],
+          "counts": {
+            "instructions": 112,
+            "memory_operand_instructions": 14,
+            "branches": 16,
+            "calls": 3
+          },
+          "opcodes": {
+            "push": 5,
+            "mov": 47,
+            "sub": 5,
+            "xor": 6,
+            "div": 1,
+            "lea": 8,
+            "cmp": 6,
+            "jae": 2,
+            "jmp": 7,
+            "je": 5,
+            "ja": 2,
+            "imul": 3,
+            "add": 2,
+            "test": 3,
+            "call": 3,
+            "movzx": 1,
+            "pop": 4,
+            "leave": 1,
+            "ret": 1
+          },
+          "call_targets": {
+            "unicode_segmentation::tables::grapheme::grapheme_category::{closure#0}": 1,
+            "unicode_segmentation::tables::grapheme::bsearch_range_value_table": 1,
+            "core::slice::index::slice_index_fail": 1
+          },
+          "stack_reservations": [
+            "24",
+            "8"
+          ],
+          "object": "bits/unicode-segmentation/ref/objects/lib.unicode_segmentation.2cc1058ac2cfbdd3-cgu.2.rcgu.o"
+        },
+        {
+          "name": "unicode_segmentation::tables::grapheme::grapheme_category::{closure#0}",
+          "start": 368,
+          "bytes": 81,
+          "section": ".text",
+          "aliases": [],
+          "counts": {
+            "instructions": 24,
+            "branches": 2,
+            "calls": 2,
+            "memory_operand_instructions": 2
+          },
+          "opcodes": {
+            "push": 1,
+            "mov": 5,
+            "test": 1,
+            "ja": 2,
+            "lea": 2,
+            "call": 2,
+            "leave": 3,
+            "ret": 3,
+            "movzx": 3,
+            "cmp": 1,
+            "add": 1
+          },
+          "call_targets": {
+            "core::panicking::panic_bounds_check": 2
+          },
+          "stack_reservations": [],
+          "object": "bits/unicode-segmentation/ref/objects/lib.unicode_segmentation.2cc1058ac2cfbdd3-cgu.2.rcgu.o"
+        }
+      ]
+    },
+    "humantime": {
+      "llvm": [
+        {
+          "name": "<humantime::duration::Parser>::parse_unit",
+          "start": 0,
+          "bytes": 1093,
+          "section": ".text._RNvMs1_NtCsaGZho4zWNqb_9humantime8durationNtB5_6Parser10parse_unit",
+          "aliases": [],
+          "counts": {
+            "instructions": 293,
+            "memory_operand_instructions": 47,
+            "direct_stack_operand_instructions": 12,
+            "branches": 80,
+            "calls": 9,
+            "non_cl_shifts": 6
+          },
+          "opcodes": {
+            "push": 6,
+            "sub": 4,
+            "mov": 93,
+            "jb": 9,
+            "test": 9,
+            "je": 14,
+            "cmp": 14,
+            "jae": 8,
+            "jge": 2,
+            "jmp": 26,
+            "jne": 5,
+            "jg": 2,
+            "lea": 8,
+            "call": 9,
+            "movzx": 1,
+            "movsxd": 2,
+            "add": 12,
+            "mul": 16,
+            "jno": 9,
+            "jo": 5,
+            "xor": 10,
+            "shr": 6,
+            "movabs": 6,
+            "imul": 2,
+            "inc": 2,
+            "or": 2,
+            "div": 4,
+            "pop": 6,
+            "ret": 1
+          },
+          "call_targets": {
+            "core::str::slice_error_fail": 2,
+            "<humantime::duration::Unit as core::str::traits::FromStr>::from_str": 1,
+            "__rustc::__rust_no_alloc_shim_is_unstable_v2": 1,
+            "__rustc::__rust_alloc": 1,
+            "memcpy": 1,
+            "core::option::expect_failed": 1,
+            "alloc::raw_vec::handle_error": 1,
+            "core::panicking::panic_const::panic_const_rem_by_zero": 1
+          },
+          "stack_reservations": [
+            "24"
+          ],
+          "object": "llvm/humantime/ref/objects/lib.humantime.7c8d5c717cf60a7d-cgu.00.rcgu.o"
+        },
+        {
+          "name": "<humantime::duration::Parser>::parse_first_char",
+          "start": 0,
+          "bytes": 469,
+          "section": ".text._RNvMs1_NtCsaGZho4zWNqb_9humantime8durationNtB5_6Parser16parse_first_char",
+          "aliases": [],
+          "counts": {
+            "instructions": 118,
+            "memory_operand_instructions": 23,
+            "branches": 25,
+            "non_cl_shifts": 7
+          },
+          "opcodes": {
+            "push": 2,
+            "movabs": 1,
+            "mov": 19,
+            "cmp": 17,
+            "je": 6,
+            "add": 6,
+            "sub": 1,
+            "jmp": 7,
+            "movzx": 8,
+            "shr": 2,
+            "test": 3,
+            "nop": 3,
+            "js": 1,
+            "inc": 1,
+            "lea": 4,
+            "jae": 2,
+            "and": 5,
+            "jbe": 1,
+            "shl": 5,
+            "or": 5,
+            "jb": 4,
+            "jne": 3,
+            "jg": 1,
+            "sete": 2,
+            "pop": 6,
+            "ret": 3
+          },
+          "call_targets": {},
+          "stack_reservations": [],
+          "object": "llvm/humantime/ref/objects/lib.humantime.7c8d5c717cf60a7d-cgu.00.rcgu.o"
+        },
+        {
+          "name": "<humantime::duration::Unit as core::str::traits::FromStr>::from_str",
+          "start": 0,
+          "bytes": 675,
+          "section": ".text._RNvXs2_NtCsaGZho4zWNqb_9humantime8durationNtB5_4UnitNtNtNtCshX3mvxHm3fC_4core3str6traits7FromStr8from_str",
+          "aliases": [],
+          "counts": {
+            "instructions": 187,
+            "branches": 35,
+            "memory_operand_instructions": 54
+          },
+          "opcodes": {
+            "mov": 27,
+            "dec": 1,
+            "cmp": 18,
+            "ja": 2,
+            "lea": 3,
+            "movsxd": 2,
+            "add": 2,
+            "jmp": 2,
+            "movzx": 24,
+            "sete": 3,
+            "sub": 3,
+            "ret": 14,
+            "xor": 37,
+            "or": 18,
+            "je": 27,
+            "jne": 4
+          },
+          "call_targets": {},
+          "stack_reservations": [],
+          "object": "llvm/humantime/ref/objects/lib.humantime.7c8d5c717cf60a7d-cgu.00.rcgu.o"
+        },
+        {
+          "name": "humantime::date::parse_rfc3339_weak",
+          "start": 0,
+          "bytes": 1150,
+          "section": ".text._RNvNtCsaGZho4zWNqb_9humantime4date18parse_rfc3339_weak",
+          "aliases": [],
+          "counts": {
+            "instructions": 298,
+            "branches": 63,
+            "memory_operand_instructions": 45,
+            "direct_stack_operand_instructions": 11,
+            "non_cl_shifts": 14,
+            "calls": 1
+          },
+          "opcodes": {
+            "mov": 51,
+            "cmp": 45,
+            "jbe": 3,
+            "jne": 10,
+            "movzx": 23,
+            "je": 7,
+            "add": 29,
+            "ja": 12,
+            "jb": 5,
+            "ret": 3,
+            "push": 6,
+            "sub": 3,
+            "jae": 6,
+            "pop": 6,
+            "lea": 22,
+            "imul": 13,
+            "cmove": 2,
+            "test": 2,
+            "xor": 7,
+            "jmp": 20,
+            "ror": 2,
+            "setb": 1,
+            "movsxd": 1,
+            "or": 2,
+            "cmovb": 1,
+            "shr": 10,
+            "shl": 2,
+            "cmovae": 1,
+            "inc": 1,
+            "call": 1,
+            "movabs": 1
+          },
+          "call_targets": {
+            "<std::time::SystemTime as core::ops::arith::Add<core::time::Duration>>::add": 1
+          },
+          "stack_reservations": [
+            "40"
+          ],
+          "object": "llvm/humantime/ref/objects/lib.humantime.7c8d5c717cf60a7d-cgu.01.rcgu.o"
+        },
+        {
+          "name": "<humantime::date::Rfc3339Timestamp as core::fmt::Display>::fmt",
+          "start": 0,
+          "bytes": 1759,
+          "section": ".text._RNvXs1_NtCsaGZho4zWNqb_9humantime4dateNtB5_16Rfc3339TimestampNtNtCshX3mvxHm3fC_4core3fmt7Display3fmt",
+          "aliases": [],
+          "counts": {
+            "instructions": 431,
+            "calls": 5,
+            "memory_operand_instructions": 51,
+            "direct_stack_operand_instructions": 43,
+            "branches": 35,
+            "non_cl_shifts": 50
+          },
+          "opcodes": {
+            "push": 3,
+            "sub": 24,
+            "mov": 96,
+            "xor": 5,
+            "call": 5,
+            "cmp": 21,
+            "je": 4,
+            "shr": 44,
+            "ja": 1,
+            "movabs": 9,
+            "mul": 7,
+            "lea": 39,
+            "movsxd": 2,
+            "imul": 42,
+            "sar": 5,
+            "add": 45,
+            "test": 1,
+            "cmovns": 1,
+            "jb": 3,
+            "shl": 1,
+            "jg": 1,
+            "jmp": 14,
+            "jae": 10,
+            "inc": 1,
+            "movups": 4,
+            "movaps": 2,
+            "or": 22,
+            "movsx": 1,
+            "movzx": 3,
+            "and": 8,
+            "jne": 2,
+            "pop": 3,
+            "ret": 1,
+            "cmovb": 1
+          },
+          "call_targets": {
+            "<std::time::SystemTime>::duration_since": 1,
+            "core::str::converts::from_utf8": 1,
+            "<core::fmt::Formatter>::write_str": 1,
+            "core::result::unwrap_failed": 2
+          },
+          "stack_reservations": [
+            "80"
+          ],
+          "object": "llvm/humantime/ref/objects/lib.humantime.7c8d5c717cf60a7d-cgu.01.rcgu.o"
+        }
+      ],
+      "bits": [
+        {
+          "name": "<humantime::duration::Parser>::parse",
+          "start": 592,
+          "bytes": 7277,
+          "section": ".text",
+          "aliases": [],
+          "counts": {
+            "instructions": 1583,
+            "memory_operand_instructions": 695,
+            "direct_stack_operand_instructions": 473,
+            "calls": 19,
+            "branches": 268
+          },
+          "opcodes": {
+            "push": 6,
+            "mov": 891,
+            "sub": 19,
+            "lea": 26,
+            "call": 19,
+            "movabs": 87,
+            "cmp": 111,
+            "je": 75,
+            "jmp": 137,
+            "jne": 30,
+            "ja": 14,
+            "setbe": 5,
+            "movzx": 13,
+            "add": 7,
+            "neg": 5,
+            "not": 5,
+            "and": 14,
+            "or": 5,
+            "pop": 5,
+            "leave": 1,
+            "ret": 1,
+            "test": 31,
+            "xor": 56,
+            "jbe": 3,
+            "sete": 5,
+            "jae": 3,
+            "mul": 1,
+            "setne": 1,
+            "imul": 1,
+            "jb": 6
+          },
+          "call_targets": {
+            "<humantime::duration::Parser>::parse_first_char": 2,
+            "<alloc::vec::Vec<u8> as core::ops::drop::Drop>::drop": 2,
+            "core::ptr::drop_in_place::<alloc::raw_vec::RawVec<u8>>": 2,
+            "<core::slice::iter::Iter<u8>>::make_slice": 4,
+            "core::str::validations::next_code_point::<core::slice::iter::Iter<u8>>": 2,
+            "<char>::from_u32_unchecked": 2,
+            "core::unicode::unicode_data::white_space::lookup": 2,
+            "<humantime::duration::Parser>::parse_fractional_part": 1,
+            "<humantime::duration::Parser>::parse_unit": 2
+          },
+          "stack_reservations": [
+            "1744",
+            "8"
+          ],
+          "object": "bits/humantime/ref/objects/lib.humantime.7c8d5c717cf60a7d-cgu.00.rcgu.o"
+        },
+        {
+          "name": "<humantime::duration::Parser>::parse_unit",
+          "start": 8304,
+          "bytes": 23799,
+          "section": ".text",
+          "aliases": [],
+          "counts": {
+            "instructions": 5674,
+            "memory_operand_instructions": 1450,
+            "direct_stack_operand_instructions": 52,
+            "calls": 64,
+            "branches": 1436
+          },
+          "opcodes": {
+            "push": 6,
+            "mov": 1889,
+            "sub": 114,
+            "call": 64,
+            "lea": 139,
+            "test": 94,
+            "jne": 126,
+            "jmp": 722,
+            "je": 532,
+            "movzx": 74,
+            "cmp": 692,
+            "pop": 5,
+            "leave": 1,
+            "ret": 1,
+            "mul": 16,
+            "setne": 16,
+            "imul": 16,
+            "movabs": 719,
+            "ja": 56,
+            "setbe": 56,
+            "add": 56,
+            "neg": 56,
+            "not": 56,
+            "and": 112,
+            "or": 56
+          },
+          "call_targets": {
+            "<core::ops::range::Range<usize> as core::slice::index::SliceIndex<str>>::get": 2,
+            "<humantime::duration::Unit as core::str::traits::FromStr>::from_str": 1,
+            "<[u8] as alloc::borrow::ToOwned>::to_owned": 1,
+            "core::str::slice_error_fail": 2,
+            "<core::option::Option<u64>>::ok_or::<humantime::duration::Error>": 17,
+            "<core::result::Result<u64, humantime::duration::Error> as core::ops::try_trait::Try>::branch": 26,
+            "humantime::duration::add_current": 2,
+            "<core::result::Result<(), humantime::duration::Error> as core::ops::try_trait::Try>::branch": 2,
+            "<u64 as humantime::duration::OverflowOp>::div": 9,
+            "core::intrinsics::unlikely": 1,
+            "<u64>::checked_mul": 1
+          },
+          "stack_reservations": [
+            "6448",
+            "8"
+          ],
+          "object": "bits/humantime/ref/objects/lib.humantime.7c8d5c717cf60a7d-cgu.00.rcgu.o"
+        },
+        {
+          "name": "<humantime::duration::Parser>::parse_first_char",
+          "start": 32992,
+          "bytes": 351,
+          "section": ".text",
+          "aliases": [],
+          "counts": {
+            "instructions": 101,
+            "memory_operand_instructions": 21,
+            "calls": 4,
+            "branches": 20
+          },
+          "opcodes": {
+            "push": 5,
+            "mov": 39,
+            "sub": 3,
+            "call": 4,
+            "and": 2,
+            "test": 4,
+            "jne": 1,
+            "jmp": 10,
+            "xor": 4,
+            "je": 4,
+            "cmp": 6,
+            "jae": 1,
+            "jbe": 2,
+            "lea": 4,
+            "movabs": 3,
+            "jb": 1,
+            "ja": 1,
+            "movzx": 1,
+            "pop": 4,
+            "leave": 1,
+            "ret": 1
+          },
+          "call_targets": {
+            "<core::slice::iter::Iter<u8>>::make_slice": 1,
+            "core::str::validations::next_code_point::<core::slice::iter::Iter<u8>>": 1,
+            "<char>::from_u32_unchecked": 1,
+            "core::unicode::unicode_data::white_space::lookup": 1
+          },
+          "stack_reservations": [
+            "144"
+          ],
+          "object": "bits/humantime/ref/objects/lib.humantime.7c8d5c717cf60a7d-cgu.00.rcgu.o"
+        },
+        {
+          "name": "<humantime::duration::Parser>::parse_fractional_part",
+          "start": 33344,
+          "bytes": 4741,
+          "section": ".text",
+          "aliases": [],
+          "counts": {
+            "instructions": 1124,
+            "memory_operand_instructions": 387,
+            "direct_stack_operand_instructions": 256,
+            "calls": 12,
+            "branches": 201
+          },
+          "opcodes": {
+            "push": 6,
+            "mov": 538,
+            "sub": 8,
+            "lea": 13,
+            "xor": 102,
+            "test": 54,
+            "sete": 20,
+            "movzx": 25,
+            "cmp": 67,
+            "call": 12,
+            "and": 2,
+            "jne": 43,
+            "jmp": 104,
+            "je": 40,
+            "jae": 2,
+            "jbe": 1,
+            "mul": 4,
+            "setne": 4,
+            "imul": 4,
+            "movabs": 55,
+            "ja": 8,
+            "pop": 5,
+            "leave": 1,
+            "ret": 1,
+            "add": 2,
+            "jb": 3
+          },
+          "call_targets": {
+            "core::str::validations::next_code_point::<core::slice::iter::Iter<u8>>": 1,
+            "<char>::from_u32_unchecked": 1,
+            "<alloc::vec::Vec<u8> as core::ops::drop::Drop>::drop": 4,
+            "core::ptr::drop_in_place::<alloc::raw_vec::RawVec<u8>>": 4,
+            "core::unicode::unicode_data::white_space::lookup": 1,
+            "<core::slice::iter::Iter<u8>>::make_slice": 1
+          },
+          "stack_reservations": [
+            "896",
+            "8"
+          ],
+          "object": "bits/humantime/ref/objects/lib.humantime.7c8d5c717cf60a7d-cgu.00.rcgu.o"
+        },
+        {
+          "name": "<humantime::duration::Unit as core::str::traits::FromStr>::from_str",
+          "start": 41536,
+          "bytes": 1294,
+          "section": ".text",
+          "aliases": [],
+          "counts": {
+            "instructions": 355,
+            "calls": 40,
+            "branches": 80,
+            "memory_operand_instructions": 12
+          },
+          "opcodes": {
+            "push": 3,
+            "mov": 134,
+            "sub": 1,
+            "lea": 52,
+            "call": 40,
+            "test": 40,
+            "je": 40,
+            "jmp": 40,
+            "movzx": 1,
+            "pop": 2,
+            "leave": 1,
+            "ret": 1
+          },
+          "call_targets": {
+            "<[u8] as core::slice::cmp::SlicePartialEq<u8>>::equal": 18,
+            "<str as core::cmp::PartialEq>::eq": 22
+          },
+          "stack_reservations": [
+            "16"
+          ],
+          "object": "bits/humantime/ref/objects/lib.humantime.7c8d5c717cf60a7d-cgu.00.rcgu.o"
+        },
+        {
+          "name": "humantime::date::parse_rfc3339_weak",
+          "start": 336,
+          "bytes": 2737,
+          "section": ".text",
+          "aliases": [],
+          "counts": {
+            "instructions": 723,
+            "memory_operand_instructions": 124,
+            "direct_stack_operand_instructions": 56,
+            "branches": 174,
+            "calls": 25
+          },
+          "opcodes": {
+            "push": 6,
+            "mov": 299,
+            "sub": 9,
+            "lea": 40,
+            "cmp": 55,
+            "jae": 2,
+            "jmp": 88,
+            "ja": 8,
+            "call": 25,
+            "pop": 5,
+            "leave": 1,
+            "ret": 1,
+            "movzx": 24,
+            "je": 49,
+            "jbe": 8,
+            "jne": 18,
+            "test": 32,
+            "xor": 25,
+            "imul": 6,
+            "add": 11,
+            "div": 4,
+            "setb": 1,
+            "jb": 1,
+            "and": 4,
+            "movabs": 1
+          },
+          "call_targets": {
+            "core::panicking::panic_bounds_check": 9,
+            "humantime::date::two_digits::two_digits_inner": 7,
+            "humantime::date::is_leap_year": 1,
+            "<core::option::Option<&u8> as core::cmp::PartialEq>::eq": 1,
+            "<usize as core::iter::range::Step>::forward_unchecked": 1,
+            "<char>::to_digit": 1,
+            "core::ptr::metadata::metadata::<[u8]>": 1,
+            "<*const u8>::cast::<[u8; 6]>": 1,
+            "<u8 as core::array::equality::SpecArrayEq<u8, 6>>::spec_ne": 1,
+            "<core::time::Duration>::new": 1,
+            "<std::time::SystemTime as core::ops::arith::Add<core::time::Duration>>::add": 1
+          },
+          "stack_reservations": [
+            "416",
+            "8"
+          ],
+          "object": "bits/humantime/ref/objects/lib.humantime.7c8d5c717cf60a7d-cgu.01.rcgu.o"
+        },
+        {
+          "name": "<humantime::date::Rfc3339Timestamp as core::fmt::Display>::fmt",
+          "start": 3632,
+          "bytes": 3226,
+          "section": ".text",
+          "aliases": [],
+          "counts": {
+            "instructions": 808,
+            "memory_operand_instructions": 216,
+            "calls": 20,
+            "branches": 54,
+            "direct_stack_operand_instructions": 80
+          },
+          "opcodes": {
+            "push": 6,
+            "mov": 347,
+            "sub": 11,
+            "lea": 28,
+            "call": 20,
+            "and": 12,
+            "movabs": 9,
+            "cmp": 24,
+            "jae": 2,
+            "jmp": 28,
+            "xor": 46,
+            "div": 46,
+            "sete": 10,
+            "movzx": 94,
+            "test": 12,
+            "jne": 15,
+            "pop": 5,
+            "leave": 1,
+            "ret": 1,
+            "cqo": 15,
+            "idiv": 15,
+            "jge": 2,
+            "add": 42,
+            "imul": 6,
+            "je": 6,
+            "movsxd": 4,
+            "jle": 1
+          },
+          "call_targets": {
+            "<std::time::SystemTime>::duration_since": 1,
+            "<core::result::Result<core::time::Duration, std::time::SystemTimeError>>::expect": 1,
+            "core::panicking::panic_const::panic_const_div_overflow": 7,
+            "<core::slice::iter::Iter<i64>>::new": 1,
+            "core::panicking::panic_const::panic_const_rem_overflow": 2,
+            "<[u8]>::len": 2,
+            "<usize>::checked_sub": 1,
+            "core::slice::index::get_offset_len_noubcheck::<u8>": 1,
+            "core::str::converts::from_utf8": 1,
+            "<core::result::Result<&str, core::str::error::Utf8Error>>::expect": 1,
+            "<core::fmt::Formatter>::write_str": 1,
+            "core::slice::index::slice_index_fail": 1
+          },
+          "stack_reservations": [
+            "424"
+          ],
+          "object": "bits/humantime/ref/objects/lib.humantime.7c8d5c717cf60a7d-cgu.01.rcgu.o"
+        }
+      ]
+    }
+  }
+}

@@ -25,7 +25,7 @@ Four-crate geomean whole-process reduction: 65.3%. The formal compile gate remai
 
 ## Separate exact codegen profile
 
-Exact codegen_crate→join_codegen current-thread user-instruction window, checker0; collected separately after runtime/whole-process measurements. Stage-instrumented objects matched each arm's uninstrumented-profile reference.
+Exact codegen_crate→join_codegen user-instruction window over all initial process threads and their descendants (including LLVM workers), checker0; collected separately after runtime/whole-process measurements. Stage-instrumented objects matched each arm's uninstrumented-profile reference.
 
 | crate | c12-phi G | integrated G | reduction | integrated/LLVM |
 |---|---:|---:|---:|---:|

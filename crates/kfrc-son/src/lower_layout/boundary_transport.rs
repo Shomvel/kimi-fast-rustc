@@ -1,4 +1,4 @@
-//! Certificates for complete fields transported from direct-call enum results.
+//! Certificates for complete fields transported from enum ABI snapshots.
 //! Separate from leaf demand: demanding every leaf does not prove byte transport.
 use super::*;
 use crate::analysis::{
@@ -10,6 +10,29 @@ use std::collections::BTreeSet;
 
 pub(super) type Fields = BTreeSet<(u32, u32)>;
 pub(super) type Certificates = HashMap<NodeId, Fields>;
+
+// A one/two-lane product already has a cheap scalar representation. Giving
+// it owned storage adds a copy only to load the same lanes again at return.
+// This is a representation policy, not permission to borrow the ABI input:
+// normal decoding still captures the fields at the original fixed point.
+fn small_scalar_product(graph: &FunctionGraph, ty: TyId) -> bool {
+    let semantic = graph.oracle.semantic();
+    if !semantic.is_product(ty) || !matches!(semantic.field_count(ty, None), Some(1 | 2)) {
+        return false;
+    }
+    semantic.field_types(ty, None).is_some_and(|fields| {
+        fields.into_iter().all(|field| {
+            !semantic.is_product(field)
+                && !semantic.is_enum(field)
+                && !semantic.is_union(field)
+                && semantic.maybe_uninit_inner(field).is_none()
+                && graph
+                    .oracle
+                    .size_align(field)
+                    .is_some_and(|layout| matches!(layout.size, 1 | 2 | 4 | 8))
+        })
+    })
+}
 
 fn supported_type(graph: &FunctionGraph, ty: TyId, seen: &mut HashSet<TyId>) -> bool {
     let semantic = graph.oracle.semantic();
@@ -65,7 +88,9 @@ fn constructor_transports(
         && uses.of(constructor).iter().all(|use_| {
             matches!(
                 (graph.op(use_.user), use_.kind),
-                (Opcode::Return, UseKind::Operand(1)) | (Opcode::StoreValue, UseKind::Operand(2))
+                (Opcode::Return, UseKind::Operand(1))
+                    | (Opcode::StoreValue, UseKind::Operand(2))
+                    | (Opcode::Call, UseKind::Operand(1..))
             ) || (matches!(use_.kind, UseKind::Operand(index) if index > 0)
                 && owned.contains(&use_.user))
         })
@@ -93,6 +118,17 @@ fn extractor_transports(
     }
     !uses.of(extractor).is_empty()
         && uses.of(extractor).iter().all(|use_| {
+            // A typed by-value call consumes the entire field synchronously.
+            // materialize_before copies the immutable owned snapshot to fresh
+            // argument storage, so a callee cannot mutate the saved value.
+            if matches!(
+                (graph.op(use_.user), use_.kind),
+                (Opcode::Call, UseKind::Operand(1..))
+                    | (Opcode::Return, UseKind::Operand(1))
+                    | (Opcode::StoreValue, UseKind::Operand(2))
+            ) {
+                return true;
+            }
             let UseKind::Operand(field) = use_.kind else {
                 return false;
             };
@@ -132,11 +168,14 @@ pub(super) fn select(
     let uses = Uses::new(graph);
     let mut selected = HashMap::default();
     for root in graph.ids() {
-        if encoded.contains(&root)
-            || graph.op(root) != Opcode::Projection
-            || graph.payload(root) != 2
-            || graph.op(graph.input(root, 0)) != Opcode::Call
-        {
+        if encoded.contains(&root) || graph.op(root) != Opcode::Projection {
+            continue;
+        }
+        let source = graph.input(root, 0);
+        if !matches!(
+            (graph.op(source), graph.payload(root)),
+            (Opcode::Call, 2) | (Opcode::Start, 2..)
+        ) {
             continue;
         }
         let Some(ty) = graph.rust_type(root) else {
@@ -194,6 +233,7 @@ pub(super) fn select(
                     || graph.oracle.semantic().is_product(field_ty))
                     || graph.oracle.size_align(field_ty)?.size == 0
                     || !supported_type(graph, field_ty, &mut HashSet::default())
+                    || small_scalar_product(graph, field_ty)
                     || demands
                         .get(&root)?
                         .child(DemandKey::VariantField(key.0, key.1))

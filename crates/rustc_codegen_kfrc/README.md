@@ -11,11 +11,20 @@ There is no legacy builder or IR mode switch. Unsupported input fails the crate.
 The current path includes products, wide pointers, typed memory, dynamic enum
 and niche ABI lowering, and bounded same-crate semantic inlining.
 `KFRC_OPTIMIZE=0` skips optimization; `KFRC_INLINE=0` skips inlining only.
+Owned Body/graph preparation and reachable function compilation run in bounded
+workers. rustc queries and diagnostics remain on the compiler thread. Workers
+borrow Cargo jobserver tokens, so `cargo -j1` can complete on the caller alone.
+The default worker ceiling is the available CPU count;
+`KFRC_CODEGEN_THREADS=N` lowers it (`1` selects serial execution, `0` is invalid).
+This also permits independent functions in one CGU to run concurrently.
+Object function/data order and CGU-local inlining restrictions are preserved.
+All workers join before object emission or an error is reported. Diagnostic
+graph dumps may interleave between functions; use one thread for ordered dumps.
 See [the semantic status](../../docs/plan/poc/semantic-ir-status.md) and the
 LLVM/semantic-off/semantic-on runner `tests/semantic-ir/run.sh` for verified coverage.
 
-The planned polymorphic R graph and answer-driven specialization remain pending;
-the current semantic input is already monomorphic. The required scope is recorded in
+Eligible definitions use a cached polymorphic R graph and answer-driven
+specialization; other instances enter through a concrete Typed Body. The scope is recorded in
 [semantic-ir-migration.md](../../docs/plan/poc/semantic-ir-migration.md).
 
 It links `rustc_private`, so it is outside the root workspace and pinned to

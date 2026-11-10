@@ -539,6 +539,7 @@ impl<'a> Emitter<'a> {
                     });
                 }
             }
+            MulHigh => self.push(MachineInstr::MulHigh { src: input[1] }),
             Compare(condition) => {
                 self.push(MachineInstr::Cmp {
                     lhs: input[0],

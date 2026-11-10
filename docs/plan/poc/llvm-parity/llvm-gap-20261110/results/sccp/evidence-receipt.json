@@ -1,0 +1,14 @@
+{
+  "archive": "/Users/shom/Downloads/kfrc-sccp-20261110/evidence.tar.gz",
+  "sha256": "a16660cd9fadaa8af642accc343a34c48751212809231fa7890437f3876141ab",
+  "bytes": 111997149,
+  "verified_files": 4325,
+  "sandbox_id": "io1338cbw3i20cg5iurs5",
+  "sandbox_status": "released after follow-up compile50 validation and archive verification",
+  "local_tests": {
+    "passed": 815,
+    "ignored": 1,
+    "log_sha256": "b65f4f08b8e0292fc9c199fa6d149622f073b37d6b3822863c78805903403117"
+  },
+  "released_at_unix": 1794292626.3673658
+}
