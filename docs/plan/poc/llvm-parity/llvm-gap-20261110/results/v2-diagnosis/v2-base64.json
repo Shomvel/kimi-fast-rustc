@@ -1,0 +1,198 @@
+{
+  "crate": "base64",
+  "version": "0.22.1",
+  "arm": "v2",
+  "backend": "/workspace/results/candidate-v2.so",
+  "backend_sha256": "f623c7a953ea83f3957362dce6b4473aa4af5a61e7289f839dd582a6ee5ed019",
+  "flags": [
+    "-Cpanic=abort",
+    "-Copt-level=3",
+    "-Ccodegen-units=16",
+    "-Cembed-bitcode=no",
+    "-Cdebuginfo=0",
+    "-Coverflow-checks=off",
+    "-Cdebug-assertions=off",
+    "-Zmir-opt-level=0"
+  ],
+  "sysroot": "/workspace/shared-std-mir0/sysroot",
+  "library_command": [
+    "rustc",
+    "+1.94.1",
+    "--sysroot=/workspace/shared-std-mir0/sysroot",
+    "--crate-name",
+    "base64",
+    "--crate-type",
+    "rlib",
+    "--edition=2021",
+    "/workspace/results/formal-suite/src/base64-0.22.1/src/lib.rs",
+    "--cfg",
+    "feature=\"alloc\"",
+    "--cfg",
+    "feature=\"std\"",
+    "-Cpanic=abort",
+    "-Copt-level=3",
+    "-Ccodegen-units=16",
+    "-Cembed-bitcode=no",
+    "-Cdebuginfo=0",
+    "-Coverflow-checks=off",
+    "-Cdebug-assertions=off",
+    "-Zmir-opt-level=0",
+    "--cap-lints=allow",
+    "-o",
+    "/workspace/results/formal-suite/v2/base64/ref/lib.rlib",
+    "-Zcodegen-backend=/workspace/results/candidate-v2.so"
+  ],
+  "status": "ok",
+  "size": {
+    "text_bytes": 27427,
+    "func_symbol_bytes": 26803,
+    "func_symbols": 92,
+    "rodata_bytes": 11262,
+    "object_count": 14,
+    "object_bytes": 128560,
+    "rlib_bytes": 486634
+  },
+  "kfrc_file_symbol": true,
+  "compile": {
+    "rounds": 0,
+    "full": [],
+    "metadata_only": [],
+    "instructions_median": null,
+    "cycles_median": null,
+    "wall_median": null,
+    "user_median": null,
+    "maxrss_kib_median": null,
+    "metadata_instructions_median": null,
+    "metadata_wall_median": null
+  },
+  "driver": {
+    "command": [
+      "rustc",
+      "+1.94.1",
+      "--sysroot=/workspace/shared-std-mir0/sysroot",
+      "--edition=2021",
+      "/workspace/baseline/tools/llvm-parity-suite/drivers/base64.rs",
+      "--crate-name",
+      "driver",
+      "-Cpanic=abort",
+      "-Copt-level=3",
+      "-Cdebuginfo=0",
+      "-Zmir-opt-level=0",
+      "--extern",
+      "base64=/workspace/results/formal-suite/v2/base64/ref/lib.rlib",
+      "-Csave-temps",
+      "-o",
+      "/workspace/results/formal-suite/v2/base64/driver/driver"
+    ],
+    "exit_code": 0,
+    "objects_sha256": {
+      "driver.7q524ybyu92u8qns68khmscfx.rcgu.o": "92ad59834dc9a8be5aa70ed035327994668310cdf0f1c37cc1ae8dfbfb90b6d3",
+      "driver.driver.39fc946f9cbf83db-cgu.0.rcgu.o": "163b9f9558243928746c44a2a13d4faedc5badc478c6e3d413cc2eb40564e288",
+      "driver.driver.39fc946f9cbf83db-cgu.1.rcgu.o": "942accf824ff0567b45256587a847b2ce84598e8f8944ba81a089fd74490f51e",
+      "driver.driver.39fc946f9cbf83db-cgu.2.rcgu.o": "d1f187890bcd9874643cf9bd12f68aba4be4b6d4e1bec45af14ce1a018cf6600",
+      "driver.driver.39fc946f9cbf83db-cgu.3.rcgu.o": "e645e4d5f078f0ed8e7ca0034e3f6d2fd86fe8271f1a073f3868c7557538204b",
+      "driver.driver.39fc946f9cbf83db-cgu.4.rcgu.o": "9722525afdb6335c760b9cdf3b5c18848c184b8c1647f04f315a9f51e16d294f",
+      "driver.driver.39fc946f9cbf83db-cgu.5.rcgu.o": "55cf76a783eb424b45476ed9db59dd6efb678ded9f6e2c18d5782a9b4d866fbf"
+    },
+    "local_text_bytes": 18392,
+    "executable_sha256": "62b6c8324e077f49365ff43ede141f1d3dbe78705ff4dcf3723ed09c31fe0d04"
+  },
+  "corpus": {
+    "exit_code": 0,
+    "sha256": "6b6bc7c96dea2202adfbf8faebfef7f2b583b409619cb0a019c695e4802ff24a",
+    "lines": 491
+  },
+  "workload_check": {
+    "encode": {
+      "exit_code": 0,
+      "checksum": 55493921
+    },
+    "decode": {
+      "exit_code": 0,
+      "checksum": 42229339
+    },
+    "short": {
+      "exit_code": 0,
+      "checksum": 55990625
+    }
+  },
+  "tests": {
+    "lockfile": "suite",
+    "sysroot": "cargo -Zbuild-std (MIR opt-level 0, panic=abort, O3, CGU16)",
+    "itest": {
+      "build_exit_code": 0,
+      "build_seconds": 3.5753748189999897,
+      "crate_invocations": 1,
+      "crate_invocations_with_backend": 1,
+      "binaries": {
+        "encode": {
+          "exit_code": 0,
+          "seconds": 0.010433031000047777,
+          "listed": 6,
+          "counts": {
+            "ok": 6,
+            "failed": 0,
+            "ignored": 0,
+            "not_run": 0
+          },
+          "outcomes": {
+            "encode_all_ascii": "ok",
+            "encode_all_bytes": "ok",
+            "encode_all_bytes_url": "ok",
+            "encoded_len_overflow": "ok",
+            "encoded_len_padded": "ok",
+            "encoded_len_unpadded": "ok"
+          }
+        },
+        "suite_itest_base64": {
+          "exit_code": 0,
+          "seconds": 0.005331029999979364,
+          "listed": 0,
+          "counts": {
+            "ok": 0,
+            "failed": 0,
+            "ignored": 0,
+            "not_run": 0
+          },
+          "outcomes": {}
+        },
+        "tests": {
+          "exit_code": 0,
+          "seconds": 0.3813875430000735,
+          "listed": 7,
+          "counts": {
+            "ok": 7,
+            "failed": 0,
+            "ignored": 0,
+            "not_run": 0
+          },
+          "outcomes": {
+            "display_wrapper_matches_normal_encode": "ok",
+            "encode_engine_slice_error_when_buffer_too_small": "ok",
+            "roundtrip_decode_trailing_10_bytes": "ok",
+            "roundtrip_random_no_padding": "ok",
+            "roundtrip_random_short_no_padding": "ok",
+            "roundtrip_random_short_standard": "ok",
+            "roundtrip_random_with_fast_loop_standard": "ok"
+          }
+        }
+      },
+      "totals": {
+        "ok": 13,
+        "failed": 0,
+        "ignored": 0,
+        "not_run": 0
+      },
+      "all_exit_zero": true
+    },
+    "unit": {
+      "build_exit_code": 101,
+      "build_seconds": 25.391432584000086,
+      "crate_invocations": 1,
+      "crate_invocations_with_backend": 1,
+      "build_error": [
+        "error: kfrc: cannot compile `std::hash::RandomState::new::KEYS::{constant#0}::{closure#1}` (_RNCNKNvNvMNtNtCskdEs339NOXv_3std4hash6randomNtB8_11RandomState3new4KEYS0s_0Cs2q0u7wL9Y11_6base64): SoN construction: unsupported: TLS is outside the semantic path"
+      ]
+    }
+  }
+}

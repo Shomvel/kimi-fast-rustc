@@ -1,0 +1,12 @@
+{
+  "base_commit": "b254941179c6f052bc2b732814c61ed299e39a3b",
+  "candidate": "v2 experimental; not performance accepted",
+  "description": "Base commit with these source/test overrides. Docs are not build inputs.",
+  "overrides_sha256": {
+    "crates/kfrc-son/src/pipeline.rs": "65deb3fea2534b6048c0c7c656f9e31aa83052e7fa9542e079269a10a833f9d2",
+    "crates/kfrc-son/src/transforms/scalar/gvn.rs": "33e6c4cb3a073d0cfff5391e758d463b82380fc12747e7227f1720a806f5830d",
+    "crates/kfrc-son/tests/semantic_memory_optimize.rs": "a7d61fdc9755bf1ae71d9f9f43409473c4aa263461ba9e03559d0552796f4dfc",
+    "crates/kfrc-x86/src/lower.rs": "afec0987c0f69a7c40d791eb3b10f1321ae89f0b256311967add3f649dc19984",
+    "crates/kfrc-x86/tests/arithmetic_contracts.rs": "03ec644bb446569a6ed0aedfda7b9c2f1a0b0e9bf9b96b4918be87440fbf3ec0"
+  }
+}

@@ -1,0 +1,233 @@
+{
+  "crate": "semver",
+  "version": "1.0.28",
+  "arm": "shift",
+  "backend": "/workspace/results/shift.so",
+  "backend_sha256": "0937489f939f250150340eb66bef14c08b548f5476d61fe3e7d3b882f135b2b5",
+  "flags": [
+    "-Cpanic=abort",
+    "-Copt-level=3",
+    "-Ccodegen-units=16",
+    "-Cembed-bitcode=no",
+    "-Cdebuginfo=0",
+    "-Coverflow-checks=off",
+    "-Cdebug-assertions=off",
+    "-Zmir-opt-level=0"
+  ],
+  "sysroot": "/workspace/shared-std-mir0/sysroot",
+  "library_command": [
+    "rustc",
+    "+1.94.1",
+    "--sysroot=/workspace/shared-std-mir0/sysroot",
+    "--crate-name",
+    "semver",
+    "--crate-type",
+    "rlib",
+    "--edition=2021",
+    "/workspace/results/formal-suite/src/semver-1.0.28/src/lib.rs",
+    "--cfg",
+    "feature=\"std\"",
+    "-Cpanic=abort",
+    "-Copt-level=3",
+    "-Ccodegen-units=16",
+    "-Cembed-bitcode=no",
+    "-Cdebuginfo=0",
+    "-Coverflow-checks=off",
+    "-Cdebug-assertions=off",
+    "-Zmir-opt-level=0",
+    "--cap-lints=allow",
+    "-o",
+    "/workspace/results/formal-suite/shift/semver/ref/lib.rlib",
+    "-Zcodegen-backend=/workspace/results/shift.so"
+  ],
+  "status": "ok",
+  "size": {
+    "text_bytes": 33971,
+    "func_symbol_bytes": 32586,
+    "func_symbols": 196,
+    "rodata_bytes": 12211,
+    "object_count": 14,
+    "object_bytes": 151136,
+    "rlib_bytes": 303846
+  },
+  "kfrc_file_symbol": true,
+  "compile": {
+    "rounds": 0,
+    "full": [],
+    "metadata_only": [],
+    "instructions_median": null,
+    "cycles_median": null,
+    "wall_median": null,
+    "user_median": null,
+    "maxrss_kib_median": null,
+    "metadata_instructions_median": null,
+    "metadata_wall_median": null
+  },
+  "driver": {
+    "command": [
+      "rustc",
+      "+1.94.1",
+      "--sysroot=/workspace/shared-std-mir0/sysroot",
+      "--edition=2021",
+      "/workspace/baseline/tools/llvm-parity-suite/drivers/semver.rs",
+      "--crate-name",
+      "driver",
+      "-Cpanic=abort",
+      "-Copt-level=3",
+      "-Cdebuginfo=0",
+      "-Zmir-opt-level=0",
+      "--extern",
+      "semver=/workspace/results/formal-suite/shift/semver/ref/lib.rlib",
+      "-Csave-temps",
+      "-o",
+      "/workspace/results/formal-suite/shift/semver/driver/driver"
+    ],
+    "exit_code": 0,
+    "objects_sha256": {
+      "driver.7q524ybyu92u8qns68khmscfx.rcgu.o": "92ad59834dc9a8be5aa70ed035327994668310cdf0f1c37cc1ae8dfbfb90b6d3",
+      "driver.driver.39fc946f9cbf83db-cgu.0.rcgu.o": "fcadf9e7d571e32cd91b36d053467b55debac9626ffd88128935ff59e3a0265e",
+      "driver.driver.39fc946f9cbf83db-cgu.1.rcgu.o": "b573c9bcbb5d4841cfd54adc7107c8e9c7a223d7661160fcd0c6cd72b18df83b",
+      "driver.driver.39fc946f9cbf83db-cgu.2.rcgu.o": "6c4f6240851c6e06c48b6cf03b09d6c2bae89a5352cf4f2bd793ad98dceb43b0",
+      "driver.driver.39fc946f9cbf83db-cgu.3.rcgu.o": "34483fecc7ca0ed845a72a3a0489e1c0f6d83f9cac2b129512ea2bbec80cced0",
+      "driver.driver.39fc946f9cbf83db-cgu.4.rcgu.o": "2dfac57cdc4ad2adde2ea96197524951cfb0885f435499e8628c135a074b132f"
+    },
+    "local_text_bytes": 12953,
+    "executable_sha256": "1f5e0dfd35ef0cf1f64fc2c75320e3ffae9844ec6b8e3a005629bb35816cc824"
+  },
+  "corpus": {
+    "exit_code": 0,
+    "sha256": "96c9f6c125b42251fee60f392b8ecfbdbae5691d6651db27947d32f3b5e4d56a",
+    "lines": 87
+  },
+  "workload_check": {
+    "parse": {
+      "exit_code": 0,
+      "checksum": 9666685
+    },
+    "req": {
+      "exit_code": 0,
+      "checksum": 400000
+    },
+    "identifier": {
+      "exit_code": 0,
+      "checksum": 30750000
+    }
+  },
+  "tests": {
+    "lockfile": "suite",
+    "sysroot": "cargo -Zbuild-std (MIR opt-level 0, panic=abort, O3, CGU16)",
+    "itest": {
+      "build_exit_code": 0,
+      "build_seconds": 19.746993943000234,
+      "crate_invocations": 1,
+      "crate_invocations_with_backend": 1,
+      "binaries": {
+        "suite_itest_semver": {
+          "exit_code": 0,
+          "seconds": 0.005466312999942602,
+          "listed": 0,
+          "counts": {
+            "ok": 0,
+            "failed": 0,
+            "ignored": 0,
+            "not_run": 0
+          },
+          "outcomes": {}
+        },
+        "test_autotrait": {
+          "exit_code": 0,
+          "seconds": 0.005369908999909967,
+          "listed": 1,
+          "counts": {
+            "ok": 1,
+            "failed": 0,
+            "ignored": 0,
+            "not_run": 0
+          },
+          "outcomes": {
+            "test": "ok"
+          }
+        },
+        "test_identifier": {
+          "exit_code": 0,
+          "seconds": 0.030704643999797554,
+          "listed": 3,
+          "counts": {
+            "ok": 3,
+            "failed": 0,
+            "ignored": 0,
+            "not_run": 0
+          },
+          "outcomes": {
+            "test_eq": "ok",
+            "test_new": "ok",
+            "test_prerelease": "ok"
+          }
+        },
+        "test_version": {
+          "exit_code": 0,
+          "seconds": 0.015485976000036317,
+          "listed": 10,
+          "counts": {
+            "ok": 10,
+            "failed": 0,
+            "ignored": 0,
+            "not_run": 0
+          },
+          "outcomes": {
+            "test_align": "ok",
+            "test_display": "ok",
+            "test_eq": "ok",
+            "test_ge": "ok",
+            "test_gt": "ok",
+            "test_le": "ok",
+            "test_lt": "ok",
+            "test_ne": "ok",
+            "test_parse": "ok",
+            "test_spec_order": "ok"
+          }
+        },
+        "test_version_req": {
+          "exit_code": 0,
+          "seconds": 0.02062784500003545,
+          "listed": 20,
+          "counts": {
+            "ok": 20,
+            "failed": 0,
+            "ignored": 0,
+            "not_run": 0
+          },
+          "outcomes": {
+            "test_any": "ok",
+            "test_basic": "ok",
+            "test_caret": "ok",
+            "test_cargo3202": "ok",
+            "test_comparator_parse": "ok",
+            "test_default": "ok",
+            "test_digit_after_wildcard": "ok",
+            "test_eq_hash": "ok",
+            "test_exact": "ok",
+            "test_greater_than": "ok",
+            "test_leading_digit_in_pre_and_build": "ok",
+            "test_less_than": "ok",
+            "test_logical_or": "ok",
+            "test_multiple": "ok",
+            "test_parse": "ok",
+            "test_pre": "ok",
+            "test_tilde": "ok",
+            "test_whitespace_delimited_comparator_sets": "ok",
+            "test_wildcard": "ok",
+            "test_wildcard_and_another": "ok"
+          }
+        }
+      },
+      "totals": {
+        "ok": 34,
+        "failed": 0,
+        "ignored": 0,
+        "not_run": 0
+      },
+      "all_exit_zero": true
+    }
+  }
+}

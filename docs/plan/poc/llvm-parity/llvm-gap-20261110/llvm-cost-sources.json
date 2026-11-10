@@ -1,0 +1,86 @@
+[
+  {
+    "path": "llvm/include/llvm/Analysis/TargetTransformInfo.h",
+    "url": "https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-21.1.8/llvm/include/llvm/Analysis/TargetTransformInfo.h",
+    "sha256": "652cc82bb3ddfda4930a9264b139e510569e60314f5e8ed7611a2e315a969f40",
+    "bytes": 99608
+  },
+  {
+    "path": "llvm/lib/Analysis/InlineCost.cpp",
+    "url": "https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-21.1.8/llvm/lib/Analysis/InlineCost.cpp",
+    "sha256": "1cbda2403ace1cb746dfb274d6557d7f98a88078f59673e705e87c25171e8899",
+    "bytes": 135328
+  },
+  {
+    "path": "llvm/lib/CodeGen/MachineScheduler.cpp",
+    "url": "https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-21.1.8/llvm/lib/CodeGen/MachineScheduler.cpp",
+    "sha256": "8788d67f152d62f0b5388aa9071d2d3c9fbd43fd9368017db18f87e8895f9226",
+    "bytes": 187733
+  },
+  {
+    "path": "llvm/include/llvm/CodeGen/TargetSchedule.h",
+    "url": "https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-21.1.8/llvm/include/llvm/CodeGen/TargetSchedule.h",
+    "sha256": "418d2030f71268e161fef3f533e25dc42c4acd5a97fd7e97b78a545b3b0e76d9",
+    "bytes": 8944
+  },
+  {
+    "path": "llvm/lib/CodeGen/RegAllocPBQP.cpp",
+    "url": "https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-21.1.8/llvm/lib/CodeGen/RegAllocPBQP.cpp",
+    "sha256": "9033ff1699e0726dcb6588babb21bcff8c032f16ab143202bbd8a5561b5919d2",
+    "bytes": 34658
+  },
+  {
+    "path": "llvm/lib/CodeGen/CalcSpillWeights.cpp",
+    "url": "https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-21.1.8/llvm/lib/CodeGen/CalcSpillWeights.cpp",
+    "sha256": "28e29ebb1c6982fd40f55d8a8f39e62b9445edbb627343a22ec4a5d5b47df1d8",
+    "bytes": 12484
+  },
+  {
+    "path": "llvm/docs/CommandGuide/llvm-mca.rst",
+    "url": "https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-21.1.8/llvm/docs/CommandGuide/llvm-mca.rst",
+    "sha256": "af23c6cec631a19d55c3e1a6142e038869929caae33e3954c07b9d5898e3ec8a",
+    "bytes": 51162
+  },
+  {
+    "path": "llvm/include/llvm/CodeGen/MachineScheduler.h",
+    "url": "https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-21.1.8/llvm/include/llvm/CodeGen/MachineScheduler.h",
+    "sha256": "b568fae74c1b890395044d3947e098adfb277654776042aed039944969f29956",
+    "bytes": 52657
+  },
+  {
+    "path": "llvm/include/llvm/Target/TargetSchedule.td",
+    "url": "https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-21.1.8/llvm/include/llvm/Target/TargetSchedule.td",
+    "sha256": "c80a933047140cf9e6398f056c45fbce25eefe540b697a8e7421056e5f1ad1ad",
+    "bytes": 26722
+  },
+  {
+    "path": "llvm/lib/CodeGen/RegAllocGreedy.cpp",
+    "url": "https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-21.1.8/llvm/lib/CodeGen/RegAllocGreedy.cpp",
+    "sha256": "c1905eae0464f4f71f95122d34e2790e8209e5ee15c357548b363a4c3107dcf8",
+    "bytes": 111402
+  },
+  {
+    "path": "llvm/docs/MLGO.rst",
+    "url": "https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-21.1.8/llvm/docs/MLGO.rst",
+    "sha256": "0f80e43210651977821431e19382c20af8a10e4d587ac61b3948c690fdfe09aa",
+    "bytes": 24471
+  },
+  {
+    "path": "llvm/lib/CodeGen/TargetPassConfig.cpp",
+    "url": "https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-21.1.8/llvm/lib/CodeGen/TargetPassConfig.cpp",
+    "sha256": "709205a50ca8737db38acdf4554af3e9fcccca9be2f103ca4dab12e96388c95f",
+    "bytes": 61723
+  },
+  {
+    "path": "llvm/lib/Transforms/Vectorize/LoopVectorize.cpp",
+    "url": "https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-21.1.8/llvm/lib/Transforms/Vectorize/LoopVectorize.cpp",
+    "sha256": "e11043e76c76f776dad967498f73a159e20914c794927dbc88f05878fe9bb44d",
+    "bytes": 451168
+  },
+  {
+    "path": "llvm/include/llvm/Support/InstructionCost.h",
+    "url": "https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-21.1.8/llvm/include/llvm/Support/InstructionCost.h",
+    "sha256": "5c0c49df082b4c5b3ac1cfbf100fbd66a756999b6ceb7022693d0523a2031874",
+    "bytes": 8526
+  }
+]

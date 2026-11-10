@@ -553,6 +553,10 @@ impl Lowering<'_> {
                     .contains(ArithmeticFlags::AMOUNT_IN_RANGE)
                 {
                     operands[1]
+                } else if let VirtualValue::Imm(count) = operands[1] {
+                    // Preserve immediate selection while applying the IR's
+                    // wrapping count semantics at the operand's integer width.
+                    VirtualValue::Imm(count & i64::from(kind.bits.max(1) - 1))
                 } else {
                     let amount = self.temporary();
                     let mask = i64::from(kind.bits.max(1) - 1);
