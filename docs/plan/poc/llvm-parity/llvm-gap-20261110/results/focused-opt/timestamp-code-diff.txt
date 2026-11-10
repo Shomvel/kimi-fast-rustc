@@ -1,0 +1,93 @@
+--- start/_RNvMNtCshX3mvxHm3fC_4core4timeNtB2_8Duration3new
+
++++ all/_RNvMNtCshX3mvxHm3fC_4core4timeNtB2_8Duration3new
+
+@@ -5,6 +5,7 @@
+
+ jb	TARGET
+ mov	rcx, rax
+ jmp	TARGET
++mov	rsi, rdi
+ jmp	TARGET
+ mov	rax, rcx
+ movabs	rsi, 1360296554856532783
+@@ -21,13 +22,13 @@
+
+ jae	TARGET
+ xor	eax, eax
+ jmp	TARGET
+-add	rdi, rax
+ mov	eax, 1
++mov	rsi, rdx
+ test	rax, rax
+ je	TARGET
+ mov	rax, rcx
+-movabs	rsi, 1360296554856532783
+-mul	rsi
++movabs	rdi, 1360296554856532783
++mul	rdi
+ mov	rax, rcx
+ sub	rax, rdx
+ shr	rax
+@@ -39,7 +40,7 @@
+
+ mov	ecx, 4294967295
+ and	rax, rcx
+ mov	rdx, rax
+-mov	rax, rdi
++mov	rax, rsi
+ leave
+ ret
+ lea	rdi, [rip]              # TARGET
+--- start/_RNvNtCsaGZho4zWNqb_9humantime4date18parse_rfc3339_weak
+
++++ all/_RNvNtCsaGZho4zWNqb_9humantime4date18parse_rfc3339_weak
+
+@@ -438,29 +438,28 @@
+
+ add	rdx, rdi
+ shr	rdx, 8
+ lea	rdi, [rbp - 112]
+-mov	rax, qword ptr [rbp - 8]
+-cmp	rax, 19
+-ja	TARGET
+-mov	r11, qword ptr [rbp - 16]
+-jmp	TARGET
+-lea	r9, [rbp - 408]
+-mov	r11, qword ptr [rbp - 16]
+-lea	r10, [r11 + 19]
+-mov	qword ptr [r9], r10
+-jmp	TARGET
+-lea	r9, [rbp - 416]
+-mov	r10d, 0
+-mov	qword ptr [r9], r10
+-mov	r9, qword ptr [r9]
+-mov	qword ptr [rdi], r9
+-lea	r9, [rip]               # TARGET
++mov	r9, qword ptr [rbp - 16]
++lea	rax, [r9 + 19]
++mov	r10, qword ptr [rbp - 8]
++cmp	r10, 19
++jbe	TARGET
++lea	r11, [rbp - 408]
++mov	qword ptr [r11], rax
++mov	rax, r11
++jmp	TARGET
++lea	rax, [rbp - 416]
++mov	r11d, 0
++mov	qword ptr [rax], r11
++mov	rax, qword ptr [rax]
++mov	qword ptr [rdi], rax
++lea	rax, [rip]              # TARGET
+ R_X86_64_PC32	.Lkfrc__RNvNtCsaGZho4zWNqb_9humantime4date18parse_rfc3339_weak_alloc29-0x4
+ mov	qword ptr [rbp - 40], rcx
+ mov	qword ptr [rbp - 48], r15
+-mov	r15, rax
++mov	r15, r10
+ mov	qword ptr [rbp - 56], r8
+ mov	qword ptr [rbp - 64], rdx
+-mov	rsi, r9
++mov	rsi, rax
+ call	TARGET
+ R_X86_64_PLT32	_RNvXsf_NtCshX3mvxHm3fC_4core6optionINtB5_6OptionRhENtNtB7_3cmp9PartialEq2eqCsaGZho4zWNqb_9humantime-0x4
+ test	al, al

@@ -1,0 +1,26 @@
+{
+  "semver": {
+    "objects_identical": true,
+    "driver_identical": true,
+    "driver_objects_identical": true,
+    "natural_driver_sha256": "e37ca06e6e4c3b8ff2c45eeb0ed39b83fba0d533e17d61ac837ac3abe533f382"
+  },
+  "base64": {
+    "objects_identical": true,
+    "driver_identical": true,
+    "driver_objects_identical": true,
+    "natural_driver_sha256": "fe53cd18ed472da706bd728c7b591abc98630e7ed41a8b628d375d6db5ea49aa"
+  },
+  "unicode-segmentation": {
+    "objects_identical": true,
+    "driver_identical": true,
+    "driver_objects_identical": true,
+    "natural_driver_sha256": "a812d794dca13ef0696803b320cda6883f81d15dd9adc74bdcecf2bd408f96c1"
+  },
+  "humantime": {
+    "objects_identical": true,
+    "driver_identical": true,
+    "driver_objects_identical": true,
+    "natural_driver_sha256": "9f70bd789055c91191821c155308c87bb8e8764c6194bf6582462914113adebc"
+  }
+}

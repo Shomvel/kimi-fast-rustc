@@ -1,0 +1,351 @@
+{
+  "crate": "unicode-segmentation",
+  "arms": [
+    "start",
+    "natural"
+  ],
+  "skipped_arms": [],
+  "rounds": 21,
+  "order": "warm-up round -1, then rounds alternate forward/reverse arm order",
+  "workloads": {
+    "graphemes-ascii": {
+      "iterations": 800,
+      "samples": [
+        {
+          "arm": "natural",
+          "round": -1,
+          "exit_code": 0,
+          "elapsed_ns": 122383923,
+          "checksum": 17570935124467329136
+        },
+        {
+          "arm": "start",
+          "round": -1,
+          "exit_code": 0,
+          "elapsed_ns": 121909351,
+          "checksum": 17570935124467329136
+        },
+        {
+          "arm": "start",
+          "round": 0,
+          "exit_code": 0,
+          "elapsed_ns": 130726073,
+          "checksum": 17570935124467329136
+        },
+        {
+          "arm": "natural",
+          "round": 0,
+          "exit_code": 0,
+          "elapsed_ns": 145273541,
+          "checksum": 17570935124467329136
+        },
+        {
+          "arm": "natural",
+          "round": 1,
+          "exit_code": 0,
+          "elapsed_ns": 136130481,
+          "checksum": 17570935124467329136
+        },
+        {
+          "arm": "start",
+          "round": 1,
+          "exit_code": 0,
+          "elapsed_ns": 121632106,
+          "checksum": 17570935124467329136
+        },
+        {
+          "arm": "start",
+          "round": 2,
+          "exit_code": 0,
+          "elapsed_ns": 157023577,
+          "checksum": 17570935124467329136
+        },
+        {
+          "arm": "natural",
+          "round": 2,
+          "exit_code": 0,
+          "elapsed_ns": 121524506,
+          "checksum": 17570935124467329136
+        },
+        {
+          "arm": "natural",
+          "round": 3,
+          "exit_code": 0,
+          "elapsed_ns": 121928020,
+          "checksum": 17570935124467329136
+        },
+        {
+          "arm": "start",
+          "round": 3,
+          "exit_code": 0,
+          "elapsed_ns": 137719502,
+          "checksum": 17570935124467329136
+        },
+        {
+          "arm": "start",
+          "round": 4,
+          "exit_code": 0,
+          "elapsed_ns": 121990334,
+          "checksum": 17570935124467329136
+        },
+        {
+          "arm": "natural",
+          "round": 4,
+          "exit_code": 0,
+          "elapsed_ns": 135783762,
+          "checksum": 17570935124467329136
+        },
+        {
+          "arm": "natural",
+          "round": 5,
+          "exit_code": 0,
+          "elapsed_ns": 132777317,
+          "checksum": 17570935124467329136
+        },
+        {
+          "arm": "start",
+          "round": 5,
+          "exit_code": 0,
+          "elapsed_ns": 121823203,
+          "checksum": 17570935124467329136
+        },
+        {
+          "arm": "start",
+          "round": 6,
+          "exit_code": 0,
+          "elapsed_ns": 123782629,
+          "checksum": 17570935124467329136
+        },
+        {
+          "arm": "natural",
+          "round": 6,
+          "exit_code": 0,
+          "elapsed_ns": 121995320,
+          "checksum": 17570935124467329136
+        },
+        {
+          "arm": "natural",
+          "round": 7,
+          "exit_code": 0,
+          "elapsed_ns": 122020570,
+          "checksum": 17570935124467329136
+        },
+        {
+          "arm": "start",
+          "round": 7,
+          "exit_code": 0,
+          "elapsed_ns": 121975240,
+          "checksum": 17570935124467329136
+        },
+        {
+          "arm": "start",
+          "round": 8,
+          "exit_code": 0,
+          "elapsed_ns": 123612314,
+          "checksum": 17570935124467329136
+        },
+        {
+          "arm": "natural",
+          "round": 8,
+          "exit_code": 0,
+          "elapsed_ns": 121932387,
+          "checksum": 17570935124467329136
+        },
+        {
+          "arm": "natural",
+          "round": 9,
+          "exit_code": 0,
+          "elapsed_ns": 121578837,
+          "checksum": 17570935124467329136
+        },
+        {
+          "arm": "start",
+          "round": 9,
+          "exit_code": 0,
+          "elapsed_ns": 122787048,
+          "checksum": 17570935124467329136
+        },
+        {
+          "arm": "start",
+          "round": 10,
+          "exit_code": 0,
+          "elapsed_ns": 124163389,
+          "checksum": 17570935124467329136
+        },
+        {
+          "arm": "natural",
+          "round": 10,
+          "exit_code": 0,
+          "elapsed_ns": 130295027,
+          "checksum": 17570935124467329136
+        },
+        {
+          "arm": "natural",
+          "round": 11,
+          "exit_code": 0,
+          "elapsed_ns": 123976359,
+          "checksum": 17570935124467329136
+        },
+        {
+          "arm": "start",
+          "round": 11,
+          "exit_code": 0,
+          "elapsed_ns": 121919858,
+          "checksum": 17570935124467329136
+        },
+        {
+          "arm": "start",
+          "round": 12,
+          "exit_code": 0,
+          "elapsed_ns": 123721587,
+          "checksum": 17570935124467329136
+        },
+        {
+          "arm": "natural",
+          "round": 12,
+          "exit_code": 0,
+          "elapsed_ns": 124049489,
+          "checksum": 17570935124467329136
+        },
+        {
+          "arm": "natural",
+          "round": 13,
+          "exit_code": 0,
+          "elapsed_ns": 122065026,
+          "checksum": 17570935124467329136
+        },
+        {
+          "arm": "start",
+          "round": 13,
+          "exit_code": 0,
+          "elapsed_ns": 122037785,
+          "checksum": 17570935124467329136
+        },
+        {
+          "arm": "start",
+          "round": 14,
+          "exit_code": 0,
+          "elapsed_ns": 123296501,
+          "checksum": 17570935124467329136
+        },
+        {
+          "arm": "natural",
+          "round": 14,
+          "exit_code": 0,
+          "elapsed_ns": 132680743,
+          "checksum": 17570935124467329136
+        },
+        {
+          "arm": "natural",
+          "round": 15,
+          "exit_code": 0,
+          "elapsed_ns": 123377973,
+          "checksum": 17570935124467329136
+        },
+        {
+          "arm": "start",
+          "round": 15,
+          "exit_code": 0,
+          "elapsed_ns": 123442369,
+          "checksum": 17570935124467329136
+        },
+        {
+          "arm": "start",
+          "round": 16,
+          "exit_code": 0,
+          "elapsed_ns": 123307587,
+          "checksum": 17570935124467329136
+        },
+        {
+          "arm": "natural",
+          "round": 16,
+          "exit_code": 0,
+          "elapsed_ns": 122438355,
+          "checksum": 17570935124467329136
+        },
+        {
+          "arm": "natural",
+          "round": 17,
+          "exit_code": 0,
+          "elapsed_ns": 129552415,
+          "checksum": 17570935124467329136
+        },
+        {
+          "arm": "start",
+          "round": 17,
+          "exit_code": 0,
+          "elapsed_ns": 129415740,
+          "checksum": 17570935124467329136
+        },
+        {
+          "arm": "start",
+          "round": 18,
+          "exit_code": 0,
+          "elapsed_ns": 123801938,
+          "checksum": 17570935124467329136
+        },
+        {
+          "arm": "natural",
+          "round": 18,
+          "exit_code": 0,
+          "elapsed_ns": 122359326,
+          "checksum": 17570935124467329136
+        },
+        {
+          "arm": "natural",
+          "round": 19,
+          "exit_code": 0,
+          "elapsed_ns": 124571249,
+          "checksum": 17570935124467329136
+        },
+        {
+          "arm": "start",
+          "round": 19,
+          "exit_code": 0,
+          "elapsed_ns": 126919359,
+          "checksum": 17570935124467329136
+        },
+        {
+          "arm": "start",
+          "round": 20,
+          "exit_code": 0,
+          "elapsed_ns": 122062150,
+          "checksum": 17570935124467329136
+        },
+        {
+          "arm": "natural",
+          "round": 20,
+          "exit_code": 0,
+          "elapsed_ns": 122595630,
+          "checksum": 17570935124467329136
+        }
+      ],
+      "arms": {
+        "start": {
+          "runs": 21,
+          "failures": 0,
+          "median_ns": 123442369,
+          "min_ns": 121632106,
+          "max_ns": 157023577,
+          "checksums": [
+            17570935124467329136
+          ],
+          "instructions": 1962773022,
+          "cycles": 447154975
+        },
+        "natural": {
+          "runs": 21,
+          "failures": 0,
+          "median_ns": 123377973,
+          "min_ns": 121524506,
+          "max_ns": 145273541,
+          "checksums": [
+            17570935124467329136
+          ],
+          "instructions": 1962772511,
+          "cycles": 446437891
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "semver": true,
+  "base64": true,
+  "unicode-segmentation": true,
+  "humantime": true
+}
