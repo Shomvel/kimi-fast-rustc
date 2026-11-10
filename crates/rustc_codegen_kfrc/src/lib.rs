@@ -37,6 +37,7 @@ mod convert;
 mod definitions;
 mod emission;
 mod enum_layout;
+mod inline_cost;
 mod permissions;
 mod profile;
 mod shell_entry;
@@ -557,10 +558,16 @@ fn compile_instance_graph<'tcx>(
             // Inlining retains node identities. Only its new call sites need
             // another identity-summary query; pre-existing calls were checked.
             let before_inline = graph.len();
+            let cost_policy = inline_cost::policy()
+                .unwrap_or_else(|error| fail("inline cost configuration", error));
             let inlined = profile::measure("inline_s", &symbol, || {
-                kfrc_son::inline_calls(&mut graph, provider, kfrc_son::InlineBudget::default())
+                kfrc_son::inline_calls_with_cost(
+                    &mut graph, provider, kfrc_son::InlineBudget::default(),
+                    cost_policy, &kfrc_son::analysis::cost::GenericCostModel,
+                )
             })
             .unwrap_or_else(|error| fail("semantic inlining", error.to_string()));
+            inline_cost::report(&symbol, &inlined);
             if inlined.calls_inlined > 0 {
                 changed = true;
                 dirty_nodes.extend_from_slice(&inlined.dirty_nodes);

@@ -1,6 +1,6 @@
 # 重复地址与常量移位实验（尚未通过性能验收）
 
-**当前状态：v1 与 v2 均出现跨负载回退，尚未采用为正式优化。工作树保留 v2 实验候选；后续转向 [系统成本建模](cost-model.md)，不得将下列初版收益当作最终交付结果。**
+**当前状态：v1 与 v2 均出现跨负载回退，尚未采用为正式优化。v2 已从默认源码撤回，当前交付 [内建成本模型](builtin-cost-model.md)，不得将下列初版收益当作最终交付结果。**
 
 本轮基于 `b254941179c6f052bc2b732814c61ed299e39a3b`，即已经合入 PR #7 的全部前序优化。实现覆盖两个在新基线产物中确认的差异；其余工作见 [优化计划](optimization-plan.md)。[基线分析](report.md) 中的历史数据与本轮测量分开记录。
 
@@ -8,9 +8,9 @@
 
 内联后 `internal_encode` 中，同一输入指针反复经过 `PointerCast`、`FieldAddr[0]` 得到编码表地址。例如 `n51=PointerCast(n3), n52=FieldAddr[0](n51)` 与 `n75=PointerCast(n3), n76=FieldAddr[0](n75)` 的类型和操作数完全相同。基线汇编整个函数有 39 次 `lea [rdi+3]`，其中热循环准备段连续 32 次；栈空间为 `0x178` 字节。
 
-内联后的专用 GVN 扫描现在可共享浮动的 `FieldAddr`、`IndexAddr`、`PointerCast`。表达式键包含 opcode、完整结果类型、payload 和原始 SSA 输入的代表节点。共享保持相同基指针的 allocation identity、offset 和 poison；不依据地址数值相等替换指针，不合并分配、load、TLS、控制锚定值或带变体证明的地址。内联后增加一次仅处理这三种地址表达式的扫描，避免重新执行完整 GVN 和 witness 分析。扫描按创建顺序运行，不要求求出所有等价式的闭包。
+实验版内联后的专用 GVN 扫描可共享浮动的 `FieldAddr`、`IndexAddr`、`PointerCast`。表达式键包含 opcode、完整结果类型、payload 和原始 SSA 输入的代表节点。共享保持相同基指针的 allocation identity、offset 和 poison；不依据地址数值相等替换指针，不合并分配、load、TLS、控制锚定值或带变体证明的地址。内联后增加一次仅处理这三种地址表达式的扫描，避免重新执行完整 GVN 和 witness 分析。扫描按创建顺序运行，不要求求出所有等价式的闭包。
 
-基线 `internal_encode` 还有 43 处通过 `CL` 执行的移位。未带 `AMOUNT_IN_RANGE` 的常量移位原先先生成临时寄存器掩码，再走 `CL`。现在在降低时按整数宽度计算 `count & (width - 1)`，将结果保留为立即数，复用已有立即数指令选择和编码。动态移位以及带契约的移位保留原来的处理。
+基线 `internal_encode` 还有 43 处通过 `CL` 执行的移位。未带 `AMOUNT_IN_RANGE` 的常量移位原先先生成临时寄存器掩码，再走 `CL`。实验版在降低时按整数宽度计算 `count & (width - 1)`，将结果保留为立即数，复用已有立即数指令选择和编码。动态移位以及带契约的移位保留原来的处理。
 
 这两项变更均不删除输出切片检查。基线范围分析已经消除了 32 个编码表索引检查，不需要重复实现这项能力。
 
@@ -24,7 +24,7 @@
 
 地址用例覆盖同一地址共享、不同对象、不同字段，以及写入前后读取不可混淆；优化前后解释执行结果一致。常量移位用例覆盖三种方向、8/16/32/64 位宽、零、边界和超位宽计数；Linux 将生成的对象与 C 驱动链接，执行 360 组输入并核对 wrapping 语义。另有结构检查确认常量移位不再经 `CL`。
 
-当前 v2 本机 workspace 重新运行：90 个测试套件，793 passed、1 ignored；v1 同样通过该范围。报告生成器：8 项回归通过。基线分析复算：59 个输入哈希、13 项负载、全部精确 codegen 窗口核对通过。
+历史 v2 本机 workspace 重新运行：90 个测试套件，793 passed、1 ignored；v1 同样通过该范围。报告生成器：8 项回归通过。基线分析复算：59 个输入哈希、13 项负载、全部精确 codegen 窗口核对通过。
 
 ## 初版候选的单项与组合比较（未采用）
 
@@ -60,4 +60,4 @@ v2 候选将共享限定在内联完成之后，保持内联决策前的图与�
 
 v2 仅在内联后共享地址，恢复两比较函数原大小，base64 收益仍在；独立11轮中 semver requirement 约改善2.1%，但identifier约退步15.3%。两版identifier相关规范化指令序列一致，动态指令数基本相同；性能原因仍需布局干预验证。v2同样未通过性能验收。
 
-原始样本与汇总：初版 [正式运行](results/candidate-v1/runtime-summary.json)、[体积](results/candidate-v1/size-summary.json)、[编译成本](results/candidate-v1/compile-cost.json)；[semver隔离](results/semver-diagnosis/paired.json)、[v2隔离](results/v2-diagnosis/paired.json)、[当前源码指纹](results/source.json)。
+原始样本与汇总：初版 [正式运行](results/candidate-v1/runtime-summary.json)、[体积](results/candidate-v1/size-summary.json)、[编译成本](results/candidate-v1/compile-cost.json)；[semver隔离](results/semver-diagnosis/paired.json)、[v2隔离](results/v2-diagnosis/paired.json)、[已撤回 v2 源码指纹](results/source.json)。

@@ -34,8 +34,8 @@ pub use lower_layout::{
 pub use optimize::{OptimizeStats, optimize_graph};
 pub use pipeline::{PipelineError, optimize_specialized_graph, optimize_specialized_seams};
 pub use transforms::ipo::{
-    GraphProvider, IdentityFoldStats, InlineBudget, InlineError, InlineSkip, InlineStats,
-    fold_identity_calls, inline_calls,
+    GraphProvider, IdentityFoldStats, InlineBudget, InlineCostPolicy, InlineDecision, InlineError,
+    InlineSkip, InlineStats, fold_identity_calls, inline_calls, inline_calls_with_cost,
 };
 pub use transforms::scalar::ranges::{RangeFoldStats, run as fold_scalar_ranges};
 pub use verify::{VerifyError, verify_graph};

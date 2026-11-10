@@ -198,12 +198,14 @@ impl LayoutLowering<'_> {
             self.decode_fields_demand(node, ty, &mut control, &mut effect, &self.demand(node))?
         };
         for user in before {
-            if self.graph.control(user) == old_control {
+            // Earlier lowering may have forwarded a dead typed read's
+            // continuation without resolving its consumers' edges yet.
+            if self.graph.resolve(self.graph.control(user)) == old_control {
                 self.graph.set_control(user, control);
             }
             let inputs = self.graph.inputs(user).to_vec();
             for (index, input) in inputs.into_iter().enumerate() {
-                if input == old_effect {
+                if self.graph.resolve(input) == old_effect {
                     self.graph.set_input(user, index, effect);
                 }
             }

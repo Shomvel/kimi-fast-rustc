@@ -272,7 +272,6 @@ pub fn optimize_specialized_seams(
         stats.predecessor_edges_removed += control.predecessor_edges_removed;
         stats.nodes_removed += control.nodes_removed;
     }
-    stats.values_merged += gvn::run_addresses(graph).values_merged;
     graph.compact();
     stats.nodes_after = graph.len();
     partition_memory(graph, &mut stats);

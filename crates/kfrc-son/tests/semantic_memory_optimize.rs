@@ -1097,98 +1097,63 @@ fn equal_pointer_casts_of_one_address_share_a_snapshot() {
 }
 
 #[test]
-fn post_inline_address_sharing_preserves_distinct_places_and_memory_versions() {
-    for opcode in [Opcode::FieldAddr, Opcode::IndexAddr, Opcode::PointerCast] {
-        let mut f = Fixture::new();
-        f.graph.level = kfrc_son::GraphLevel::Specialized;
-        let source_ty = if opcode == Opcode::FieldAddr {
-            f.pair
-        } else {
-            f.word
-        };
-        let base = f.slot(0, source_ty);
-        let other_base = f.slot(1, source_ty);
-        let zero = f.graph.add_constant(0, f.word);
-        let address = |f: &mut Fixture, base, field| {
-            let inputs = if opcode == Opcode::IndexAddr {
-                vec![base, zero]
-            } else {
-                vec![base]
-            };
-            f.graph.add_node(
-                opcode,
-                NodeId::NONE,
-                &inputs,
-                field,
-                ValueType::Rust(f.pointer),
-            )
-        };
-        let first = address(&mut f, base, 0);
-        let duplicate = address(&mut f, base, 0);
-        let other = address(&mut f, other_base, 0);
-        let seven = f.graph.add_constant(7, f.word);
-        let eleven = f.graph.add_constant(11, f.word);
-        let seventeen = f.graph.add_constant(17, f.word);
-        f.store(first, seven);
-        let before_write = f.load(duplicate, f.word);
-        f.store(duplicate, eleven);
-        f.store(other, seventeen);
-        let after_write = f.load(first, f.word);
-        let other_value = f.load(other, f.word);
-        let mut sum = f.graph.add_node(
-            Opcode::Add,
-            NodeId::NONE,
-            &[before_write, after_write],
-            0,
-            ValueType::Rust(f.word),
-        );
-        sum = f.graph.add_node(
-            Opcode::Add,
-            NodeId::NONE,
-            &[sum, other_value],
-            0,
-            ValueType::Rust(f.word),
-        );
-        let expected = if opcode == Opcode::FieldAddr {
-            let other_field = address(&mut f, base, 1);
-            let thirteen = f.graph.add_constant(13, f.word);
-            f.store(other_field, thirteen);
-            let field_value = f.load(other_field, f.word);
-            sum = f.graph.add_node(
-                Opcode::Add,
-                NodeId::NONE,
-                &[sum, field_value],
-                0,
-                ValueType::Rust(f.word),
-            );
-            48
-        } else {
-            35
-        };
-        f.ret(sum);
-        verify_graph(&mut f.graph).unwrap();
-        assert_eq!(
-            run(&f.graph).unwrap(),
-            SemanticOutcome::Return(Value::Scalar(expected))
-        );
-        kfrc_son::optimize_specialized_seams(&mut f.graph, &[], &[]).unwrap();
-        verify_graph(&mut f.graph).unwrap();
-        assert_eq!(
-            run(&f.graph).unwrap(),
-            SemanticOutcome::Return(Value::Scalar(expected))
-        );
-        let count = f
-            .graph
-            .ids()
-            .filter(|&node| f.graph.op(node) == opcode)
-            .count();
-        if opcode == Opcode::FieldAddr {
-            assert_eq!(
-                count, 3,
-                "same base/field shares, different base or field stays distinct"
-            );
-        } else if opcode == Opcode::IndexAddr {
-            assert_eq!(count, 2, "different allocation identities remain distinct");
+fn call_snapshot_precedes_users_of_a_forwarded_load_continuation() {
+    use kfrc_son::{GraphLevel, Outcome, lower_layout};
+    let mut f = Fixture::new();
+    f.graph.oracle.record_abi_pair(
+        f.pair,
+        [
+            FieldLayout {
+                ty: f.word,
+                offset: 0,
+            },
+            FieldLayout {
+                ty: f.word,
+                offset: 8,
+            },
+        ],
+    );
+    f.graph.level = GraphLevel::Specialized;
+    let slot = f.slot(0, f.word);
+    let seven = f.graph.add_constant(7, f.word);
+    f.store(slot, seven);
+    let target = f.graph.add_callee(CallTarget {
+        symbol: "pair".into(),
+        abi: FunctionAbi {
+            args: vec![],
+            ret: PassMode::Pair,
+            c_variadic: false,
+        },
+    });
+    let pair = f.fixed(Opcode::Call, &[], target, Some(f.pair)).unwrap();
+    // The unused read's continuation is forwarded before the call result is
+    // decoded. Its consumer must still be redirected past the snapshot loads.
+    f.load(slot, f.word);
+    let field = f.graph.add_node(
+        Opcode::Field,
+        NodeId::NONE,
+        &[pair],
+        0,
+        ValueType::Rust(f.word),
+    );
+    f.store(slot, field);
+    let result = f.load(slot, f.word);
+    f.ret(result);
+    verify_graph(&mut f.graph).unwrap();
+    lower_layout(&mut f.graph).unwrap();
+    verify_graph(&mut f.graph).unwrap();
+    struct Calls;
+    impl kfrc_son::interpret::CallHandler for Calls {
+        fn call(&mut self, _: &str, _: &[u64]) -> Result<u64, InterpretError> {
+            unreachable!()
+        }
+        fn call_pair(&mut self, symbol: &str, _: &[u64]) -> Result<(u64, u64), InterpretError> {
+            assert_eq!(symbol, "pair");
+            Ok((42, 73))
         }
     }
+    assert_eq!(
+        Interpreter::new(&f.graph).run(&[], &mut Calls).unwrap(),
+        Outcome::Return(42)
+    );
 }

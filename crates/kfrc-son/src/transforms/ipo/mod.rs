@@ -4,19 +4,24 @@
 //! mentioned-item diagnostics before calling this pass and independently prove
 //! emission reachability. This pass does not replace that proof or definition-
 //! level R specialization. Missing or ineligible callees stay calls.
+mod cost;
 mod identity;
 mod plan;
 mod splice;
 mod types;
 
+use crate::analysis::cost::{CostModel, GenericCostModel};
+use cost::Costs;
+pub use cost::{InlineCostPolicy, InlineDecision};
+
 pub use identity::{IdentityFoldStats, fold_identity_calls};
 
 use crate::verify::verify_pipeline_step;
 use crate::{FunctionGraph, GraphLevel, NodeId, Opcode, VerifyError};
+use kfrc_body::fx_hash::{HashMap, HashSet};
 use plan::plan;
 use splice::splice;
 use std::cmp::Reverse;
-use kfrc_body::fx_hash::{HashMap, HashSet};
 use std::collections::{BTreeMap, BinaryHeap};
 
 pub trait GraphProvider {
@@ -73,6 +78,10 @@ pub enum InlineSkip {
     Budget,
     /// Larger than `max_callee_nodes` and called from elsewhere too.
     Size,
+    /// Known code-size estimate exceeds the selected policy threshold.
+    Cost,
+    /// The model cannot price this callee within its analysis budget.
+    UnknownCost,
     Unsupported,
     TypeConflict,
     AbiMismatch,
@@ -81,6 +90,9 @@ pub enum InlineSkip {
 #[derive(Clone, Debug, Default)]
 pub struct InlineStats {
     pub calls_inlined: usize,
+    pub decisions: Vec<InlineDecision>,
+    /// Cost summaries are cached per callee and bounded per caller.
+    pub cost_nodes_visited: usize,
     pub nodes_added: usize,
     pub skipped: Vec<(String, InlineSkip)>,
     /// Nodes inspected by eligibility, recursion discovery and splice planning.
@@ -92,6 +104,15 @@ pub struct InlineStats {
     /// Caller LocalSlot roots passed to an erased call (W06/F08).
     pub argument_slots: Vec<NodeId>,
 }
+impl InlineStats {
+    fn reject(&mut self, symbol: String, reason: InlineSkip, decision: Option<usize>) {
+        if let Some(index) = decision {
+            self.decisions[index].rejection = Some(reason);
+        }
+        self.skipped.push((symbol, reason));
+    }
+}
+
 #[derive(Debug)]
 pub enum InlineError {
     NotSpecialized,
@@ -109,6 +130,24 @@ pub fn inline_calls(
     provider: &(impl GraphProvider + ?Sized),
     budget: InlineBudget,
 ) -> Result<InlineStats, InlineError> {
+    inline_calls_with_cost(
+        caller,
+        provider,
+        budget,
+        InlineCostPolicy::Legacy,
+        &GenericCostModel,
+    )
+}
+
+/// Run with an explicit cost policy. Observe is decision-identical to Legacy;
+/// CodeSize is an opt-in policy until its weights are calibrated on real code.
+pub fn inline_calls_with_cost(
+    caller: &mut FunctionGraph,
+    provider: &(impl GraphProvider + ?Sized),
+    budget: InlineBudget,
+    policy: InlineCostPolicy,
+    model: &dyn CostModel,
+) -> Result<InlineStats, InlineError> {
     if caller.level != GraphLevel::Specialized {
         return Err(InlineError::NotSpecialized);
     }
@@ -121,37 +160,69 @@ pub fn inline_calls(
     let mut recursion = HashMap::default();
     let mut callees = HashMap::default();
     let mut imports: HashMap<String, plan::ImportedTypes> = HashMap::default();
-    let size_of = |graph: &FunctionGraph, call: NodeId| {
-        let symbol = &graph.callees[graph.payload(call) as usize].symbol;
-        provider.graph(symbol).map_or(0, FunctionGraph::live_count)
-    };
+    let mut costs = Costs::new(policy, model, budget.max_nodes);
     let mut sequence = 0usize;
-    let mut pending: BinaryHeap<Reverse<(usize, usize, NodeId, usize)>> = BinaryHeap::new();
+    let mut pending: BinaryHeap<Reverse<(u64, usize, NodeId, usize)>> = BinaryHeap::new();
     for call in original.ids().filter(|&n| original.op(n) == Opcode::Call) {
-        pending.push(Reverse((size_of(original, call), sequence, call, 0)));
+        pending.push(Reverse((
+            costs.priority(original, call, provider),
+            sequence,
+            call,
+            0,
+        )));
         sequence += 1;
     }
     let mut costed_calls = 0usize;
-    while let Some(Reverse((size, _, call, depth))) = pending.pop() {
+    while let Some(Reverse((_, _, call, depth))) = pending.pop() {
         let caller = candidate.as_ref().unwrap_or(&*original);
         if caller.is_dead(call) {
             continue;
         }
         let target = caller.callees[caller.payload(call) as usize].clone();
-        let free = size <= budget.free_nodes;
+        let size = provider
+            .graph(&target.symbol)
+            .map_or(0, FunctionGraph::live_count);
+        let estimate = costs.estimate(&target.symbol, provider);
+        let sole = depth == 0 && provider.sole_call_site(&target.symbol);
+        let free = match policy {
+            InlineCostPolicy::CodeSize { free_units, .. } => estimate
+                .and_then(|cost| cost.code_size.total())
+                .is_some_and(|cost| cost <= free_units),
+            _ => size <= budget.free_nodes,
+        };
+        let decision = (policy != InlineCostPolicy::Legacy).then(|| {
+            let index = stats.decisions.len();
+            stats.decisions.push(InlineDecision {
+                call,
+                symbol: target.symbol.clone(),
+                depth,
+                source_nodes: size,
+                budget,
+                nodes_added_before: stats.nodes_added,
+                costed_calls_before: costed_calls,
+                model: costs.model_name(),
+                policy,
+                estimate,
+                sole_call_site: sole,
+                free,
+                rejection: None,
+            });
+            index
+        });
         if depth >= budget.max_depth || (!free && costed_calls >= budget.max_calls) {
-            stats.skipped.push((target.symbol, InlineSkip::Budget));
+            stats.reject(target.symbol, InlineSkip::Budget, decision);
             continue;
         }
-        // A nested call site is a copy of the callee's own call, so only the
-        // caller's original call sites can be the sole one.
-        if size > budget.max_callee_nodes && !(depth == 0 && provider.sole_call_site(&target.symbol))
+        // Keep legacy ordering/thresholds exactly in observation mode.
+        if !matches!(policy, InlineCostPolicy::CodeSize { .. })
+            && size > budget.max_callee_nodes
+            && !sole
         {
-            stats.skipped.push((target.symbol, InlineSkip::Size));
+            stats.reject(target.symbol, InlineSkip::Size, decision);
             continue;
         }
         let Some(source) = provider.graph(&target.symbol) else {
-            stats.skipped.push((target.symbol, InlineSkip::Missing));
+            stats.reject(target.symbol, InlineSkip::Missing, decision);
             continue;
         };
         let source_eligible = if let Some(&eligible) = source_checks.get(&target.symbol) {
@@ -166,15 +237,15 @@ pub fn inline_calls(
             eligible
         };
         if !source_eligible {
-            stats.skipped.push((target.symbol, InlineSkip::Unsupported));
+            stats.reject(target.symbol, InlineSkip::Unsupported, decision);
             continue;
         }
         if source.live_count() > budget.max_nodes.saturating_sub(stats.nodes_added) {
-            stats.skipped.push((target.symbol, InlineSkip::Budget));
+            stats.reject(target.symbol, InlineSkip::Budget, decision);
             continue;
         }
         if source.abi != target.abi {
-            stats.skipped.push((target.symbol, InlineSkip::AbiMismatch));
+            stats.reject(target.symbol, InlineSkip::AbiMismatch, decision);
             continue;
         }
         if *recursion.entry(target.symbol.clone()).or_insert_with(|| {
@@ -186,8 +257,21 @@ pub fn inline_calls(
                 &mut stats.nodes_visited,
             )
         }) {
-            stats.skipped.push((target.symbol, InlineSkip::Recursive));
+            stats.reject(target.symbol, InlineSkip::Recursive, decision);
             continue;
+        }
+        if let InlineCostPolicy::CodeSize { max_units, .. } = policy {
+            match estimate.and_then(|cost| cost.code_size.total()) {
+                None => {
+                    stats.reject(target.symbol, InlineSkip::UnknownCost, decision);
+                    continue;
+                }
+                Some(units) if units > max_units && !sole => {
+                    stats.reject(target.symbol, InlineSkip::Cost, decision);
+                    continue;
+                }
+                _ => {}
+            }
         }
         let before = caller.len();
         let plan = match plan(
@@ -200,7 +284,7 @@ pub fn inline_calls(
         ) {
             Ok(plan) => plan,
             Err(reason) => {
-                stats.skipped.push((target.symbol, reason));
+                stats.reject(target.symbol, reason, decision);
                 continue;
             }
         };
@@ -218,10 +302,16 @@ pub fn inline_calls(
         stats.dirty_nodes.extend(spliced.dirty);
         stats.argument_slots.extend(spliced.argument_slots);
         for node in spliced.nested {
-            pending.push(Reverse((size_of(caller, node), sequence, node, depth + 1)));
+            pending.push(Reverse((
+                costs.priority(caller, node, provider),
+                sequence,
+                node,
+                depth + 1,
+            )));
             sequence += 1;
         }
     }
+    stats.cost_nodes_visited = costs.nodes_visited;
     let Some(mut candidate) = candidate else {
         return Ok(stats);
     };

@@ -1,7 +1,7 @@
 //! Exact expression numbering for floating, deterministic value nodes.
 //!
 //! This deliberately does not number memory reads, projections, Phi, calls,
-//! traps, allocations or control-anchored values. Equal pointer comparisons do
+//! traps, addresses or control-anchored values. Equal pointer comparisons do
 //! not establish interchangeable pointers; we only reuse the comparison's
 //! result when its original operands are identical.
 //! VariantField keys retain their optional witness input. Two equal subjects
@@ -31,28 +31,14 @@ struct Expression {
 }
 
 pub(crate) fn run(graph: &mut FunctionGraph) -> GvnStats {
-    let witnesses = merge_dominated_witnesses(graph);
-    let mut stats = number_expressions(graph, numberable);
-    stats.values_merged += witnesses;
-    stats
-}
-
-/// Inlining can duplicate address paths from the same SSA pointer. Sharing
-/// these pure expressions retains the base's provenance and poison, without
-/// equating separate allocations or reusing reads across memory effects.
-/// Keep this post-inline sweep narrower than the semantic GVN pass.
-pub(crate) fn run_addresses(graph: &mut FunctionGraph) -> GvnStats {
-    number_expressions(graph, address_expression)
-}
-
-fn number_expressions(graph: &mut FunctionGraph, accepts: fn(Opcode) -> bool) -> GvnStats {
     let mut stats = GvnStats::default();
+    stats.values_merged += merge_dominated_witnesses(graph);
     let mut expressions = HashMap::default();
     let nodes: Vec<_> = graph.ids().collect();
     for node in nodes {
         if !graph.control(node).is_none()
             || !matches!(graph.value_type(node), ValueType::Rust(_))
-            || !accepts(graph.op(node))
+            || !numberable(graph.op(node))
         {
             continue;
         }
@@ -160,13 +146,6 @@ fn numberable(opcode: Opcode) -> bool {
             | Opcode::VariantField
             | Opcode::Discriminant
             | Opcode::WidePtr
-    )
-}
-
-fn address_expression(opcode: Opcode) -> bool {
-    matches!(
-        opcode,
-        Opcode::FieldAddr | Opcode::IndexAddr | Opcode::PointerCast
     )
 }
 
