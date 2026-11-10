@@ -1,0 +1,100 @@
+{
+  "study_root": "/Users/shom/Downloads/llvm-study",
+  "llvm_revision": "3623fe661ae35c6c80ac221f14d85be76aa870f1",
+  "llvm_version": "21.1.0",
+  "kfrc_revision": "7fb04aab2659e39dfa871b235fceb30bc0a5999b",
+  "files": {
+    "README.md": {
+      "bytes": 5854,
+      "sha256": "c7d18bfbad873d9bd9600e7a5c44ee96d35b2451970f3836092165fb9a3c9793"
+    },
+    "topics/00-architecture.md": {
+      "bytes": 3535,
+      "sha256": "4e68cbbe8ad9055f30369b7f438e1c8d76d6c7e58b61396f26d8492a2f22c43a"
+    },
+    "topics/01-ir-semantics.md": {
+      "bytes": 3844,
+      "sha256": "febe50b21626b2dd51b5e4c29ca27840200c44f47a6f777d903f7c0e7e35497c"
+    },
+    "topics/02-pass-manager.md": {
+      "bytes": 3369,
+      "sha256": "25b14d81a1e0a809bb59d2eff80b79b8b91699d07645033e4b28dcff7b0641b0"
+    },
+    "topics/03-sroa-mem2reg.md": {
+      "bytes": 2965,
+      "sha256": "981996eaf11c3d874c0f06916988767c524363461f468904d42d6225e67979b1"
+    },
+    "topics/04-instcombine.md": {
+      "bytes": 3226,
+      "sha256": "0222d0055a2254944d99863b464d3c2fd155a1f0b94144012724478bbea6e951"
+    },
+    "topics/05-sccp-cfg-dce.md": {
+      "bytes": 3148,
+      "sha256": "201bd4a12e7e2c7eb203135b8357377d4482a6ff9bc86fcf85fe6c7bf527739b"
+    },
+    "topics/06-memory-gvn-dse.md": {
+      "bytes": 3670,
+      "sha256": "0f32bdf96fcd5cb7377c28c8b2bbcf22f5c36dac610fd4e03bb1829bdf768d50"
+    },
+    "topics/07-loop-licm.md": {
+      "bytes": 4122,
+      "sha256": "6b8a08225a705ffa36306ddb42021d1e6b74600d5343fcd6cef6c0aae2c5e2fc"
+    },
+    "topics/08-vectorization-unrolling.md": {
+      "bytes": 4171,
+      "sha256": "988efdfddf57829a32bc8989d93dfb85d358cd9effb822fbe9386f65a2da8740"
+    },
+    "topics/09-ipo-lto.md": {
+      "bytes": 3201,
+      "sha256": "94766b9a6dc566e8235011e7b44c48d3f5f949a7150a71fe8db9291198ef7aa8"
+    },
+    "topics/10-instruction-selection.md": {
+      "bytes": 3331,
+      "sha256": "6fab96ca2ba7a370297fd8d5f1db70bf799abf4d0a2cd58f9e03d944b4fa7700"
+    },
+    "topics/11-register-allocation.md": {
+      "bytes": 3610,
+      "sha256": "827563cca0bf5ff6b035cccccaf074b2c55a0e7945d1ee701263b4f506ec0e33"
+    },
+    "topics/12-instruction-scheduling.md": {
+      "bytes": 2968,
+      "sha256": "56e525d92bd81783f36a94ec84ee53e73b1a2b1b7f3ec1f7c24fc14b3470f0b9"
+    },
+    "topics/13-pgo-layout.md": {
+      "bytes": 3401,
+      "sha256": "f5d289b439811b0927c1919c3922c15c4d21659e206ff3979cf0b7bdd30e28ca"
+    },
+    "topics/14-experiments.md": {
+      "bytes": 6968,
+      "sha256": "d83fc87c39ec4cbe5bb02cd343c234eace471220c9b04e37612420de851aed3a"
+    },
+    "topics/15-canonicalization.md": {
+      "bytes": 3817,
+      "sha256": "4a376ada313f69cfbe63be33dc95892bd407d19955b9673b7133ba53fd78d2a7"
+    },
+    "topics/16-phase-ordering-budget.md": {
+      "bytes": 3926,
+      "sha256": "3b27efe67bde4423a7857a2eea84536e805c308f79ecec6e759baf734a9b265c"
+    },
+    "topics/17-vplan.md": {
+      "bytes": 3243,
+      "sha256": "6b38442d06b9e2523ec1e9c621a8d15c01534e3686c419524425efcee2ac275b"
+    },
+    "topics/18-refinement-validation.md": {
+      "bytes": 3892,
+      "sha256": "79ce1682eb7bbcf963486c96c0749e2bccc0b87c2fc989c12d5f5b37689b89dc"
+    },
+    "topics/19-mlgo.md": {
+      "bytes": 3492,
+      "sha256": "585b3f67c8556a2a6678625c47390169f7380f483515279e946470b10834d27b"
+    },
+    "topics/20-bolt.md": {
+      "bytes": 3328,
+      "sha256": "15eaf89f825cc865c638d5116666608c7fdf72cda472297f8cbef4c0dff2e85b"
+    },
+    "topics/21-demanded-known-bits.md": {
+      "bytes": 2934,
+      "sha256": "48af524a52b45043affd781865c5a48b1e426ef199d4a04953f49d09a50c82ba"
+    }
+  }
+}
