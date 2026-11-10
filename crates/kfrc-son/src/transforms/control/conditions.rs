@@ -20,7 +20,7 @@ pub(crate) struct ConditionStats {
 
 pub(crate) fn run(graph: &mut FunctionGraph) -> Result<ConditionStats, VerifyError> {
     let mut stats = ConditionStats::default();
-    if graph.level != GraphLevel::Specialized {
+    if !matches!(graph.level, GraphLevel::Specialized | GraphLevel::Layout) {
         return Ok(stats);
     }
     // Reuse the witness scan to discover whether this graph has any target.

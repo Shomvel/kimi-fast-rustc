@@ -9,6 +9,7 @@
 
 mod array_transport;
 mod boundary_transport;
+mod cleanup;
 mod demand;
 mod encoded;
 mod ignored_abi;
@@ -16,6 +17,7 @@ mod maybe_uninit;
 mod memory;
 mod observation;
 mod owned_transport;
+mod private_memory;
 mod projections;
 mod repeat;
 mod representation;
@@ -148,6 +150,7 @@ pub fn lower_layout_with_options(
     lowering.projections.write_stats(&mut lowering.stats);
     let stats = lowering.stats;
     candidate.level = GraphLevel::Layout;
+    cleanup::run(&mut candidate)?;
     // Permissions belong to S parameters and source calls (RS5.1 erasure
     // point). L parameters follow physical passing modes instead.
     candidate.arg_permissions.clear();

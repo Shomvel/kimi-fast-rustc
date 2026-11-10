@@ -313,6 +313,13 @@ pub(crate) fn evaluate(
 
 fn identity(graph: &FunctionGraph, node: NodeId, ty: TyId, scalar: Integer) -> Option<NodeId> {
     use Opcode::*;
+    if graph.op(node) == BitNot {
+        let inner = graph.resolve(graph.input(node, 0));
+        if graph.op(inner) == BitNot {
+            let original = graph.resolve(graph.input(inner, 0));
+            return (graph.rust_type(original) == Some(ty)).then_some(original);
+        }
+    }
     let inputs = graph.inputs(node);
     if matches!(graph.op(node), ByteSwap | BitReverse) {
         let inner = graph.resolve(inputs[0]);

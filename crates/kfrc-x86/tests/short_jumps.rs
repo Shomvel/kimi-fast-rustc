@@ -283,7 +283,10 @@ fn labels_and_plt32_call_offsets_use_the_shortened_layout() {
     let bytes = kfrc_x86::write_object(&functions).unwrap();
     use object::{Object, ObjectSection, ObjectSymbol, RelocationTarget};
     let object = object::File::parse(bytes.as_slice()).unwrap();
-    let text = object.section_by_name(".text").unwrap();
+    let text = object
+        .sections()
+        .find(|section| section.relocations().count() == 2)
+        .unwrap();
     let relocs: Vec<_> = text.relocations().collect();
     assert_eq!(relocs.len(), 2);
     for ((offset, reloc), (expected_offset, name)) in

@@ -191,6 +191,11 @@ impl CodegenBackend for KfrcCodegenBackend {
             }
         }
         graphs.collect_references();
+        profile::measure("prepare_wrappers_s", "crate", || graphs.simplify_wrappers())
+            .unwrap_or_else(|error| {
+                tcx.dcx()
+                    .fatal(format!("kfrc: {}: {}", error.symbol, error.message))
+            });
         let mut jobs = Vec::new();
         for cgu in partition.codegen_units {
             let available: BTreeSet<String> = cgu

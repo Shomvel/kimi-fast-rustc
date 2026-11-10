@@ -14,6 +14,9 @@ pub(crate) struct KnownBits {
 }
 
 impl KnownBits {
+    pub(crate) fn unsigned_bounds(self) -> (u64, u64) {
+        (self.one, self.mask() & !self.zero)
+    }
     fn mask(self) -> u64 {
         u64::MAX >> (64 - self.bits)
     }
@@ -76,6 +79,44 @@ fn query(g: &FunctionGraph, node: NodeId, remaining: &mut usize) -> Option<Known
             result.zero = a.one;
             result.one = a.zero;
         }
+        Opcode::Sub => {
+            // (x + y) - x has y's bits whenever the expression is defined,
+            // including modular arithmetic. This does not erase poison in S.
+            let sum = g.resolve(g.input(node, 0));
+            let subtrahend = g.resolve(g.input(node, 1));
+            if g.op(sum) == Opcode::Add {
+                let a = g.resolve(g.input(sum, 0));
+                let b = g.resolve(g.input(sum, 1));
+                if a == subtrahend {
+                    result = query(g, b, remaining)?;
+                } else if b == subtrahend {
+                    result = query(g, a, remaining)?;
+                }
+            }
+        }
+        Opcode::Phi => {
+            // Undefined incoming values contribute no defined executions.
+            // Intersect every other arm; recursive queries exhaust the shared
+            // budget to unknown, so loops never bootstrap facts from themselves.
+            let mut common: Option<KnownBits> = None;
+            for &incoming in &g.inputs(node)[1..] {
+                if g.op(g.resolve(incoming)) == Opcode::Undefined {
+                    continue;
+                }
+                let bits = query(g, incoming, remaining)?;
+                common = Some(match common {
+                    None => bits,
+                    Some(old) => KnownBits {
+                        zero: old.zero & bits.zero,
+                        one: old.one & bits.one,
+                        bits: old.bits,
+                    },
+                });
+            }
+            if let Some(common) = common {
+                result = common;
+            }
+        }
         Opcode::IntCast => {
             let input = g.input(node, 0);
             let a = query(g, input, remaining)?;
@@ -121,10 +162,52 @@ fn query(g: &FunctionGraph, node: NodeId, remaining: &mut usize) -> Option<Known
                 _ => unreachable!(),
             }
         }
-        // Phi cycles, memory, arithmetic and provenance-sensitive values stay
+        // Memory, other arithmetic and provenance-sensitive values stay
         // unknown. No type-validity or non-poison claim is inferred here.
         _ => {}
     }
     debug_assert_eq!(result.zero & result.one, 0);
     Some(result)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::ValueType;
+    use kfrc_body::{FunctionAbi, IntegerWidth, PassMode, RecordedTypes, SizeAlign};
+
+    #[test]
+    fn a_cycle_cannot_supply_its_own_known_bits() {
+        let mut types = RecordedTypes::new();
+        let ty = types.intern(
+            TypeShape::Int {
+                width: IntegerWidth::W8,
+                signed: false,
+            },
+            Some(SizeAlign { size: 1, align: 1 }),
+        );
+        let mut graph = FunctionGraph::new(
+            "cyclic_facts",
+            FunctionAbi {
+                args: vec![],
+                ret: PassMode::Ignore,
+                c_variadic: false,
+            },
+            types,
+        );
+        let region = graph.add_node(Opcode::Region, NodeId::NONE, &[], 0, ValueType::Control);
+        let one = graph.add_constant(1, ty);
+        let phi = graph.add_node(
+            Opcode::Phi,
+            NodeId::NONE,
+            &[region, one, one],
+            0,
+            ValueType::Rust(ty),
+        );
+        graph.set_input(phi, 2, phi);
+        assert_eq!(of(&graph, phi).unwrap().unsigned_bounds(), (0, 255));
+        let zero = graph.add_constant(0, ty);
+        graph.set_input(phi, 2, zero);
+        assert_eq!(of(&graph, phi).unwrap().unsigned_bounds(), (0, 1));
+    }
 }

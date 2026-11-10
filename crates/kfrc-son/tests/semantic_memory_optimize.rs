@@ -531,7 +531,7 @@ fn layout_copy_libcalls_recompute_local_partitions_without_weakening_escape_rule
 }
 
 #[test]
-fn layout_partition_recomputation_retains_provable_local_and_const_loads() {
+fn layout_promotes_private_store_load_and_retains_const_partition() {
     for constant in [false, true] {
         let mut f = Fixture::new();
         let address = if constant {
@@ -560,20 +560,20 @@ fn layout_partition_recomputation_retains_provable_local_and_const_loads() {
         verify_graph(&mut f.graph).unwrap();
         kfrc_son::lower_layout(&mut f.graph).unwrap();
         verify_graph(&mut f.graph).unwrap();
-        let load = f
-            .graph
-            .ids()
-            .find(|&n| f.graph.op(n) == Opcode::Load)
-            .unwrap();
-        let expected = if constant {
-            kfrc_son::MemoryPartition::Const { symbol: 0 }
+        let load = f.graph.ids().find(|&n| f.graph.op(n) == Opcode::Load);
+        if constant {
+            assert_eq!(
+                f.graph.memory_partitions[f.graph.payload(load.unwrap()) as usize],
+                kfrc_son::MemoryPartition::Const { symbol: 0 }
+            );
         } else {
-            kfrc_son::MemoryPartition::Local { local: 19 }
-        };
-        assert_eq!(
-            f.graph.memory_partitions[f.graph.payload(load) as usize],
-            expected
-        );
+            assert!(load.is_none());
+            assert!(
+                !f.graph
+                    .ids()
+                    .any(|n| matches!(f.graph.op(n), Opcode::Store | Opcode::StackSlot))
+            );
+        }
         assert_eq!(
             Interpreter::new(&f.graph).run(&[], &mut |_: &str, _: &[u64]| unreachable!()),
             Ok(kfrc_son::Outcome::Return(37))
@@ -972,7 +972,8 @@ fn a_store_in_one_loop_iteration_never_forwards_to_the_next() {
         .graph
         .add_node(Opcode::Jump, again, &[], 0, ValueType::Control);
     f.graph.set_inputs(region, &[entry, jump]);
-    f.graph.set_inputs(effect, &[region, entry_effect, f.effect]);
+    f.graph
+        .set_inputs(effect, &[region, entry_effect, f.effect]);
     f.control = exit;
     f.ret(header);
     verify_graph(&mut f.graph).unwrap();

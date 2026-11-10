@@ -61,10 +61,10 @@ fn check(overlap: bool) -> FunctionGraph {
 #[test]
 fn shared_lanes_carry_constructor_loop_and_memory_values() {
     let lowered = check(false);
-    // One tag plus the byte lane at 1 and the u32 lane at 4: each is read
-    // once and written once, independent of how many variants use it.
-    assert_eq!(count(&lowered, Opcode::Load), 3, "{}", lowered.dump());
-    assert_eq!(count(&lowered, Opcode::Store), 3, "{}", lowered.dump());
+    // The three nonoverlapping lanes have exact private writers. Their
+    // round trips disappear after layout; overlapping lanes below cannot.
+    assert_eq!(count(&lowered, Opcode::Load), 0, "{}", lowered.dump());
+    assert_eq!(count(&lowered, Opcode::Store), 0, "{}", lowered.dump());
 }
 
 #[test]

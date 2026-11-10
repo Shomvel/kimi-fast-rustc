@@ -480,23 +480,24 @@ fn constant_shift_counts_stay_immediate_after_rust_width_masking() {
                 let machine = binary("constant_shift", width, signed, op, 0, Some(amount));
                 let count = (amount % u64::from(bits)) as u8;
                 assert!(
-                    machine
-                        .instructions
-                        .iter()
-                        .any(|instruction| match (op, instruction) {
-                            (Opcode::ShiftLeft, MachineInstr::ShlImm { count: actual, .. })
-                            | (
-                                Opcode::ShiftRightLogical,
-                                MachineInstr::LShrImm { count: actual, .. },
-                            )
-                            | (
-                                Opcode::ShiftRightArithmetic,
-                                MachineInstr::ShrImm { count: actual, .. },
-                            ) => {
-                                *actual == count
-                            }
-                            _ => false,
-                        }),
+                    count == 0
+                        || machine
+                            .instructions
+                            .iter()
+                            .any(|instruction| match (op, instruction) {
+                                (Opcode::ShiftLeft, MachineInstr::ShlImm { count: actual, .. })
+                                | (
+                                    Opcode::ShiftRightLogical,
+                                    MachineInstr::LShrImm { count: actual, .. },
+                                )
+                                | (
+                                    Opcode::ShiftRightArithmetic,
+                                    MachineInstr::ShrImm { count: actual, .. },
+                                ) => {
+                                    *actual == count
+                                }
+                                _ => false,
+                            }),
                     "{width:?} {op:?} {amount}: {:?}",
                     machine.instructions
                 );

@@ -153,6 +153,7 @@ pub fn optimize_specialized_graph(
     }
     verify_pipeline_step(graph).map_err(PipelineError::Verification)?;
     let mut stats = optimize_graph(graph);
+    fold_identity_transmutes(graph);
     verify_pipeline_step(graph).map_err(PipelineError::Verification)?;
     promote(graph, None, &mut stats);
     remove_redundant_observations(graph, &mut stats);
@@ -212,6 +213,7 @@ pub fn optimize_specialized_seams(
         ..OptimizeStats::default()
     };
     let mut pending = seeds.to_vec();
+    pending.extend(fold_identity_transmutes(graph));
     let candidates = argument_slots
         .iter()
         .chain(seeds)
@@ -380,4 +382,38 @@ fn propagate_constants(graph: &mut FunctionGraph, stats: &mut OptimizeStats) -> 
     stats.sccp_visits += propagated.visits;
     stats.sccp_budget_bailouts += propagated.budget_bailouts;
     propagated.dirty
+}
+
+/// Same-type transmute observes its input but cannot change its representation.
+/// Retaining RequireDefined preserves the S poison contract while releasing
+/// pointer users from an opaque conversion, which can expose private storage.
+fn fold_identity_transmutes(graph: &mut FunctionGraph) -> Vec<NodeId> {
+    let uses = crate::analysis::uses::Uses::new(graph);
+    let nodes: Vec<_> = graph
+        .ids()
+        .filter(|&n| graph.op(n) == Opcode::TransmuteValue)
+        .collect();
+    let mut dirty = Vec::new();
+    for node in nodes {
+        let value = graph.input(node, 1);
+        let crate::ValueType::Tuple(fields) = graph.value_type(node) else {
+            continue;
+        };
+        if fields.get(2) != Some(graph.value_type(value)) {
+            continue;
+        }
+        for usage in uses.of(node) {
+            if graph.op(usage.user) == Opcode::Projection && graph.payload(usage.user) == 2 {
+                dirty.extend(uses.of(usage.user).iter().map(|u| u.user));
+                graph.replace(usage.user, value);
+            }
+        }
+        graph.set_opcode(node, Opcode::RequireDefined);
+        graph.set_value_type(
+            node,
+            crate::ValueType::Tuple(vec![crate::ValueType::Control, crate::ValueType::Effect]),
+        );
+    }
+    graph.resolve_edges();
+    dirty
 }

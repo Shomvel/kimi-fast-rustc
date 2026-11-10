@@ -1,4 +1,4 @@
-//! Certificates for complete fields transported from direct-call enum results.
+//! Certificates for complete fields transported from enum ABI snapshots.
 //! Separate from leaf demand: demanding every leaf does not prove byte transport.
 use super::*;
 use crate::analysis::{
@@ -65,7 +65,9 @@ fn constructor_transports(
         && uses.of(constructor).iter().all(|use_| {
             matches!(
                 (graph.op(use_.user), use_.kind),
-                (Opcode::Return, UseKind::Operand(1)) | (Opcode::StoreValue, UseKind::Operand(2))
+                (Opcode::Return, UseKind::Operand(1))
+                    | (Opcode::StoreValue, UseKind::Operand(2))
+                    | (Opcode::Call, UseKind::Operand(1..))
             ) || (matches!(use_.kind, UseKind::Operand(index) if index > 0)
                 && owned.contains(&use_.user))
         })
@@ -93,6 +95,17 @@ fn extractor_transports(
     }
     !uses.of(extractor).is_empty()
         && uses.of(extractor).iter().all(|use_| {
+            // A typed by-value call consumes the entire field synchronously.
+            // materialize_before copies the immutable owned snapshot to fresh
+            // argument storage, so a callee cannot mutate the saved value.
+            if matches!(
+                (graph.op(use_.user), use_.kind),
+                (Opcode::Call, UseKind::Operand(1..))
+                    | (Opcode::Return, UseKind::Operand(1))
+                    | (Opcode::StoreValue, UseKind::Operand(2))
+            ) {
+                return true;
+            }
             let UseKind::Operand(field) = use_.kind else {
                 return false;
             };
@@ -132,11 +145,14 @@ pub(super) fn select(
     let uses = Uses::new(graph);
     let mut selected = HashMap::default();
     for root in graph.ids() {
-        if encoded.contains(&root)
-            || graph.op(root) != Opcode::Projection
-            || graph.payload(root) != 2
-            || graph.op(graph.input(root, 0)) != Opcode::Call
-        {
+        if encoded.contains(&root) || graph.op(root) != Opcode::Projection {
+            continue;
+        }
+        let source = graph.input(root, 0);
+        if !matches!(
+            (graph.op(source), graph.payload(root)),
+            (Opcode::Call, 2) | (Opcode::Start, 2..)
+        ) {
             continue;
         }
         let Some(ty) = graph.rust_type(root) else {

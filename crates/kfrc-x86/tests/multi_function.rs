@@ -39,8 +39,6 @@ fn native_answer_object_has_correct_code_symbols_and_plt32_relocation() {
     let object = object::File::parse(bytes.as_slice()).unwrap();
     assert_eq!(object.architecture(), object::Architecture::X86_64);
     assert_eq!(object.kind(), object::ObjectKind::Relocatable);
-    let text = object.section_by_name(".text").unwrap();
-    let code = text.data().unwrap();
     let expected_answer = [0xb9, 42, 0, 0, 0, 0x48, 0x89, 0xc8, 0xc3];
     let expected_main = [0x55, 0x48, 0x89, 0xe5, 0xe8, 0, 0, 0, 0, 0xc9, 0xc3];
     let answer = object
@@ -54,13 +52,21 @@ fn native_answer_object_has_correct_code_symbols_and_plt32_relocation() {
     ] {
         assert_eq!(symbol.kind(), object::SymbolKind::Text);
         assert!(symbol.is_global());
-        assert_eq!(symbol.section_index(), Some(text.index()));
+        let text = object
+            .section_by_index(symbol.section_index().unwrap())
+            .unwrap();
+        let code = text.data().unwrap();
+        assert_eq!(symbol.address(), 0);
         assert_eq!(symbol.size(), expected.len() as u64);
         assert_eq!(
             &code[symbol.address() as usize..symbol.address() as usize + expected.len()],
             expected
         );
     }
+    assert_ne!(answer.section_index(), main.section_index());
+    let text = object
+        .section_by_index(main.section_index().unwrap())
+        .unwrap();
     let relocs: Vec<_> = text.relocations().collect();
     assert_eq!(relocs.len(), 1);
     let (offset, relocation) = &relocs[0];
@@ -201,4 +207,92 @@ impl Drop for TempDirectory {
 
 fn env_temp_dir() -> PathBuf {
     std::env::temp_dir()
+}
+
+#[cfg(all(target_os = "linux", target_arch = "x86_64"))]
+#[test]
+fn section_gc_discards_unreferenced_code_and_data_but_keeps_relocation_closure() {
+    use kfrc_body::{DataObject, DataRelocation};
+    use object::{Object, ObjectSection, ObjectSymbol};
+    let make = |name: &str, data: &str| {
+        let mut f = MachineFunction::new(name);
+        f.symbols.push(data.into());
+        f.instructions = vec![
+            MachineInstr::SymbolAddress {
+                dst: Reg::Rax,
+                symbol: 0,
+                addend: 0,
+            },
+            MachineInstr::Ret,
+        ];
+        kfrc_x86::FunctionCode {
+            function: f,
+            binding: kfrc_x86::SymbolBinding::Global { hidden: false },
+        }
+    };
+    let objects = vec![
+        DataObject {
+            symbol: "live_root".into(),
+            bytes: vec![0; 8],
+            align: 8,
+            relocations: vec![DataRelocation {
+                offset: 0,
+                target: "live_leaf".into(),
+                addend: 0,
+            }],
+            ..Default::default()
+        },
+        DataObject {
+            symbol: "live_leaf".into(),
+            bytes: vec![7; 8],
+            align: 8,
+            ..Default::default()
+        },
+        DataObject {
+            symbol: "dead_data".into(),
+            bytes: vec![9; 128],
+            align: 8,
+            ..Default::default()
+        },
+    ];
+    let bytes = kfrc_x86::write_object_with_data(
+        &[make("keep", "live_root"), make("discard", "dead_data")],
+        &objects,
+    )
+    .unwrap();
+    let dir = TempDirectory::new();
+    fs::write(dir.0.join("input.o"), bytes).unwrap();
+    let result = Command::new("ld")
+        .current_dir(&dir.0)
+        .args([
+            "-r",
+            "--gc-sections",
+            "-u",
+            "keep",
+            "input.o",
+            "-o",
+            "output.o",
+        ])
+        .output()
+        .unwrap();
+    assert!(
+        result.status.success(),
+        "{}",
+        String::from_utf8_lossy(&result.stderr)
+    );
+    let bytes = fs::read(dir.0.join("output.o")).unwrap();
+    let file = object::File::parse(bytes.as_slice()).unwrap();
+    let names: Vec<_> = file.symbols().filter_map(|s| s.name().ok()).collect();
+    for name in ["keep", "live_root", "live_leaf"] {
+        assert!(names.contains(&name), "{names:?}");
+    }
+    for name in ["discard", "dead_data"] {
+        assert!(!names.contains(&name), "{names:?}");
+    }
+    assert_eq!(
+        file.sections()
+            .filter(|s| s.kind() == object::SectionKind::Text)
+            .count(),
+        1
+    );
 }

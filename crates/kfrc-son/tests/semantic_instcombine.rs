@@ -452,3 +452,42 @@ fn known_sign_bits_survive_arithmetic_right_shift() {
     }
     assert!(run(&f.graph, &[Value::Poison]).is_err());
 }
+
+#[test]
+fn double_not_preserves_the_entire_value_including_poison() {
+    for width in [IntegerWidth::W8, IntegerWidth::W64] {
+        let mut f = Function::new(width, false, 1);
+        let inner = f.graph.add_node(
+            Opcode::BitNot,
+            NodeId::NONE,
+            &[f.args[0]],
+            0,
+            ValueType::Rust(f.ty),
+        );
+        let outer = f.graph.add_node(
+            Opcode::BitNot,
+            NodeId::NONE,
+            &[inner],
+            0,
+            ValueType::Rust(f.ty),
+        );
+        f.finish(outer);
+        let before = f.graph.clone();
+        optimize_graph(&mut f.graph);
+        verify_graph(&mut f.graph).unwrap();
+        assert!(!f.graph.ids().any(|n| f.graph.op(n) == Opcode::BitNot));
+        for input in [Value::Scalar(0), Value::Scalar(129), Value::Poison] {
+            let run = |g: &FunctionGraph| {
+                Interpreter::new(g).run_values(&[input.clone()], &mut |_: &str, _: &[Value]| {
+                    Ok(Value::Scalar(0))
+                })
+            };
+            let a = run(&before);
+            let b = run(&f.graph);
+            assert_eq!(a.is_ok(), b.is_ok());
+            if a.is_ok() {
+                assert_eq!(a, b);
+            }
+        }
+    }
+}

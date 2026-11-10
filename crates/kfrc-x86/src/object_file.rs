@@ -8,11 +8,9 @@ use object::{
     SymbolFlags, SymbolKind, SymbolScope,
 };
 
-use kfrc_body::{DataBinding, DataObject};
 use crate::machine::x86::MachineFunction;
-use crate::machine::x86_encode::{
-    AddressRelocationKind, EncodeError, encode_with_all_relocations,
-};
+use crate::machine::x86_encode::{AddressRelocationKind, EncodeError, encode_with_all_relocations};
+use kfrc_body::{DataBinding, DataObject};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum SymbolBinding {
@@ -64,8 +62,8 @@ impl std::fmt::Display for ObjectError {
 
 impl std::error::Error for ObjectError {}
 
-/// Writes all functions into one `.text` section, in the given order, with
-/// `R_X86_64_PLT32` relocations for calls.
+/// Writes independently collectable function sections with `R_X86_64_PLT32`
+/// relocations for calls. Symbols retain identity; sections are not mergeable.
 pub fn write_object(functions: &[FunctionCode]) -> Result<Vec<u8>, ObjectError> {
     write_object_with_data(functions, &[])
 }
@@ -76,7 +74,6 @@ pub fn write_object_with_data(
 ) -> Result<Vec<u8>, ObjectError> {
     let mut object = Object::new(BinaryFormat::Elf, Architecture::X86_64, Endianness::Little);
     object.add_file_symbol(b"kfrc".to_vec());
-    let text = object.section_id(StandardSection::Text);
     object.add_section(
         Vec::new(),
         b".note.GNU-stack".to_vec(),
@@ -99,6 +96,11 @@ pub fn write_object_with_data(
     }
     for code in functions {
         let symbol_name = code.function.name.clone();
+        let text = object.add_section(
+            Vec::new(),
+            format!(".text.{symbol_name}").into_bytes(),
+            StandardSection::Text.kind(),
+        );
         let (bytes, calls, addresses) =
             encode_with_all_relocations(&code.function).map_err(|error| ObjectError::Encode {
                 symbol: symbol_name.clone(),
@@ -157,22 +159,26 @@ pub fn write_object_with_data(
             ));
         }
     }
-    let readonly = object.section_id(StandardSection::ReadOnlyData);
     for datum in data {
         let zero_tls = datum.thread_local
             && datum.relocations.is_empty()
             && datum.bytes.iter().all(|byte| *byte == 0);
-        let section = if zero_tls {
-            object.section_id(StandardSection::UninitializedTls)
+        let (prefix, kind) = if zero_tls {
+            (".tbss", StandardSection::UninitializedTls)
         } else if datum.thread_local {
-            object.section_id(StandardSection::Tls)
+            (".tdata", StandardSection::Tls)
         } else if datum.writable {
-            object.section_id(StandardSection::Data)
+            (".data", StandardSection::Data)
         } else if datum.relocations.is_empty() {
-            readonly
+            (".rodata", StandardSection::ReadOnlyData)
         } else {
-            object.section_id(StandardSection::ReadOnlyDataWithRel)
+            (".data.rel.ro", StandardSection::ReadOnlyDataWithRel)
         };
+        let section = object.add_section(
+            Vec::new(),
+            format!("{prefix}.{}", datum.symbol).into_bytes(),
+            kind.kind(),
+        );
         let offset = if zero_tls {
             object.append_section_bss(section, datum.bytes.len() as u64, datum.align.max(1))
         } else {
