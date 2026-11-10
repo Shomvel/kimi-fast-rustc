@@ -384,7 +384,11 @@ fn conflicting_nominal_field_types_skip_atomically() {
 }
 
 /// Inlines `address() -> &private_static` for a local object with `flags`.
-fn inline_local_object(unnamed_address: bool, writable: bool) -> (usize, Vec<InlineSkip>, usize) {
+fn inline_local_object(
+    unnamed_address: bool,
+    writable: bool,
+    mutable_child: bool,
+) -> (usize, Vec<InlineSkip>, usize) {
     let mut callee = Function::new("address", 0, true);
     let pointer = callee.graph.oracle.intern(
         TypeShape::RawPointer {
@@ -402,6 +406,22 @@ fn inline_local_object(unnamed_address: bool, writable: bool) -> (usize, Vec<Inl
         writable,
         ..Default::default()
     });
+    if mutable_child {
+        callee.graph.data_objects[0]
+            .relocations
+            .push(kfrc_body::DataRelocation {
+                offset: 0,
+                target: "mutable_child".into(),
+                addend: 0,
+            });
+        callee.graph.data_objects.push(kfrc_body::DataObject {
+            symbol: "mutable_child".into(),
+            bytes: vec![0; 8],
+            align: 8,
+            writable: true,
+            ..Default::default()
+        });
+    }
     let address = callee.node(Opcode::SymbolAddress, &[], 0, pointer);
     callee.ret(address);
     callee.verify();
@@ -423,15 +443,24 @@ fn inline_local_object(unnamed_address: bool, writable: bool) -> (usize, Vec<Inl
     };
     let stats = inline_calls(&mut caller.graph, &provider, budget).unwrap();
     let reasons = stats.skipped.iter().map(|(_, reason)| *reason).collect();
-    (stats.calls_inlined, reasons, caller.graph.data_objects.len())
+    (
+        stats.calls_inlined,
+        reasons,
+        caller.graph.data_objects.len(),
+    )
 }
 
 #[test]
 fn read_only_anonymous_constants_copy_into_the_caller() {
-    assert_eq!(inline_local_object(true, false), (1, vec![], 1));
+    assert_eq!(inline_local_object(true, false, false), (1, vec![], 1));
     // Writable memory keeps its single identity even when anonymous.
     assert_eq!(
-        inline_local_object(true, true),
+        inline_local_object(true, true, false),
+        (0, vec![InlineSkip::DataConflict], 0)
+    );
+    // A copyable constant may still point at state with a unique identity.
+    assert_eq!(
+        inline_local_object(true, false, true),
         (0, vec![InlineSkip::DataConflict], 0)
     );
 }
@@ -474,6 +503,37 @@ fn local_data_identity_is_not_duplicated_into_another_cgu() {
     assert_eq!(stats.skipped[0].1, InlineSkip::DataConflict);
     assert_eq!(caller.graph.dump(), before);
     assert!(caller.graph.data_objects.is_empty());
+}
+
+#[test]
+fn dead_local_data_does_not_prevent_inlining_a_pure_wrapper() {
+    let mut callee = Function::new("increment", 1, true);
+    callee.graph.data_objects.push(kfrc_body::DataObject {
+        symbol: "dead_private_state".into(),
+        bytes: vec![0; 8],
+        align: 8,
+        writable: true,
+        ..Default::default()
+    });
+    let one = callee.graph.add_constant(1, callee.int);
+    let value = callee.node(Opcode::Add, &[callee.args[0], one], 0, callee.int);
+    callee.ret(value);
+    callee.verify();
+    let mut caller = Function::new("caller", 1, false);
+    let arg = caller.args[0];
+    let result = caller.call(&callee.graph, &[arg], caller.int);
+    caller.ret(result);
+    caller.verify();
+    let provider = HashMap::from_iter([(callee.graph.symbol.clone(), callee.graph)]);
+    let stats = inline_calls(&mut caller.graph, &provider, InlineBudget::default()).unwrap();
+    assert_eq!(stats.calls_inlined, 1, "{:?}", stats.skipped);
+    assert!(caller.graph.data_objects.is_empty());
+    for n in [0u64, 1, u64::MAX] {
+        assert_eq!(
+            run(&caller.graph, &[n]).unwrap(),
+            SemanticOutcome::Return(Value::Scalar(n.wrapping_add(1)))
+        );
+    }
 }
 
 #[test]

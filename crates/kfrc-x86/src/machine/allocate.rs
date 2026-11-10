@@ -229,6 +229,7 @@ fn defined_register(instruction: &VirtualInstr) -> Option<VirtualReg> {
         | VirtualInstr::Add { dst, .. }
         | VirtualInstr::Sub { dst, .. }
         | VirtualInstr::Mul { dst, .. }
+        | VirtualInstr::MulHigh { dst, .. }
         | VirtualInstr::And { dst, .. }
         | VirtualInstr::Or { dst, .. }
         | VirtualInstr::Xor { dst, .. }
@@ -268,6 +269,7 @@ fn used_registers(instruction: &VirtualInstr) -> Vec<VirtualReg> {
         VirtualInstr::Add { lhs, rhs, .. }
         | VirtualInstr::Sub { lhs, rhs, .. }
         | VirtualInstr::Mul { lhs, rhs, .. }
+        | VirtualInstr::MulHigh { lhs, rhs, .. }
         | VirtualInstr::And { lhs, rhs, .. }
         | VirtualInstr::Or { lhs, rhs, .. }
         | VirtualInstr::Xor { lhs, rhs, .. }
@@ -319,6 +321,7 @@ fn required_argument_homes(
                 | VirtualInstr::Rem { .. }
                 | VirtualInstr::UDiv { .. }
                 | VirtualInstr::URem { .. }
+                | VirtualInstr::MulHigh { .. }
         ) {
             let index = Reg::ARGUMENTS
                 .iter()
@@ -402,6 +405,13 @@ impl Emitter<'_> {
             }
             VirtualInstr::Mul { dst, lhs, rhs } => {
                 self.emit_binary(dst, lhs, rhs, BinaryKind::Mul)?;
+            }
+            VirtualInstr::MulHigh { dst, lhs, rhs } => {
+                self.load_value(lhs, Reg::Rax)?;
+                self.load_value(rhs, SCRATCH1)?;
+                self.instructions
+                    .push(MachineInstr::MulHigh { src: SCRATCH1 });
+                self.store_definition(dst, Reg::Rdx)?;
             }
             VirtualInstr::And { dst, lhs, rhs } => {
                 self.emit_binary(dst, lhs, rhs, BinaryKind::And)?;

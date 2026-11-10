@@ -32,6 +32,39 @@ fn args(count: u32) -> Vec<LowerInstr> {
 }
 
 #[test]
+fn multiply_high_preserves_live_inputs_and_accepts_identical_operands() {
+    for same in [false, true] {
+        let mut code = args(6);
+        code.push(scalar(VirtualInstr::MulHigh {
+            dst: VirtualReg(6),
+            lhs: v(0),
+            rhs: v(if same { 0 } else { 2 }),
+        }));
+        let mut result = v(6);
+        for index in 0..6 {
+            let dst = VirtualReg(7 + index);
+            code.push(scalar(VirtualInstr::Add {
+                dst,
+                lhs: result,
+                rhs: v(index),
+            }));
+            result = VirtualValue::Reg(dst);
+        }
+        code.push(scalar(VirtualInstr::Return(result)));
+        let function = compile_stream(code, 13);
+        for first in [0, 1, -1, i64::MIN, i64::MAX] {
+            let inputs = [first, 13, -71, 31, 19, 11];
+            let rhs = inputs[if same { 0 } else { 2 }];
+            let high = ((u128::from(first as u64) * u128::from(rhs as u64)) >> 64) as i64;
+            let expected = inputs
+                .iter()
+                .fold(high, |sum, value| sum.wrapping_add(*value));
+            assert_eq!(eval::evaluate(&function, &inputs).unwrap(), expected);
+        }
+    }
+}
+
+#[test]
 fn unrelated_live_values_across_repeated_cl_shifts_need_no_save_slots() {
     let mut code = args(3);
     let mut value = v(0);

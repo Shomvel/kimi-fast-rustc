@@ -22,11 +22,13 @@ pub(super) fn splice(
         oracle,
         expected_result,
         locals,
+        data,
     } = plan;
     if let Some(oracle) = oracle {
         graph.oracle = oracle;
     }
-    for data in &source.data_objects {
+    for index in data {
+        let data = &source.data_objects[index];
         if !graph.data_objects.iter().any(|d| d.symbol == data.symbol) {
             graph.data_objects.push(data.clone());
         }

@@ -4,6 +4,8 @@ use super::{InlineSkip, types::TypeImport};
 use crate::{FunctionGraph, NodeId, Opcode, ValueType};
 use kfrc_body::fx_hash::HashMap;
 
+mod data;
+
 /// Callee node types in the caller's type table.
 pub(super) type ImportedTypes = std::rc::Rc<HashMap<NodeId, ValueType>>;
 
@@ -15,6 +17,7 @@ pub(super) struct Plan {
     pub(super) oracle: Option<kfrc_body::RecordedTypes>,
     pub(super) expected_result: Option<ValueType>,
     pub(super) locals: HashMap<u32, u32>,
+    pub(super) data: Vec<usize>,
 }
 pub(super) fn plan(
     graph: &FunctionGraph,
@@ -25,7 +28,9 @@ pub(super) fn plan(
     previous_import: Option<&ImportedTypes>,
 ) -> Result<Plan, InlineSkip> {
     let ids: Vec<_> = source.ids().collect();
-    for data in &source.data_objects {
+    let data = data::referenced(source, &ids);
+    for &index in &data {
+        let data = &source.data_objects[index];
         // A provider can expose another CGU's graph. Duplicating an object
         // with local linkage changes identity and potentially mutable state.
         // A symbol-owner contract must export a shared definition first.
@@ -152,5 +157,6 @@ pub(super) fn plan(
         oracle,
         expected_result,
         locals,
+        data,
     })
 }

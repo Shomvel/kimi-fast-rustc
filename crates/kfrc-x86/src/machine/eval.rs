@@ -367,6 +367,13 @@ fn execute(function: &MachineFunction, arguments: &[i64]) -> Result<Execution, M
                 machine.set_reg(Reg::Rdx, (lhs % rhs) as i64);
                 machine.comparison = None;
             }
+            MachineInstr::MulHigh { src } => {
+                let product =
+                    u128::from(machine.reg(Reg::Rax) as u64) * u128::from(machine.reg(src) as u64);
+                machine.set_reg(Reg::Rax, product as i64);
+                machine.set_reg(Reg::Rdx, (product >> 64) as i64);
+                machine.comparison = None;
+            }
             MachineInstr::Cmp { lhs, rhs } => {
                 machine.comparison = Some((
                     machine.reg(lhs),
@@ -590,6 +597,14 @@ fn validate_instruction(
             validate_operand(src)?;
             if let Operand::Reg(reg @ (Reg::Rax | Reg::Rdx)) = src {
                 Err(MachineEvalError::InvalidDivisor(reg))
+            } else {
+                Ok(())
+            }
+        }
+        MulHigh { src } => {
+            validate_reg(src)?;
+            if matches!(src, Reg::Rax | Reg::Rdx) {
+                Err(MachineEvalError::InvalidDivisor(src))
             } else {
                 Ok(())
             }

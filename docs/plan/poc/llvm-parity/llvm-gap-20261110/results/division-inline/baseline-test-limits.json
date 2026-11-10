@@ -1,0 +1,155 @@
+{
+  "base64": {
+    "lockfile": "generated",
+    "sysroot": "cargo -Zbuild-std (MIR opt-level 0, panic=abort, O3, CGU16)",
+    "itest": {
+      "build_exit_code": 0,
+      "build_seconds": 21.70120270299992,
+      "crate_invocations": 1,
+      "crate_invocations_with_backend": 1,
+      "binaries": {
+        "encode": {
+          "exit_code": 0,
+          "seconds": 0.01043179800001326,
+          "listed": 6,
+          "counts": {
+            "ok": 6,
+            "failed": 0,
+            "ignored": 0,
+            "not_run": 0
+          },
+          "outcomes": {
+            "encode_all_ascii": "ok",
+            "encode_all_bytes": "ok",
+            "encode_all_bytes_url": "ok",
+            "encoded_len_overflow": "ok",
+            "encoded_len_padded": "ok",
+            "encoded_len_unpadded": "ok"
+          }
+        },
+        "suite_itest_base64": {
+          "exit_code": 0,
+          "seconds": 0.005346743999893988,
+          "listed": 0,
+          "counts": {
+            "ok": 0,
+            "failed": 0,
+            "ignored": 0,
+            "not_run": 0
+          },
+          "outcomes": {}
+        },
+        "tests": {
+          "exit_code": 0,
+          "seconds": 0.3656144359999871,
+          "listed": 7,
+          "counts": {
+            "ok": 7,
+            "failed": 0,
+            "ignored": 0,
+            "not_run": 0
+          },
+          "outcomes": {
+            "display_wrapper_matches_normal_encode": "ok",
+            "encode_engine_slice_error_when_buffer_too_small": "ok",
+            "roundtrip_decode_trailing_10_bytes": "ok",
+            "roundtrip_random_no_padding": "ok",
+            "roundtrip_random_short_no_padding": "ok",
+            "roundtrip_random_short_standard": "ok",
+            "roundtrip_random_with_fast_loop_standard": "ok"
+          }
+        }
+      },
+      "totals": {
+        "ok": 13,
+        "failed": 0,
+        "ignored": 0,
+        "not_run": 0
+      },
+      "all_exit_zero": true
+    },
+    "unit": {
+      "build_exit_code": 101,
+      "build_seconds": 25.16246398399994,
+      "crate_invocations": 1,
+      "crate_invocations_with_backend": 1,
+      "build_error": [
+        "error: kfrc: cannot compile `core::f64::<impl f64>::abs` (_RNvMNtCshX3mvxHm3fC_4core3f64d3abs): MIR conversion: intrinsic `fabsf64` is not implemented"
+      ]
+    }
+  },
+  "unicode-segmentation": {
+    "lockfile": "generated",
+    "sysroot": "cargo -Zbuild-std (MIR opt-level 0, panic=abort, O3, CGU16)",
+    "itest": {
+      "build_exit_code": 0,
+      "build_seconds": 5.771717464000062,
+      "crate_invocations": 1,
+      "crate_invocations_with_backend": 1,
+      "binaries": {
+        "suite_itest_unicode_segmentation": {
+          "exit_code": 0,
+          "seconds": 0.005310700999984874,
+          "listed": 0,
+          "counts": {
+            "ok": 0,
+            "failed": 0,
+            "ignored": 0,
+            "not_run": 0
+          },
+          "outcomes": {}
+        },
+        "test": {
+          "exit_code": 0,
+          "seconds": 0.02051695899990591,
+          "listed": 8,
+          "counts": {
+            "ok": 8,
+            "failed": 0,
+            "ignored": 0,
+            "not_run": 0
+          },
+          "outcomes": {
+            "quickcheck_forward_reverse_graphemes_extended": "ok",
+            "quickcheck_forward_reverse_graphemes_legacy": "ok",
+            "quickcheck_forward_reverse_words": "ok",
+            "quickcheck_join_graphemes": "ok",
+            "quickcheck_join_words": "ok",
+            "test_graphemes": "ok",
+            "test_sentences": "ok",
+            "test_words": "ok"
+          }
+        }
+      },
+      "totals": {
+        "ok": 8,
+        "failed": 0,
+        "ignored": 0,
+        "not_run": 0
+      },
+      "all_exit_zero": true
+    },
+    "unit": {
+      "build_exit_code": 101,
+      "build_seconds": 16.619837679000057,
+      "crate_invocations": 1,
+      "crate_invocations_with_backend": 1,
+      "build_error": [
+        "error: kfrc: cannot compile `core::sync::atomic::atomic_sub::<usize, usize>` (_RINvNtNtCshX3mvxHm3fC_4core4sync6atomic10atomic_subjjECs87syuzlRB8g_20unicode_segmentation): MIR conversion: intrinsic `atomic_xsub` is not implemented"
+      ]
+    }
+  },
+  "humantime": {
+    "lockfile": "generated",
+    "sysroot": "cargo -Zbuild-std (MIR opt-level 0, panic=abort, O3, CGU16)",
+    "unit": {
+      "build_exit_code": 101,
+      "build_seconds": 2.4468901619999315,
+      "crate_invocations": 1,
+      "crate_invocations_with_backend": 1,
+      "build_error": [
+        "error: kfrc: cannot compile `std::sync::atomic::atomic_load::<*mut std::ffi::c_void>` (_RINvNtNtCshX3mvxHm3fC_4core4sync6atomic11atomic_loadONtNtB6_3ffi6c_voidECscCbzlkW1Zmb_9humantime): MIR conversion: intrinsic `atomic_load` is not implemented"
+      ]
+    }
+  }
+}

@@ -1,0 +1,154 @@
+{
+  "semver": {
+    "llvm": {
+      "text_bytes": 18515,
+      "func_symbol_bytes": 19015,
+      "func_symbols": 81,
+      "rodata_bytes": 2008,
+      "object_count": 14,
+      "object_bytes": 85240,
+      "rlib_bytes": 238558
+    },
+    "baseline": {
+      "text_bytes": 34148,
+      "func_symbol_bytes": 32786,
+      "func_symbols": 196,
+      "rodata_bytes": 12009,
+      "object_count": 14,
+      "object_bytes": 151088,
+      "rlib_bytes": 303766
+    },
+    "shared": {
+      "text_bytes": 33955,
+      "func_symbol_bytes": 32584,
+      "func_symbols": 196,
+      "rodata_bytes": 12009,
+      "object_count": 14,
+      "object_bytes": 150904,
+      "rlib_bytes": 303566
+    },
+    "data": {
+      "text_bytes": 34052,
+      "func_symbol_bytes": 32705,
+      "func_symbols": 194,
+      "rodata_bytes": 11795,
+      "object_count": 14,
+      "object_bytes": 149960,
+      "rlib_bytes": 302606
+    }
+  },
+  "base64": {
+    "llvm": {
+      "text_bytes": 8648,
+      "func_symbol_bytes": 8648,
+      "func_symbols": 35,
+      "rodata_bytes": 1926,
+      "object_count": 14,
+      "object_bytes": 53632,
+      "rlib_bytes": 411664
+    },
+    "baseline": {
+      "text_bytes": 29635,
+      "func_symbol_bytes": 29009,
+      "func_symbols": 92,
+      "rodata_bytes": 11143,
+      "object_count": 14,
+      "object_bytes": 130656,
+      "rlib_bytes": 488506
+    },
+    "shared": {
+      "text_bytes": 28938,
+      "func_symbol_bytes": 28328,
+      "func_symbols": 92,
+      "rodata_bytes": 11143,
+      "object_count": 14,
+      "object_bytes": 129960,
+      "rlib_bytes": 487778
+    },
+    "data": {
+      "text_bytes": 28778,
+      "func_symbol_bytes": 28175,
+      "func_symbols": 90,
+      "rodata_bytes": 10890,
+      "object_count": 14,
+      "object_bytes": 128416,
+      "rlib_bytes": 486202
+    }
+  },
+  "unicode-segmentation": {
+    "llvm": {
+      "text_bytes": 8398,
+      "func_symbol_bytes": 8398,
+      "func_symbols": 24,
+      "rodata_bytes": 75874,
+      "object_count": 9,
+      "object_bytes": 112552,
+      "rlib_bytes": 1268720
+    },
+    "baseline": {
+      "text_bytes": 18602,
+      "func_symbol_bytes": 18082,
+      "func_symbols": 78,
+      "rodata_bytes": 90444,
+      "object_count": 9,
+      "object_bytes": 179976,
+      "rlib_bytes": 1335324
+    },
+    "shared": {
+      "text_bytes": 18490,
+      "func_symbol_bytes": 17878,
+      "func_symbols": 78,
+      "rodata_bytes": 90444,
+      "object_count": 9,
+      "object_bytes": 179864,
+      "rlib_bytes": 1335204
+    },
+    "data": {
+      "text_bytes": 18490,
+      "func_symbol_bytes": 17878,
+      "func_symbols": 78,
+      "rodata_bytes": 90444,
+      "object_count": 9,
+      "object_bytes": 179864,
+      "rlib_bytes": 1335196
+    }
+  },
+  "humantime": {
+    "llvm": {
+      "text_bytes": 10426,
+      "func_symbol_bytes": 10426,
+      "func_symbols": 32,
+      "rodata_bytes": 1656,
+      "object_count": 13,
+      "object_bytes": 53768,
+      "rlib_bytes": 148680
+    },
+    "baseline": {
+      "text_bytes": 57461,
+      "func_symbol_bytes": 56798,
+      "func_symbols": 100,
+      "rodata_bytes": 11406,
+      "object_count": 13,
+      "object_bytes": 165880,
+      "rlib_bytes": 261036
+    },
+    "shared": {
+      "text_bytes": 58805,
+      "func_symbol_bytes": 58118,
+      "func_symbols": 100,
+      "rodata_bytes": 11406,
+      "object_count": 13,
+      "object_bytes": 167224,
+      "rlib_bytes": 262372
+    },
+    "data": {
+      "text_bytes": 58709,
+      "func_symbol_bytes": 58034,
+      "func_symbols": 98,
+      "rodata_bytes": 11149,
+      "object_count": 13,
+      "object_bytes": 165960,
+      "rlib_bytes": 261100
+    }
+  }
+}

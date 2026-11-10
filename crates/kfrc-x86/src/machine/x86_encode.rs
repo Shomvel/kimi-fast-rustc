@@ -284,6 +284,12 @@ fn validate_instruction(
                 return Err(EncodeError::InvalidDivisor(reg));
             }
         }
+        MulHigh { src } => {
+            validate_reg(src)?;
+            if matches!(src, Reg::Rax | Reg::Rdx) {
+                return Err(EncodeError::InvalidMultiplyRegister(src));
+            }
+        }
         Cmp { lhs, rhs } => {
             validate_reg(lhs)?;
             validate_operand(rhs, stack_slots)?;
@@ -674,6 +680,11 @@ impl Encoder<'_> {
                     self.stack_memory(Reg::Rsi, spill_offset(slot)?);
                 }
             },
+            MulHigh { src } => {
+                self.rex(true, None, Some(src), false);
+                self.bytes.push(0xf7);
+                self.modrm(3, Reg::Rsp, src.low_code());
+            }
             Cmp {
                 lhs,
                 rhs: Operand::Imm(0),

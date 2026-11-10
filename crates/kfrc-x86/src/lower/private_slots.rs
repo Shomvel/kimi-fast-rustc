@@ -64,6 +64,7 @@ pub(super) fn facts(instruction: &LowerInstr) -> Facts {
             | VirtualInstr::Div { dst, lhs, rhs }
             | VirtualInstr::Rem { dst, lhs, rhs }
             | VirtualInstr::UDiv { dst, lhs, rhs }
+            | VirtualInstr::MulHigh { dst, lhs, rhs }
             | VirtualInstr::URem { dst, lhs, rhs }
             | VirtualInstr::Compare { dst, lhs, rhs, .. } => {
                 f.defs.push(*dst);

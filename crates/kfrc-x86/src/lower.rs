@@ -96,6 +96,7 @@ fn lower_function_inner(
         next_temporary: graph.len() as u32,
         stack_layouts: graph.stack_slots.clone(),
         return_address: None,
+        constant_quotients: HashMap::default(),
         options,
     };
     lowering.run()?;
@@ -123,6 +124,8 @@ struct Lowering<'a> {
     next_temporary: u32,
     stack_layouts: Vec<SizeAlign>,
     return_address: Option<VirtualReg>,
+    /// Block-local scalar values; never reused across a phi edge or backedge.
+    constant_quotients: HashMap<(NodeId, u64, bool), VirtualValue>,
     options: LayoutOptions,
 }
 
@@ -554,14 +557,21 @@ impl Lowering<'_> {
                 {
                     operands[1]
                 } else {
-                    let amount = self.temporary();
-                    let mask = i64::from(kind.bits.max(1) - 1);
-                    self.push(VirtualInstr::And {
-                        dst: amount,
-                        lhs: operands[1],
-                        rhs: VirtualValue::Imm(mask),
-                    });
-                    VirtualValue::Reg(amount)
+                    match operands[1] {
+                        VirtualValue::Imm(value) => {
+                            VirtualValue::Imm(((value as u64) % u64::from(kind.bits)) as i64)
+                        }
+                        value => {
+                            let amount = self.temporary();
+                            let mask = i64::from(kind.bits - 1);
+                            self.push(VirtualInstr::And {
+                                dst: amount,
+                                lhs: value,
+                                rhs: VirtualValue::Imm(mask),
+                            });
+                            VirtualValue::Reg(amount)
+                        }
+                    }
                 };
                 let lhs = operands[0];
                 self.push(match op {
@@ -655,6 +665,7 @@ impl Lowering<'_> {
         let order = schedule.order.clone();
         let address_only = self.address_only_offsets();
         for block in order {
+            self.constant_quotients.clear();
             self.push(VirtualInstr::Label(label_of(block)));
             if block == 0 {
                 self.emit_parameters()?;
@@ -696,7 +707,9 @@ impl Lowering<'_> {
             | Opcode::RemUnsigned) => {
                 let lhs = self.value(graph.input(node, 0))?;
                 let rhs = self.value(graph.input(node, 1))?;
-                if self.emit_exact_constant_division(node, lhs, rhs)? {
+                if self.emit_exact_constant_division(node, lhs, rhs)?
+                    || self.emit_constant_division(node, lhs, rhs)?
+                {
                     self.emitted.insert(node);
                     return Ok(());
                 }

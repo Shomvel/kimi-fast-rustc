@@ -99,6 +99,11 @@ pub enum VirtualInstr {
         lhs: VirtualValue,
         rhs: VirtualValue,
     },
+    MulHigh {
+        dst: VirtualReg,
+        lhs: VirtualValue,
+        rhs: VirtualValue,
+    },
     And {
         dst: VirtualReg,
         lhs: VirtualValue,
@@ -502,6 +507,10 @@ pub enum MachineInstr {
     UDiv {
         src: Operand,
     },
+    /// Unsigned 64-bit RAX * src, with the high half in RDX.
+    MulHigh {
+        src: Reg,
+    },
     Cmp {
         lhs: Reg,
         rhs: Operand,
@@ -750,6 +759,7 @@ pub fn optimize_zero_idioms(instructions: &mut [MachineInstr]) -> usize {
                     | MachineInstr::LShr { .. }
                     | MachineInstr::IDiv { .. }
                     | MachineInstr::UDiv { .. }
+                    | MachineInstr::MulHigh { .. }
                     | MachineInstr::Cmp { .. }
                     | MachineInstr::Test { .. }
                     | MachineInstr::TestByte { .. }
@@ -999,6 +1009,12 @@ fn validate_instruction(
                 return Err(AsmError::InvalidDivisor(reg));
             }
         }
+        MulHigh { src } => {
+            validate_reg(src)?;
+            if matches!(src, Reg::Rax | Reg::Rdx) {
+                return Err(AsmError::InvalidMultiplyRegister(src));
+            }
+        }
         Cmp { lhs, rhs } => {
             validate_reg(lhs)?;
             validate_operand(rhs)?;
@@ -1201,6 +1217,7 @@ fn emit_instruction(
             emit_operand(out, src, stack_slots)?;
             out.push('\n');
         }
+        MulHigh { src } => out.push_str(&format!("\tmul {}\n", src.name())),
         Cmp {
             lhs,
             rhs: Operand::Imm(0),
