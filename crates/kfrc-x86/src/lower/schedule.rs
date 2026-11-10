@@ -9,6 +9,9 @@ pub(super) struct Block {
 }
 
 pub(super) struct Schedule {
+    idom: Vec<usize>,
+    /// Natural-loop headers in block-ID order, before allocation adds edge blocks.
+    pub(super) loop_headers: Vec<usize>,
     pub(super) blocks: Vec<Block>,
     /// Blocks in emission order (reverse postorder).
     pub(super) order: Vec<usize>,
@@ -172,8 +175,16 @@ impl Schedule {
         for node in &ids {
             place(graph, *node, &mut placement, &mut placed, &depth)?;
         }
-        let placed = schedule_late(graph, &blocks, &order, &rank, &idom, &placement, placed);
+        let (placed, loop_headers) =
+            schedule_late(graph, &blocks, &order, &rank, &idom, &placement, placed);
+        // The scheduler's dominator algorithm indexes by RPO rank. Selection
+        // asks about block IDs, which are assigned during control discovery.
+        let idom = (0..blocks.len())
+            .map(|block| order[idom[rank[&block]]])
+            .collect();
         Ok(Self {
+            idom,
+            loop_headers,
             blocks,
             order,
             block_of_head,
@@ -182,6 +193,13 @@ impl Schedule {
             phis_of_region,
             projections,
         })
+    }
+
+    pub(super) fn dominates(&self, ancestor: usize, mut block: usize) -> bool {
+        while block != ancestor && self.idom[block] != block {
+            block = self.idom[block];
+        }
+        block == ancestor
     }
 }
 
@@ -391,7 +409,7 @@ fn schedule_late(
     idom: &[usize],
     placement: &HashMap<NodeId, usize>,
     early: Vec<Vec<NodeId>>,
-) -> Vec<Vec<NodeId>> {
+) -> (Vec<Vec<NodeId>>, Vec<usize>) {
     let mut early_rank = HashMap::default();
     for (block, nodes) in early.iter().enumerate() {
         for &node in nodes {
@@ -414,6 +432,7 @@ fn schedule_late(
             pinned.insert(graph.resolve(control));
         }
     }
+    let (loop_depth, loop_headers) = loop_depths(blocks, order, rank, idom);
     let late = Late {
         graph,
         rank,
@@ -422,7 +441,7 @@ fn schedule_late(
         early_rank: &early_rank,
         users: &users,
         pinned: &pinned,
-        loop_depth: loop_depths(blocks, order, rank, idom),
+        loop_depth,
     };
     let mut decided = HashMap::default();
     let mut placed = vec![Vec::new(); blocks.len()];
@@ -431,7 +450,7 @@ fn schedule_late(
             placed[order[block_rank]].push(*node);
         }
     }
-    placed
+    (placed, loop_headers)
 }
 
 struct Late<'a> {
@@ -525,7 +544,7 @@ fn loop_depths(
     order: &[usize],
     rank: &HashMap<usize, usize>,
     idom: &[usize],
-) -> Vec<usize> {
+) -> (Vec<usize>, Vec<usize>) {
     let mut predecessors = vec![Vec::new(); order.len()];
     for (source, block) in order.iter().enumerate() {
         for successor in &blocks[*block].successors {
@@ -547,7 +566,9 @@ fn loop_depths(
             if !dominates(header, source) {
                 continue;
             }
-            let body = bodies.entry(header).or_insert_with(|| HashSet::from_iter([header]));
+            let body = bodies
+                .entry(header)
+                .or_insert_with(|| HashSet::from_iter([header]));
             let mut work = vec![source];
             while let Some(block) = work.pop() {
                 if body.insert(block) {
@@ -556,11 +577,13 @@ fn loop_depths(
             }
         }
     }
+    let mut headers: Vec<_> = bodies.keys().map(|&header| order[header]).collect();
+    headers.sort_unstable();
     let mut depth = vec![0; order.len()];
     for body in bodies.values() {
         for &block in body {
             depth[block] += 1;
         }
     }
-    depth
+    (depth, headers)
 }

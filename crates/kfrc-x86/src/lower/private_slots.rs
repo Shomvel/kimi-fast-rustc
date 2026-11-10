@@ -130,8 +130,15 @@ pub(super) fn facts(instruction: &LowerInstr) -> Facts {
         LowerInstr::LoadVector { address, .. } | LowerInstr::StoreVector { address, .. } => {
             f.use_value(*address)
         }
-        LowerInstr::MulOverflow { dst, lhs, rhs, .. } => {
+        LowerInstr::MulOverflow {
+            dst,
+            product,
+            lhs,
+            rhs,
+            ..
+        } => {
             f.defs.push(*dst);
+            f.defs.extend(product);
             f.use_value(*lhs);
             f.use_value(*rhs);
         }

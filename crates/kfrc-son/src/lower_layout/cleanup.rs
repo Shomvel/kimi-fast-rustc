@@ -8,6 +8,13 @@ use crate::transforms::{
     scalar::instcombine,
 };
 
+#[path = "address_cse.rs"]
+mod address_cse;
+
+#[cfg(test)]
+#[path = "cleanup_tests.rs"]
+mod tests;
+
 fn bit_conditions(graph: &mut FunctionGraph) {
     let replacements: Vec<_> = graph
         .ids()
@@ -16,6 +23,20 @@ fn bit_conditions(graph: &mut FunctionGraph) {
                 return None;
             }
             let condition = graph.input(branch, 0);
+            let ty = graph.rust_type(condition)?;
+            if !matches!(graph.oracle.shape(ty), TypeShape::Bool) {
+                return None;
+            }
+            // Only the branch observation is refined here, after L has been
+            // published. Other users still observe the original value, and
+            // fixed producers remain on their original control/effect path.
+            if graph.op(condition) != Opcode::Const {
+                let (min, max) =
+                    crate::analysis::known_bits::of(graph, condition)?.unsigned_bounds();
+                if min == max {
+                    return Some((branch, ty, min != 0));
+                }
+            }
             if graph.op(condition) != Opcode::Compare {
                 return None;
             }
@@ -36,7 +57,7 @@ fn bit_conditions(graph: &mut FunctionGraph) {
                 P::NotEqual if a.1 < b.0 || b.1 < a.0 => true,
                 _ => return None,
             };
-            Some((branch, graph.rust_type(condition)?, answer))
+            Some((branch, ty, answer))
         })
         .collect();
     for (branch, ty, answer) in replacements {
@@ -46,6 +67,8 @@ fn bit_conditions(graph: &mut FunctionGraph) {
 }
 
 pub(super) fn run(graph: &mut FunctionGraph) -> Result<(), LayoutError> {
+    debug_assert_eq!(graph.level, GraphLevel::Layout);
+    address_cse::run(graph);
     for _ in 0..2 {
         private_memory::run(graph);
         instcombine::run(graph);
@@ -62,6 +85,7 @@ pub(super) fn run(graph: &mut FunctionGraph) -> Result<(), LayoutError> {
     // Fold those before publishing the final scalar graph.
     instcombine::run(graph);
     graph.resolve_edges();
+    address_cse::run(graph);
     graph.compact();
     Ok(())
 }

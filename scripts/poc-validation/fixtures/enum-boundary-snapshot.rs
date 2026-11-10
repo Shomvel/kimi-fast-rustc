@@ -50,3 +50,16 @@ pub fn parameter(value: Result<u64, Error>) -> (u64, Result<u64, Error>) {
 pub fn call_result(selector: u8, value: u64) -> (u64, Result<u64, Error>) {
     parameter(source(selector, value))
 }
+
+#[inline(never)]
+pub fn utf8_expect(bytes: &[u8]) -> &str {
+    std::str::from_utf8(bytes).expect("valid UTF-8")
+}
+
+#[inline(never)]
+pub fn utf8_result(bytes: &[u8]) -> Result<&str, std::str::Utf8Error> {
+    match std::str::from_utf8(bytes) {
+        Ok(text) => Ok(text),
+        Err(error) => Err(error),
+    }
+}

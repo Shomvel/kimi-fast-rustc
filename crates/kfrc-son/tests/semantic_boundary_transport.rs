@@ -47,6 +47,15 @@ fn fixture(observe_duplicate: bool, cyclic: bool) -> FunctionGraph {
 }
 
 fn fixture_with_raw_field(observe_duplicate: bool, cyclic: bool, raw_field: bool) -> FunctionGraph {
+    fixture_with_field_kind(observe_duplicate, cyclic, raw_field, false)
+}
+
+fn fixture_with_field_kind(
+    observe_duplicate: bool,
+    cyclic: bool,
+    raw_field: bool,
+    scalar_product: bool,
+) -> FunctionGraph {
     let mut types = RecordedTypes::new();
     let word = types.intern(
         TypeShape::Int {
@@ -101,6 +110,31 @@ fn fixture_with_raw_field(observe_duplicate: bool, cyclic: bool, raw_field: bool
             }],
         ],
     );
+    let nested = if scalar_product {
+        let pair = types.intern(
+            TypeShape::Tuple(vec![small, small]),
+            Some(SizeAlign { size: 8, align: 4 }),
+        );
+        types.record_aggregate(
+            pair,
+            AggregateLayout {
+                fields: vec![
+                    FieldLayout {
+                        ty: small,
+                        offset: 0,
+                    },
+                    FieldLayout {
+                        ty: small,
+                        offset: 4,
+                    },
+                ],
+                variants: vec![],
+            },
+        );
+        pair
+    } else {
+        nested
+    };
     let outer = enumeration(
         &mut types,
         "Outer",
@@ -396,6 +430,13 @@ fn check(mut graph: FunctionGraph, expected_captures: usize) {
 #[test]
 fn direct_call_subfield_is_captured_once_and_nested_variant_bytes_survive() {
     check(fixture(false, false), 1);
+}
+
+#[test]
+fn small_scalar_product_returns_without_a_boundary_snapshot() {
+    // The same 8-byte ABI field as the nested-enum test, but two scalar lanes:
+    // preserve both lane values without introducing owned temporary storage.
+    check(fixture_with_field_kind(false, false, false, true), 0);
 }
 #[test]
 fn any_observed_duplicate_extractor_disables_the_entire_field_certificate() {

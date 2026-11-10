@@ -360,6 +360,7 @@ pub(super) fn select(stream: Vec<LowerInstr>) -> Vec<Instruction> {
             }
             LowerInstr::MulOverflow {
                 dst,
+                product,
                 lhs,
                 rhs,
                 signed,
@@ -369,6 +370,9 @@ pub(super) fn select(stream: Vec<LowerInstr>) -> Vec<Instruction> {
                 inst.input(lhs, Any, Early);
                 inst.input(rhs, Any, Late);
                 inst.output(dst, Reuse(0));
+                if let Some(product) = product {
+                    inst.output(product, Fixed(Reg::Rax));
+                }
                 inst.clobbers = vec![Reg::Rax, Reg::Rdx];
                 inst
             }

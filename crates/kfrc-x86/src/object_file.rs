@@ -9,7 +9,9 @@ use object::{
 };
 
 use crate::machine::x86::MachineFunction;
-use crate::machine::x86_encode::{AddressRelocationKind, EncodeError, encode_with_all_relocations};
+use crate::machine::x86_encode::{
+    AddressRelocationKind, CODE_ALIGNMENT, EncodeError, encode_with_all_relocations,
+};
 use kfrc_body::{DataBinding, DataObject};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -106,7 +108,7 @@ pub fn write_object_with_data(
                 symbol: symbol_name.clone(),
                 error,
             })?;
-        let offset = object.append_section_data(text, &bytes, 16);
+        let offset = object.append_section_data(text, &bytes, CODE_ALIGNMENT);
         let (scope, weak) = match code.binding {
             SymbolBinding::Global { hidden: false } => (SymbolScope::Dynamic, false),
             SymbolBinding::Global { hidden: true } => (SymbolScope::Linkage, false),

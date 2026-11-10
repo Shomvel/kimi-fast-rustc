@@ -682,6 +682,7 @@ mod tests {
             stack_slots: 0,
             callee_saved: Vec::new(),
             symbols: Vec::new(),
+            loop_headers: Vec::new(),
         }
     }
 

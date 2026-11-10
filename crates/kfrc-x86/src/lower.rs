@@ -6,6 +6,7 @@ mod allocated;
 mod arithmetic;
 mod branch;
 mod cast;
+mod checked;
 mod fallthrough;
 mod intrinsics;
 mod known_width;
@@ -97,18 +98,27 @@ fn lower_function_inner(
         stack_layouts: graph.stack_slots.clone(),
         return_address: None,
         constant_quotients: HashMap::default(),
+        checked_values: checked::Values::new(graph, &schedule),
+        current_block: 0,
         options,
     };
     lowering.run()?;
     private_slots::run(&mut lowering.instructions, &mut lowering.stack_layouts);
     known_width::run(&mut lowering.instructions);
     let instructions = lowering.instructions;
-    allocated::compile(
+    let mut function = allocated::compile(
         graph,
         instructions,
         lowering.next_temporary,
         &lowering.stack_layouts,
-    )
+    )?;
+    function.loop_headers = schedule
+        .loop_headers
+        .iter()
+        .copied()
+        .map(label_of)
+        .collect();
+    Ok(function)
 }
 
 // -- scheduling -------------------------------------------------------------------------
@@ -126,6 +136,8 @@ struct Lowering<'a> {
     return_address: Option<VirtualReg>,
     /// Block-local scalar values; never reused across a phi edge or backedge.
     constant_quotients: HashMap<(NodeId, u64, bool), VirtualValue>,
+    checked_values: checked::Values,
+    current_block: usize,
     options: LayoutOptions,
 }
 
@@ -199,6 +211,8 @@ enum LowerInstr {
     },
     MulOverflow {
         dst: VirtualReg,
+        /// The unsigned 64-bit product left in RAX by the overflow operation.
+        product: Option<VirtualReg>,
         lhs: VirtualValue,
         rhs: VirtualValue,
         signed: bool,
@@ -452,6 +466,23 @@ impl Lowering<'_> {
             operands.push(self.value(*input)?);
         }
         let destination = register(node);
+        if let Some(overflow) = self
+            .checked_values
+            .overflow(self.graph, self.current_block, node)
+            && !self.emitted.contains(&overflow)
+        {
+            self.emit_pure(overflow)?;
+        }
+        if let Some(value) =
+            self.checked_values
+                .get(self.graph, self.schedule, self.current_block, node)
+        {
+            self.push(VirtualInstr::Mov {
+                dst: destination,
+                src: value,
+            });
+            return Ok(());
+        }
         let kind = if matches!(
             op,
             Opcode::PtrOffset | Opcode::StackSlot | Opcode::SymbolAddress
@@ -510,13 +541,26 @@ impl Lowering<'_> {
             }
             Opcode::MulOverflow => {
                 let input_kind = self.node_kind(inputs[0])?;
+                let product = self
+                    .checked_values
+                    .needs_product(self.graph, node)
+                    .then(|| self.temporary());
                 self.instructions.push(LowerInstr::MulOverflow {
                     dst: destination,
+                    product,
                     lhs: operands[0],
                     rhs: operands[1],
                     signed: input_kind.signed,
                     bits: input_kind.bits as u8,
                 });
+                if let Some(product) = product {
+                    self.checked_values.record_product(
+                        self.graph,
+                        self.current_block,
+                        node,
+                        VirtualValue::Reg(product),
+                    );
+                }
             }
             Opcode::Add
             | Opcode::Sub
@@ -550,6 +594,12 @@ impl Lowering<'_> {
                 } else {
                     self.canonicalize(destination, VirtualValue::Reg(raw), kind);
                 }
+                self.checked_values.record(
+                    self.graph,
+                    self.current_block,
+                    node,
+                    VirtualValue::Reg(destination),
+                );
             }
             Opcode::ShiftLeft | Opcode::ShiftRightArithmetic | Opcode::ShiftRightLogical => {
                 let rhs = if ArithmeticFlags(self.graph.payload(node))
@@ -665,6 +715,7 @@ impl Lowering<'_> {
         let order = schedule.order.clone();
         let address_only = self.address_only_offsets();
         for block in order {
+            self.current_block = block;
             self.constant_quotients.clear();
             self.push(VirtualInstr::Label(label_of(block)));
             if block == 0 {

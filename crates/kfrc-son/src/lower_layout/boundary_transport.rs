@@ -11,6 +11,29 @@ use std::collections::BTreeSet;
 pub(super) type Fields = BTreeSet<(u32, u32)>;
 pub(super) type Certificates = HashMap<NodeId, Fields>;
 
+// A one/two-lane product already has a cheap scalar representation. Giving
+// it owned storage adds a copy only to load the same lanes again at return.
+// This is a representation policy, not permission to borrow the ABI input:
+// normal decoding still captures the fields at the original fixed point.
+fn small_scalar_product(graph: &FunctionGraph, ty: TyId) -> bool {
+    let semantic = graph.oracle.semantic();
+    if !semantic.is_product(ty) || !matches!(semantic.field_count(ty, None), Some(1 | 2)) {
+        return false;
+    }
+    semantic.field_types(ty, None).is_some_and(|fields| {
+        fields.into_iter().all(|field| {
+            !semantic.is_product(field)
+                && !semantic.is_enum(field)
+                && !semantic.is_union(field)
+                && semantic.maybe_uninit_inner(field).is_none()
+                && graph
+                    .oracle
+                    .size_align(field)
+                    .is_some_and(|layout| matches!(layout.size, 1 | 2 | 4 | 8))
+        })
+    })
+}
+
 fn supported_type(graph: &FunctionGraph, ty: TyId, seen: &mut HashSet<TyId>) -> bool {
     let semantic = graph.oracle.semantic();
     if graph.oracle.size_align(ty).is_none()
@@ -210,6 +233,7 @@ pub(super) fn select(
                     || graph.oracle.semantic().is_product(field_ty))
                     || graph.oracle.size_align(field_ty)?.size == 0
                     || !supported_type(graph, field_ty, &mut HashSet::default())
+                    || small_scalar_product(graph, field_ty)
                     || demands
                         .get(&root)?
                         .child(DemandKey::VariantField(key.0, key.1))

@@ -621,6 +621,9 @@ pub struct MachineFunction {
     pub stack_slots: u32,
     pub callee_saved: Vec<Reg>,
     pub symbols: Vec<String>,
+    /// Labels proved to be natural-loop headers by the source CFG scheduler.
+    /// Allocation may append backward critical edges that are not loops.
+    pub loop_headers: Vec<u32>,
 }
 
 /// An architectural SSE register. All XMM registers are caller-saved on SysV.
@@ -635,6 +638,7 @@ impl MachineFunction {
             stack_slots: 0,
             callee_saved: Vec::new(),
             symbols: Vec::new(),
+            loop_headers: Vec::new(),
         }
     }
 
@@ -1467,6 +1471,7 @@ mod tests {
             stack_slots: 0,
             callee_saved: Vec::new(),
             symbols: Vec::new(),
+            loop_headers: Vec::new(),
         }
     }
 
@@ -1613,6 +1618,7 @@ mod tests {
             stack_slots: 1,
             callee_saved: vec![Reg::Rbx, Reg::R12],
             symbols: Vec::new(),
+            loop_headers: Vec::new(),
         }
         .emit_gnu_assembly()
         .unwrap();
