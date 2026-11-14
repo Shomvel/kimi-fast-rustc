@@ -372,12 +372,16 @@ fn narrow_constants_wrap_at_the_source_width() {
         f.ret(region, f.effect, wrapped);
         verify_graph(&mut f.g).unwrap();
         let original = f.g.clone();
-        let stats = if seams {
-            optimize_specialized_seams(&mut f.g, &[], &[]).unwrap()
+        if seams {
+            optimize_specialized_seams(&mut f.g, &[], &[]).unwrap();
         } else {
-            optimize_specialized_graph(&mut f.g).unwrap()
-        };
-        assert!(stats.sccp_constants >= 2);
+            optimize_specialized_graph(&mut f.g).unwrap();
+        }
+        // 255 + 2 wraps to 1 at eight bits, whichever pass folds the merge.
+        let ret = f.g.ids().find(|n| f.g.op(*n) == Opcode::Return).unwrap();
+        let value = f.g.resolve(f.g.input(ret, 1));
+        assert_eq!(f.g.op(value), Opcode::Const);
+        assert_eq!(f.g.constant_value(value), 1);
         for c in [0, 1] {
             assert_eq!(
                 execute(&f.g, Value::Scalar(c), 0),

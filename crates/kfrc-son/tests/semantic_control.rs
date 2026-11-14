@@ -698,3 +698,79 @@ fn layout_proves_wrapping_slice_length_through_defined_phi_arms() {
         }
     }
 }
+
+#[test]
+fn redundant_merges_of_one_value_fold_to_that_value() {
+    let mut test = TestGraph::new();
+    let control = test.control;
+    let (after, _effect, value) = test.call(control, "left");
+    test.control = after;
+    let (threshold_ctl, threshold_effect, threshold) = test.call(after, "right");
+    test.control = threshold_ctl;
+    let condition = test.graph.add_node(
+        Opcode::Compare,
+        NodeId::NONE,
+        &[value, threshold],
+        kfrc_son::ComparePredicate::Equal as u32,
+        ValueType::Rust(test.boolean),
+    );
+    let (yes, no) = test.branch(condition);
+    // One arm passes through a single-predecessor wrapper with its own Phi.
+    let wrapper_jump = test.graph.add_node(Opcode::Jump, yes, &[], 0, ValueType::Control);
+    let wrapper = test.graph.add_node(
+        Opcode::Region,
+        NodeId::NONE,
+        &[wrapper_jump],
+        0,
+        ValueType::Control,
+    );
+    let wrapped = test.graph.add_node(
+        Opcode::Phi,
+        NodeId::NONE,
+        &[wrapper, value],
+        0,
+        ValueType::Rust(test.integer),
+    );
+    let yes_jump = test.graph.add_node(Opcode::Jump, wrapper, &[], 0, ValueType::Control);
+    let no_jump = test.graph.add_node(Opcode::Jump, no, &[], 0, ValueType::Control);
+    let region = test.graph.add_node(
+        Opcode::Region,
+        NodeId::NONE,
+        &[yes_jump, no_jump],
+        0,
+        ValueType::Control,
+    );
+    let merged = test.graph.add_node(
+        Opcode::Phi,
+        NodeId::NONE,
+        &[region, wrapped, value],
+        0,
+        ValueType::Rust(test.integer),
+    );
+    let merged_effect = test.graph.add_node(
+        Opcode::Phi,
+        NodeId::NONE,
+        &[region, threshold_effect, threshold_effect],
+        0,
+        ValueType::Effect,
+    );
+    test.return_value(region, merged_effect, merged);
+    verify_graph(&mut test.graph).unwrap();
+    let original = test.graph.clone();
+    optimize_specialized_graph(&mut test.graph).unwrap();
+    verify_graph(&mut test.graph).unwrap();
+    assert_eq!(run(&test.graph), run(&original));
+    let ret = test
+        .graph
+        .ids()
+        .find(|node| test.graph.op(*node) == Opcode::Return)
+        .unwrap();
+    let returned = test.graph.resolve(test.graph.input(ret, 1));
+    assert_eq!(test.graph.op(returned), Opcode::Projection);
+    assert!(
+        !test
+            .graph
+            .ids()
+            .any(|node| test.graph.op(node) == Opcode::Phi)
+    );
+}
