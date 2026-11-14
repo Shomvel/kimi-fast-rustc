@@ -133,7 +133,7 @@ fn entry_available_fixed_result_stays_before_dispatch() {
 
 #[test]
 fn authentication_external_uses_and_dependent_addresses_decline_without_edits() {
-    for defect in 0..7 {
+    for defect in 0..6 {
         let mut fixture = Fixture::new(&[5, 2, 5, 2], false, false);
         let first = fixture.events[0];
         match defect {
@@ -185,17 +185,6 @@ fn authentication_external_uses_and_dependent_addresses_decline_without_edits() 
                     Opcode::Phi,
                     NodeId::NONE,
                     &[tail, value, value],
-                    0,
-                    ValueType::Rust(fixture.word),
-                );
-            }
-            6 => {
-                let constant = fixture.graph.add_constant(7, fixture.word);
-                let region = fixture.success_regions[0];
-                fixture.graph.add_node(
-                    Opcode::Phi,
-                    NodeId::NONE,
-                    &[region, constant],
                     0,
                     ValueType::Rust(fixture.word),
                 );
@@ -281,4 +270,39 @@ fn exhausted_work_abandons_the_complete_plan_without_graph_edits() {
     assert_eq!(fixture.graph.dump(), before);
     let stats = transform(&mut fixture.graph, completed.node_visits);
     assert_eq!(stats.cells_grouped, 8);
+}
+
+#[test]
+fn success_value_phis_keep_their_incoming_slots() {
+    let mut fixture = Fixture::new(&[5, 2, 5, 1, 2], false, false);
+    // Real `match` arms return through value Phis at each success join.
+    for (index, (&region, &ret)) in fixture
+        .success_regions
+        .clone()
+        .iter()
+        .zip(&fixture.success_returns.clone())
+        .enumerate()
+    {
+        let code = fixture.graph.add_constant(100 + index as u128, fixture.word);
+        let phi = fixture.graph.add_node(
+            Opcode::Phi,
+            NodeId::NONE,
+            &[region, code],
+            0,
+            ValueType::Rust(fixture.word),
+        );
+        fixture.graph.set_input(ret, 1, phi);
+    }
+    verify_graph(&mut fixture.graph).unwrap();
+    let original = fixture.graph.clone();
+    assert_eq!(transform(&mut fixture.graph, MAX_WORK).cells_grouped, 5);
+    verify_graph(&mut fixture.graph).unwrap();
+    for length in 0..=6 {
+        for outcomes in 0..32 {
+            assert_eq!(
+                Fixture::execute(&fixture.graph, length, outcomes),
+                Fixture::execute(&original, length, outcomes)
+            );
+        }
+    }
 }

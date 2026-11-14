@@ -15,6 +15,67 @@ pub struct ControlStats {
     pub branches_folded: usize,
     pub predecessor_edges_removed: usize,
     pub nodes_removed: usize,
+    pub phis_folded: usize,
+}
+
+/// Forward every Phi whose incoming values, ignoring the Phi itself, are one
+/// value of the same type. Inlined merges otherwise leave chains of such Phis
+/// (a slice pointer re-merged at every join), so equal SSA values appear as
+/// distinct nodes to later pattern matching.
+fn fold_redundant_phis(graph: &mut FunctionGraph) -> usize {
+    let phis: Vec<_> = graph
+        .ids()
+        .filter(|node| graph.op(*node) == Opcode::Phi)
+        .collect();
+    let mut phi_users: HashMap<NodeId, Vec<NodeId>> = HashMap::default();
+    for &phi in &phis {
+        for &input in &graph.inputs(phi)[1..] {
+            let input = graph.resolve(input);
+            if input != phi && graph.op(input) == Opcode::Phi {
+                phi_users.entry(input).or_default().push(phi);
+            }
+        }
+    }
+    let mut pending = phis;
+    pending.reverse();
+    let mut folded = 0;
+    while let Some(phi) = pending.pop() {
+        if graph.is_dead(phi) {
+            continue;
+        }
+        let mut same = None;
+        let mut distinct = false;
+        for &input in &graph.inputs(phi)[1..] {
+            let input = graph.resolve(input);
+            if input == phi {
+                continue;
+            }
+            match same {
+                None => same = Some(input),
+                Some(value) if value == input => (),
+                Some(_) => {
+                    distinct = true;
+                    break;
+                }
+            }
+        }
+        let Some(value) = same.filter(|_| !distinct) else {
+            continue;
+        };
+        if value.is_none() || graph.value_type(value) != graph.value_type(phi) {
+            continue;
+        }
+        graph.replace(phi, value);
+        folded += 1;
+        if let Some(users) = phi_users.remove(&phi) {
+            // Users now observe `value`; they must be revisited if it folds.
+            if graph.op(value) == Opcode::Phi {
+                phi_users.entry(value).or_default().extend(users.iter().copied());
+            }
+            pending.extend(users);
+        }
+    }
+    folded
 }
 
 pub fn run(graph: &mut FunctionGraph) -> Result<ControlStats, CfgEditError> {
@@ -104,6 +165,8 @@ fn run_impl(graph: &mut FunctionGraph, fold_diamonds: bool) -> Result<ControlSta
         stats.predecessor_edges_removed +=
             CfgEditor::new(graph).retain_predecessors(region, &keep)?;
     }
+    graph.resolve_edges();
+    stats.phis_folded = fold_redundant_phis(graph);
     graph.resolve_edges();
 
     let mut live = vec![false; graph.len()];

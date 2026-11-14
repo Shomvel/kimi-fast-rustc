@@ -1,6 +1,12 @@
 //! Match fixed comparison cells and their exact reconvergence receipts.
 use super::*;
 
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum Merges {
+    EffectOnly,
+    EffectAndValues,
+}
+
 impl Context<'_> {
     pub(super) fn guard(&mut self, branch: NodeId) -> Option<Guard> {
         let graph = self.graph;
@@ -102,9 +108,11 @@ impl Context<'_> {
         Some((jump, region, slot))
     }
 
-    /// A target's only value merge is its Effect Phi. A shared or additional
-    /// value Phi would need a separate transport receipt and is declined.
-    fn effect_phi(&mut self, region: NodeId) -> Option<NodeId> {
+    /// The single Effect Phi of `region`. Value Phis are admitted only where
+    /// `values` holds: a success target keeps its predecessor slots, so their
+    /// incoming values stay in place, whereas a failure join is rebuilt or
+    /// retired and admits no value merge.
+    fn effect_phi(&mut self, region: NodeId, values: Merges) -> Option<NodeId> {
         let mut phi = None;
         for usage in self.users(region)? {
             if usage.kind == UseKind::Control {
@@ -113,12 +121,19 @@ impl Context<'_> {
             let node = usage.user;
             if usage.kind != UseKind::Operand(0)
                 || self.graph.op(node) != Opcode::Phi
-                || self.graph.value_type(node) != &ValueType::Effect
                 || !self.graph.control(node).is_none()
                 || self.graph.payload(node) != 0
                 || self.graph.inputs(node).len() != self.graph.inputs(region).len() + 1
-                || phi.replace(node).is_some()
             {
+                return None;
+            }
+            if self.graph.value_type(node) != &ValueType::Effect {
+                if values == Merges::EffectOnly {
+                    return None;
+                }
+                continue;
+            }
+            if phi.replace(node).is_some() {
                 return None;
             }
         }
@@ -180,7 +195,7 @@ impl Context<'_> {
                 control = region;
                 continue;
             }
-            let effect = self.effect_phi(region)?;
+            let effect = self.effect_phi(region, Merges::EffectAndValues)?;
             if self.input(effect, slot + 1) != outgoing {
                 return None;
             }
@@ -225,9 +240,14 @@ impl Context<'_> {
                             signed: true
                         }
                     )
+                    // The producer passes literal and input addresses as
+                    // thin references (`&[u8; N]`) or raw pointers.
                     && [1, 2].into_iter().all(|slot| {
                         graph.rust_type(self.input(event, slot)).is_some_and(|ty| {
-                            matches!(graph.oracle.shape(ty), TypeShape::RawPointer { .. })
+                            matches!(
+                                graph.oracle.shape(ty),
+                                TypeShape::RawPointer { .. } | TypeShape::Reference { .. }
+                            )
                         })
                     }) =>
             {
@@ -335,7 +355,7 @@ impl Context<'_> {
         if same_failure != failure || graph.inputs(failure).len() != 2 {
             return None;
         }
-        let failure_effect = self.effect_phi(failure)?;
+        let failure_effect = self.effect_phi(failure, Merges::EffectOnly)?;
         let input_effect = self.input(event, 0);
         let outgoing = self.input(failure_effect, mismatch_slot + 1);
         if graph.value_type(input_effect) != &ValueType::Effect

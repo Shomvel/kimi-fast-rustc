@@ -15,7 +15,6 @@ fn slot(kind: UseKind) -> usize {
 }
 
 fn boundary(context: &mut Context<'_>, cells: &[&Cell]) -> Option<HashSet<NodeId>> {
-    let graph = context.graph;
     let mut owned = HashSet::default();
     let mut allowed = HashSet::default();
     for cell in cells {
@@ -29,22 +28,23 @@ fn boundary(context: &mut Context<'_>, cells: &[&Cell]) -> Option<HashSet<NodeId
         allowed.insert((cell.outgoing, cell.success.effect, cell.success.slot + 1));
     }
     let tail = cells.last()?;
-    let terminal = context.control_user(tail.failure)?;
-    // The old reject Region and its one Effect Phi remain the continuation.
-    // Decline any additional predecessor/value/effect export needing repair.
-    let terminal_effect_uses = context.users(tail.failure_effect)?;
-    if terminal_effect_uses.len() != 1
-        || terminal_effect_uses[0].user != terminal
-        || terminal_effect_uses[0].kind != UseKind::Operand(0)
-        || !graph.op(terminal).is_fixed()
-        || owned.contains(&terminal)
-    {
-        return None;
+    // The tail reject Region and its Effect Phi stay as the continuation:
+    // `apply` rewrites only their inputs, so each of their existing users
+    // remains valid wherever it lies outside the ladder.
+    let continuation = [tail.failure, tail.failure_effect];
+    for node in continuation {
+        for usage in context.users(node)? {
+            let internal = node == tail.failure && usage.user == tail.failure_effect;
+            if !internal && owned.contains(&usage.user) {
+                return None;
+            }
+        }
     }
-    allowed.insert((tail.failure, terminal, usize::MAX));
-    allowed.insert((tail.failure_effect, terminal, 0));
     let mut observed = HashSet::default();
     for &node in &owned {
+        if continuation.contains(&node) {
+            continue;
+        }
         for usage in context.users(node)? {
             if owned.contains(&usage.user) {
                 continue;
