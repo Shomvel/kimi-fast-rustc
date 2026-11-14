@@ -1,0 +1,17 @@
+{
+  "requested_entry": "/root/SWEEnvMaker/bins/e2b/0820_run_nac_swe_q1_q45_pass4_c40_chenjun_template_id_canary.sh",
+  "requested_entry_status": "missing on HK; related current canary inspected instead",
+  "actual_entry": "/root/SWEEnvMaker/bins/e2b/0820_run_nac_swe_q1_codex_gpt56sol_chenjun_template_id_canary.sh",
+  "entrypoint": "/root/code-harbor/scripts/_harbor_entrypoint.py run",
+  "configuration": "/root/SWEEnvMaker-data/nac-swe-code-harbor-0820/secrets/job-nac-swe-codex-gpt-5.6-sol-chenjun-template-id-canary.yaml",
+  "environment_type": "e2b",
+  "hk_sdk": "2.37.1",
+  "local_client": "existing manage.py e2b 2.34.0 compatibility client",
+  "sandbox": "itmdyt5e3uvkqwmscvqme",
+  "template": "r6g8s7tmv7hjdgpouxk9",
+  "cpu": 8,
+  "memory_mib": 16384,
+  "source_baseline": "ranges plus cycle unit test from frozen start-source.json",
+  "suite_config_difference": "preserve sandbox perf binary path; all other settings to be compared",
+  "ownership": "reused source thread task sandbox as authorized takeover; generic original SDK metadata is not task identity"
+}

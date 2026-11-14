@@ -1,0 +1,390 @@
+{
+  "crate": "semver",
+  "version": "1.0.28",
+  "arm": "llvm",
+  "backend": "llvm",
+  "backend_sha256": "LLVM",
+  "flags": [
+    "-Cpanic=abort",
+    "-Copt-level=3",
+    "-Ccodegen-units=16",
+    "-Cembed-bitcode=no",
+    "-Cdebuginfo=0",
+    "-Coverflow-checks=off",
+    "-Cdebug-assertions=off",
+    "-Zmir-opt-level=0"
+  ],
+  "sysroot": "/workspace/shared-std-mir0/sysroot",
+  "library_command": [
+    "rustc",
+    "+1.94.1",
+    "--sysroot=/workspace/shared-std-mir0/sysroot",
+    "--crate-name",
+    "semver",
+    "--crate-type",
+    "rlib",
+    "--edition=2021",
+    "/workspace/results/integrated-final1/suite/src/semver-1.0.28/src/lib.rs",
+    "--cfg",
+    "feature=\"std\"",
+    "-Cpanic=abort",
+    "-Copt-level=3",
+    "-Ccodegen-units=16",
+    "-Cembed-bitcode=no",
+    "-Cdebuginfo=0",
+    "-Coverflow-checks=off",
+    "-Cdebug-assertions=off",
+    "-Zmir-opt-level=0",
+    "--cap-lints=allow",
+    "-o",
+    "/workspace/results/integrated-final1/suite/llvm/semver/ref/lib.rlib"
+  ],
+  "status": "ok",
+  "size": {
+    "text_bytes": 18515,
+    "func_symbol_bytes": 19015,
+    "func_symbols": 81,
+    "rodata_bytes": 2062,
+    "object_count": 14,
+    "object_bytes": 85304,
+    "rlib_bytes": 238822
+  },
+  "kfrc_file_symbol": false,
+  "compile": {
+    "rounds": 3,
+    "checker": 0,
+    "order": "three rounds: llvm,c12-phi,integrated then reverse then forward; same sandbox serial",
+    "full": [
+      {
+        "exit_code": 0,
+        "wall_seconds": 0.33590386799914995,
+        "user_seconds": 0.48668799999999995,
+        "sys_seconds": 0.137838,
+        "maxrss_kib": 151660,
+        "instructions": 2055850139,
+        "instructions_running_pct": 100.0,
+        "cycles": 1663854261,
+        "cycles_running_pct": 100.0,
+        "objects_identical_to_reference": true
+      },
+      {
+        "exit_code": 0,
+        "wall_seconds": 0.2695933139984845,
+        "user_seconds": 0.46975,
+        "sys_seconds": 0.11867799999999999,
+        "maxrss_kib": 150124,
+        "instructions": 2055218253,
+        "instructions_running_pct": 100.0,
+        "cycles": 1623164168,
+        "cycles_running_pct": 100.0,
+        "objects_identical_to_reference": true
+      },
+      {
+        "exit_code": 0,
+        "wall_seconds": 0.2796971459974884,
+        "user_seconds": 0.469541,
+        "sys_seconds": 0.120471,
+        "maxrss_kib": 150404,
+        "instructions": 2055673846,
+        "instructions_running_pct": 100.0,
+        "cycles": 1649440699,
+        "cycles_running_pct": 100.0,
+        "objects_identical_to_reference": true
+      }
+    ],
+    "metadata_only": [
+      {
+        "exit_code": 0,
+        "wall_seconds": 0.13344080199749442,
+        "user_seconds": 0.082647,
+        "sys_seconds": 0.048694999999999995,
+        "maxrss_kib": 116084,
+        "instructions": 330258532,
+        "instructions_running_pct": 100.0,
+        "cycles": 301100295,
+        "cycles_running_pct": 100.0
+      },
+      {
+        "exit_code": 0,
+        "wall_seconds": 0.11187038299976848,
+        "user_seconds": 0.073223,
+        "sys_seconds": 0.040198,
+        "maxrss_kib": 116020,
+        "instructions": 330268987,
+        "instructions_running_pct": 100.0,
+        "cycles": 254506721,
+        "cycles_running_pct": 100.0
+      },
+      {
+        "exit_code": 0,
+        "wall_seconds": 0.11195032199611887,
+        "user_seconds": 0.072645,
+        "sys_seconds": 0.038949,
+        "maxrss_kib": 116064,
+        "instructions": 330268420,
+        "instructions_running_pct": 100.0,
+        "cycles": 249704990,
+        "cycles_running_pct": 100.0
+      }
+    ],
+    "instructions_median": 2055673846,
+    "cycles_median": 1649440699,
+    "wall_median": 0.2796971459974884,
+    "user_median": 0.46975,
+    "maxrss_kib_median": 150404,
+    "metadata_instructions_median": 330268420,
+    "metadata_wall_median": 0.11195032199611887,
+    "codegen_instructions_estimate": 1725405426
+  },
+  "driver": {
+    "command": [
+      "rustc",
+      "+1.94.1",
+      "--sysroot=/workspace/shared-std-mir0/sysroot",
+      "--edition=2021",
+      "/workspace/suite/drivers/semver.rs",
+      "--crate-name",
+      "driver",
+      "-Cpanic=abort",
+      "-Copt-level=3",
+      "-Cdebuginfo=0",
+      "-Zmir-opt-level=0",
+      "--extern",
+      "semver=/workspace/results/integrated-final1/suite/llvm/semver/ref/lib.rlib",
+      "-Csave-temps",
+      "-o",
+      "/workspace/results/integrated-final1/suite/llvm/semver/driver/driver"
+    ],
+    "exit_code": 0,
+    "objects_sha256": {
+      "driver.7q524ybyu92u8qns68khmscfx.rcgu.o": "92ad59834dc9a8be5aa70ed035327994668310cdf0f1c37cc1ae8dfbfb90b6d3",
+      "driver.driver.39fc946f9cbf83db-cgu.0.rcgu.o": "b683ac8e40b8d2041ab2831dae25a68c0ffd64b57639c817361c2fdd6d0d993a",
+      "driver.driver.39fc946f9cbf83db-cgu.1.rcgu.o": "b573c9bcbb5d4841cfd54adc7107c8e9c7a223d7661160fcd0c6cd72b18df83b",
+      "driver.driver.39fc946f9cbf83db-cgu.2.rcgu.o": "6c4f6240851c6e06c48b6cf03b09d6c2bae89a5352cf4f2bd793ad98dceb43b0",
+      "driver.driver.39fc946f9cbf83db-cgu.3.rcgu.o": "34483fecc7ca0ed845a72a3a0489e1c0f6d83f9cac2b129512ea2bbec80cced0",
+      "driver.driver.39fc946f9cbf83db-cgu.4.rcgu.o": "2dfac57cdc4ad2adde2ea96197524951cfb0885f435499e8628c135a074b132f"
+    },
+    "local_text_bytes": 12953,
+    "executable_sha256": "881f73dfc30dc2894154e83690e979699c6fe8173f29505f1c9c54839ca59d42"
+  },
+  "corpus": {
+    "exit_code": 0,
+    "sha256": "96c9f6c125b42251fee60f392b8ecfbdbae5691d6651db27947d32f3b5e4d56a",
+    "lines": 87
+  },
+  "workload_check": {
+    "parse": {
+      "exit_code": 0,
+      "checksum": 9666685
+    },
+    "req": {
+      "exit_code": 0,
+      "checksum": 400000
+    },
+    "identifier": {
+      "exit_code": 0,
+      "checksum": 30750000
+    }
+  },
+  "tests": {
+    "lockfile": "suite",
+    "sysroot": "cargo -Zbuild-std (MIR opt-level 0, panic=abort, O3, CGU16)",
+    "itest": {
+      "build_exit_code": 0,
+      "build_seconds": 21.562081238000246,
+      "crate_invocations": 1,
+      "crate_invocations_with_backend": 0,
+      "binaries": {
+        "suite_itest_semver": {
+          "exit_code": 0,
+          "seconds": 0.005382998002460226,
+          "listed": 0,
+          "counts": {
+            "ok": 0,
+            "failed": 0,
+            "ignored": 0,
+            "not_run": 0
+          },
+          "outcomes": {}
+        },
+        "test_autotrait": {
+          "exit_code": 0,
+          "seconds": 0.005354064000130165,
+          "listed": 1,
+          "counts": {
+            "ok": 1,
+            "failed": 0,
+            "ignored": 0,
+            "not_run": 0
+          },
+          "outcomes": {
+            "test": "ok"
+          }
+        },
+        "test_identifier": {
+          "exit_code": 0,
+          "seconds": 0.02051974400092149,
+          "listed": 3,
+          "counts": {
+            "ok": 3,
+            "failed": 0,
+            "ignored": 0,
+            "not_run": 0
+          },
+          "outcomes": {
+            "test_eq": "ok",
+            "test_new": "ok",
+            "test_prerelease": "ok"
+          }
+        },
+        "test_version": {
+          "exit_code": 0,
+          "seconds": 0.015493569997488521,
+          "listed": 10,
+          "counts": {
+            "ok": 10,
+            "failed": 0,
+            "ignored": 0,
+            "not_run": 0
+          },
+          "outcomes": {
+            "test_align": "ok",
+            "test_display": "ok",
+            "test_eq": "ok",
+            "test_ge": "ok",
+            "test_gt": "ok",
+            "test_le": "ok",
+            "test_lt": "ok",
+            "test_ne": "ok",
+            "test_parse": "ok",
+            "test_spec_order": "ok"
+          }
+        },
+        "test_version_req": {
+          "exit_code": 0,
+          "seconds": 0.025641168002039194,
+          "listed": 20,
+          "counts": {
+            "ok": 20,
+            "failed": 0,
+            "ignored": 0,
+            "not_run": 0
+          },
+          "outcomes": {
+            "test_any": "ok",
+            "test_basic": "ok",
+            "test_caret": "ok",
+            "test_cargo3202": "ok",
+            "test_comparator_parse": "ok",
+            "test_default": "ok",
+            "test_digit_after_wildcard": "ok",
+            "test_eq_hash": "ok",
+            "test_exact": "ok",
+            "test_greater_than": "ok",
+            "test_leading_digit_in_pre_and_build": "ok",
+            "test_less_than": "ok",
+            "test_logical_or": "ok",
+            "test_multiple": "ok",
+            "test_parse": "ok",
+            "test_pre": "ok",
+            "test_tilde": "ok",
+            "test_whitespace_delimited_comparator_sets": "ok",
+            "test_wildcard": "ok",
+            "test_wildcard_and_another": "ok"
+          }
+        }
+      },
+      "totals": {
+        "ok": 34,
+        "failed": 0,
+        "ignored": 0,
+        "not_run": 0
+      },
+      "all_exit_zero": true
+    }
+  },
+  "compile_checker1_not_formal": {
+    "rounds": 3,
+    "full": [
+      {
+        "exit_code": 0,
+        "wall_seconds": 0.3099822359945392,
+        "user_seconds": 0.44333,
+        "sys_seconds": 0.14296999999999999,
+        "maxrss_kib": 150264,
+        "instructions": 2055636996,
+        "instructions_running_pct": 100.0,
+        "cycles": 1570195262,
+        "cycles_running_pct": 100.0,
+        "objects_identical_to_reference": true
+      },
+      {
+        "exit_code": 0,
+        "wall_seconds": 0.2802854999972624,
+        "user_seconds": 0.438727,
+        "sys_seconds": 0.14493799999999998,
+        "maxrss_kib": 151124,
+        "instructions": 2055545005,
+        "instructions_running_pct": 100.0,
+        "cycles": 1603301736,
+        "cycles_running_pct": 100.0,
+        "objects_identical_to_reference": true
+      },
+      {
+        "exit_code": 0,
+        "wall_seconds": 0.27637858699745266,
+        "user_seconds": 0.415989,
+        "sys_seconds": 0.16544899999999998,
+        "maxrss_kib": 151756,
+        "instructions": 2055817163,
+        "instructions_running_pct": 100.0,
+        "cycles": 1587418336,
+        "cycles_running_pct": 100.0,
+        "objects_identical_to_reference": true
+      }
+    ],
+    "metadata_only": [
+      {
+        "exit_code": 0,
+        "wall_seconds": 0.11215343700314406,
+        "user_seconds": 0.069025,
+        "sys_seconds": 0.044511999999999996,
+        "maxrss_kib": 116040,
+        "instructions": 330250907,
+        "instructions_running_pct": 100.0,
+        "cycles": 252714100,
+        "cycles_running_pct": 100.0
+      },
+      {
+        "exit_code": 0,
+        "wall_seconds": 0.11703447100444464,
+        "user_seconds": 0.09026999999999999,
+        "sys_seconds": 0.027194,
+        "maxrss_kib": 116076,
+        "instructions": 330259517,
+        "instructions_running_pct": 100.0,
+        "cycles": 263404373,
+        "cycles_running_pct": 100.0
+      },
+      {
+        "exit_code": 0,
+        "wall_seconds": 0.11707416099670809,
+        "user_seconds": 0.061293,
+        "sys_seconds": 0.055823,
+        "maxrss_kib": 115984,
+        "instructions": 330262975,
+        "instructions_running_pct": 100.0,
+        "cycles": 264813812,
+        "cycles_running_pct": 100.0
+      }
+    ],
+    "instructions_median": 2055636996,
+    "cycles_median": 1587418336,
+    "wall_median": 0.2802854999972624,
+    "user_median": 0.438727,
+    "maxrss_kib_median": 151124,
+    "metadata_instructions_median": 330259517,
+    "metadata_wall_median": 0.11703447100444464,
+    "codegen_instructions_estimate": 1725377479
+  }
+}

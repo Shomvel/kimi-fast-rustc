@@ -1,0 +1,27 @@
+{
+  "sandbox_id": "itmdyt5e3uvkqwmscvqme",
+  "durable_root": "/Users/shom/Downloads/kfrc-artifact-fixes-20261110/systematic-review-evidence",
+  "archives": [
+    {
+      "file": "compact-review.tar.gz",
+      "bytes": 11950894,
+      "sha256": "746f84475146d8c486aa0fddf93a9e1414e4605a9c8b5a884c26b2e319cc478d"
+    },
+    {
+      "file": "review-index.tar.gz",
+      "bytes": 1458126,
+      "sha256": "8b4741acd053b69646ca99a3f43d30e4ba560478e9bdbae420b53735d4792753"
+    },
+    {
+      "file": "review-evidence.tar.gz",
+      "bytes": 70021780,
+      "sha256": "b969aea508cad0ebfc5061b8ce0eb0e1a62706e929aca7196fb63f4ed7eb838f"
+    }
+  ],
+  "compact_manifest_verified_files": 729,
+  "static_object_sha256_verified": 200,
+  "function_records": 1428,
+  "full_archive_status": "complete; all parts and full archive SHA-256 verified locally",
+  "release_status": "not checked during takeover; no remote lifecycle action performed",
+  "full_manifest_verified_files": 3496
+}

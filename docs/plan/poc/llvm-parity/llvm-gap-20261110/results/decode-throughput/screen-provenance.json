@@ -1,0 +1,521 @@
+{
+  "status": "passed",
+  "selection": {
+    "authorized": true,
+    "label": "decode-private-copy-v1-r1-global-screen-v1",
+    "sandbox_id": "imj3ukm7eqxdk2x0im3uh",
+    "arms": [
+      "generic-v18r2",
+      "decode-private-copy-v1-r1",
+      "llvm"
+    ],
+    "measured_rounds": 9,
+    "excluded_warmup_rounds": 1,
+    "runtime": true,
+    "compile_kinds": [
+      "full",
+      "metadata"
+    ],
+    "order": "rotate by round and reverse odd rounds;round -1 excluded",
+    "runtime_perf_or_profile": false,
+    "compile_perf": "instructions:u,cycles:u;separate from runtime",
+    "source_flags_and_original_workloads": "frozen original suite unchanged",
+    "prior_formal_modified": false,
+    "pins": {
+      "generic-v18r2": {
+        "source_manifest_sha256": "bdb84234da3e2cb361fa683cdb60ab1d1c6a1f72d6856b275155385c09261343",
+        "source_tree_sha256": "99032438e4f499480f41dbd25e87ff4ac3de39a4a07aa11a584a3c61c0ad0a08",
+        "backend_sha256": "47a06f80c001a20a6bb00dba6451d6410b93501d0626529c5e2b9047a6262f97",
+        "correctness_summary_sha256": "d6f2a4424552981e063f496ce31c4cece9befee75ab63b4cba593889c3630393",
+        "correctness_summary_path": "/workspace/callsite/generic-parity-20261110/results/generic-v18r2/summary.json",
+        "source_manifest_path": "/workspace/callsite/generic-parity-20261110/results/generic-v18r2/source-manifest.json",
+        "backend_path": "/workspace/callsite/generic-parity-20261110/generic-v18r2.so"
+      },
+      "decode-private-copy-v1-r1": {
+        "source_manifest_sha256": "2647a5018e70021128ad0c646f936cdd48613d66a61fb307c10da03eb72b917a",
+        "source_tree_sha256": "9235520b2dd380f635c5c51d76baa2c890b9c84b61d2de9f10841dafeef495a3",
+        "backend_sha256": "6c25173e5b00a7056f891748beaf80294fba00e71fd3a4de15e9d81a0616521c",
+        "correctness_summary_sha256": "4871b896779018a74c1068dc6df6cec696077cac1b6ceae1b6043f35cf6f754b",
+        "correctness_summary_path": "/workspace/callsite/generic-parity-20261110/results/decode-private-copy-v1-r1-final-correctness/summary.json",
+        "source_manifest_path": "/workspace/callsite/generic-parity-20261110/results/decode-private-copy-v1-r1-final-correctness/source-manifest.json",
+        "backend_path": "/workspace/callsite/generic-parity-20261110/decode-private-copy-v1-r1.so"
+      }
+    }
+  },
+  "selection_sha256": "47b8b2b3412040fbb114d6932ccb2b211e8b334028df8ee4d569da7a0f01cd4d",
+  "harness_sha256": "a6aafcb4d8d620f74ae170e6f9b4bf141b6319bf580e496f6d043f05aace4a14",
+  "active_processes_before": [],
+  "runtime_profiled": false,
+  "prior_formal_outputs_modified": false,
+  "runner_files": {
+    "suite.py": "f5517550ff8cba25470872994e542cdce47d6e7a8712aa6519804e725e743bac",
+    "suite.json": "2266adf6553061341d1684f9bc314599f50a87422f7b252090e4e9f729316d3d",
+    "drivers/semver.rs": "904daa08049fb5c642441a4098c77245810cf4b0f60841bce85b6f2487757f06",
+    "drivers/base64.rs": "151d222517291d45fab14aee8615c1194acbf51be2bcd47d87305a355b69092f",
+    "drivers/unicode_segmentation.rs": "261efb05556289a983a30ca1947f8bb641f37f36ad5a4caa4fea6473cef8b0fc",
+    "drivers/humantime.rs": "13a2fcf686aa6504fe2455194750bca716e1f0d90d56f6d5bb7050c47de852fe"
+  },
+  "environment_overrides": {
+    "KFRC_CODEGEN_THREADS": "8",
+    "KFRC_REGALLOC_CHECK": "0"
+  },
+  "toolchain": "rustc 1.94.1 (e408947bf 2026-03-25)\nbinary: rustc\ncommit-hash: e408947bfd200af42db322daf0fadfe7e26d3bd1\ncommit-date: 2026-03-25\nhost: x86_64-unknown-linux-gnu\nrelease: 1.94.1\nLLVM version: 21.1.8\n",
+  "initial_cpu_affinity": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ],
+  "kernel": "6.1.158",
+  "cpu_model": "AMD EPYC",
+  "crate_input_sha256": {
+    "semver": "d4dd7e0f4f20fb24305029b6b5f9d27e07d29fb86f95f20dc51411829299ce0f",
+    "base64": "d7d15b15a2c1be412df18fd336b5259320b2f21fc53278f3499cf91bc3ae28d0",
+    "unicode-segmentation": "c131b7371434add7d56d1252492e12b07eddaa3f7ff02bc32f9a645de1185970",
+    "humantime": "4ca0673d1ebb72679978e6d79460be67764be30d3ef8a6b051f7fcd2943492ee"
+  },
+  "sysroot_manifest_sha256": "bf9348f279ae15242fa615100d297dcac25cd9e2f43db8f8862288863acdf35a",
+  "library_flags": [
+    "-Cpanic=abort",
+    "-Copt-level=3",
+    "-Ccodegen-units=16",
+    "-Cembed-bitcode=no",
+    "-Cdebuginfo=0",
+    "-Coverflow-checks=off",
+    "-Cdebug-assertions=off",
+    "-Zmir-opt-level=0"
+  ],
+  "driver_flags": [
+    "-Cpanic=abort",
+    "-Copt-level=3",
+    "-Cdebuginfo=0",
+    "-Zmir-opt-level=0"
+  ],
+  "source_fixture_inputs_sha256": "95e2c0f3e6c2c7601d17b2e94756d2aaf66b5b06c8bf8f9d8e75722c3ba58990",
+  "started_at_utc": "2026-11-11T09:52:04.225541+00:00",
+  "executables": {
+    "generic-v18r2": {
+      "semver": {
+        "path": "/workspace/callsite/generic-parity-20261110/results/decode-private-copy-v1-r1-global-screen-v1/suite/generic-v18r2/semver/driver/driver",
+        "device": 65024,
+        "inode": 11058507,
+        "bytes": 567600,
+        "sha256": "6c3a353b28ebcc9ee6e3a927cba6f313e54625d0f1c718d80ad5d2e0088b7c4e"
+      },
+      "base64": {
+        "path": "/workspace/callsite/generic-parity-20261110/results/decode-private-copy-v1-r1-global-screen-v1/suite/generic-v18r2/base64/driver/driver",
+        "device": 65024,
+        "inode": 11058610,
+        "bytes": 544192,
+        "sha256": "3e55456bf0c7a786171e8c7b4f4d92a84a14fc4a59fccbdfbb8fb3083b277a8d"
+      },
+      "unicode-segmentation": {
+        "path": "/workspace/callsite/generic-parity-20261110/results/decode-private-copy-v1-r1-global-screen-v1/suite/generic-v18r2/unicode-segmentation/driver/driver",
+        "device": 65024,
+        "inode": 11058699,
+        "bytes": 676312,
+        "sha256": "ad7bdfd69cd5782295bd07ba7de60f906691a6b1ab9ebcc20820001264eb737e"
+      },
+      "humantime": {
+        "path": "/workspace/callsite/generic-parity-20261110/results/decode-private-copy-v1-r1-global-screen-v1/suite/generic-v18r2/humantime/driver/driver",
+        "device": 65024,
+        "inode": 11058783,
+        "bytes": 580024,
+        "sha256": "ee6d2ae13ef0b18cfe8937656a4c9062e6eea52449ab6ad827c8d2d7bc18f7e2"
+      }
+    },
+    "decode-private-copy-v1-r1": {
+      "semver": {
+        "path": "/workspace/callsite/generic-parity-20261110/results/decode-private-copy-v1-r1-global-screen-v1/suite/decode-private-copy-v1-r1/semver/driver/driver",
+        "device": 65024,
+        "inode": 11058881,
+        "bytes": 567552,
+        "sha256": "b907bffcca47fd7d8460382b66d3db8f1db9da29177a889a81dd200b1bfa64c3"
+      },
+      "base64": {
+        "path": "/workspace/callsite/generic-parity-20261110/results/decode-private-copy-v1-r1-global-screen-v1/suite/decode-private-copy-v1-r1/base64/driver/driver",
+        "device": 65024,
+        "inode": 11058984,
+        "bytes": 544600,
+        "sha256": "90be767a8a85f89441fc541bb47df32bf1a55d7ee6abffbc5b3dcfd9a93f71b4"
+      },
+      "unicode-segmentation": {
+        "path": "/workspace/callsite/generic-parity-20261110/results/decode-private-copy-v1-r1-global-screen-v1/suite/decode-private-copy-v1-r1/unicode-segmentation/driver/driver",
+        "device": 65024,
+        "inode": 11059073,
+        "bytes": 675848,
+        "sha256": "b10e2210f0a304f875c6037b8524cbf71492045c8b007789f059fffb247d7d19"
+      },
+      "humantime": {
+        "path": "/workspace/callsite/generic-parity-20261110/results/decode-private-copy-v1-r1-global-screen-v1/suite/decode-private-copy-v1-r1/humantime/driver/driver",
+        "device": 65024,
+        "inode": 11059157,
+        "bytes": 576800,
+        "sha256": "96f9d600cee339f05524ca948761cef7db5b6308c0ce9bc8990e0340b5072cd9"
+      }
+    },
+    "llvm": {
+      "semver": {
+        "path": "/workspace/callsite/generic-parity-20261110/results/decode-private-copy-v1-r1-global-screen-v1/suite/llvm/semver/driver/driver",
+        "device": 65024,
+        "inode": 11058133,
+        "bytes": 524560,
+        "sha256": "52b7ec4fef014b3e11ae3a826fec059e21f781016d5c89f15493b34b0cceb1dd"
+      },
+      "base64": {
+        "path": "/workspace/callsite/generic-parity-20261110/results/decode-private-copy-v1-r1-global-screen-v1/suite/llvm/base64/driver/driver",
+        "device": 65024,
+        "inode": 11058236,
+        "bytes": 520584,
+        "sha256": "aae2e001649e2257ae0344823157b4804028a50fc10d32b4e77fec5acef1db97"
+      },
+      "unicode-segmentation": {
+        "path": "/workspace/callsite/generic-parity-20261110/results/decode-private-copy-v1-r1-global-screen-v1/suite/llvm/unicode-segmentation/driver/driver",
+        "device": 65024,
+        "inode": 11058325,
+        "bytes": 632648,
+        "sha256": "5e2eb6693b9ac2811520fce372df9a06aa6ae3dd3589c1982bb4f7e2000a6158"
+      },
+      "humantime": {
+        "path": "/workspace/callsite/generic-parity-20261110/results/decode-private-copy-v1-r1-global-screen-v1/suite/llvm/humantime/driver/driver",
+        "device": 65024,
+        "inode": 11058409,
+        "bytes": 517976,
+        "sha256": "3cded6d11bee66068e46a96ce83f8c1121a5231608212066291c515a6c8f3e5c"
+      }
+    }
+  },
+  "normal_reference_objects": {
+    "generic-v18r2": {
+      "semver": {
+        "lib.semver.fd940cb7d3d8ab00-cgu.00.rcgu.o": "51cea5174c56e83d70eb0b252dbe177d5d090cc6d78dc45a213534ff06d912d3",
+        "lib.semver.fd940cb7d3d8ab00-cgu.01.rcgu.o": "38f91ff5b38a5133ea543cfb4a9147baa3554436e49215e4ef4223aef095d19d",
+        "lib.semver.fd940cb7d3d8ab00-cgu.02.rcgu.o": "8bb9ea20552bcc58786fa1bd0897e4a5c076bea7b3672ddebf2ab5ce759a44aa",
+        "lib.semver.fd940cb7d3d8ab00-cgu.03.rcgu.o": "2a9d92dbde2457cd5878882abea44121affd48aad644c541633853b867a8de4d",
+        "lib.semver.fd940cb7d3d8ab00-cgu.04.rcgu.o": "8fc1925096ac74eaea27f254303f619a39bfed190a9af56a1f2198d7dfc6b1a6",
+        "lib.semver.fd940cb7d3d8ab00-cgu.05.rcgu.o": "5f78d09675b8017ad80c3a2443c44d559d3bf94bd7fd857e6c9b6b0b09ace11c",
+        "lib.semver.fd940cb7d3d8ab00-cgu.06.rcgu.o": "b6e8f48f8eff131f2d62c6f2ef331e60764b87d3d529482075368e3fe51872d3",
+        "lib.semver.fd940cb7d3d8ab00-cgu.07.rcgu.o": "628985d69ad7dfe5ebac23f83a334e2be38f4c5efeed288b21ba89040caea2e9",
+        "lib.semver.fd940cb7d3d8ab00-cgu.08.rcgu.o": "3a3c5d9058e5bfeb46e7bdaa94e1548975437915d8604034cda278d423a2f6d7",
+        "lib.semver.fd940cb7d3d8ab00-cgu.09.rcgu.o": "2519ff973a34addc622fdffb0a4c846cea43494777ba9de1c99a48cf2491d7ba",
+        "lib.semver.fd940cb7d3d8ab00-cgu.10.rcgu.o": "5c5f92011cc5f3aac8b192768056051229dfe8ea9f883b9f36b4928fd538eeb3",
+        "lib.semver.fd940cb7d3d8ab00-cgu.11.rcgu.o": "dba03248542a2d959d077ce77ceb7ecb0e38517155f28f03b69e7e4b0c6a01c1",
+        "lib.semver.fd940cb7d3d8ab00-cgu.12.rcgu.o": "ad5502ac56084c45e3859e179fd4c415ae7b400b7176734a71f44c2f89dc71af",
+        "lib.semver.fd940cb7d3d8ab00-cgu.13.rcgu.o": "ad1d592cd8c5374dd78edf56f6fdb08d7846a24bad4830ff996d458f1ce020e8"
+      },
+      "base64": {
+        "lib.base64.1a75627b77da3786-cgu.00.rcgu.o": "364275f3e6ee99b0ad182b28a081920b69ae4f590eaca2cde4f77de9d8b0bf78",
+        "lib.base64.1a75627b77da3786-cgu.01.rcgu.o": "22528d3096d2c78b20352481b21a6727637d3dfe17a1bdcf048e3c71158876fe",
+        "lib.base64.1a75627b77da3786-cgu.02.rcgu.o": "e95daed04c26d6f789cde94f3368acd349a67170f0000de6aeaaeeff5b7ad6b3",
+        "lib.base64.1a75627b77da3786-cgu.03.rcgu.o": "ddbc7de3824615369868cac952f19da1f14211bd337f98f923d54e9c388196aa",
+        "lib.base64.1a75627b77da3786-cgu.04.rcgu.o": "e31269f613583cfb0dc3647981e5718ed900a0aea5546c5dca29c22cef0a5009",
+        "lib.base64.1a75627b77da3786-cgu.05.rcgu.o": "bad4831dcb55b1e29f3b3cd402bb50ea663bd468357a31c3c6edd510e942a0f3",
+        "lib.base64.1a75627b77da3786-cgu.06.rcgu.o": "dab4cb11ec1c5930a0171f1d3093a220f9b67b7ffa6cedac3a0348756e5f89db",
+        "lib.base64.1a75627b77da3786-cgu.07.rcgu.o": "3d41720a22033a709a38d39ffe196868bb621fa74f09a98b25a8294083a4a19f",
+        "lib.base64.1a75627b77da3786-cgu.08.rcgu.o": "840599600816e962acd95c427c7be1898d6a1038c0201cc4308311ae24e5e39a",
+        "lib.base64.1a75627b77da3786-cgu.09.rcgu.o": "8cdfa0081199fde78d0f117ad91db6bd8eb1c83dd102497bbcab5d7e2f11f4d7",
+        "lib.base64.1a75627b77da3786-cgu.10.rcgu.o": "1e7168f7b7652d96058c0047c83fe00a4c6bbec7b0a5e07485a98d6c8f98e667",
+        "lib.base64.1a75627b77da3786-cgu.11.rcgu.o": "9befe7fc2b788c3f04e4110b3645a23f8be7b954c7cc6c9105d04be21c0d9674",
+        "lib.base64.1a75627b77da3786-cgu.12.rcgu.o": "51ad31d7553c2492344d85f2721c46efe5d5518cbbf10485355fa972bf452ab7",
+        "lib.base64.1a75627b77da3786-cgu.13.rcgu.o": "fc3090f8adf00eef92f5fd6cc4fcc83d84d99efbeea58d7bbbd7214e553c4475"
+      },
+      "unicode-segmentation": {
+        "lib.unicode_segmentation.2cc1058ac2cfbdd3-cgu.0.rcgu.o": "dbfdbe75d15b4c9591ec17bda69c74d3528f07e8fdbd4f831a3f3c39a06fb6b5",
+        "lib.unicode_segmentation.2cc1058ac2cfbdd3-cgu.1.rcgu.o": "579801711ea603cd5dc61be9afc5071367e45a61a7c8ee27867a07bcfb59f586",
+        "lib.unicode_segmentation.2cc1058ac2cfbdd3-cgu.2.rcgu.o": "2685cc41ac376d4131f58d61c1731565fa29de7e0459c0acfa2ca5509bf54b8f",
+        "lib.unicode_segmentation.2cc1058ac2cfbdd3-cgu.3.rcgu.o": "384340a4f444225058aef75e53d8897958ee29650ca430fa6e8526513cb1b3c4",
+        "lib.unicode_segmentation.2cc1058ac2cfbdd3-cgu.4.rcgu.o": "d0ecf14463712e719cb49184954f7e13a2dfb4db0a37f883664df311a45e4720",
+        "lib.unicode_segmentation.2cc1058ac2cfbdd3-cgu.5.rcgu.o": "25cf8361028625692b099894fae068e88b9447943529df85312564d263806c8c",
+        "lib.unicode_segmentation.2cc1058ac2cfbdd3-cgu.6.rcgu.o": "44e130b8d65563af6bdac168c0c1bc2a0d2462d431c3510cb8dddfedf47db245",
+        "lib.unicode_segmentation.2cc1058ac2cfbdd3-cgu.7.rcgu.o": "b39bc0d47f4c202249ee0117541b5ffb43b9a5862a269ae69b924172433f60d8",
+        "lib.unicode_segmentation.2cc1058ac2cfbdd3-cgu.8.rcgu.o": "2eeeb8065f1b49f2bed5f9c44431c182ce92ecf3e04cbcda39595d50cdea0861"
+      },
+      "humantime": {
+        "lib.humantime.7c8d5c717cf60a7d-cgu.00.rcgu.o": "c80c4b3a3f7d0c000858eda79d00030a51bf5eedb6ff6b5a5a676d10523b5432",
+        "lib.humantime.7c8d5c717cf60a7d-cgu.01.rcgu.o": "ba8fd85d50b171a959bca4d31e555866e816996d41f63ec77873129b6b043aec",
+        "lib.humantime.7c8d5c717cf60a7d-cgu.02.rcgu.o": "d56cf0151b339d5551417cd29b613ad557ad4b4489f38686c4a956852e6f0d6e",
+        "lib.humantime.7c8d5c717cf60a7d-cgu.03.rcgu.o": "8921bab07134b6cb084753ee2855be4927e83dc00dbc3e584ea386d16c5ce1ad",
+        "lib.humantime.7c8d5c717cf60a7d-cgu.04.rcgu.o": "ac4347d83df1a432f8b68df30a9bd3f528e2b5cecb9361c306ff473ad157c633",
+        "lib.humantime.7c8d5c717cf60a7d-cgu.05.rcgu.o": "c1abd50e7b7de643274ffd6533fe38832f1fe8171963ea2dedd3bf41e11f5cd7",
+        "lib.humantime.7c8d5c717cf60a7d-cgu.06.rcgu.o": "d43da1ecd5f9da17764cb216d8bd43871d208864cbc934a20945f6d692e1ed69",
+        "lib.humantime.7c8d5c717cf60a7d-cgu.07.rcgu.o": "25f3ffd87f3c42a57cc3f6db5fa0100a100183205a012f087f3f522a74651cf6",
+        "lib.humantime.7c8d5c717cf60a7d-cgu.08.rcgu.o": "4cc3c4f40d25b4afb7646aeb83f57cd96758a84daf0646e58a6310d9882452b5",
+        "lib.humantime.7c8d5c717cf60a7d-cgu.09.rcgu.o": "fb74665d4697bbe2603e9fb657e48a6c596346fb8e0259a64a230a55b5070be2",
+        "lib.humantime.7c8d5c717cf60a7d-cgu.10.rcgu.o": "b354bef659eb9e3e29b3a254ea0733ecde259f04882325d690257d7c3e0387ed",
+        "lib.humantime.7c8d5c717cf60a7d-cgu.11.rcgu.o": "06e16ec3e5e31d57fddaec9d3d1e02f14ef01f80208f2622c2630fc067c00dcd",
+        "lib.humantime.7c8d5c717cf60a7d-cgu.12.rcgu.o": "35a2a12887a3bdd236eeab29d64a3a795ca0fc96e72d748330b9c1d8fc12e6e1"
+      }
+    },
+    "decode-private-copy-v1-r1": {
+      "semver": {
+        "lib.semver.fd940cb7d3d8ab00-cgu.00.rcgu.o": "51cea5174c56e83d70eb0b252dbe177d5d090cc6d78dc45a213534ff06d912d3",
+        "lib.semver.fd940cb7d3d8ab00-cgu.01.rcgu.o": "0a006ef4f7a085cf910b6b4473261c4c4d6a0177303957f1730d3b93f8e4c06f",
+        "lib.semver.fd940cb7d3d8ab00-cgu.02.rcgu.o": "8bb9ea20552bcc58786fa1bd0897e4a5c076bea7b3672ddebf2ab5ce759a44aa",
+        "lib.semver.fd940cb7d3d8ab00-cgu.03.rcgu.o": "2a9d92dbde2457cd5878882abea44121affd48aad644c541633853b867a8de4d",
+        "lib.semver.fd940cb7d3d8ab00-cgu.04.rcgu.o": "8fc1925096ac74eaea27f254303f619a39bfed190a9af56a1f2198d7dfc6b1a6",
+        "lib.semver.fd940cb7d3d8ab00-cgu.05.rcgu.o": "5f78d09675b8017ad80c3a2443c44d559d3bf94bd7fd857e6c9b6b0b09ace11c",
+        "lib.semver.fd940cb7d3d8ab00-cgu.06.rcgu.o": "b6e8f48f8eff131f2d62c6f2ef331e60764b87d3d529482075368e3fe51872d3",
+        "lib.semver.fd940cb7d3d8ab00-cgu.07.rcgu.o": "628985d69ad7dfe5ebac23f83a334e2be38f4c5efeed288b21ba89040caea2e9",
+        "lib.semver.fd940cb7d3d8ab00-cgu.08.rcgu.o": "3a3c5d9058e5bfeb46e7bdaa94e1548975437915d8604034cda278d423a2f6d7",
+        "lib.semver.fd940cb7d3d8ab00-cgu.09.rcgu.o": "2519ff973a34addc622fdffb0a4c846cea43494777ba9de1c99a48cf2491d7ba",
+        "lib.semver.fd940cb7d3d8ab00-cgu.10.rcgu.o": "5c5f92011cc5f3aac8b192768056051229dfe8ea9f883b9f36b4928fd538eeb3",
+        "lib.semver.fd940cb7d3d8ab00-cgu.11.rcgu.o": "dba03248542a2d959d077ce77ceb7ecb0e38517155f28f03b69e7e4b0c6a01c1",
+        "lib.semver.fd940cb7d3d8ab00-cgu.12.rcgu.o": "ad5502ac56084c45e3859e179fd4c415ae7b400b7176734a71f44c2f89dc71af",
+        "lib.semver.fd940cb7d3d8ab00-cgu.13.rcgu.o": "ad1d592cd8c5374dd78edf56f6fdb08d7846a24bad4830ff996d458f1ce020e8"
+      },
+      "base64": {
+        "lib.base64.1a75627b77da3786-cgu.00.rcgu.o": "b2a3c59721b6d8d84868af9f2b8461fc63aea1cd7735c3c9c5f33ae24f914ff2",
+        "lib.base64.1a75627b77da3786-cgu.01.rcgu.o": "22528d3096d2c78b20352481b21a6727637d3dfe17a1bdcf048e3c71158876fe",
+        "lib.base64.1a75627b77da3786-cgu.02.rcgu.o": "e95daed04c26d6f789cde94f3368acd349a67170f0000de6aeaaeeff5b7ad6b3",
+        "lib.base64.1a75627b77da3786-cgu.03.rcgu.o": "ddbc7de3824615369868cac952f19da1f14211bd337f98f923d54e9c388196aa",
+        "lib.base64.1a75627b77da3786-cgu.04.rcgu.o": "e31269f613583cfb0dc3647981e5718ed900a0aea5546c5dca29c22cef0a5009",
+        "lib.base64.1a75627b77da3786-cgu.05.rcgu.o": "bad4831dcb55b1e29f3b3cd402bb50ea663bd468357a31c3c6edd510e942a0f3",
+        "lib.base64.1a75627b77da3786-cgu.06.rcgu.o": "dab4cb11ec1c5930a0171f1d3093a220f9b67b7ffa6cedac3a0348756e5f89db",
+        "lib.base64.1a75627b77da3786-cgu.07.rcgu.o": "3d41720a22033a709a38d39ffe196868bb621fa74f09a98b25a8294083a4a19f",
+        "lib.base64.1a75627b77da3786-cgu.08.rcgu.o": "840599600816e962acd95c427c7be1898d6a1038c0201cc4308311ae24e5e39a",
+        "lib.base64.1a75627b77da3786-cgu.09.rcgu.o": "8cdfa0081199fde78d0f117ad91db6bd8eb1c83dd102497bbcab5d7e2f11f4d7",
+        "lib.base64.1a75627b77da3786-cgu.10.rcgu.o": "1e7168f7b7652d96058c0047c83fe00a4c6bbec7b0a5e07485a98d6c8f98e667",
+        "lib.base64.1a75627b77da3786-cgu.11.rcgu.o": "9befe7fc2b788c3f04e4110b3645a23f8be7b954c7cc6c9105d04be21c0d9674",
+        "lib.base64.1a75627b77da3786-cgu.12.rcgu.o": "51ad31d7553c2492344d85f2721c46efe5d5518cbbf10485355fa972bf452ab7",
+        "lib.base64.1a75627b77da3786-cgu.13.rcgu.o": "fc3090f8adf00eef92f5fd6cc4fcc83d84d99efbeea58d7bbbd7214e553c4475"
+      },
+      "unicode-segmentation": {
+        "lib.unicode_segmentation.2cc1058ac2cfbdd3-cgu.0.rcgu.o": "fb5d010db8b65b35a358981f779f0b1cc9ea62d6dda96e8268227c0a13c73ba1",
+        "lib.unicode_segmentation.2cc1058ac2cfbdd3-cgu.1.rcgu.o": "579801711ea603cd5dc61be9afc5071367e45a61a7c8ee27867a07bcfb59f586",
+        "lib.unicode_segmentation.2cc1058ac2cfbdd3-cgu.2.rcgu.o": "2685cc41ac376d4131f58d61c1731565fa29de7e0459c0acfa2ca5509bf54b8f",
+        "lib.unicode_segmentation.2cc1058ac2cfbdd3-cgu.3.rcgu.o": "384340a4f444225058aef75e53d8897958ee29650ca430fa6e8526513cb1b3c4",
+        "lib.unicode_segmentation.2cc1058ac2cfbdd3-cgu.4.rcgu.o": "d0ecf14463712e719cb49184954f7e13a2dfb4db0a37f883664df311a45e4720",
+        "lib.unicode_segmentation.2cc1058ac2cfbdd3-cgu.5.rcgu.o": "25cf8361028625692b099894fae068e88b9447943529df85312564d263806c8c",
+        "lib.unicode_segmentation.2cc1058ac2cfbdd3-cgu.6.rcgu.o": "44e130b8d65563af6bdac168c0c1bc2a0d2462d431c3510cb8dddfedf47db245",
+        "lib.unicode_segmentation.2cc1058ac2cfbdd3-cgu.7.rcgu.o": "b39bc0d47f4c202249ee0117541b5ffb43b9a5862a269ae69b924172433f60d8",
+        "lib.unicode_segmentation.2cc1058ac2cfbdd3-cgu.8.rcgu.o": "2eeeb8065f1b49f2bed5f9c44431c182ce92ecf3e04cbcda39595d50cdea0861"
+      },
+      "humantime": {
+        "lib.humantime.7c8d5c717cf60a7d-cgu.00.rcgu.o": "b532a0e4464589ede32f934adcfb20d2d4f3156044fe4bffe8cf966ef26d1ca7",
+        "lib.humantime.7c8d5c717cf60a7d-cgu.01.rcgu.o": "ba8fd85d50b171a959bca4d31e555866e816996d41f63ec77873129b6b043aec",
+        "lib.humantime.7c8d5c717cf60a7d-cgu.02.rcgu.o": "d56cf0151b339d5551417cd29b613ad557ad4b4489f38686c4a956852e6f0d6e",
+        "lib.humantime.7c8d5c717cf60a7d-cgu.03.rcgu.o": "8921bab07134b6cb084753ee2855be4927e83dc00dbc3e584ea386d16c5ce1ad",
+        "lib.humantime.7c8d5c717cf60a7d-cgu.04.rcgu.o": "ac4347d83df1a432f8b68df30a9bd3f528e2b5cecb9361c306ff473ad157c633",
+        "lib.humantime.7c8d5c717cf60a7d-cgu.05.rcgu.o": "c1abd50e7b7de643274ffd6533fe38832f1fe8171963ea2dedd3bf41e11f5cd7",
+        "lib.humantime.7c8d5c717cf60a7d-cgu.06.rcgu.o": "d43da1ecd5f9da17764cb216d8bd43871d208864cbc934a20945f6d692e1ed69",
+        "lib.humantime.7c8d5c717cf60a7d-cgu.07.rcgu.o": "25f3ffd87f3c42a57cc3f6db5fa0100a100183205a012f087f3f522a74651cf6",
+        "lib.humantime.7c8d5c717cf60a7d-cgu.08.rcgu.o": "4cc3c4f40d25b4afb7646aeb83f57cd96758a84daf0646e58a6310d9882452b5",
+        "lib.humantime.7c8d5c717cf60a7d-cgu.09.rcgu.o": "fb74665d4697bbe2603e9fb657e48a6c596346fb8e0259a64a230a55b5070be2",
+        "lib.humantime.7c8d5c717cf60a7d-cgu.10.rcgu.o": "b354bef659eb9e3e29b3a254ea0733ecde259f04882325d690257d7c3e0387ed",
+        "lib.humantime.7c8d5c717cf60a7d-cgu.11.rcgu.o": "06e16ec3e5e31d57fddaec9d3d1e02f14ef01f80208f2622c2630fc067c00dcd",
+        "lib.humantime.7c8d5c717cf60a7d-cgu.12.rcgu.o": "35a2a12887a3bdd236eeab29d64a3a795ca0fc96e72d748330b9c1d8fc12e6e1"
+      }
+    },
+    "llvm": {
+      "semver": {
+        "lib.semver.fd940cb7d3d8ab00-cgu.00.rcgu.o": "da03993825811b1a4841fba4247dcbd0ce193cfeb229f3cb9015b6cb74be14c3",
+        "lib.semver.fd940cb7d3d8ab00-cgu.01.rcgu.o": "3614dc1e8866eaece92fd8670168c87068faa028dd6f3003861c06f64af1c0d0",
+        "lib.semver.fd940cb7d3d8ab00-cgu.02.rcgu.o": "c3c30bbfbd32a5f60fec930ec0b4f00963fb72b1fa120dd555d78c54c78cd32c",
+        "lib.semver.fd940cb7d3d8ab00-cgu.03.rcgu.o": "8fb1a1075a85a7e8faeee60a5deb1f6143e4ed35fb9d853601d7444cf56c370b",
+        "lib.semver.fd940cb7d3d8ab00-cgu.04.rcgu.o": "09522d3ef4348430c5b056b38bbb04797b14e02a3f3f1066e3a3b2ba58587d91",
+        "lib.semver.fd940cb7d3d8ab00-cgu.05.rcgu.o": "eb5d6a5a733e4122a8e3f1e96260fceaf465ab3ea95ea22444f3fb35730a7111",
+        "lib.semver.fd940cb7d3d8ab00-cgu.06.rcgu.o": "a2a31f021d68ce77290eda2f665125535eb8fd65de023067b75927cb7fed0ae2",
+        "lib.semver.fd940cb7d3d8ab00-cgu.07.rcgu.o": "2700a88da8131bddca884d3abe4ffe219a878b0f7aad1be2e9462e1c5122ba88",
+        "lib.semver.fd940cb7d3d8ab00-cgu.08.rcgu.o": "0dc94d97b01ef702b6008cb02f2c9266df7b1303c69619da12080162c38f24ca",
+        "lib.semver.fd940cb7d3d8ab00-cgu.09.rcgu.o": "dec04921090d836f1a2d35653b1ed581819e6c3aabd41fa61731095c40398213",
+        "lib.semver.fd940cb7d3d8ab00-cgu.10.rcgu.o": "a4cdd614e7ebb872e2b24bfa89eaf10a34b6887d9937cf7d8308461d601a03cc",
+        "lib.semver.fd940cb7d3d8ab00-cgu.11.rcgu.o": "bdf69c6cb830409bda4134941d98f5c69ff44f7a57eb9d667166a4c36f57b46e",
+        "lib.semver.fd940cb7d3d8ab00-cgu.12.rcgu.o": "697069820890ec67a42cfc2f55a6b88f4938d226ddfba9a584a78639dec4e3f6",
+        "lib.semver.fd940cb7d3d8ab00-cgu.13.rcgu.o": "bcf99083ab881922b514c092db19a0e4a48f2c91d9ab987df108c43ef39e77c4"
+      },
+      "base64": {
+        "lib.base64.1a75627b77da3786-cgu.00.rcgu.o": "e6fdac72207436c98baa2e6da69cd58a99ca2619f7a19c6e90d8e03c5d1da774",
+        "lib.base64.1a75627b77da3786-cgu.01.rcgu.o": "e69258473915dcc4c35ce909e6de4d7fccc19fd500728a13ddba029fcb045afe",
+        "lib.base64.1a75627b77da3786-cgu.02.rcgu.o": "7fba269a1f863979526bf4e3a911a925cc3ea88e90b26c3646b58e0c65455ae7",
+        "lib.base64.1a75627b77da3786-cgu.03.rcgu.o": "2c4266a4447afc6c07129a34680543291926f6f8124103dfae08a72f1c291cca",
+        "lib.base64.1a75627b77da3786-cgu.04.rcgu.o": "8dec3d81b1ee657728a2f0e98a920ba59f281f44d51a4cfbff4bb7d38fd96bd8",
+        "lib.base64.1a75627b77da3786-cgu.05.rcgu.o": "d97e454998facef524a5d89482185628e2b54a39722e348f0642bc8c2bcbca76",
+        "lib.base64.1a75627b77da3786-cgu.06.rcgu.o": "4346ad48e1a527ce3e8187ae8db81751bed5f7c5ad9d6588ef3f900a6165df97",
+        "lib.base64.1a75627b77da3786-cgu.07.rcgu.o": "523ad988d09b13c5d4f853238e12d66f48d493d00b7d5d0bbefbdf0399a7d4fe",
+        "lib.base64.1a75627b77da3786-cgu.08.rcgu.o": "12ee2f79ae9c3c4786a8e8a1d0fb943e87d84fec2dad0299b0a22de43e7b9df8",
+        "lib.base64.1a75627b77da3786-cgu.09.rcgu.o": "a64bf6e7115a6262f6a4e427b61fe6e1b4b600fc10573f225528a0c5708da529",
+        "lib.base64.1a75627b77da3786-cgu.10.rcgu.o": "c012854b28130919f29bcea20b31038080046ca291c20d68ab9c9a91aae687cc",
+        "lib.base64.1a75627b77da3786-cgu.11.rcgu.o": "20f78f3452e8e7a7ad5aa49f1b54d399127c2db79003782559860a9afd6d1a70",
+        "lib.base64.1a75627b77da3786-cgu.12.rcgu.o": "f3611e91217be9665a65d5f70cfdda0efa8a0f577bff27d8c05067c20ee32a54",
+        "lib.base64.1a75627b77da3786-cgu.13.rcgu.o": "8f4549bef454557ccacec9a0d16770ab52b4c185f1beb23dc5e47c36bbee472a"
+      },
+      "unicode-segmentation": {
+        "lib.unicode_segmentation.2cc1058ac2cfbdd3-cgu.0.rcgu.o": "221851c10fe8092e1feebcb9939a6c68f5ed54d0483e10872e4ee36b80f0886e",
+        "lib.unicode_segmentation.2cc1058ac2cfbdd3-cgu.1.rcgu.o": "fb61208ab27afebdf20c158026120fa42c2acaa6296c03f16574ab55b818ae69",
+        "lib.unicode_segmentation.2cc1058ac2cfbdd3-cgu.2.rcgu.o": "8547d8f4a02a59517bdecdc3f8a89d5e5a65cf9b8c0457f3cbd670af30dfe177",
+        "lib.unicode_segmentation.2cc1058ac2cfbdd3-cgu.3.rcgu.o": "6f17eece5ad4ff4cdb9a8f2274b94e2eb870304330b1a18aa30b62ef24e10a52",
+        "lib.unicode_segmentation.2cc1058ac2cfbdd3-cgu.4.rcgu.o": "93b5eb341fdfe5e05ab425cd4a2881a80da48e86cb45512c56b650ad0bf95a8f",
+        "lib.unicode_segmentation.2cc1058ac2cfbdd3-cgu.5.rcgu.o": "780223a4aae38c6f4a04835b38b17712ff8b16c85638a1452d777ff308b521c0",
+        "lib.unicode_segmentation.2cc1058ac2cfbdd3-cgu.6.rcgu.o": "a61e2ff1f3a2a469b151cd6f50727935ab90d60e0330f8d3bf5e7081fdbf95e8",
+        "lib.unicode_segmentation.2cc1058ac2cfbdd3-cgu.7.rcgu.o": "f02f556996542ad0d23532d3965ae1f97214dfb91c90fa15951b9d99e40ca96f",
+        "lib.unicode_segmentation.2cc1058ac2cfbdd3-cgu.8.rcgu.o": "77cfdf17a4b5c205a2bc3f12b7e7222e8e6a92bfbf38fd06bfa5de616f18a3aa"
+      },
+      "humantime": {
+        "lib.humantime.7c8d5c717cf60a7d-cgu.00.rcgu.o": "040f560a69b919994d1f91bd9f99711889b56eaa16b91f91e44bc9000ed1a97c",
+        "lib.humantime.7c8d5c717cf60a7d-cgu.01.rcgu.o": "66f78715a9a7e8cbcef0c5c436e49878f168fa234040c9dcb36dacc308ae02bc",
+        "lib.humantime.7c8d5c717cf60a7d-cgu.02.rcgu.o": "b7a223587e2d26969cc5aa049336c6c04181ed96437b4766228bec64562226d0",
+        "lib.humantime.7c8d5c717cf60a7d-cgu.03.rcgu.o": "18eeb57b3346832e062a11745a3e3132098bec6d4a55cfddb3ec04f7eb5e4870",
+        "lib.humantime.7c8d5c717cf60a7d-cgu.04.rcgu.o": "32066819d3b35e1d88e3b645614ceb5bb3e05b561a88d44652a751fe746ae692",
+        "lib.humantime.7c8d5c717cf60a7d-cgu.05.rcgu.o": "5f9726e34a9aa9dad53556ca3670a13eccd62c9e360e6416942191e5e75e2241",
+        "lib.humantime.7c8d5c717cf60a7d-cgu.06.rcgu.o": "522f41e61beddc7f098f05701faf5b7f0b54b91ad9847dc812a086e6b63a9ef5",
+        "lib.humantime.7c8d5c717cf60a7d-cgu.07.rcgu.o": "8f1489c63978d303247f1e335eed572c8760941c64b18c8a4948bddb6551c8d6",
+        "lib.humantime.7c8d5c717cf60a7d-cgu.08.rcgu.o": "5201d40c42d2068fd01b51bbfc1e74a989f026948d853953b0f08594d3ea3646",
+        "lib.humantime.7c8d5c717cf60a7d-cgu.09.rcgu.o": "5e390342f127ea7e8ae4431ba7fe4bfd7bf3587b7c9761653467ef9b6c98d07b",
+        "lib.humantime.7c8d5c717cf60a7d-cgu.10.rcgu.o": "0dda3976347a00c7c121be11ce2db5061c2a2d63b15f84d30a96d856b8edd90d",
+        "lib.humantime.7c8d5c717cf60a7d-cgu.11.rcgu.o": "158dda8071495d593c6540fd376c0ad02beaafc5806b05dcc3450b6f6f7a697b",
+        "lib.humantime.7c8d5c717cf60a7d-cgu.12.rcgu.o": "ef67a570bb620ce376a8fbe759b97d4421691293a603c6512956fcc24b6dced5"
+      }
+    }
+  },
+  "normal_mode_sizes": {
+    "generic-v18r2": {
+      "semver": {
+        "text_bytes": 30829,
+        "func_symbol_bytes": 30829,
+        "func_symbols": 165,
+        "rodata_bytes": 12201,
+        "object_count": 14,
+        "object_bytes": 231376,
+        "rlib_bytes": 385070
+      },
+      "base64": {
+        "text_bytes": 23597,
+        "func_symbol_bytes": 23597,
+        "func_symbols": 62,
+        "rodata_bytes": 10341,
+        "object_count": 14,
+        "object_bytes": 190536,
+        "rlib_bytes": 550706
+      },
+      "unicode-segmentation": {
+        "text_bytes": 18520,
+        "func_symbol_bytes": 18520,
+        "func_symbols": 65,
+        "rodata_bytes": 91449,
+        "object_count": 9,
+        "object_bytes": 248264,
+        "rlib_bytes": 1404340
+      },
+      "humantime": {
+        "text_bytes": 49835,
+        "func_symbol_bytes": 49835,
+        "func_symbols": 80,
+        "rodata_bytes": 10903,
+        "object_count": 13,
+        "object_bytes": 254480,
+        "rlib_bytes": 350220
+      }
+    },
+    "decode-private-copy-v1-r1": {
+      "semver": {
+        "text_bytes": 30780,
+        "func_symbol_bytes": 30780,
+        "func_symbols": 165,
+        "rodata_bytes": 12201,
+        "object_count": 14,
+        "object_bytes": 231328,
+        "rlib_bytes": 385022
+      },
+      "base64": {
+        "text_bytes": 25723,
+        "func_symbol_bytes": 25723,
+        "func_symbols": 62,
+        "rodata_bytes": 9621,
+        "object_count": 14,
+        "object_bytes": 179672,
+        "rlib_bytes": 539842
+      },
+      "unicode-segmentation": {
+        "text_bytes": 18210,
+        "func_symbol_bytes": 18210,
+        "func_symbols": 64,
+        "rodata_bytes": 91449,
+        "object_count": 9,
+        "object_bytes": 247536,
+        "rlib_bytes": 1403612
+      },
+      "humantime": {
+        "text_bytes": 46959,
+        "func_symbol_bytes": 46959,
+        "func_symbols": 78,
+        "rodata_bytes": 10903,
+        "object_count": 13,
+        "object_bytes": 250584,
+        "rlib_bytes": 346324
+      }
+    },
+    "llvm": {
+      "semver": {
+        "text_bytes": 18515,
+        "func_symbol_bytes": 19015,
+        "func_symbols": 81,
+        "rodata_bytes": 2236,
+        "object_count": 14,
+        "object_bytes": 85464,
+        "rlib_bytes": 239794
+      },
+      "base64": {
+        "text_bytes": 8648,
+        "func_symbol_bytes": 8648,
+        "func_symbols": 35,
+        "rodata_bytes": 2534,
+        "object_count": 14,
+        "object_bytes": 54216,
+        "rlib_bytes": 414568
+      },
+      "unicode-segmentation": {
+        "text_bytes": 8398,
+        "func_symbol_bytes": 8398,
+        "func_symbols": 24,
+        "rodata_bytes": 76330,
+        "object_count": 9,
+        "object_bytes": 113024,
+        "rlib_bytes": 1269932
+      },
+      "humantime": {
+        "text_bytes": 10426,
+        "func_symbol_bytes": 10426,
+        "func_symbols": 32,
+        "rodata_bytes": 1808,
+        "object_count": 13,
+        "object_bytes": 53920,
+        "rlib_bytes": 149416
+      }
+    }
+  },
+  "prepare_status": "passed",
+  "prepare_finished_at_utc": "2026-11-11T09:52:14.862689+00:00",
+  "runtime_affinity": {
+    "before": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "after": [
+      7
+    ]
+  },
+  "runtime_status": "passed",
+  "runtime_finished_at_utc": "2026-11-11T09:52:36.132694+00:00",
+  "compile_affinity": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ],
+  "compile_status": "passed",
+  "compile_finished_at_utc": "2026-11-11T09:53:34.526779+00:00"
+}

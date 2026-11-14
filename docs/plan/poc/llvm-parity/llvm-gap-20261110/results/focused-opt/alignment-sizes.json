@@ -1,0 +1,190 @@
+{
+  "semver": {
+    "start": {
+      "text_bytes": 31089,
+      "func_symbol_bytes": 31089,
+      "func_symbols": 171,
+      "rodata_bytes": 11417,
+      "object_count": 14,
+      "object_bytes": 238664,
+      "rlib_bytes": 391494
+    },
+    "all": {
+      "text_bytes": 30931,
+      "func_symbol_bytes": 30931,
+      "func_symbols": 171,
+      "rodata_bytes": 11417,
+      "object_count": 14,
+      "object_bytes": 238512,
+      "rlib_bytes": 391342
+    },
+    "align16": {
+      "text_bytes": 31098,
+      "func_symbol_bytes": 31098,
+      "func_symbols": 171,
+      "rodata_bytes": 11417,
+      "object_count": 14,
+      "object_bytes": 238672,
+      "rlib_bytes": 391502
+    },
+    "align32": {
+      "text_bytes": 31213,
+      "func_symbol_bytes": 31213,
+      "func_symbols": 171,
+      "rodata_bytes": 11417,
+      "object_count": 14,
+      "object_bytes": 240176,
+      "rlib_bytes": 393006
+    },
+    "align64": {
+      "text_bytes": 31568,
+      "func_symbol_bytes": 31568,
+      "func_symbols": 171,
+      "rodata_bytes": 11417,
+      "object_count": 14,
+      "object_bytes": 243568,
+      "rlib_bytes": 396398
+    }
+  },
+  "base64": {
+    "start": {
+      "text_bytes": 24444,
+      "func_symbol_bytes": 24444,
+      "func_symbols": 72,
+      "rodata_bytes": 10422,
+      "object_count": 14,
+      "object_bytes": 200296,
+      "rlib_bytes": 558498
+    },
+    "all": {
+      "text_bytes": 23031,
+      "func_symbol_bytes": 23031,
+      "func_symbols": 72,
+      "rodata_bytes": 10422,
+      "object_count": 14,
+      "object_bytes": 198904,
+      "rlib_bytes": 557106
+    },
+    "align16": {
+      "text_bytes": 23120,
+      "func_symbol_bytes": 23120,
+      "func_symbols": 72,
+      "rodata_bytes": 10422,
+      "object_count": 14,
+      "object_bytes": 199000,
+      "rlib_bytes": 557202
+    },
+    "align32": {
+      "text_bytes": 23203,
+      "func_symbol_bytes": 23203,
+      "func_symbols": 72,
+      "rodata_bytes": 10422,
+      "object_count": 14,
+      "object_bytes": 199480,
+      "rlib_bytes": 557682
+    },
+    "align64": {
+      "text_bytes": 23459,
+      "func_symbol_bytes": 23459,
+      "func_symbols": 72,
+      "rodata_bytes": 10422,
+      "object_count": 14,
+      "object_bytes": 200760,
+      "rlib_bytes": 558962
+    }
+  },
+  "unicode-segmentation": {
+    "start": {
+      "text_bytes": 17535,
+      "func_symbol_bytes": 17535,
+      "func_symbols": 76,
+      "rodata_bytes": 90629,
+      "object_count": 9,
+      "object_bytes": 255384,
+      "rlib_bytes": 1410844
+    },
+    "all": {
+      "text_bytes": 17604,
+      "func_symbol_bytes": 17604,
+      "func_symbols": 76,
+      "rodata_bytes": 90629,
+      "object_count": 9,
+      "object_bytes": 255480,
+      "rlib_bytes": 1410940
+    },
+    "align16": {
+      "text_bytes": 17718,
+      "func_symbol_bytes": 17718,
+      "func_symbols": 76,
+      "rodata_bytes": 90629,
+      "object_count": 9,
+      "object_bytes": 255512,
+      "rlib_bytes": 1410972
+    },
+    "align32": {
+      "text_bytes": 17878,
+      "func_symbol_bytes": 17878,
+      "func_symbols": 76,
+      "rodata_bytes": 90629,
+      "object_count": 9,
+      "object_bytes": 256248,
+      "rlib_bytes": 1411708
+    },
+    "align64": {
+      "text_bytes": 18230,
+      "func_symbol_bytes": 18230,
+      "func_symbols": 76,
+      "rodata_bytes": 90629,
+      "object_count": 9,
+      "object_bytes": 258104,
+      "rlib_bytes": 1413564
+    }
+  },
+  "humantime": {
+    "start": {
+      "text_bytes": 36305,
+      "func_symbol_bytes": 36305,
+      "func_symbols": 82,
+      "rodata_bytes": 11018,
+      "object_count": 13,
+      "object_bytes": 246624,
+      "rlib_bytes": 341868
+    },
+    "all": {
+      "text_bytes": 35653,
+      "func_symbol_bytes": 35653,
+      "func_symbols": 82,
+      "rodata_bytes": 11018,
+      "object_count": 13,
+      "object_bytes": 245200,
+      "rlib_bytes": 340444
+    },
+    "align16": {
+      "text_bytes": 35702,
+      "func_symbol_bytes": 35702,
+      "func_symbols": 82,
+      "rodata_bytes": 11018,
+      "object_count": 13,
+      "object_bytes": 245264,
+      "rlib_bytes": 340508
+    },
+    "align32": {
+      "text_bytes": 35750,
+      "func_symbol_bytes": 35750,
+      "func_symbols": 82,
+      "rodata_bytes": 11018,
+      "object_count": 13,
+      "object_bytes": 245840,
+      "rlib_bytes": 341084
+    },
+    "align64": {
+      "text_bytes": 35814,
+      "func_symbol_bytes": 35814,
+      "func_symbols": 82,
+      "rodata_bytes": 11018,
+      "object_count": 13,
+      "object_bytes": 247344,
+      "rlib_bytes": 342588
+    }
+  }
+}

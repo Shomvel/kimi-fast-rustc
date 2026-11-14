@@ -1,0 +1,333 @@
+{
+  "crate": "unicode-segmentation",
+  "version": "1.13.3",
+  "arm": "c12-phi",
+  "backend": "/workspace/results/compile-c12-base/backend.so",
+  "backend_sha256": "4a49d09600bb6006d0f403869213592a48f230686af1f83268201ff98c97ccb4",
+  "flags": [
+    "-Cpanic=abort",
+    "-Copt-level=3",
+    "-Ccodegen-units=16",
+    "-Cembed-bitcode=no",
+    "-Cdebuginfo=0",
+    "-Coverflow-checks=off",
+    "-Cdebug-assertions=off",
+    "-Zmir-opt-level=0"
+  ],
+  "sysroot": "/workspace/shared-std-mir0/sysroot",
+  "library_command": [
+    "rustc",
+    "+1.94.1",
+    "--sysroot=/workspace/shared-std-mir0/sysroot",
+    "--crate-name",
+    "unicode_segmentation",
+    "--crate-type",
+    "rlib",
+    "--edition=2018",
+    "/workspace/results/integrated-final1/suite/src/unicode-segmentation-1.13.3/src/lib.rs",
+    "-Cpanic=abort",
+    "-Copt-level=3",
+    "-Ccodegen-units=16",
+    "-Cembed-bitcode=no",
+    "-Cdebuginfo=0",
+    "-Coverflow-checks=off",
+    "-Cdebug-assertions=off",
+    "-Zmir-opt-level=0",
+    "--cap-lints=allow",
+    "-o",
+    "/workspace/results/integrated-final1/suite/c12-phi/unicode-segmentation/ref/lib.rlib",
+    "-Zcodegen-backend=/workspace/results/compile-c12-base/backend.so"
+  ],
+  "status": "ok",
+  "size": {
+    "text_bytes": 18618,
+    "func_symbol_bytes": 18087,
+    "func_symbols": 78,
+    "rodata_bytes": 90882,
+    "object_count": 9,
+    "object_bytes": 180424,
+    "rlib_bytes": 1335908
+  },
+  "kfrc_file_symbol": true,
+  "compile": {
+    "rounds": 3,
+    "checker": 0,
+    "order": "three rounds: llvm,c12-phi,integrated then reverse then forward; same sandbox serial",
+    "full": [
+      {
+        "exit_code": 0,
+        "wall_seconds": 0.46717493000323884,
+        "user_seconds": 0.412995,
+        "sys_seconds": 0.051912,
+        "maxrss_kib": 139228,
+        "instructions": 3366091003,
+        "instructions_running_pct": 100.0,
+        "cycles": 1445727015,
+        "cycles_running_pct": 100.0,
+        "objects_identical_to_reference": true
+      },
+      {
+        "exit_code": 0,
+        "wall_seconds": 0.4731286359965452,
+        "user_seconds": 0.40476199999999996,
+        "sys_seconds": 0.068232,
+        "maxrss_kib": 139080,
+        "instructions": 3366344577,
+        "instructions_running_pct": 100.0,
+        "cycles": 1473896522,
+        "cycles_running_pct": 100.0,
+        "objects_identical_to_reference": true
+      },
+      {
+        "exit_code": 0,
+        "wall_seconds": 0.46695116499904543,
+        "user_seconds": 0.40932799999999997,
+        "sys_seconds": 0.058983999999999995,
+        "maxrss_kib": 139104,
+        "instructions": 3366124554,
+        "instructions_running_pct": 100.0,
+        "cycles": 1467905450,
+        "cycles_running_pct": 100.0,
+        "objects_identical_to_reference": true
+      }
+    ],
+    "metadata_only": [
+      {
+        "exit_code": 0,
+        "wall_seconds": 0.22427241199329728,
+        "user_seconds": 0.170446,
+        "sys_seconds": 0.055621,
+        "maxrss_kib": 117948,
+        "instructions": 1014016546,
+        "instructions_running_pct": 100.0,
+        "cycles": 601912170,
+        "cycles_running_pct": 100.0
+      },
+      {
+        "exit_code": 0,
+        "wall_seconds": 0.21862898200197378,
+        "user_seconds": 0.176202,
+        "sys_seconds": 0.043289,
+        "maxrss_kib": 117952,
+        "instructions": 1014123404,
+        "instructions_running_pct": 100.0,
+        "cycles": 592348603,
+        "cycles_running_pct": 100.0
+      },
+      {
+        "exit_code": 0,
+        "wall_seconds": 0.20823391200246988,
+        "user_seconds": 0.16963599999999998,
+        "sys_seconds": 0.035691,
+        "maxrss_kib": 118128,
+        "instructions": 1014525495,
+        "instructions_running_pct": 100.0,
+        "cycles": 553586107,
+        "cycles_running_pct": 100.0
+      }
+    ],
+    "instructions_median": 3366124554,
+    "cycles_median": 1467905450,
+    "wall_median": 0.46717493000323884,
+    "user_median": 0.40932799999999997,
+    "maxrss_kib_median": 139104,
+    "metadata_instructions_median": 1014123404,
+    "metadata_wall_median": 0.21862898200197378,
+    "codegen_instructions_estimate": 2352001150
+  },
+  "driver": {
+    "command": [
+      "rustc",
+      "+1.94.1",
+      "--sysroot=/workspace/shared-std-mir0/sysroot",
+      "--edition=2021",
+      "/workspace/suite/drivers/unicode_segmentation.rs",
+      "--crate-name",
+      "driver",
+      "-Cpanic=abort",
+      "-Copt-level=3",
+      "-Cdebuginfo=0",
+      "-Zmir-opt-level=0",
+      "--extern",
+      "unicode_segmentation=/workspace/results/integrated-final1/suite/c12-phi/unicode-segmentation/ref/lib.rlib",
+      "-Csave-temps",
+      "-o",
+      "/workspace/results/integrated-final1/suite/c12-phi/unicode-segmentation/driver/driver"
+    ],
+    "exit_code": 0,
+    "objects_sha256": {
+      "driver.7q524ybyu92u8qns68khmscfx.rcgu.o": "92ad59834dc9a8be5aa70ed035327994668310cdf0f1c37cc1ae8dfbfb90b6d3",
+      "driver.driver.39fc946f9cbf83db-cgu.0.rcgu.o": "7390a8396207c8c545f37d435fcdb3a8685e9a407bf4b040ed9e6ea30cac9ed5",
+      "driver.driver.39fc946f9cbf83db-cgu.1.rcgu.o": "be5f331fcdaa3e4c4128ea40585163e737e48d0130dc194eeb5ba03460e49979",
+      "driver.driver.39fc946f9cbf83db-cgu.2.rcgu.o": "59f8b205135276301737139d91cfa2ac5b8f80bda4b97c911d25b1ffd720c3e2",
+      "driver.driver.39fc946f9cbf83db-cgu.3.rcgu.o": "adc138d565d6bca805b48a496f70977f5d875cbb924f1c97a2d55d0368f088a6",
+      "driver.driver.39fc946f9cbf83db-cgu.4.rcgu.o": "92fce8909452af591b76646e417e5f7d541ba3417a2707063353445494363653"
+    },
+    "local_text_bytes": 37496,
+    "executable_sha256": "8f79515bfe99faa6157a29022db44db90059bccc0cb18a046c0299b43dc835ce"
+  },
+  "corpus": {
+    "exit_code": 0,
+    "sha256": "7a39af42d1e29be38305ff8b3144ca098bc99f35daa9339818d47301394640dd",
+    "lines": 153
+  },
+  "workload_check": {
+    "graphemes-mixed": {
+      "exit_code": 0,
+      "checksum": 4502913975839704316
+    },
+    "graphemes-ascii": {
+      "exit_code": 0,
+      "checksum": 18227791836399012924
+    },
+    "graphemes-rev": {
+      "exit_code": 0,
+      "checksum": 12754887892209847992
+    }
+  },
+  "tests": {
+    "lockfile": "suite",
+    "sysroot": "cargo -Zbuild-std (MIR opt-level 0, panic=abort, O3, CGU16)",
+    "itest": {
+      "build_exit_code": 0,
+      "build_seconds": 5.872384868001973,
+      "crate_invocations": 1,
+      "crate_invocations_with_backend": 1,
+      "binaries": {
+        "suite_itest_unicode_segmentation": {
+          "exit_code": 0,
+          "seconds": 0.005431760997453239,
+          "listed": 0,
+          "counts": {
+            "ok": 0,
+            "failed": 0,
+            "ignored": 0,
+            "not_run": 0
+          },
+          "outcomes": {}
+        },
+        "test": {
+          "exit_code": 0,
+          "seconds": 0.02069299299910199,
+          "listed": 8,
+          "counts": {
+            "ok": 8,
+            "failed": 0,
+            "ignored": 0,
+            "not_run": 0
+          },
+          "outcomes": {
+            "quickcheck_forward_reverse_graphemes_extended": "ok",
+            "quickcheck_forward_reverse_graphemes_legacy": "ok",
+            "quickcheck_forward_reverse_words": "ok",
+            "quickcheck_join_graphemes": "ok",
+            "quickcheck_join_words": "ok",
+            "test_graphemes": "ok",
+            "test_sentences": "ok",
+            "test_words": "ok"
+          }
+        }
+      },
+      "totals": {
+        "ok": 8,
+        "failed": 0,
+        "ignored": 0,
+        "not_run": 0
+      },
+      "all_exit_zero": true
+    },
+    "unit": {
+      "build_exit_code": 101,
+      "build_seconds": 16.668911474997003,
+      "crate_invocations": 1,
+      "crate_invocations_with_backend": 1,
+      "build_error": [
+        "error: kfrc: cannot compile `core::sync::atomic::atomic_sub::<usize, usize>` (_RINvNtNtCshX3mvxHm3fC_4core4sync6atomic10atomic_subjjECsbxH0FprOEAu_20unicode_segmentation): MIR conversion: intrinsic `atomic_xsub` is not implemented"
+      ]
+    }
+  },
+  "compile_checker1_not_formal": {
+    "rounds": 3,
+    "full": [
+      {
+        "exit_code": 0,
+        "wall_seconds": 0.5125585679998039,
+        "user_seconds": 0.42447799999999997,
+        "sys_seconds": 0.061418,
+        "maxrss_kib": 138920,
+        "instructions": 3476615698,
+        "instructions_running_pct": 100.0,
+        "cycles": 1491215613,
+        "cycles_running_pct": 100.0,
+        "objects_identical_to_reference": true
+      },
+      {
+        "exit_code": 0,
+        "wall_seconds": 0.47202074399683625,
+        "user_seconds": 0.412831,
+        "sys_seconds": 0.059058,
+        "maxrss_kib": 138552,
+        "instructions": 3476622952,
+        "instructions_running_pct": 100.0,
+        "cycles": 1478214891,
+        "cycles_running_pct": 100.0,
+        "objects_identical_to_reference": true
+      },
+      {
+        "exit_code": 0,
+        "wall_seconds": 0.48217017500428483,
+        "user_seconds": 0.40990699999999997,
+        "sys_seconds": 0.069714,
+        "maxrss_kib": 138440,
+        "instructions": 3476385105,
+        "instructions_running_pct": 100.0,
+        "cycles": 1512444257,
+        "cycles_running_pct": 100.0,
+        "objects_identical_to_reference": true
+      }
+    ],
+    "metadata_only": [
+      {
+        "exit_code": 0,
+        "wall_seconds": 0.20330874199862592,
+        "user_seconds": 0.136893,
+        "sys_seconds": 0.067142,
+        "maxrss_kib": 118152,
+        "instructions": 1014145736,
+        "instructions_running_pct": 100.0,
+        "cycles": 542026593,
+        "cycles_running_pct": 100.0
+      },
+      {
+        "exit_code": 0,
+        "wall_seconds": 0.20331490199896507,
+        "user_seconds": 0.16383999999999999,
+        "sys_seconds": 0.040059,
+        "maxrss_kib": 118092,
+        "instructions": 1014082323,
+        "instructions_running_pct": 100.0,
+        "cycles": 539530184,
+        "cycles_running_pct": 100.0
+      },
+      {
+        "exit_code": 0,
+        "wall_seconds": 0.20838522000121884,
+        "user_seconds": 0.13411,
+        "sys_seconds": 0.072282,
+        "maxrss_kib": 117972,
+        "instructions": 1014104813,
+        "instructions_running_pct": 100.0,
+        "cycles": 552697952,
+        "cycles_running_pct": 100.0
+      }
+    ],
+    "instructions_median": 3476615698,
+    "cycles_median": 1491215613,
+    "wall_median": 0.48217017500428483,
+    "user_median": 0.412831,
+    "maxrss_kib_median": 138552,
+    "metadata_instructions_median": 1014104813,
+    "metadata_wall_median": 0.20331490199896507,
+    "codegen_instructions_estimate": 2462510885
+  }
+}

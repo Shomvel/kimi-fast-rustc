@@ -1,0 +1,7 @@
+{
+  "id": "ibneicdujhnbif39umsgi",
+  "template": "mirx-rust1941-linux",
+  "killed": true,
+  "killed_at": "2026-11-09T06:52:22.494533+00:00",
+  "reason": "all frozen candidate13 outputs downloaded and hashes verified; user ended optimization; task sandbox released; HK archives retained"
+}

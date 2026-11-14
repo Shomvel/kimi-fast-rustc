@@ -1,0 +1,348 @@
+[
+  {
+    "file": "crates/kfrc-son/tests/build_and_run.rs",
+    "references": [
+      {
+        "line": 6,
+        "text": "build_graph, verify::check, verify_graph,"
+      },
+      {
+        "line": 93,
+        "text": "let mut graph = build_graph(body).unwrap_or_else(|error| panic!(\"{error}\\n{body}\"));"
+      },
+      {
+        "line": 344,
+        "text": "match build_graph(&builder.finish()) {"
+      },
+      {
+        "line": 345,
+        "text": "Err(BuildError::Unsupported { what, .. }) => assert!(what.contains(\"Assert\"), \"{what}\"),"
+      },
+      {
+        "line": 1882,
+        "text": "kfrc_son::lower_layout(&mut graph).unwrap();"
+      }
+    ]
+  },
+  {
+    "file": "crates/kfrc-son/tests/nested_pointer_wrappers.rs",
+    "references": [
+      {
+        "line": 4,
+        "text": "use kfrc_son::{Interpreter, Outcome, build_graph, verify_graph};"
+      },
+      {
+        "line": 276,
+        "text": "let mut graph = build_graph(&builder.finish()).unwrap();"
+      },
+      {
+        "line": 478,
+        "text": "let mut graph = build_graph(&builder.finish()).unwrap();"
+      },
+      {
+        "line": 493,
+        "text": "kfrc_son::lower_layout(&mut graph).unwrap();"
+      }
+    ]
+  },
+  {
+    "file": "crates/kfrc-son/tests/optimization.rs",
+    "references": [
+      {
+        "line": 240,
+        "text": "kfrc_son::lower_layout(&mut graph).unwrap();"
+      }
+    ]
+  },
+  {
+    "file": "crates/kfrc-son/tests/pointer_comparisons.rs",
+    "references": [
+      {
+        "line": 4,
+        "text": "use kfrc_son::{Interpreter, Outcome, build_graph, optimize_graph, verify_graph};"
+      },
+      {
+        "line": 73,
+        "text": "let mut graph = build_graph(&builder.finish()).unwrap();"
+      },
+      {
+        "line": 179,
+        "text": "let mut graph = build_graph(&builder.finish()).unwrap();"
+      },
+      {
+        "line": 217,
+        "text": "kfrc_son::lower_layout(&mut graph).unwrap();"
+      }
+    ]
+  },
+  {
+    "file": "crates/kfrc-son/tests/pointer_metadata.rs",
+    "references": [
+      {
+        "line": 4,
+        "text": "use kfrc_son::{BuildError, Interpreter, Opcode, Outcome, build_graph, verify_graph};"
+      },
+      {
+        "line": 148,
+        "text": "let mut graph = build_graph(&builder.finish()).unwrap();"
+      },
+      {
+        "line": 211,
+        "text": "let result = build_graph(&builder.finish());"
+      },
+      {
+        "line": 213,
+        "text": "matches!(&result, Err(BuildError::Unsupported { what, .. }) if what.contains(\"invalid logical field None/1\")),"
+      },
+      {
+        "line": 222,
+        "text": "kfrc_son::lower_layout(&mut graph).unwrap();"
+      }
+    ]
+  },
+  {
+    "file": "crates/kfrc-son/tests/semantic_build.rs",
+    "references": [
+      {
+        "line": 6,
+        "text": "build_graph, verify_graph,"
+      },
+      {
+        "line": 66,
+        "text": "let mut graph = build_graph(body).unwrap();"
+      },
+      {
+        "line": 421,
+        "text": "let mut graph = build_graph(&b.finish()).unwrap();"
+      }
+    ]
+  },
+  {
+    "file": "crates/kfrc-son/tests/semantic_verify.rs",
+    "references": [
+      {
+        "line": 725,
+        "text": "kfrc_son::lower_layout(&mut f.graph).unwrap();"
+      }
+    ]
+  },
+  {
+    "file": "crates/kfrc-son/tests/thread_local.rs",
+    "references": [
+      {
+        "line": 4,
+        "text": "use kfrc_son::{build_graph, BuildError};"
+      },
+      {
+        "line": 138,
+        "text": "let result = build_graph(&body);"
+      },
+      {
+        "line": 140,
+        "text": "matches!(&result, Err(BuildError::Unsupported { what, .. })"
+      }
+    ]
+  },
+  {
+    "file": "crates/kfrc-son/tests/union_values.rs",
+    "references": [
+      {
+        "line": 4,
+        "text": "use kfrc_son::{BuildError, build_graph};"
+      },
+      {
+        "line": 151,
+        "text": "build_graph(&builder.finish()),"
+      },
+      {
+        "line": 152,
+        "text": "Err(BuildError::Unsupported { what, .. }) if what.to_lowercase().contains(\"union\")"
+      },
+      {
+        "line": 199,
+        "text": "build_graph(&builder.finish()),"
+      },
+      {
+        "line": 200,
+        "text": "Err(BuildError::Unsupported { what, .. }) if what.to_lowercase().contains(\"union\")"
+      }
+    ]
+  },
+  {
+    "file": "crates/kfrc-son/tests/vector_values.rs",
+    "references": [
+      {
+        "line": 4,
+        "text": "use kfrc_son::{BuildError, build_graph};"
+      },
+      {
+        "line": 71,
+        "text": "build_graph(&builder.finish()),"
+      },
+      {
+        "line": 72,
+        "text": "Err(BuildError::Unsupported { what, .. })"
+      },
+      {
+        "line": 210,
+        "text": "build_graph(&builder.finish()),"
+      },
+      {
+        "line": 211,
+        "text": "Err(BuildError::Unsupported { .. })"
+      }
+    ]
+  },
+  {
+    "file": "crates/kfrc-son/tests/zst_aggregates.rs",
+    "references": [
+      {
+        "line": 4,
+        "text": "use kfrc_son::{BuildError, Interpreter, Opcode, Outcome, build_graph, verify_graph};"
+      },
+      {
+        "line": 239,
+        "text": "let mut graph = build_graph(&builder.finish()).unwrap();"
+      },
+      {
+        "line": 315,
+        "text": "let error = build_graph(&builder.finish()).unwrap_err();"
+      },
+      {
+        "line": 317,
+        "text": "matches!(error, BuildError::Unsupported { what, .. } if what.contains(\"aggregate operand count\")),"
+      },
+      {
+        "line": 327,
+        "text": "kfrc_son::lower_layout(&mut graph).unwrap();"
+      }
+    ]
+  },
+  {
+    "file": "crates/kfrc-x86/tests/cast_e2e.rs",
+    "references": [
+      {
+        "line": 5,
+        "text": "use kfrc_son::{build_graph, lower_layout, verify_graph};"
+      },
+      {
+        "line": 23,
+        "text": "let mut graph = build_graph(&body).unwrap_or_else(|error| panic!(\"{error}\\n{body}\"));"
+      },
+      {
+        "line": 25,
+        "text": "lower_layout(&mut graph).unwrap_or_else(|error| panic!(\"{error}\\n{}\", graph.dump()));"
+      }
+    ]
+  },
+  {
+    "file": "crates/kfrc-x86/tests/memory_e2e.rs",
+    "references": [
+      {
+        "line": 7,
+        "text": "use kfrc_son::{build_graph, lower_layout, verify_graph};"
+      },
+      {
+        "line": 34,
+        "text": "let mut graph = build_graph(&body).unwrap_or_else(|error| panic!(\"{error}\\n{body}\"));"
+      },
+      {
+        "line": 36,
+        "text": "lower_layout(&mut graph).unwrap_or_else(|error| panic!(\"{error}\\n{}\", graph.dump()));"
+      }
+    ]
+  },
+  {
+    "file": "crates/kfrc-x86/tests/semantic_layout.rs",
+    "references": [
+      {
+        "line": 5,
+        "text": "FunctionGraph, GraphLevel, LayoutError, Opcode, ValueType, build_graph, lower_layout,"
+      },
+      {
+        "line": 82,
+        "text": "let mut graph = build_graph(body).unwrap();"
+      },
+      {
+        "line": 89,
+        "text": "lower_layout(&mut graph).unwrap_or_else(|e| panic!(\"{e}\\n{}\", graph.dump()));"
+      },
+      {
+        "line": 499,
+        "text": "let mut graph = build_graph(&b.finish()).unwrap();"
+      },
+      {
+        "line": 503,
+        "text": "matches!(lower_layout(&mut graph), Err(LayoutError::Unsupported(message)) if message.contains(\"layout answer\"))"
+      }
+    ]
+  },
+  {
+    "file": "crates/kfrc-x86/tests/stack_alignment_e2e.rs",
+    "references": [
+      {
+        "line": 7,
+        "text": "use kfrc_son::{build_graph, lower_layout, verify_graph};"
+      },
+      {
+        "line": 75,
+        "text": "let mut graph = build_graph(&body.finish()).unwrap();"
+      },
+      {
+        "line": 77,
+        "text": "lower_layout(&mut graph).unwrap_or_else(|error| panic!(\"{error}\\n{}\", graph.dump()));"
+      },
+      {
+        "line": 216,
+        "text": "let mut graph = build_graph(&body).unwrap();"
+      },
+      {
+        "line": 218,
+        "text": "lower_layout(&mut graph).unwrap_or_else(|error| panic!(\"{error}\\n{}\", graph.dump()));"
+      }
+    ]
+  },
+  {
+    "file": "crates/kfrc-x86/tests/tls_e2e.rs",
+    "references": [
+      {
+        "line": 7,
+        "text": "use kfrc_son::{BuildError, build_graph};"
+      },
+      {
+        "line": 49,
+        "text": "matches!(build_graph(&body.finish()), Err(BuildError::Unsupported { what, .. })"
+      }
+    ]
+  },
+  {
+    "file": "crates/kfrc-x86/tests/vector_abi_e2e.rs",
+    "references": [
+      {
+        "line": 7,
+        "text": "use kfrc_son::{BuildError, build_graph};"
+      },
+      {
+        "line": 266,
+        "text": "matches!(build_graph(&body), Err(BuildError::Unsupported { what, .. })"
+      }
+    ]
+  },
+  {
+    "file": "crates/kfrc-x86/tests/writable_data_e2e.rs",
+    "references": [
+      {
+        "line": 7,
+        "text": "use kfrc_son::{build_graph, lower_layout, verify_graph};"
+      },
+      {
+        "line": 71,
+        "text": "let mut graph = build_graph(&body).unwrap();"
+      },
+      {
+        "line": 73,
+        "text": "lower_layout(&mut graph).unwrap_or_else(|error| panic!(\"{error}\\n{}\", graph.dump()));"
+      }
+    ]
+  }
+]

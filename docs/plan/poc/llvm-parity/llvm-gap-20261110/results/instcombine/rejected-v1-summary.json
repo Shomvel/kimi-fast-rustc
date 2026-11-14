@@ -1,0 +1,1001 @@
+{
+  "base": "e3c6295",
+  "backends": {
+    "baseline": "fcb4dc20d17e2ab3004a858c8b0e25ad98f73da311605bea26581fcb2fa341ad",
+    "instcombine": "625e00d60398487af714501d39fdb97bd0fac309ccf1724f5cb8f6b976610fd7"
+  },
+  "linux_tests": {
+    "passed": 837,
+    "ignored": 1
+  },
+  "preflight": [
+    {
+      "crate": "semver",
+      "arm": "baseline",
+      "status": "ok",
+      "checker": 1,
+      "upstream_incomplete": {},
+      "corpus_equal": true,
+      "checksums_equal": true
+    },
+    {
+      "crate": "semver",
+      "arm": "instcombine",
+      "status": "ok",
+      "checker": 1,
+      "upstream_incomplete": {},
+      "corpus_equal": true,
+      "checksums_equal": true
+    },
+    {
+      "crate": "regex-syntax",
+      "arm": "baseline",
+      "status": "compile_failed",
+      "checker": 1,
+      "expected_unsupported": [
+        "error: kfrc: cannot compile `core::core_simd::swizzle::<impl core::simd::Simd<i8, 16>>::resize::<16>` (_RINvMNtNtCshX3mvxHm3fC_4core9core_simd7swizzleINtNtB5_6vector4SimdaKj10_E6resizeKB14_ECsgtqDAkISWhW_12regex_syntax): SoN construction: unsupported: union and SIMD values are outside the semantic path",
+        "error: aborting due to 1 previous error"
+      ]
+    },
+    {
+      "crate": "regex-syntax",
+      "arm": "instcombine",
+      "status": "compile_failed",
+      "checker": 1,
+      "expected_unsupported": [
+        "error: kfrc: cannot compile `core::core_simd::swizzle::<impl core::simd::Simd<i8, 16>>::resize::<16>` (_RINvMNtNtCshX3mvxHm3fC_4core9core_simd7swizzleINtNtB5_6vector4SimdaKj10_E6resizeKB14_ECsgtqDAkISWhW_12regex_syntax): SoN construction: unsupported: union and SIMD values are outside the semantic path",
+        "error: aborting due to 1 previous error"
+      ]
+    },
+    {
+      "crate": "base64",
+      "arm": "baseline",
+      "status": "ok",
+      "checker": 1,
+      "upstream_incomplete": {
+        "unit": [
+          "error: kfrc: cannot compile `std::hash::RandomState::new::KEYS::{constant#0}::{closure#1}` (_RNCNKNvNvMNtNtCskdEs339NOXv_3std4hash6randomNtB8_11RandomState3new4KEYS0s_0Csfmw7w5XwWdq_6base64): SoN construction: unsupported: TLS is outside the semantic path"
+        ]
+      },
+      "corpus_equal": true,
+      "checksums_equal": true
+    },
+    {
+      "crate": "base64",
+      "arm": "instcombine",
+      "status": "ok",
+      "checker": 1,
+      "upstream_incomplete": {
+        "unit": [
+          "error: kfrc: cannot compile `std::hash::RandomState::new::KEYS::{constant#0}::{closure#1}` (_RNCNKNvNvMNtNtCskdEs339NOXv_3std4hash6randomNtB8_11RandomState3new4KEYS0s_0Cs7ZJAJjr83XP_6base64): SoN construction: unsupported: TLS is outside the semantic path"
+        ]
+      },
+      "corpus_equal": true,
+      "checksums_equal": true
+    },
+    {
+      "crate": "unicode-segmentation",
+      "arm": "baseline",
+      "status": "ok",
+      "checker": 1,
+      "upstream_incomplete": {
+        "unit": [
+          "error: kfrc: cannot compile `core::sync::atomic::atomic_sub::<usize, usize>` (_RINvNtNtCshX3mvxHm3fC_4core4sync6atomic10atomic_subjjECs87syuzlRB8g_20unicode_segmentation): MIR conversion: intrinsic `atomic_xsub` is not implemented"
+        ]
+      },
+      "corpus_equal": true,
+      "checksums_equal": true
+    },
+    {
+      "crate": "unicode-segmentation",
+      "arm": "instcombine",
+      "status": "ok",
+      "checker": 1,
+      "upstream_incomplete": {
+        "unit": [
+          "error: kfrc: cannot compile `core::sync::atomic::atomic_sub::<usize, usize>` (_RINvNtNtCshX3mvxHm3fC_4core4sync6atomic10atomic_subjjECs1qwDdVHylo5_20unicode_segmentation): MIR conversion: intrinsic `atomic_xsub` is not implemented"
+        ]
+      },
+      "corpus_equal": true,
+      "checksums_equal": true
+    },
+    {
+      "crate": "humantime",
+      "arm": "baseline",
+      "status": "ok",
+      "checker": 1,
+      "upstream_incomplete": {
+        "unit": [
+          "error: kfrc: cannot compile `<u64 as rand::distr::utils::WideningMultiply>::wmul` (_RNvXs4_NtNtCs9WOZcrf9gIs_4rand5distr5utilsyNtB5_16WideningMultiply4wmul): SoN construction: unsupported: unsupported semantic type u128"
+        ]
+      },
+      "corpus_equal": true,
+      "checksums_equal": true
+    },
+    {
+      "crate": "humantime",
+      "arm": "instcombine",
+      "status": "ok",
+      "checker": 1,
+      "upstream_incomplete": {
+        "unit": [
+          "error: kfrc: cannot compile `<u64 as rand::distr::utils::WideningMultiply>::wmul` (_RNvXs4_NtNtCs9WOZcrf9gIs_4rand5distr5utilsyNtB5_16WideningMultiply4wmul): SoN construction: unsupported: unsupported semantic type u128"
+        ]
+      },
+      "corpus_equal": true,
+      "checksums_equal": true
+    }
+  ],
+  "sizes": [
+    {
+      "crate": "semver",
+      "size": {
+        "llvm": {
+          "text_bytes": 18515,
+          "func_symbol_bytes": 19015,
+          "func_symbols": 81,
+          "rodata_bytes": 2029,
+          "object_count": 14,
+          "object_bytes": 85256,
+          "rlib_bytes": 238670
+        },
+        "baseline": {
+          "text_bytes": 34148,
+          "func_symbol_bytes": 32795,
+          "func_symbols": 196,
+          "rodata_bytes": 12211,
+          "object_count": 14,
+          "object_bytes": 151304,
+          "rlib_bytes": 304078
+        },
+        "instcombine": {
+          "text_bytes": 34148,
+          "func_symbol_bytes": 32791,
+          "func_symbols": 196,
+          "rodata_bytes": 12211,
+          "object_count": 14,
+          "object_bytes": 151304,
+          "rlib_bytes": 304078
+        }
+      },
+      "text_ratio": 1.0
+    },
+    {
+      "crate": "base64",
+      "size": {
+        "llvm": {
+          "text_bytes": 8648,
+          "func_symbol_bytes": 8648,
+          "func_symbols": 35,
+          "rodata_bytes": 1982,
+          "object_count": 14,
+          "object_bytes": 53704,
+          "rlib_bytes": 411962
+        },
+        "baseline": {
+          "text_bytes": 29651,
+          "func_symbol_bytes": 29025,
+          "func_symbols": 92,
+          "rodata_bytes": 11262,
+          "object_count": 14,
+          "object_bytes": 130784,
+          "rlib_bytes": 488858
+        },
+        "instcombine": {
+          "text_bytes": 29619,
+          "func_symbol_bytes": 29016,
+          "func_symbols": 92,
+          "rodata_bytes": 11262,
+          "object_count": 14,
+          "object_bytes": 130752,
+          "rlib_bytes": 488826
+        }
+      },
+      "text_ratio": 0.9989207783885873
+    },
+    {
+      "crate": "unicode-segmentation",
+      "size": {
+        "llvm": {
+          "text_bytes": 8398,
+          "func_symbol_bytes": 8398,
+          "func_symbols": 24,
+          "rodata_bytes": 75916,
+          "object_count": 9,
+          "object_bytes": 112600,
+          "rlib_bytes": 1268848
+        },
+        "baseline": {
+          "text_bytes": 18618,
+          "func_symbol_bytes": 18087,
+          "func_symbols": 78,
+          "rodata_bytes": 90617,
+          "object_count": 9,
+          "object_bytes": 180168,
+          "rlib_bytes": 1335588
+        },
+        "instcombine": {
+          "text_bytes": 18618,
+          "func_symbol_bytes": 18084,
+          "func_symbols": 78,
+          "rodata_bytes": 90617,
+          "object_count": 9,
+          "object_bytes": 180168,
+          "rlib_bytes": 1335588
+        }
+      },
+      "text_ratio": 1.0
+    },
+    {
+      "crate": "humantime",
+      "size": {
+        "llvm": {
+          "text_bytes": 10426,
+          "func_symbol_bytes": 10426,
+          "func_symbols": 32,
+          "rodata_bytes": 1670,
+          "object_count": 13,
+          "object_bytes": 53784,
+          "rlib_bytes": 148752
+        },
+        "baseline": {
+          "text_bytes": 57477,
+          "func_symbol_bytes": 56816,
+          "func_symbols": 100,
+          "rodata_bytes": 11494,
+          "object_count": 13,
+          "object_bytes": 165984,
+          "rlib_bytes": 261196
+        },
+        "instcombine": {
+          "text_bytes": 57461,
+          "func_symbol_bytes": 56813,
+          "func_symbols": 100,
+          "rodata_bytes": 11494,
+          "object_count": 13,
+          "object_bytes": 165968,
+          "rlib_bytes": 261180
+        }
+      },
+      "text_ratio": 0.9997216277815474
+    }
+  ],
+  "runtime": [
+    {
+      "crate": "semver",
+      "workload": "parse",
+      "paired_ratios": [
+        1.3130730783984188,
+        1.0026079441765163,
+        1.0040582751438958,
+        1.005013612376306,
+        1.0376368607299857,
+        0.9821745626722689,
+        1.0157575414802233,
+        1.0031659894236888,
+        1.0993872029665142,
+        1.0226118447276957,
+        0.9976606014443437
+      ],
+      "paired_median": 1.005013612376306,
+      "arms": {
+        "llvm": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 11139809,
+          "min_ns": 11056083,
+          "max_ns": 11857796,
+          "checksums": [
+            9666685
+          ],
+          "instructions": 173125960,
+          "cycles": 41384402
+        },
+        "baseline": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 46909594,
+          "min_ns": 46465878,
+          "max_ns": 47738969,
+          "checksums": [
+            9666685
+          ],
+          "instructions": 705264022,
+          "cycles": 170887753
+        },
+        "instcombine": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 47198066,
+          "min_ns": 46787742,
+          "max_ns": 61595725,
+          "checksums": [
+            9666685
+          ],
+          "instructions": 705264073,
+          "cycles": 173240324
+        }
+      }
+    },
+    {
+      "crate": "semver",
+      "workload": "req",
+      "paired_ratios": [
+        1.0771189518828181,
+        0.9976540202147399,
+        1.0095614633902101,
+        0.9952740045226214,
+        1.0060972262226122,
+        0.9915471568605295,
+        1.0042647496447474,
+        1.0076605927064886,
+        0.9506305076629984,
+        1.0098200133886786,
+        1.0037403555294702
+      ],
+      "paired_median": 1.0042647496447474,
+      "arms": {
+        "llvm": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 16980494,
+          "min_ns": 16845592,
+          "max_ns": 18040315,
+          "checksums": [
+            400000
+          ],
+          "instructions": 262258058,
+          "cycles": 64194663
+        },
+        "baseline": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 127683593,
+          "min_ns": 127144735,
+          "max_ns": 135062276,
+          "checksums": [
+            400000
+          ],
+          "instructions": 1658728760,
+          "cycles": 468960874
+        },
+        "instcombine": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 128304204,
+          "min_ns": 127578765,
+          "max_ns": 137795960,
+          "checksums": [
+            400000
+          ],
+          "instructions": 1658729199,
+          "cycles": 468325397
+        }
+      }
+    },
+    {
+      "crate": "semver",
+      "workload": "identifier",
+      "paired_ratios": [
+        0.9557881788166982,
+        1.0130945714063389,
+        1.1717034834512452,
+        1.0673713558035023,
+        0.9865644855653601,
+        1.0406687318896337,
+        1.00536030725091,
+        1.0018411048126743,
+        1.0077747849060361,
+        0.9919123343818654,
+        1.000411584240824
+      ],
+      "paired_median": 1.00536030725091,
+      "arms": {
+        "llvm": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 28198312,
+          "min_ns": 28089648,
+          "max_ns": 29602979,
+          "checksums": [
+            30750000
+          ],
+          "instructions": 555109384,
+          "cycles": 103330055
+        },
+        "baseline": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 54938303,
+          "min_ns": 54727557,
+          "max_ns": 57290153,
+          "checksums": [
+            30750000
+          ],
+          "instructions": 918623801,
+          "cycles": 201117994
+        },
+        "instcombine": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 55112816,
+          "min_ns": 54750082,
+          "max_ns": 64371401,
+          "checksums": [
+            30750000
+          ],
+          "instructions": 918623037,
+          "cycles": 261482416
+        }
+      }
+    },
+    {
+      "crate": "base64",
+      "workload": "encode",
+      "paired_ratios": [
+        1.0226511317203462,
+        1.0024213884288151,
+        1.00730231981754,
+        0.9867694111869098,
+        0.9961285730757931,
+        1.0108074451575506,
+        1.0040470458639736,
+        0.9693065984984325,
+        1.0070800930822608,
+        0.9937861296772182,
+        1.003530082059617
+      ],
+      "paired_median": 1.003530082059617,
+      "arms": {
+        "llvm": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 17536079,
+          "min_ns": 17448617,
+          "max_ns": 19453347,
+          "checksums": [
+            55493921
+          ],
+          "instructions": 292760805,
+          "cycles": 64829970
+        },
+        "baseline": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 172567638,
+          "min_ns": 171807627,
+          "max_ns": 177666330,
+          "checksums": [
+            55493921
+          ],
+          "instructions": 1870915611,
+          "cycles": 631770540
+        },
+        "instcombine": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 172867147,
+          "min_ns": 171899555,
+          "max_ns": 176466770,
+          "checksums": [
+            55493921
+          ],
+          "instructions": 1870915761,
+          "cycles": 632161781
+        }
+      }
+    },
+    {
+      "crate": "base64",
+      "workload": "decode",
+      "paired_ratios": [
+        1.0039542775792245,
+        1.0114417050053832,
+        1.108869289934126,
+        1.019739454783319,
+        1.0136715462023742,
+        0.9996663042854087,
+        1.0207044534301988,
+        1.0890512329005952,
+        1.0204431928225812,
+        1.0316242605980448,
+        1.022771896556055
+      ],
+      "paired_median": 1.0204431928225812,
+      "arms": {
+        "llvm": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 18527196,
+          "min_ns": 18414688,
+          "max_ns": 24835605,
+          "checksums": [
+            42229339
+          ],
+          "instructions": 385642898,
+          "cycles": 67990664
+        },
+        "baseline": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 153822529,
+          "min_ns": 152405988,
+          "max_ns": 168103658,
+          "checksums": [
+            42229339
+          ],
+          "instructions": 2429135853,
+          "cycles": 561602290
+        },
+        "instcombine": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 157390299,
+          "min_ns": 155521653,
+          "max_ns": 183073496,
+          "checksums": [
+            42229339
+          ],
+          "instructions": 2429025272,
+          "cycles": 575220535
+        }
+      }
+    },
+    {
+      "crate": "base64",
+      "workload": "short",
+      "paired_ratios": [
+        0.9954194047391975,
+        1.0043093103909735,
+        0.9952872803381775,
+        0.9969236911647773,
+        0.9891825884562502,
+        1.0117744567775826,
+        0.9957079064056287,
+        1.0051382598646668,
+        0.9856055047527115,
+        0.999901401519592,
+        0.9226186428345764
+      ],
+      "paired_median": 0.9957079064056287,
+      "arms": {
+        "llvm": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 17059032,
+          "min_ns": 17016469,
+          "max_ns": 17264670,
+          "checksums": [
+            55990625
+          ],
+          "instructions": 335775869,
+          "cycles": 63510256
+        },
+        "baseline": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 78333537,
+          "min_ns": 77791122,
+          "max_ns": 86098141,
+          "checksums": [
+            55990625
+          ],
+          "instructions": 1172203104,
+          "cycles": 304180689
+        },
+        "instcombine": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 78096951,
+          "min_ns": 77493245,
+          "max_ns": 79619797,
+          "checksums": [
+            55990625
+          ],
+          "instructions": 1170765163,
+          "cycles": 366172863
+        }
+      }
+    },
+    {
+      "crate": "unicode-segmentation",
+      "workload": "graphemes-mixed",
+      "paired_ratios": [
+        1.650287054356335,
+        1.0048159506093954,
+        1.0015029761391658,
+        0.9357286790595802,
+        1.005384651856993,
+        0.9977405937318624,
+        0.9760357249081767,
+        1.0178983307403808,
+        0.9884484200067224,
+        1.016521048136103,
+        1.039213558386669
+      ],
+      "paired_median": 1.0048159506093954,
+      "arms": {
+        "llvm": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 17446586,
+          "min_ns": 17278882,
+          "max_ns": 29643140,
+          "checksums": [
+            4502913975839704316
+          ],
+          "instructions": 270091895,
+          "cycles": 64120493
+        },
+        "baseline": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 23782013,
+          "min_ns": 23640361,
+          "max_ns": 25418989,
+          "checksums": [
+            4502913975839704316
+          ],
+          "instructions": 361360028,
+          "cycles": 88325792
+        },
+        "instcombine": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 23896546,
+          "min_ns": 23753791,
+          "max_ns": 39209317,
+          "checksums": [
+            4502913975839704316
+          ],
+          "instructions": 361360597,
+          "cycles": 87647906
+        }
+      }
+    },
+    {
+      "crate": "unicode-segmentation",
+      "workload": "graphemes-ascii",
+      "paired_ratios": [
+        0.9989174658828964,
+        1.0505856862961718,
+        0.9814363518715208,
+        0.9980321841118717,
+        0.9840701695625143,
+        1.0051598636748496,
+        1.0453267230568921,
+        1.0036559922049342,
+        0.9939169994081851,
+        0.9931074389971445,
+        0.9862403426796662
+      ],
+      "paired_median": 0.9980321841118717,
+      "arms": {
+        "llvm": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 27760925,
+          "min_ns": 27561514,
+          "max_ns": 32039456,
+          "checksums": [
+            18227791836399012924
+          ],
+          "instructions": 469604944,
+          "cycles": 102064736
+        },
+        "baseline": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 30326065,
+          "min_ns": 30060717,
+          "max_ns": 30714006,
+          "checksums": [
+            18227791836399012924
+          ],
+          "instructions": 490907841,
+          "cycles": 114502973
+        },
+        "instcombine": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 30239054,
+          "min_ns": 30143842,
+          "max_ns": 31657263,
+          "checksums": [
+            18227791836399012924
+          ],
+          "instructions": 490907841,
+          "cycles": 116162119
+        }
+      }
+    },
+    {
+      "crate": "unicode-segmentation",
+      "workload": "graphemes-rev",
+      "paired_ratios": [
+        1.0034882600293056,
+        0.9979763609111313,
+        1.0019829330087568,
+        1.1328911650695093,
+        0.9995246570180716,
+        1.0004210234667954,
+        0.9989642818515609,
+        1.0021976920168534,
+        1.0061734096794144,
+        1.0018207088267872,
+        0.9934320958122734
+      ],
+      "paired_median": 1.0018207088267872,
+      "arms": {
+        "llvm": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 22838817,
+          "min_ns": 22346228,
+          "max_ns": 23411448,
+          "checksums": [
+            12754887892209847992
+          ],
+          "instructions": 364549483,
+          "cycles": 84374818
+        },
+        "baseline": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 80068089,
+          "min_ns": 79788630,
+          "max_ns": 80533148,
+          "checksums": [
+            12754887892209847992
+          ],
+          "instructions": 1305241809,
+          "cycles": 293564564
+        },
+        "instcombine": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 80244054,
+          "min_ns": 79923201,
+          "max_ns": 90391834,
+          "checksums": [
+            12754887892209847992
+          ],
+          "instructions": 1305241607,
+          "cycles": 293837283
+        }
+      }
+    },
+    {
+      "crate": "humantime",
+      "workload": "dur-parse",
+      "paired_ratios": [
+        1.0405160103453135,
+        1.0061528464233005,
+        1.048864776535619,
+        1.0387532014145684,
+        1.0093549113557547,
+        1.0471457670857416,
+        1.0357386943646132,
+        1.0534977580726583,
+        1.0381130428579413,
+        1.042672350738151,
+        0.8913580582589274
+      ],
+      "paired_median": 1.0387532014145684,
+      "arms": {
+        "llvm": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 20896713,
+          "min_ns": 20803834,
+          "max_ns": 21168450,
+          "checksums": [
+            9931678550000
+          ],
+          "instructions": 329610129,
+          "cycles": 77912285
+        },
+        "baseline": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 220656550,
+          "min_ns": 218511692,
+          "max_ns": 255464092,
+          "checksums": [
+            9931678550000
+          ],
+          "instructions": 2494762618,
+          "cycles": 833536519
+        },
+        "instcombine": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 229301256,
+          "min_ns": 227709977,
+          "max_ns": 232511953,
+          "checksums": [
+            9931678550000
+          ],
+          "instructions": 2494763014,
+          "cycles": 839796223
+        }
+      }
+    },
+    {
+      "crate": "humantime",
+      "workload": "dur-format",
+      "paired_ratios": [
+        0.9976512476960866,
+        1.0245859765740744,
+        1.012011634557957,
+        1.0245224104262016,
+        0.991441998743831,
+        1.0160512152775891,
+        1.0211555033970672,
+        0.9648937660080524,
+        1.1305956803954857,
+        1.1608475088747239,
+        0.9807301596260457
+      ],
+      "paired_median": 1.0160512152775891,
+      "arms": {
+        "llvm": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 23958399,
+          "min_ns": 23252959,
+          "max_ns": 24106520,
+          "checksums": [
+            9619162
+          ],
+          "instructions": 380623205,
+          "cycles": 88614131
+        },
+        "baseline": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 28011700,
+          "min_ns": 27270729,
+          "max_ns": 29028227,
+          "checksums": [
+            9619162
+          ],
+          "instructions": 436462585,
+          "cycles": 107061350
+        },
+        "instcombine": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 28058931,
+          "min_ns": 27847655,
+          "max_ns": 33697345,
+          "checksums": [
+            9619162
+          ],
+          "instructions": 436462673,
+          "cycles": 102396479
+        }
+      }
+    },
+    {
+      "crate": "humantime",
+      "workload": "ts-parse",
+      "paired_ratios": [
+        0.9160393553972992,
+        0.9161299158326806,
+        0.9211994083830611,
+        0.9217385034009267,
+        0.9186204370110004,
+        0.9066002651065977,
+        0.9179091375795537,
+        0.9201818917369563,
+        0.9605501419379291,
+        0.9085743986021794,
+        0.9854963096226801
+      ],
+      "paired_median": 0.9186204370110004,
+      "arms": {
+        "llvm": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 21714470,
+          "min_ns": 21364165,
+          "max_ns": 29376780,
+          "checksums": [
+            10339638455182523344
+          ],
+          "instructions": 295760120,
+          "cycles": 79747060
+        },
+        "baseline": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 74062116,
+          "min_ns": 74002066,
+          "max_ns": 77015058,
+          "checksums": [
+            10339638455182523344
+          ],
+          "instructions": 1239262940,
+          "cycles": 271524358
+        },
+        "instcombine": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 68187358,
+          "min_ns": 67843813,
+          "max_ns": 72993242,
+          "checksums": [
+            10339638455182523344
+          ],
+          "instructions": 1238263095,
+          "cycles": 250714276
+        }
+      }
+    },
+    {
+      "crate": "humantime",
+      "workload": "ts-format",
+      "paired_ratios": [
+        1.0024913920715885,
+        0.999468587536671,
+        1.0003582018507773,
+        0.9994794917361165,
+        1.0014054371228467,
+        1.0149220103351095,
+        1.0017678004025887,
+        1.0011093590760527,
+        1.0005259321466193,
+        1.0034779979197703,
+        1.002144996149855
+      ],
+      "paired_median": 1.0014054371228467,
+      "arms": {
+        "llvm": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 22831066,
+          "min_ns": 22722303,
+          "max_ns": 23150755,
+          "checksums": [
+            32966122
+          ],
+          "instructions": 264257452,
+          "cycles": 83930730
+        },
+        "baseline": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 50687433,
+          "min_ns": 50635807,
+          "max_ns": 53400837,
+          "checksums": [
+            32966122
+          ],
+          "instructions": 447939987,
+          "cycles": 186172294
+        },
+        "instcombine": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 50752782,
+          "min_ns": 50679562,
+          "max_ns": 53586565,
+          "checksums": [
+            32966122
+          ],
+          "instructions": 447939495,
+          "cycles": 186434684
+        }
+      }
+    }
+  ],
+  "runtime_geomean": 1.000706643140035,
+  "confirm_regressions": [
+    {
+      "crate": "humantime",
+      "workload": "dur-parse",
+      "ratio": 1.0387532014145684
+    }
+  ]
+}

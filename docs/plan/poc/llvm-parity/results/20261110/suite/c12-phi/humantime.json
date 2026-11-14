@@ -1,0 +1,288 @@
+{
+  "crate": "humantime",
+  "version": "2.4.0",
+  "arm": "c12-phi",
+  "backend": "/workspace/results/compile-c12-base/backend.so",
+  "backend_sha256": "4a49d09600bb6006d0f403869213592a48f230686af1f83268201ff98c97ccb4",
+  "flags": [
+    "-Cpanic=abort",
+    "-Copt-level=3",
+    "-Ccodegen-units=16",
+    "-Cembed-bitcode=no",
+    "-Cdebuginfo=0",
+    "-Coverflow-checks=off",
+    "-Cdebug-assertions=off",
+    "-Zmir-opt-level=0"
+  ],
+  "sysroot": "/workspace/shared-std-mir0/sysroot",
+  "library_command": [
+    "rustc",
+    "+1.94.1",
+    "--sysroot=/workspace/shared-std-mir0/sysroot",
+    "--crate-name",
+    "humantime",
+    "--crate-type",
+    "rlib",
+    "--edition=2021",
+    "/workspace/results/integrated-final1/suite/src/humantime-2.4.0/src/lib.rs",
+    "-Cpanic=abort",
+    "-Copt-level=3",
+    "-Ccodegen-units=16",
+    "-Cembed-bitcode=no",
+    "-Cdebuginfo=0",
+    "-Coverflow-checks=off",
+    "-Cdebug-assertions=off",
+    "-Zmir-opt-level=0",
+    "--cap-lints=allow",
+    "-o",
+    "/workspace/results/integrated-final1/suite/c12-phi/humantime/ref/lib.rlib",
+    "-Zcodegen-backend=/workspace/results/compile-c12-base/backend.so"
+  ],
+  "status": "ok",
+  "size": {
+    "text_bytes": 57477,
+    "func_symbol_bytes": 56816,
+    "func_symbols": 100,
+    "rodata_bytes": 11622,
+    "object_count": 13,
+    "object_bytes": 166112,
+    "rlib_bytes": 261380
+  },
+  "kfrc_file_symbol": true,
+  "compile": {
+    "rounds": 3,
+    "checker": 0,
+    "order": "three rounds: llvm,c12-phi,integrated then reverse then forward; same sandbox serial",
+    "full": [
+      {
+        "exit_code": 0,
+        "wall_seconds": 1.035662020003656,
+        "user_seconds": 0.894087,
+        "sys_seconds": 0.14016,
+        "maxrss_kib": 227068,
+        "instructions": 10123125488,
+        "instructions_running_pct": 100.0,
+        "cycles": 3357266096,
+        "cycles_running_pct": 100.0,
+        "objects_identical_to_reference": true
+      },
+      {
+        "exit_code": 0,
+        "wall_seconds": 1.026170646000537,
+        "user_seconds": 0.928346,
+        "sys_seconds": 0.09930399999999999,
+        "maxrss_kib": 236552,
+        "instructions": 10123488520,
+        "instructions_running_pct": 100.0,
+        "cycles": 3322619964,
+        "cycles_running_pct": 100.0,
+        "objects_identical_to_reference": true
+      },
+      {
+        "exit_code": 0,
+        "wall_seconds": 1.0249349920050008,
+        "user_seconds": 0.914107,
+        "sys_seconds": 0.11147699999999999,
+        "maxrss_kib": 226580,
+        "instructions": 10124886365,
+        "instructions_running_pct": 100.0,
+        "cycles": 3328752473,
+        "cycles_running_pct": 100.0,
+        "objects_identical_to_reference": true
+      }
+    ],
+    "metadata_only": [
+      {
+        "exit_code": 0,
+        "wall_seconds": 0.10699710799963214,
+        "user_seconds": 0.06445,
+        "sys_seconds": 0.040035,
+        "maxrss_kib": 110360,
+        "instructions": 280902926,
+        "instructions_running_pct": 100.0,
+        "cycles": 222610106,
+        "cycles_running_pct": 100.0
+      },
+      {
+        "exit_code": 0,
+        "wall_seconds": 0.10727838000457268,
+        "user_seconds": 0.06478099999999999,
+        "sys_seconds": 0.043841,
+        "maxrss_kib": 110368,
+        "instructions": 280918457,
+        "instructions_running_pct": 100.0,
+        "cycles": 240959131,
+        "cycles_running_pct": 100.0
+      },
+      {
+        "exit_code": 0,
+        "wall_seconds": 0.10205638400657335,
+        "user_seconds": 0.048868999999999996,
+        "sys_seconds": 0.05278,
+        "maxrss_kib": 110492,
+        "instructions": 280904657,
+        "instructions_running_pct": 100.0,
+        "cycles": 208271072,
+        "cycles_running_pct": 100.0
+      }
+    ],
+    "instructions_median": 10123488520,
+    "cycles_median": 3328752473,
+    "wall_median": 1.026170646000537,
+    "user_median": 0.914107,
+    "maxrss_kib_median": 227068,
+    "metadata_instructions_median": 280904657,
+    "metadata_wall_median": 0.10699710799963214,
+    "codegen_instructions_estimate": 9842583863
+  },
+  "driver": {
+    "command": [
+      "rustc",
+      "+1.94.1",
+      "--sysroot=/workspace/shared-std-mir0/sysroot",
+      "--edition=2021",
+      "/workspace/suite/drivers/humantime.rs",
+      "--crate-name",
+      "driver",
+      "-Cpanic=abort",
+      "-Copt-level=3",
+      "-Cdebuginfo=0",
+      "-Zmir-opt-level=0",
+      "--extern",
+      "humantime=/workspace/results/integrated-final1/suite/c12-phi/humantime/ref/lib.rlib",
+      "-Csave-temps",
+      "-o",
+      "/workspace/results/integrated-final1/suite/c12-phi/humantime/driver/driver"
+    ],
+    "exit_code": 0,
+    "objects_sha256": {
+      "driver.7q524ybyu92u8qns68khmscfx.rcgu.o": "92ad59834dc9a8be5aa70ed035327994668310cdf0f1c37cc1ae8dfbfb90b6d3",
+      "driver.driver.39fc946f9cbf83db-cgu.0.rcgu.o": "bc768ce65210eb28f804cf683ec72bb4114ed933f6055e1a09f955afa2ed6b0b",
+      "driver.driver.39fc946f9cbf83db-cgu.1.rcgu.o": "56f78a594fbc671caa7edb89124ff9c704f35f3a479f2dccb1b3a8bb477bc211",
+      "driver.driver.39fc946f9cbf83db-cgu.2.rcgu.o": "5b9e2f41968f6cfe08c91c91c494a12fa276d0a9207d9dbf703b61eae05afdc7",
+      "driver.driver.39fc946f9cbf83db-cgu.3.rcgu.o": "c9a1709b817f45dd9af9aff4b58f1cde552d908fb3f3036315a19afc059fcd24"
+    },
+    "local_text_bytes": 11184,
+    "executable_sha256": "8aaf6586d776520be19bf773d3b062f8ca1d7fa78c87f1001bfcbc95cc71029a"
+  },
+  "corpus": {
+    "exit_code": 0,
+    "sha256": "a9425cd88ba9a9d39fae77ce8c1399af21168d6e2938ad1377b560e49a029b1d",
+    "lines": 553
+  },
+  "workload_check": {
+    "dur-parse": {
+      "exit_code": 0,
+      "checksum": 9931678550000
+    },
+    "dur-format": {
+      "exit_code": 0,
+      "checksum": 9619162
+    },
+    "ts-parse": {
+      "exit_code": 0,
+      "checksum": 10339638455182523344
+    },
+    "ts-format": {
+      "exit_code": 0,
+      "checksum": 32966122
+    }
+  },
+  "tests": {
+    "lockfile": "suite",
+    "sysroot": "cargo -Zbuild-std (MIR opt-level 0, panic=abort, O3, CGU16)",
+    "unit": {
+      "build_exit_code": 101,
+      "build_seconds": 2.6307675700008986,
+      "crate_invocations": 1,
+      "crate_invocations_with_backend": 1,
+      "build_error": [
+        "error: kfrc: cannot compile `<u64 as rand::distr::utils::WideningMultiply>::wmul` (_RNvXs4_NtNtCs9WOZcrf9gIs_4rand5distr5utilsyNtB5_16WideningMultiply4wmul): SoN construction: unsupported: unsupported semantic type u128"
+      ]
+    }
+  },
+  "compile_checker1_not_formal": {
+    "rounds": 3,
+    "full": [
+      {
+        "exit_code": 0,
+        "wall_seconds": 1.141031977997045,
+        "user_seconds": 0.971665,
+        "sys_seconds": 0.133674,
+        "maxrss_kib": 237660,
+        "instructions": 10833882391,
+        "instructions_running_pct": 100.0,
+        "cycles": 3553513775,
+        "cycles_running_pct": 100.0,
+        "objects_identical_to_reference": true
+      },
+      {
+        "exit_code": 0,
+        "wall_seconds": 1.074676839998574,
+        "user_seconds": 0.951819,
+        "sys_seconds": 0.12382499999999999,
+        "maxrss_kib": 228544,
+        "instructions": 10834948629,
+        "instructions_running_pct": 100.0,
+        "cycles": 3529775369,
+        "cycles_running_pct": 100.0,
+        "objects_identical_to_reference": true
+      },
+      {
+        "exit_code": 0,
+        "wall_seconds": 1.080396303004818,
+        "user_seconds": 0.9598559999999999,
+        "sys_seconds": 0.119004,
+        "maxrss_kib": 236616,
+        "instructions": 10835129268,
+        "instructions_running_pct": 100.0,
+        "cycles": 3540593342,
+        "cycles_running_pct": 100.0,
+        "objects_identical_to_reference": true
+      }
+    ],
+    "metadata_only": [
+      {
+        "exit_code": 0,
+        "wall_seconds": 0.09671442700346233,
+        "user_seconds": 0.065013,
+        "sys_seconds": 0.031925,
+        "maxrss_kib": 110508,
+        "instructions": 280924170,
+        "instructions_running_pct": 100.0,
+        "cycles": 199023718,
+        "cycles_running_pct": 100.0
+      },
+      {
+        "exit_code": 0,
+        "wall_seconds": 0.09661643100116635,
+        "user_seconds": 0.055253,
+        "sys_seconds": 0.040447,
+        "maxrss_kib": 110416,
+        "instructions": 280910748,
+        "instructions_running_pct": 100.0,
+        "cycles": 197402196,
+        "cycles_running_pct": 100.0
+      },
+      {
+        "exit_code": 0,
+        "wall_seconds": 0.09670846800145227,
+        "user_seconds": 0.06626699999999999,
+        "sys_seconds": 0.031527,
+        "maxrss_kib": 110588,
+        "instructions": 280903754,
+        "instructions_running_pct": 100.0,
+        "cycles": 201866917,
+        "cycles_running_pct": 100.0
+      }
+    ],
+    "instructions_median": 10834948629,
+    "cycles_median": 3540593342,
+    "wall_median": 1.080396303004818,
+    "user_median": 0.9598559999999999,
+    "maxrss_kib_median": 236616,
+    "metadata_instructions_median": 280910748,
+    "metadata_wall_median": 0.09670846800145227,
+    "codegen_instructions_estimate": 10554037881
+  }
+}

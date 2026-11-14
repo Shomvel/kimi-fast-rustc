@@ -1,0 +1,556 @@
+//! Compile-time variant witnesses. A false proof is a compiler error, never UB.
+//! Proof edges participate in graph maintenance, not in machine value demand.
+mod implication;
+#[cfg(test)]
+mod instance_walk;
+
+use crate::analysis::{
+    cfg::{ControlFlow, is_anchored_value, is_control_flow},
+    dominators::Dominators,
+    uses::{UseKind, Uses},
+};
+use crate::{ComparePredicate, FunctionGraph, NodeId, Opcode, ValueType};
+use kfrc_body::fx_hash::{HashMap, HashSet};
+use kfrc_body::{TyId, TypeOracle, TypeShape};
+
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct WitnessStats {
+    pub witnesses_checked: usize,
+    pub node_visits: usize,
+    pub consumer_sites: usize,
+}
+
+pub fn variant_on_edge(graph: &FunctionGraph, value: NodeId, edge: NodeId) -> Option<u32> {
+    if graph.op(edge) != Opcode::Projection {
+        return None;
+    }
+    let branch = graph.input(edge, 0);
+    if graph.op(branch) != Opcode::VariantSwitch
+        || graph.resolve(graph.input(branch, 0)) != graph.resolve(value)
+    {
+        return None;
+    }
+    let cases = graph.variant_switches.get(graph.payload(branch) as usize)?;
+    let slot = graph.payload(edge) as usize;
+    if slot < cases.len() {
+        return Some(cases[slot]);
+    }
+    if slot != cases.len() {
+        return None;
+    }
+    let count = graph
+        .oracle
+        .semantic()
+        .variant_count(graph.rust_type(value)?)?;
+    let mut remaining = (0..count as u32).filter(|variant| !cases.contains(variant));
+    let variant = remaining.next()?;
+    remaining.next().is_none().then_some(variant)
+}
+
+/// A predicate known on a particular control exit. This records only the
+/// Boolean proposition: `ptr != 0` says nothing about validity for dereference.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct ScopedPredicate {
+    pub predicate: NodeId,
+    pub truth: bool,
+    pub proof: NodeId,
+    pub origin: PredicateOrigin,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum PredicateOrigin {
+    Branch,
+    Assumption,
+}
+
+/// Evidence for one proposed If rewrite, valid only before that batch mutates
+/// the graph. Keeping receipts ephemeral avoids stale NodeIds after compaction.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) struct ConditionReceipt {
+    pub branch: NodeId,
+    pub condition: NodeId,
+    pub proof: NodeId,
+    pub truth: bool,
+}
+
+/// One fixed Call operand justified by an earlier executed integer equality.
+/// This receipt belongs to the original graph, before any batch edits.
+#[derive(Clone, Copy, Debug)]
+pub(crate) struct CallArgumentReceipt {
+    pub call: NodeId,
+    pub slot: usize,
+    pub original: NodeId,
+    pub constant: NodeId,
+    pub proof: NodeId,
+}
+
+pub(crate) fn ordinary_integer(graph: &FunctionGraph, value: NodeId) -> Option<TyId> {
+    let ValueType::Rust(ty) = graph.value_type(graph.resolve(value)) else {
+        return None;
+    };
+    let ty = *ty;
+    if graph.oracle.scalar_validity(ty).is_none()
+        && matches!(graph.oracle.shape(ty), TypeShape::Int { width, .. } if width.bits(64) <= 64)
+    {
+        Some(ty)
+    } else {
+        None
+    }
+}
+
+/// Normalize Boolean negation and equality against Boolean constants.
+/// Integer BitNot and integer comparison constants are not truth complements.
+pub(crate) fn canonical_condition(graph: &FunctionGraph, value: NodeId) -> Option<(NodeId, bool)> {
+    let mut value = graph.resolve(value);
+    let mut inverted = false;
+    let mut seen = HashSet::default();
+    loop {
+        let ty = graph.rust_type(value)?;
+        if !matches!(graph.oracle.semantic().shape(ty), TypeShape::Bool) || !seen.insert(value) {
+            return None;
+        }
+        if graph.op(value) == Opcode::BitNot {
+            value = graph.resolve(*graph.inputs(value).first()?);
+            inverted = !inverted;
+            continue;
+        }
+        if graph.op(value) == Opcode::Compare
+            && matches!(
+                ComparePredicate::from_payload(graph.payload(value)),
+                ComparePredicate::Equal | ComparePredicate::NotEqual
+            )
+        {
+            let [left, right] = graph.inputs(value) else {
+                return None;
+            };
+            let operands = [graph.resolve(*left), graph.resolve(*right)];
+            if operands.iter().all(|&operand| {
+                graph
+                    .rust_type(operand)
+                    .is_some_and(|ty| matches!(graph.oracle.semantic().shape(ty), TypeShape::Bool))
+            }) {
+                let constant = operands.iter().position(|&operand| {
+                    graph.op(operand) == Opcode::Const && graph.constant_value(operand) <= 1
+                });
+                if let Some(slot) = constant {
+                    let constant = graph.constant_value(operands[slot]) != 0;
+                    let equal = graph.payload(value) == ComparePredicate::Equal as u32;
+                    inverted ^= equal != constant;
+                    value = operands[1 - slot];
+                    continue;
+                }
+            }
+        }
+        return Some((value, inverted));
+    }
+}
+
+fn predicate_on_edge(graph: &FunctionGraph, edge: NodeId) -> Option<ScopedPredicate> {
+    if graph.op(edge) != Opcode::Projection {
+        return None;
+    }
+    let source = graph.input(edge, 0);
+    let (predicate, truth, origin) = match (graph.op(source), graph.payload(edge)) {
+        (Opcode::If, slot @ 0..=1) => (graph.input(source, 0), slot == 0, PredicateOrigin::Branch),
+        (Opcode::Assume, 0) => (graph.input(source, 1), true, PredicateOrigin::Assumption),
+        _ => return None,
+    };
+    Some(ScopedPredicate {
+        predicate,
+        truth,
+        proof: edge,
+        origin,
+    })
+}
+
+fn integer_equality(graph: &FunctionGraph, fact: ScopedPredicate) -> Option<(NodeId, NodeId)> {
+    let (predicate, inverted) = canonical_condition(graph, fact.predicate)?;
+    let truth = fact.truth ^ inverted;
+    if graph.op(predicate) != Opcode::Compare
+        || !matches!(
+            (
+                ComparePredicate::from_payload(graph.payload(predicate)),
+                truth
+            ),
+            (ComparePredicate::Equal, true) | (ComparePredicate::NotEqual, false)
+        )
+    {
+        return None;
+    }
+    let [left, right] = graph.inputs(predicate) else {
+        return None;
+    };
+    let (mut value, mut constant) = (graph.resolve(*left), graph.resolve(*right));
+    if graph.op(value) == Opcode::Const {
+        std::mem::swap(&mut value, &mut constant);
+    }
+    if graph.op(value) == Opcode::Const || graph.op(constant) != Opcode::Const {
+        return None;
+    }
+    (graph.value_type(constant) == &ValueType::Rust(ordinary_integer(graph, value)?))
+        .then_some((value, constant))
+}
+
+/// Candidate discovery only. The returned equality is not usable until
+/// PredicateFacts validates this proof at the consumer's execution control.
+pub(crate) fn integer_equality_on_edge(
+    graph: &FunctionGraph,
+    proof: NodeId,
+) -> Option<(NodeId, NodeId)> {
+    integer_equality(graph, predicate_on_edge(graph, proof)?)
+}
+
+fn predicate_variant(graph: &FunctionGraph, value: NodeId, fact: ScopedPredicate) -> Option<u32> {
+    let predicate = fact.predicate;
+    if graph.op(predicate) != Opcode::Compare
+        || !((graph.payload(predicate) == ComparePredicate::Equal as u32 && fact.truth)
+            || (graph.payload(predicate) == ComparePredicate::NotEqual as u32 && !fact.truth))
+    {
+        return None;
+    }
+    for (query, constant) in [
+        (graph.input(predicate, 0), graph.input(predicate, 1)),
+        (graph.input(predicate, 1), graph.input(predicate, 0)),
+    ] {
+        if graph.op(query) == Opcode::VariantOf
+            && graph.resolve(graph.input(query, 0)) == graph.resolve(value)
+            && graph.op(constant) == Opcode::Const
+        {
+            return u32::try_from(graph.constant_value(constant)).ok();
+        }
+    }
+    None
+}
+
+/// Scoped facts for one immutable CFG snapshot. Consumers must query at their
+/// actual execution control, including Phi predecessor edges. A graph edit
+/// invalidates this cache. Dynamic scope follows the dominance proof below,
+/// without a budget-based success fallback.
+pub struct PredicateFacts<'a> {
+    graph: &'a FunctionGraph,
+    cfg: &'a ControlFlow,
+    dominators: &'a Dominators,
+    anchors: HashMap<NodeId, Vec<NodeId>>,
+    instances: HashMap<(NodeId, NodeId), bool>,
+    stats: WitnessStats,
+}
+
+impl<'a> PredicateFacts<'a> {
+    pub fn new(graph: &'a FunctionGraph, cfg: &'a ControlFlow, dominators: &'a Dominators) -> Self {
+        Self {
+            graph,
+            cfg,
+            dominators,
+            anchors: HashMap::default(),
+            instances: HashMap::default(),
+            stats: WitnessStats::default(),
+        }
+    }
+
+    pub fn stats(&self) -> WitnessStats {
+        self.stats
+    }
+
+    /// Returns a fact only when its exit dominates `at` and the predicate's
+    /// dynamic inputs have not been redefined since that exit was traversed.
+    pub fn predicate_at(&mut self, proof: NodeId, at: NodeId) -> Option<ScopedPredicate> {
+        let fact = predicate_on_edge(self.graph, proof)?;
+        self.same_instance(fact.predicate, proof, at)
+            .then_some(fact)
+    }
+
+    /// Truth implied by an observed Boolean at an execution point.
+    /// No relation between separate loads or merely equal numeric addresses is
+    /// inferred; predicate_at retains dominance and loop-instance validation.
+    pub fn condition_at(&mut self, condition: NodeId, proof: NodeId, at: NodeId) -> Option<bool> {
+        let fact = predicate_on_edge(self.graph, proof)?;
+        let (base, inverted) = canonical_condition(self.graph, condition)?;
+        let (known_base, known_inverted) = canonical_condition(self.graph, fact.predicate)?;
+        let known_truth = fact.truth ^ known_inverted;
+        // First establish that these SSA predicates can imply one another.
+        // An unrelated comparison cannot justify a rewrite, regardless of its
+        // dynamic scope; do not build its definition anchors just to reject it.
+        let truth = if base == known_base {
+            known_truth
+        } else {
+            implication::compare(self.graph, known_base, known_truth, base)?
+        };
+        self.same_instance(fact.predicate, proof, at)
+            .then_some(truth ^ inverted)
+    }
+
+    /// The exact SSA value equals an ordinary, same-type integer constant at
+    /// `at`. This never relates separate loads or propagates through a Phi.
+    pub(crate) fn integer_constant_at(
+        &mut self,
+        value: NodeId,
+        proof: NodeId,
+        at: NodeId,
+    ) -> Option<NodeId> {
+        let fact = predicate_on_edge(self.graph, proof)?;
+        let (known, constant) = integer_equality(self.graph, fact)?;
+        (known == self.graph.resolve(value) && self.same_instance(fact.predicate, proof, at))
+            .then_some(constant)
+    }
+
+    fn same_instance(&mut self, value: NodeId, proof: NodeId, at: NodeId) -> bool {
+        let value = self.graph.resolve(value);
+        if !self.dominators.dominates(self.cfg, proof, at) {
+            return false;
+        }
+        if let Some(&valid) = self.instances.get(&(value, proof)) {
+            return valid;
+        }
+        let anchors = self
+            .anchors
+            .entry(value)
+            .or_insert_with(|| definition_anchors(self.graph, value, &mut self.stats));
+        // Every definition anchor must dominate the proof, which must dominate
+        // the use. These cuts also exclude a stale loop instance: if a path
+        // from proof through a distinct anchor to `at` avoided proof, a path
+        // from Start to that anchor avoiding proof could be prefixed to its
+        // suffix, contradicting proof's dominance of `at`. Such a prefix must
+        // exist because distinct reachable nodes cannot dominate each other.
+        // Revisiting an anchor equal to proof refreshes the fact itself.
+        // Thus the former proof-to-use product-state walk cannot reject any
+        // case that passes both dominance tests, including irreducible loops.
+        // The anchor test depends on (value, proof), not on the particular use.
+        let valid = anchors.iter().all(|&anchor| {
+            self.stats.node_visits += 1;
+            self.dominators.dominates(self.cfg, anchor, proof)
+        });
+        self.instances.insert((value, proof), valid);
+        valid
+    }
+}
+
+/// Debug verifier entry for a complete rewrite batch against unchanged IR.
+/// A new facts instance recomputes dominance/dynamic scope rather than trusting
+/// the optimizer's cached answer. Wrong evidence is a compiler error.
+pub(crate) fn check_conditions(
+    graph: &FunctionGraph,
+    receipts: &[ConditionReceipt],
+) -> Result<(), (NodeId, &'static str)> {
+    let cfg = ControlFlow::new(graph);
+    let dominators = Dominators::new(&cfg);
+    let mut facts = PredicateFacts::new(graph, &cfg, &dominators);
+    for receipt in receipts {
+        if graph.is_dead(receipt.branch)
+            || graph.op(receipt.branch) != Opcode::If
+            || graph.resolve(graph.input(receipt.branch, 0)) != receipt.condition
+        {
+            return Err((
+                receipt.branch,
+                "condition receipt does not match the original If",
+            ));
+        }
+        if facts.condition_at(
+            receipt.condition,
+            receipt.proof,
+            graph.control(receipt.branch),
+        ) != Some(receipt.truth)
+        {
+            return Err((
+                receipt.branch,
+                "condition receipt lacks current dominating predicate evidence",
+            ));
+        }
+    }
+    Ok(())
+}
+
+/// Rebuild all scoped facts independently, before changing any Call operand.
+pub(crate) fn check_call_arguments(
+    graph: &FunctionGraph,
+    receipts: &[CallArgumentReceipt],
+) -> Result<(), (NodeId, &'static str)> {
+    let cfg = ControlFlow::new(graph);
+    let dominators = Dominators::new(&cfg);
+    let mut facts = PredicateFacts::new(graph, &cfg, &dominators);
+    for receipt in receipts {
+        if graph.level != crate::GraphLevel::Layout
+            || graph.is_dead(receipt.call)
+            || graph.op(receipt.call) != Opcode::Call
+            || receipt.slot == 0
+            || graph
+                .inputs(receipt.call)
+                .get(receipt.slot)
+                .is_none_or(|&input| graph.resolve(input) != receipt.original)
+        {
+            return Err((
+                receipt.call,
+                "Call argument receipt does not match the original operand",
+            ));
+        }
+        if facts.integer_constant_at(
+            receipt.original,
+            receipt.proof,
+            graph.resolve(graph.control(receipt.call)),
+        ) != Some(receipt.constant)
+        {
+            return Err((
+                receipt.call,
+                "Call argument lacks current dominating integer equality",
+            ));
+        }
+    }
+    Ok(())
+}
+
+/// Dynamic definitions which can change this source value on another iteration.
+fn definition_anchors(
+    graph: &FunctionGraph,
+    source: NodeId,
+    stats: &mut WitnessStats,
+) -> Vec<NodeId> {
+    let mut pending = vec![source];
+    let mut seen = HashSet::default();
+    let mut anchors = Vec::new();
+    while let Some(node) = pending.pop() {
+        let node = graph.resolve(node);
+        if !seen.insert(node) {
+            continue;
+        }
+        stats.node_visits += 1;
+        match graph.op(node) {
+            Opcode::Phi => anchors.push(graph.input(node, 0)),
+            Opcode::VariantField => pending.push(graph.input(node, 0)),
+            Opcode::VariantWitness => {}
+            Opcode::Projection => {
+                let origin = graph.input(node, 0);
+                if graph.op(origin).is_fixed() {
+                    anchors.push(origin);
+                } else {
+                    pending.push(origin);
+                }
+            }
+            op if is_anchored_value(op) => anchors.push(graph.control(node)),
+            Opcode::Const
+            | Opcode::Undefined
+            | Opcode::LocalSlot
+            | Opcode::StackSlot
+            | Opcode::SymbolAddress => {}
+            _ => pending.extend_from_slice(graph.inputs(node)),
+        }
+    }
+    anchors.sort_unstable();
+    anchors.dedup();
+    anchors
+}
+
+/// Follow only business-value consumers. A Phi consumes its operand on that
+/// incoming edge; the resulting Phi is a new snapshot, not a late re-read.
+fn execution_sites(
+    graph: &FunctionGraph,
+    uses: &Uses,
+    field: NodeId,
+    stats: &mut WitnessStats,
+) -> Vec<NodeId> {
+    let mut pending = vec![field];
+    let mut seen = HashSet::default();
+    let mut sites = Vec::new();
+    while let Some(node) = pending.pop() {
+        if !seen.insert(node) {
+            continue;
+        }
+        stats.node_visits += 1;
+        for usage in uses.of(node) {
+            stats.node_visits += 1;
+            let user = usage.user;
+            if graph.op(user) == Opcode::VariantWitness {
+                continue;
+            }
+            if graph.op(user) == Opcode::Phi {
+                if let UseKind::Operand(index) = usage.kind
+                    && index > 0
+                {
+                    sites.push(graph.input(graph.input(user, 0), index - 1));
+                }
+            } else if is_anchored_value(graph.op(user)) {
+                sites.push(graph.control(user));
+            } else if is_control_flow(graph, user) {
+                sites.push(user);
+            } else {
+                pending.push(user);
+            }
+        }
+    }
+    sites.sort_unstable();
+    sites.dedup();
+    stats.consumer_sites += sites.len();
+    sites
+}
+
+pub fn check(
+    graph: &FunctionGraph,
+    cfg: &ControlFlow,
+    dominators: &Dominators,
+) -> Result<WitnessStats, (NodeId, &'static str)> {
+    let stats = WitnessStats::default();
+    let witnesses: Vec<_> = graph
+        .ids()
+        .filter(|&node| graph.op(node) == Opcode::VariantWitness)
+        .collect();
+    if witnesses.is_empty() {
+        return Ok(stats);
+    }
+    let uses = Uses::new(graph);
+    let mut facts = PredicateFacts::new(graph, cfg, dominators);
+    // Include the use-index construction in measurable analysis work.
+    facts.stats.node_visits += graph
+        .ids()
+        .map(|node| 1 + graph.inputs(node).len())
+        .sum::<usize>();
+    for node in witnesses {
+        facts.stats.witnesses_checked += 1;
+        let value = graph.resolve(graph.input(node, 0));
+        let proof = graph.input(node, 1);
+        let scope = graph.control(node);
+        let variant = graph.payload(node);
+        if !dominators.dominates(cfg, proof, scope) {
+            return Err((node, "variant proof does not dominate its witness scope"));
+        }
+        let constructor = graph.op(value) == Opcode::MakeVariant && graph.payload(value) == variant;
+        let scalar_evidence = facts
+            .predicate_at(proof, scope)
+            .and_then(|fact| predicate_variant(graph, value, fact))
+            == Some(variant);
+        if !constructor && variant_on_edge(graph, value, proof) != Some(variant) && !scalar_evidence
+        {
+            return Err((
+                node,
+                "VariantWitness lacks evidence for this exact enum value and variant",
+            ));
+        }
+        if !facts.same_instance(value, proof, scope) {
+            return Err((
+                node,
+                "variant witness source is unavailable or has changed since its proof",
+            ));
+        }
+        for usage in uses.of(node) {
+            let field = usage.user;
+            if usage.kind != UseKind::Operand(1) || graph.op(field) != Opcode::VariantField {
+                return Err((node, "witness used outside a variant field proof"));
+            }
+            for at in execution_sites(graph, &uses, field, &mut facts.stats) {
+                if !dominators.dominates(cfg, scope, at) {
+                    return Err((field, "variant field use escapes its witness scope"));
+                }
+                if !facts.same_instance(value, proof, at)
+                    || (scalar_evidence && facts.predicate_at(proof, at).is_none())
+                {
+                    return Err((
+                        field,
+                        "variant witness refers to a previous dynamic value instance",
+                    ));
+                }
+            }
+        }
+    }
+    Ok(facts.stats)
+}
+
+#[cfg(test)]
+#[path = "refinement_tests.rs"]
+mod tests;

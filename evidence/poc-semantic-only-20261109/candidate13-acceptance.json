@@ -1,0 +1,225 @@
+{
+  "candidate": "candidate13",
+  "contract": "stage2 VariantWitness proof-only, fixed Assume source requirements, no ObserveValue/Refine/pin_tree; real MIR/direct/generic Assume producer accepted on defined native inputs",
+  "source_sha256": "5316798289d820c4aa9443043197095f592bcc4e4791544b5e894511071067ca",
+  "linux_tests": {
+    "suites": 67,
+    "passed": 608,
+    "ignored": 1
+  },
+  "semantic": "381 output lines equal in 3 arms and scope negatives rejected",
+  "features": "all three arms pass strict generic/prepared-once/dead-target/known-no-branch, VariantWitness graphs, nominal, MaybeUninit opaque/partial/invalid-bool raw-byte, array iterator clone, static callback/recursive emission roots; real stable assert_unchecked/direct intrinsic/generic Assume source graphs retained and requirements/proofs absent from L",
+  "cli": "pass",
+  "semver": "unchanged 1.0.28: 34 upstream tests per arm and workload passed",
+  "not_rerun": [
+    "W01-W10 original walkthroughs",
+    "regex-syntax"
+  ],
+  "previous_coverage": "candidate10 receipts remain latest walkthrough/regex evidence; known f64/atomics/caller-location failures not rerun or claimed fixed",
+  "semver_performance": {
+    "compile_wall_seconds": 0.67,
+    "text_bytes": 983122,
+    "runtime_ns_medians": {
+      "parse": 144057114,
+      "req": 354594890,
+      "identifier": 138492920
+    },
+    "compile_rounds": 5,
+    "runtime_rounds": 7,
+    "shared_std_mir0": true,
+    "checksum_equal": true
+  },
+  "total_profile": {
+    "LLVM_instructions": 1667909650,
+    "kfrc_instructions": 5563263785,
+    "ratio": 3.3354707102989662,
+    "rounds": 3,
+    "enabled_equals_running": true,
+    "object_bytes_unchanged": true,
+    "scope": "codegen_crate entry through join_codegen; user instructions for initial process threads and descendants; includes collector and kfrc MIR conversion, excludes linking; not a MIR-conversion-excluded metric",
+    "backend_sha256": {
+      "kfrc": "89471fc01d1fc620c9dd54327a9b23e14654bf05f41e1a517bf9e68bc2af7d47",
+      "llvm-wrapper": "427e58caa1c5be4461d8a4153f59635ac595839be7173d39a5b84807e32d8cd5"
+    }
+  },
+  "from_str": {
+    "S_input_nodes": 532,
+    "S_after_opt_nodes": 845,
+    "S_Call": 31,
+    "S_RequireDefined": 24,
+    "S_VariantWitness": 35,
+    "L_nodes": 4859,
+    "If": 150,
+    "RequireDefined": 0,
+    "Assume": 0,
+    "VariantWitness": 0,
+    "ObserveValue": 0,
+    "Load": 180,
+    "Store": 80,
+    "Refine": 0,
+    "text_bytes": 45111
+  },
+  "interpretation": "Correctness and new representation structure passed. vs12 text -1.52%, parse -0.72%, req +4.20%, identifier -1.02%, compile wall .64->.67s, total kfrc instructions +10.80%; parse +2.03% vs10. Not an across-the-board performance improvement or formal performance-target acceptance.",
+  "archives": {
+    "candidate13-results.tar.gz": "8f7c12b977d01d73e298ffcbb15ecf5406b8f57e24ce3540807461536cea61e8",
+    "candidate13-attribution.tar.gz": "9e76a7b47c817e059c0c88651aab1606d290274d422147a41bcdd50ad679d627"
+  },
+  "local_tests": {
+    "suites": 67,
+    "passed": 579,
+    "ignored": 1
+  },
+  "legacy_corpus": {
+    "suites": 7,
+    "fixtures": 394,
+    "vectors": 1295,
+    "traps": 19,
+    "arms": "LLVM/off/on pass"
+  },
+  "from_str_machine": {
+    "symbol": "<semver::Version as core::str::traits::FromStr>::from_str",
+    "disassembly_sha256": "278654bf0cb7796479e7bb3cef941241fb8d80b49073ed0aad95cc7b69501018",
+    "text_bytes": 45111,
+    "scope": "static exact ELF symbol; explicit memory operands only, implicit stack traffic excluded; mov_exact excludes movzx/movsx; rbp mov is a frame-memory proxy, not proven spill traffic",
+    "counts": {
+      "instructions": 8810,
+      "mov_exact": 7241,
+      "mov_family": 7485,
+      "rbp_memory_mov_exact": 3751,
+      "conditional_branches": 150,
+      "unconditional_branches": 142,
+      "calls": 31,
+      "returns": 9,
+      "explicit_memory_read_instructions": 1911,
+      "explicit_memory_write_instructions": 2180
+    },
+    "opcodes": {
+      "add": 229,
+      "and": 169,
+      "call": 31,
+      "cmp": 160,
+      "jmp": 142,
+      "jne": 150,
+      "lea": 58,
+      "leave": 9,
+      "mov": 7241,
+      "movzx": 244,
+      "neg": 12,
+      "not": 12,
+      "or": 16,
+      "push": 1,
+      "ret": 9,
+      "setbe": 12,
+      "sete": 136,
+      "setne": 12,
+      "sub": 13,
+      "test": 150,
+      "xor": 4
+    }
+  },
+  "from_str_machine_llvm": {
+    "symbol": "<semver::Version as core::str::traits::FromStr>::from_str",
+    "disassembly_sha256": "54e42fd8db486588e19cd9e2606ef8629c1546ed6f244dd26635a7116730de8c",
+    "text_bytes": 917,
+    "scope": "static exact ELF symbol; explicit memory operands only, implicit stack traffic excluded; mov_exact excludes movzx/movsx; rbp mov is a frame-memory proxy, not proven spill traffic",
+    "counts": {
+      "instructions": 232,
+      "mov_exact": 62,
+      "mov_family": 78,
+      "rbp_memory_mov_exact": 0,
+      "conditional_branches": 25,
+      "unconditional_branches": 20,
+      "calls": 9,
+      "returns": 1,
+      "explicit_memory_read_instructions": 29,
+      "explicit_memory_write_instructions": 30
+    },
+    "opcodes": {
+      "add": 2,
+      "and": 10,
+      "call": 9,
+      "cmp": 13,
+      "dec": 4,
+      "inc": 4,
+      "jb": 4,
+      "je": 13,
+      "jmp": 20,
+      "jne": 6,
+      "js": 2,
+      "lea": 10,
+      "mov": 62,
+      "movdqu": 2,
+      "movzx": 14,
+      "or": 14,
+      "pcmpeqd": 1,
+      "pop": 6,
+      "push": 6,
+      "pxor": 1,
+      "ret": 1,
+      "shl": 13,
+      "sub": 1,
+      "test": 12,
+      "xor": 2
+    }
+  },
+  "generated_differential": {
+    "entry": "crates/rustc_codegen_kfrc/tests/p0-scalar/generated/run.sh",
+    "seeds": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "functions_per_seed": 40,
+    "inputs_per_function": 6,
+    "total_functions": 200,
+    "total_input_vectors": 1200,
+    "arms": "semantic-off and semantic-on each compared with LLVM",
+    "source_definedness": "generator masks shifts, bounds loops, no division, arithmetic overflow checks disabled; no native UB cases",
+    "records": [
+      {
+        "seed": 1,
+        "lib_sha256": "488b62f79caf7dbea4ddcf360a7b60abec3b7936acc8e615df6a295991cf18cc",
+        "driver_sha256": "b2f8d03f6b612bf472af0be64a34834089d9812111075796ef5f1d1679575d15",
+        "stdout_sha256": "d53edfb603e6766484991cb587e63c3550208521e1d33737e854d153ce9149fb",
+        "output_lines": 240
+      },
+      {
+        "seed": 2,
+        "lib_sha256": "e9a54b9bd6ea067c026ea9a6b555477f54ef03d263d84dfdbbd174fb9d130917",
+        "driver_sha256": "e81d0c956d4080cdc2dcfc4f9e9199181f13830bec0dd60a99b1329b6a291c4e",
+        "stdout_sha256": "52ba722c3b2487a715846411eebe7fdf7ad3b3e324b6310f879471753721d05f",
+        "output_lines": 240
+      },
+      {
+        "seed": 3,
+        "lib_sha256": "cc53713b699df427e10dbf15c8e4f235b0857b64bde2cf9ae010529c00006942",
+        "driver_sha256": "ff66d6b4ecc64b85389654a3a3cd49e0b1153a46933d8093122d6c2dc21efb58",
+        "stdout_sha256": "c2c3195a3a54908a3c0e12f20ef501355d1a384629fcc4efc18ec34b1ea61d09",
+        "output_lines": 240
+      },
+      {
+        "seed": 4,
+        "lib_sha256": "ba03d209d6843f14161ed230d137078b32446bec05a6a70639047ed0ee84b052",
+        "driver_sha256": "399b1d0af086c7f336ec4c4141989bae3a8e9286b4d7ec5269fdd0ed567e5dce",
+        "stdout_sha256": "56b61b8baffa00bef1a0733b4de39812a1426e966407ddf8efe84eb2f4976423",
+        "output_lines": 240
+      },
+      {
+        "seed": 5,
+        "lib_sha256": "dc91458cfca54dabdd78e2645d340a5e5bc0f4c5e126a019399ba11556937ca4",
+        "driver_sha256": "eba22fc627a67e93013fd4656ee90d5153bf31fc8e7ed5ae7bbc1db2dd903b00",
+        "stdout_sha256": "c9790ae3f995cb33da8a8451653e69ca212d6cc90b838f83bd1d3dd9ea6b2cb5",
+        "output_lines": 240
+      }
+    ]
+  },
+  "sandbox": {
+    "id": "ibneicdujhnbif39umsgi",
+    "template": "mirx-rust1941-linux",
+    "killed": true,
+    "killed_at": "2026-11-09T06:52:22.494533+00:00",
+    "reason": "all frozen candidate13 outputs downloaded and hashes verified; user ended optimization; task sandbox released; HK archives retained"
+  }
+}

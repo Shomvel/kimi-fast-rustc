@@ -1,0 +1,834 @@
+{
+  "schema_version": 1,
+  "crate_name": "legacy_calls",
+  "source_revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f",
+  "rustc_flags": [
+    "--edition=2021",
+    "-Cpanic=abort",
+    "-Coverflow-checks=off",
+    "-Copt-level=0",
+    "-Cdebug-assertions=off",
+    "-Zmir-opt-level=0",
+    "-Awarnings",
+    "-Aunconditional_panic",
+    "-Aarithmetic_overflow"
+  ],
+  "runs": [
+    {
+      "id": "calls_normal",
+      "run_args": [],
+      "expected_exit": "success",
+      "expected_stdout": "function_calls__register_arguments_are_loaded_before_the_call:0=42\nfunction_calls__stack_arguments_are_stored_before_the_call:0=36\nloops__calls_and_relocations_survive_loops:0=55\nforward_calls__forward_calls_use_declaration_order_indices:0=42\nforward_calls__self_recursion_emits_a_call_to_the_current_function:0=120\nforward_calls__mutual_recursion_uses_each_forward_signature:0=42\nforward_calls__signature_collection_checks_types_and_skips_nested_bodies:0=42\nconst_functions__const_fn_forward_calls_use_the_prescanned_signature:0=42\nconst_functions__const_fn_recursion_emits_a_runtime_call:0=42\nconst_functions__const_fn_supports_all_visibilities_and_preserves_object_symbols:0=42\nearly_return__bool_early_returns_work_across_function_calls:0=42\nbool_ops__bool_calls_use_function_signatures:0=42\nbool_comparisons__bool_comparisons_use_function_parameter_and_return_signatures:0=42\nassignment_syntax__mutable_parameters_survive_function_call_lowering:0=63\ncontrol_optimization__value_numbering_never_crosses_function_boundaries:0=42\nfor_loops__range_calls_and_invalid_syntax_are_checked:0=10\nloop_and_tail__tail_calls_work_after_a_range_loop:0=42\nexpression_statements__unit_calls_with_arguments_work_as_statements:0=42\nexpression_statements__nonunit_calls_and_pure_expressions_can_be_discarded:0=42\nexpression_statements__unit_values_can_be_bound_and_returned_from_unit_functions:0=0\nu64_ops__u64_calls_and_mixed_type_errors_are_checked:0=42\nfunction_visibility__supported_visibilities_do_not_change_function_names_or_indices:0=42\nfunction_visibility__visibility_preserves_forward_calls_and_native_symbols:0=42\nredundant_moves__calls_keep_only_required_argument_and_result_moves:0=42\ncasts__casts_work_in_calls_and_ranges:0=6\nfunction_calls__zero_argument_calls_emit_symbols_and_relocations:0=42\n",
+      "source_refs": [
+        {
+          "path": "tests/function_calls.rs",
+          "test": "register_arguments_are_loaded_before_the_call",
+          "line": 33,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/function_calls.rs",
+          "test": "stack_arguments_are_stored_before_the_call",
+          "line": 58,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/loops.rs",
+          "test": "calls_and_relocations_survive_loops",
+          "line": 71,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/forward_calls.rs",
+          "test": "forward_calls_use_declaration_order_indices",
+          "line": 7,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/forward_calls.rs",
+          "test": "self_recursion_emits_a_call_to_the_current_function",
+          "line": 26,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/forward_calls.rs",
+          "test": "mutual_recursion_uses_each_forward_signature",
+          "line": 42,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/forward_calls.rs",
+          "test": "signature_collection_checks_types_and_skips_nested_bodies",
+          "line": 61,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/const_functions.rs",
+          "test": "const_fn_forward_calls_use_the_prescanned_signature",
+          "line": 7,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/const_functions.rs",
+          "test": "const_fn_recursion_emits_a_runtime_call",
+          "line": 25,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/const_functions.rs",
+          "test": "const_fn_supports_all_visibilities_and_preserves_object_symbols",
+          "line": 44,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/early_return.rs",
+          "test": "bool_early_returns_work_across_function_calls",
+          "line": 56,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/bool_ops.rs",
+          "test": "bool_calls_use_function_signatures",
+          "line": 75,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/bool_comparisons.rs",
+          "test": "bool_comparisons_use_function_parameter_and_return_signatures",
+          "line": 74,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/assignment_syntax.rs",
+          "test": "mutable_parameters_survive_function_call_lowering",
+          "line": 42,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/control_optimization.rs",
+          "test": "value_numbering_never_crosses_function_boundaries",
+          "line": 79,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/for_loops.rs",
+          "test": "range_calls_and_invalid_syntax_are_checked",
+          "line": 61,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/loop_and_tail.rs",
+          "test": "tail_calls_work_after_a_range_loop",
+          "line": 42,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/expression_statements.rs",
+          "test": "unit_calls_with_arguments_work_as_statements",
+          "line": 6,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/expression_statements.rs",
+          "test": "nonunit_calls_and_pure_expressions_can_be_discarded",
+          "line": 20,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/expression_statements.rs",
+          "test": "unit_values_can_be_bound_and_returned_from_unit_functions",
+          "line": 30,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/u64_ops.rs",
+          "test": "u64_calls_and_mixed_type_errors_are_checked",
+          "line": 96,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/function_visibility.rs",
+          "test": "supported_visibilities_do_not_change_function_names_or_indices",
+          "line": 7,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/function_visibility.rs",
+          "test": "visibility_preserves_forward_calls_and_native_symbols",
+          "line": 30,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/redundant_moves.rs",
+          "test": "calls_keep_only_required_argument_and_result_moves",
+          "line": 39,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/casts.rs",
+          "test": "casts_work_in_calls_and_ranges",
+          "line": 45,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/function_calls.rs",
+          "test": "zero_argument_calls_emit_symbols_and_relocations",
+          "line": 6,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ]
+    }
+  ],
+  "cases": [
+    {
+      "id": "function_calls__register_arguments_are_loaded_before_the_call",
+      "source_refs": [
+        {
+          "path": "tests/function_calls.rs",
+          "test": "register_arguments_are_loaded_before_the_call",
+          "line": 33,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "fn id(x: i64) -> i64 { return x; } fn main() -> i64 { return id(42); }",
+      "source": "fn id(x: i64) -> i64 { return x; } #[inline(never)] pub fn test_fn() -> i64 { return id(42); }",
+      "source_sha256": "1dac797ff22e180875d26ea64e0275eccea046b99ad592117eab4f0b29ce6f05",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_000"
+    },
+    {
+      "id": "function_calls__stack_arguments_are_stored_before_the_call",
+      "source_refs": [
+        {
+          "path": "tests/function_calls.rs",
+          "test": "stack_arguments_are_stored_before_the_call",
+          "line": 58,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 36,
+          "trap": null
+        }
+      ],
+      "original_source": "fn sum8(a: i64, b: i64, c: i64, d: i64, e: i64, f: i64, g: i64, h: i64) -> i64 { return a + b + c + d + e + f + g + h; } fn main() -> i64 { return sum8(1, 2, 3, 4, 5, 6, 7, 8); }",
+      "source": "fn sum8(a: i64, b: i64, c: i64, d: i64, e: i64, f: i64, g: i64, h: i64) -> i64 { return a + b + c + d + e + f + g + h; } #[inline(never)] pub fn test_fn() -> i64 { return sum8(1, 2, 3, 4, 5, 6, 7, 8); }",
+      "source_sha256": "09525e111e3121be28a17894eb0190b191d825ff8d689d9b6c3c2d4839502339",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_001"
+    },
+    {
+      "id": "loops__calls_and_relocations_survive_loops",
+      "source_refs": [
+        {
+          "path": "tests/loops.rs",
+          "test": "calls_and_relocations_survive_loops",
+          "line": 71,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 55,
+          "trap": null
+        }
+      ],
+      "original_source": "fn sum_to(limit: i64) -> i64 { let mut sum = 0; let mut i = 1; while i <= limit { sum = sum + i; i = i + 1; } return sum; } fn main() -> i64 { return sum_to(10); }",
+      "source": "fn sum_to(limit: i64) -> i64 { let mut sum = 0; let mut i = 1; while i <= limit { sum = sum + i; i = i + 1; } return sum; } #[inline(never)] pub fn test_fn() -> i64 { return sum_to(10); }",
+      "source_sha256": "d2296f2c20c53bc51d225fdb8080aec3e02fe15bb6c12c6f49316806c8ba334f",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_002"
+    },
+    {
+      "id": "forward_calls__forward_calls_use_declaration_order_indices",
+      "source_refs": [
+        {
+          "path": "tests/forward_calls.rs",
+          "test": "forward_calls_use_declaration_order_indices",
+          "line": 7,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main() -> i64 { return later(40); } fn padding() -> i64 { return 0; } fn later(value: i64) -> i64 { return value + 2; }",
+      "source": "#[inline(never)] pub fn test_fn() -> i64 { return later(40); } fn padding() -> i64 { return 0; } fn later(value: i64) -> i64 { return value + 2; }",
+      "source_sha256": "fdf3a5d0569bffe144be6ce38a2d32fbe94d7a6276aee8d733c57989b906ac09",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_003"
+    },
+    {
+      "id": "forward_calls__self_recursion_emits_a_call_to_the_current_function",
+      "source_refs": [
+        {
+          "path": "tests/forward_calls.rs",
+          "test": "self_recursion_emits_a_call_to_the_current_function",
+          "line": 26,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 120,
+          "trap": null
+        }
+      ],
+      "original_source": "fn factorial(value: i64) -> i64 { if value <= 1 { return 1; } return value * factorial(value - 1); } fn main() -> i64 { return factorial(5); }",
+      "source": "fn factorial(value: i64) -> i64 { if value <= 1 { return 1; } return value * factorial(value - 1); } #[inline(never)] pub fn test_fn() -> i64 { return factorial(5); }",
+      "source_sha256": "30452d70c94efe3d2c23d96f6684bb4d9a11aa1f5485ce8b1270ceb910bfefe1",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_004"
+    },
+    {
+      "id": "forward_calls__mutual_recursion_uses_each_forward_signature",
+      "source_refs": [
+        {
+          "path": "tests/forward_calls.rs",
+          "test": "mutual_recursion_uses_each_forward_signature",
+          "line": 42,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main() -> i64 { return if even(10) { 42 } else { 0 }; } fn even(value: u64) -> bool { if value == 0 { return true; } return odd(value - 1); } fn odd(value: u64) -> bool { if value == 0 { return false; } return even(value - 1); }",
+      "source": "#[inline(never)] pub fn test_fn() -> i64 { return if even(10) { 42 } else { 0 }; } fn even(value: u64) -> bool { if value == 0 { return true; } return odd(value - 1); } fn odd(value: u64) -> bool { if value == 0 { return false; } return even(value - 1); }",
+      "source_sha256": "58621143045f1d1b454f30d57e6c334dc5b2e11f5646830a6a0cd9d8ebdb7dd3",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_005"
+    },
+    {
+      "id": "forward_calls__signature_collection_checks_types_and_skips_nested_bodies",
+      "source_refs": [
+        {
+          "path": "tests/forward_calls.rs",
+          "test": "signature_collection_checks_types_and_skips_nested_bodies",
+          "line": 61,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "fn first(value: i64) -> i64 { let mut index = 0; while index < 2 { if value > 0 { index += 1; } else { index += 2; } } return second(value); } fn second(value: i64) -> i64 { return value + 2; } fn main() -> i64 { return first(40); }",
+      "source": "fn first(value: i64) -> i64 { let mut index = 0; while index < 2 { if value > 0 { index += 1; } else { index += 2; } } return second(value); } fn second(value: i64) -> i64 { return value + 2; } #[inline(never)] pub fn test_fn() -> i64 { return first(40); }",
+      "source_sha256": "4a7bca53e95f7996f8f4158f375d955b9adb5686a9abc80ed4221fc15d936571",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_006"
+    },
+    {
+      "id": "const_functions__const_fn_forward_calls_use_the_prescanned_signature",
+      "source_refs": [
+        {
+          "path": "tests/const_functions.rs",
+          "test": "const_fn_forward_calls_use_the_prescanned_signature",
+          "line": 7,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "const fn main() -> i64 { return later(40); } pub const fn later(value: i64) -> i64 { return value + 2; }",
+      "source": "#[inline(never)] pub const fn test_fn() -> i64 { return later(40); } pub const fn later(value: i64) -> i64 { return value + 2; }",
+      "source_sha256": "347b7b229f5a3ff8e25c43705d4e19b9d90bd268c336a2cc89e8ca6bffe4d98d",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_007"
+    },
+    {
+      "id": "const_functions__const_fn_recursion_emits_a_runtime_call",
+      "source_refs": [
+        {
+          "path": "tests/const_functions.rs",
+          "test": "const_fn_recursion_emits_a_runtime_call",
+          "line": 25,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "const fn countdown(value: i64) -> i64 { if value == 0 { return 42; } return countdown(value - 1); } pub(crate) const fn main() -> i64 { return countdown(3); }",
+      "source": "const fn countdown(value: i64) -> i64 { if value == 0 { return 42; } return countdown(value - 1); } #[inline(never)] pub const fn test_fn() -> i64 { return countdown(3); }",
+      "source_sha256": "5fd6e4fdd6604fd6dbd1022ac04b9a3b88d6a306c7de43f322d2250f93d631ba",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_008"
+    },
+    {
+      "id": "const_functions__const_fn_supports_all_visibilities_and_preserves_object_symbols",
+      "source_refs": [
+        {
+          "path": "tests/const_functions.rs",
+          "test": "const_fn_supports_all_visibilities_and_preserves_object_symbols",
+          "line": 44,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "pub const fn main() -> i64 { return crate_visible(); } const fn private() -> i64 { return 0; } pub(crate) const fn crate_visible() -> i64 { return 42; } pub(self) const fn self_visible() -> i64 { return 0; } pub(super) const fn super_visible() -> i64 { return 0; }",
+      "source": "#[inline(never)] pub const fn test_fn() -> i64 { return crate_visible(); } const fn private() -> i64 { return 0; } pub(crate) const fn crate_visible() -> i64 { return 42; } pub(self) const fn self_visible() -> i64 { return 0; } pub(super) const fn super_visible() -> i64 { return 0; }",
+      "source_sha256": "e40ea5544dfba7395a72d6554cafd6a5b7184159aa03c03a81aa05ddab045077",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_009"
+    },
+    {
+      "id": "early_return__bool_early_returns_work_across_function_calls",
+      "source_refs": [
+        {
+          "path": "tests/early_return.rs",
+          "test": "bool_early_returns_work_across_function_calls",
+          "line": 56,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "fn decide(value: i64) -> bool { if value > 0 { return true; } return false; } fn main() -> i64 { return if decide(42) { 42 } else { 0 }; }",
+      "source": "fn decide(value: i64) -> bool { if value > 0 { return true; } return false; } #[inline(never)] pub fn test_fn() -> i64 { return if decide(42) { 42 } else { 0 }; }",
+      "source_sha256": "2bd820ff77d151644a42038c91f22c91c657ce9ecd4eaddd8035651c8f9b73ba",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_010"
+    },
+    {
+      "id": "bool_ops__bool_calls_use_function_signatures",
+      "source_refs": [
+        {
+          "path": "tests/bool_ops.rs",
+          "test": "bool_calls_use_function_signatures",
+          "line": 75,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "fn positive(value: i64) -> bool { return value > 0; } fn main() -> i64 { return if positive(42) && !false { 42 } else { 0 }; }",
+      "source": "fn positive(value: i64) -> bool { return value > 0; } #[inline(never)] pub fn test_fn() -> i64 { return if positive(42) && !false { 42 } else { 0 }; }",
+      "source_sha256": "57bfe0896ec547adfa9367faf200aa3657b7a19c37ecbd0841bf4f9b569c013e",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_011"
+    },
+    {
+      "id": "bool_comparisons__bool_comparisons_use_function_parameter_and_return_signatures",
+      "source_refs": [
+        {
+          "path": "tests/bool_comparisons.rs",
+          "test": "bool_comparisons_use_function_parameter_and_return_signatures",
+          "line": 74,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "fn equal(a: bool, b: bool) -> bool { return a == b; } fn different(a: bool, b: bool) -> bool { return a != b; } fn main() -> i64 { return if equal(true, false) != different(false, true) { 42 } else { 0 }; }",
+      "source": "fn equal(a: bool, b: bool) -> bool { return a == b; } fn different(a: bool, b: bool) -> bool { return a != b; } #[inline(never)] pub fn test_fn() -> i64 { return if equal(true, false) != different(false, true) { 42 } else { 0 }; }",
+      "source_sha256": "b87783e3a1c58496083f50afd55b11437382aa9cf83cf335c947b1bc40612a51",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_012"
+    },
+    {
+      "id": "assignment_syntax__mutable_parameters_survive_function_call_lowering",
+      "source_refs": [
+        {
+          "path": "tests/assignment_syntax.rs",
+          "test": "mutable_parameters_survive_function_call_lowering",
+          "line": 42,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 63,
+          "trap": null
+        }
+      ],
+      "original_source": "fn adjust(mut value: i64) -> i64 { value += 5; value *= 3; return value; } fn main() -> i64 { return adjust(16); }",
+      "source": "fn adjust(mut value: i64) -> i64 { value += 5; value *= 3; return value; } #[inline(never)] pub fn test_fn() -> i64 { return adjust(16); }",
+      "source_sha256": "a366dd3d63ffee4f8426b6dbfe4c83d31cbd638aed58faa28af462a509d05751",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_013"
+    },
+    {
+      "id": "control_optimization__value_numbering_never_crosses_function_boundaries",
+      "source_refs": [
+        {
+          "path": "tests/control_optimization.rs",
+          "test": "value_numbering_never_crosses_function_boundaries",
+          "line": 79,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "fn is_positive(value: i64) -> bool { return value > 0; } fn main() -> i64 { let positive = is_positive(42); let valid = positive && !false; return if valid { 42 } else { 0 }; }",
+      "source": "fn is_positive(value: i64) -> bool { return value > 0; } #[inline(never)] pub fn test_fn() -> i64 { let positive = is_positive(42); let valid = positive && !false; return if valid { 42 } else { 0 }; }",
+      "source_sha256": "dbfe0148885276c415436710407a3b6d97d2996e3172a40d783892bef3ab04af",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_014"
+    },
+    {
+      "id": "for_loops__range_calls_and_invalid_syntax_are_checked",
+      "source_refs": [
+        {
+          "path": "tests/for_loops.rs",
+          "test": "range_calls_and_invalid_syntax_are_checked",
+          "line": 61,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "usize",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 10,
+          "trap": null
+        }
+      ],
+      "original_source": "fn start() -> usize { return 1; } fn end() -> usize { return 5; } fn main() -> usize { let mut sum = 0usize; for i in start()..end() { sum += i; } return sum; }",
+      "source": "fn start() -> usize { return 1; } fn end() -> usize { return 5; } #[inline(never)] pub fn test_fn() -> usize { let mut sum = 0usize; for i in start()..end() { sum += i; } return sum; }",
+      "source_sha256": "654433549138172b923ab54d597106749f9aa0a1379878f48a3214844d279da0",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_015"
+    },
+    {
+      "id": "loop_and_tail__tail_calls_work_after_a_range_loop",
+      "source_refs": [
+        {
+          "path": "tests/loop_and_tail.rs",
+          "test": "tail_calls_work_after_a_range_loop",
+          "line": 42,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "fn sum() -> i64 { let mut total = 0; for i in 0..5 { total += i; } total + 32 } fn main() -> i64 { sum() }",
+      "source": "fn sum() -> i64 { let mut total = 0; for i in 0..5 { total += i; } total + 32 } #[inline(never)] pub fn test_fn() -> i64 { sum() }",
+      "source_sha256": "e9749ea34af7e53d394de86f5150086bbed84f7e3376e7c8de67c77fc6b3e87c",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_016"
+    },
+    {
+      "id": "expression_statements__unit_calls_with_arguments_work_as_statements",
+      "source_refs": [
+        {
+          "path": "tests/expression_statements.rs",
+          "test": "unit_calls_with_arguments_work_as_statements",
+          "line": 6,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "fn helper(value: i64) { return; } fn main() -> i64 { helper(1); return 42; }",
+      "source": "fn helper(value: i64) { return; } #[inline(never)] pub fn test_fn() -> i64 { helper(1); return 42; }",
+      "source_sha256": "b769cb6d072e44a608fc4b65e5023e833496d27afa406c439d31e21ba1785ea9",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_017"
+    },
+    {
+      "id": "expression_statements__nonunit_calls_and_pure_expressions_can_be_discarded",
+      "source_refs": [
+        {
+          "path": "tests/expression_statements.rs",
+          "test": "nonunit_calls_and_pure_expressions_can_be_discarded",
+          "line": 20,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "fn answer() -> i64 { return 42; } fn main() -> i64 { answer(); 1 + 2; 3 < 4; return answer(); }",
+      "source": "fn answer() -> i64 { return 42; } #[inline(never)] pub fn test_fn() -> i64 { answer(); 1 + 2; 3 < 4; return answer(); }",
+      "source_sha256": "ea796cfe6674c14a1b37ae581083ee278d0c730a30e37af5e0c67d204e066835",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_018"
+    },
+    {
+      "id": "expression_statements__unit_values_can_be_bound_and_returned_from_unit_functions",
+      "source_refs": [
+        {
+          "path": "tests/expression_statements.rs",
+          "test": "unit_values_can_be_bound_and_returned_from_unit_functions",
+          "line": 30,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "()",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 0,
+          "trap": null
+        }
+      ],
+      "original_source": "fn helper() { return; } fn main() { let value = helper(); value; return value; }",
+      "source": "fn helper() { return; } #[inline(never)] pub fn test_fn() { let value = helper(); value; return value; }",
+      "source_sha256": "70748a386e96814396461d93554cc93b07b8e1bc83eebc3044d087af8545b50c",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_019"
+    },
+    {
+      "id": "u64_ops__u64_calls_and_mixed_type_errors_are_checked",
+      "source_refs": [
+        {
+          "path": "tests/u64_ops.rs",
+          "test": "u64_calls_and_mixed_type_errors_are_checked",
+          "line": 96,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "u64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "fn halve(value: u64) -> u64 { return value >> 1; } fn main() -> u64 { return halve(84u64); }",
+      "source": "fn halve(value: u64) -> u64 { return value >> 1; } #[inline(never)] pub fn test_fn() -> u64 { return halve(84u64); }",
+      "source_sha256": "e31b046db108900f787e797367be0b9cef946dacac9fc45c228a90799e8f0f00",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_020"
+    },
+    {
+      "id": "function_visibility__supported_visibilities_do_not_change_function_names_or_indices",
+      "source_refs": [
+        {
+          "path": "tests/function_visibility.rs",
+          "test": "supported_visibilities_do_not_change_function_names_or_indices",
+          "line": 7,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "pub fn main() -> i64 { return later(40); } fn plain() -> i64 { return 0; } pub(crate) fn later(value: i64) -> i64 { return value + 2; } pub(self) fn self_visible() -> i64 { return 0; } pub(super) fn super_visible() -> i64 { return 0; }",
+      "source": "#[inline(never)] pub fn test_fn() -> i64 { return later(40); } fn plain() -> i64 { return 0; } pub(crate) fn later(value: i64) -> i64 { return value + 2; } pub(self) fn self_visible() -> i64 { return 0; } pub(super) fn super_visible() -> i64 { return 0; }",
+      "source_sha256": "4d05dc1c38e7463ec3471291da2b0d081f9c23bef1e48411cfe856afb8a617be",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_021"
+    },
+    {
+      "id": "function_visibility__visibility_preserves_forward_calls_and_native_symbols",
+      "source_refs": [
+        {
+          "path": "tests/function_visibility.rs",
+          "test": "visibility_preserves_forward_calls_and_native_symbols",
+          "line": 30,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "pub fn main() -> i64 { return later(40); } pub(self) fn padding() -> i64 { return 0; } pub(super) fn later(value: i64) -> i64 { return value + 2; }",
+      "source": "#[inline(never)] pub fn test_fn() -> i64 { return later(40); } pub(self) fn padding() -> i64 { return 0; } pub(super) fn later(value: i64) -> i64 { return value + 2; }",
+      "source_sha256": "d8f41d165da618c6d7d017d98c422a0741b9f482b6854d415ce041a08cafdadb",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_022"
+    },
+    {
+      "id": "redundant_moves__calls_keep_only_required_argument_and_result_moves",
+      "source_refs": [
+        {
+          "path": "tests/redundant_moves.rs",
+          "test": "calls_keep_only_required_argument_and_result_moves",
+          "line": 39,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "fn id(value: i64) -> i64 { return value; } fn main() -> i64 { return id(42); }",
+      "source": "fn id(value: i64) -> i64 { return value; } #[inline(never)] pub fn test_fn() -> i64 { return id(42); }",
+      "source_sha256": "bfceb327dde19963da6c102ddb930eefbe715b2d0e849c7c9bde011d7ff427c6",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_023"
+    },
+    {
+      "id": "casts__casts_work_in_calls_and_ranges",
+      "source_refs": [
+        {
+          "path": "tests/casts.rs",
+          "test": "casts_work_in_calls_and_ranges",
+          "line": 45,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "u64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 6,
+          "trap": null
+        }
+      ],
+      "original_source": "fn convert(value: i64) -> u64 { return value as u64; } fn main() -> u64 { let mut total = 0usize; for i in 0..convert(4) { total += i as usize; } return total; }",
+      "source": "fn convert(value: i64) -> u64 { return value as u64; } #[inline(never)] pub fn test_fn() -> u64 { let mut total = 0usize; for i in 0..convert(4) { total += i as usize; } return total as u64; }",
+      "source_sha256": "13cab6cf94b07f49db37fde7de2329cf559518056947f485356455c90b5b2547",
+      "adaptation": "Explicit x86_64 word-sized cast replaces the removed frontend alias rule; numeric result preserved.",
+      "module": "case_024"
+    },
+    {
+      "id": "function_calls__zero_argument_calls_emit_symbols_and_relocations",
+      "source_refs": [
+        {
+          "path": "tests/function_calls.rs",
+          "test": "zero_argument_calls_emit_symbols_and_relocations",
+          "line": 6,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "fn answer() -> i64 { return 42; }\nfn main() -> i64 { return answer(); }",
+      "source": "fn answer() -> i64 { return 42; }\n#[inline(never)] pub fn test_fn() -> i64 { return answer(); }",
+      "source_sha256": "0a69c09ecc54bc2378272c6a7bba5ba8ec08240424d87686628feaf98c68d1bf",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_025"
+    }
+  ]
+}

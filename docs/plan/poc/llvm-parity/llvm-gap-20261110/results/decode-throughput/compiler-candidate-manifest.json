@@ -1,0 +1,148 @@
+{
+  "label": "decode-private-copy-v1",
+  "validated": false,
+  "parent_label": "generic-v18r2",
+  "base_manifest_sha256": "bdb84234da3e2cb361fa683cdb60ab1d1c6a1f72d6856b275155385c09261343",
+  "base_source_tree_sha256": "99032438e4f499480f41dbd25e87ff4ac3de39a4a07aa11a584a3c61c0ad0a08",
+  "incremental_parent_label": "decode-closure-v1",
+  "incremental_parent_manifest_sha256": "1d0dae40087a79797e7e1c983ecd11336d372d71a7571b135871e6905e247879",
+  "incremental_parent_source_tree_sha256": "93fcd1ed0b9a1dd9ce3333d347507e9df7b48e171e0a161c5daffd61739140e4",
+  "overlay_label": "private-copy-v1",
+  "overlay_manifest_sha256": "4c4e46467776b71d28cb616992b25f9e34bc9dd6a69186e2e8123cd2436621a9",
+  "source_tree_sha256": "9235520b2dd380f635c5c51d76baa2c890b9c84b61d2de9f10841dafeef495a3",
+  "source_file_count": 1846,
+  "files": {
+    "crates/kfrc-son/src/lower_layout/copy_tests.rs": {
+      "base_sha256": null,
+      "sha256": "940e9b84d255e8eea3ae67ccf93e339ab84f2bc6e535ee546953a7d17c152f00",
+      "bytes": 19319
+    },
+    "crates/kfrc-son/src/lower_layout/private_memory.rs": {
+      "base_sha256": "d27206e7fa3fcce8af760a95253a30c1208cd535da6e0f694fd6771223978030",
+      "sha256": "e935758956e46b2c77c67c441569df5c027923e0c380327dab2ce147e58e0083",
+      "bytes": 9788
+    },
+    "crates/kfrc-son/src/lower_layout/private_memory_copy.rs": {
+      "base_sha256": null,
+      "sha256": "815ee73932be24392b5c7363f84c4a4358c19483c8b888e50f32417bdf3ae9ba",
+      "bytes": 9771
+    },
+    "crates/kfrc-son/src/pipeline.rs": {
+      "base_sha256": "a94f95211a29a53d56424c7223ba1b8eb05ecca3416554973735e146dbd094ba",
+      "sha256": "163d8c84bdcd75298500c91ac5f2567698bf14a45c8a7179c21f43c93c510ec3",
+      "bytes": 28566
+    },
+    "crates/kfrc-son/src/transforms/ipo/arguments.rs": {
+      "base_sha256": "cc7b6e77331cb9abab579a5ac43708a5e1cd914b630635681aeb6d5a7150d856",
+      "sha256": "a68f1acb7fc729a3e2db55a6d1febff945eb6a4a870a2d27daa58cd167aa550c",
+      "bytes": 22705
+    },
+    "crates/kfrc-son/src/transforms/ipo/arguments/cleanup.rs": {
+      "base_sha256": "6303b55945fc16b1779edc6c99e178f815a6c8f5f778df4a16a061437baf9c7b",
+      "sha256": "a0b4354da6e6ab87f767eaf8806c2716bff4d2806985d42f3acc4289171e6d79",
+      "bytes": 3021
+    },
+    "crates/kfrc-son/src/transforms/ipo/arguments/facts.rs": {
+      "base_sha256": null,
+      "sha256": "a66971ec1c8a64d8796a07d4650cdee8a1750cfe1d36999b0ebbe7b60a74f848",
+      "bytes": 3918
+    },
+    "crates/kfrc-son/src/transforms/ipo/cost.rs": {
+      "base_sha256": "b30e47c1c369f903964c61cebbeb381e7bcb5516c7f113700cc30fb4db02ab2f",
+      "sha256": "322cb4c8d1834264c714a2600e01c9ad44e519ebc8c07dd813ebf52cad34daa1",
+      "bytes": 6617
+    },
+    "crates/kfrc-son/src/transforms/ipo/driver.rs": {
+      "base_sha256": "6db0524c365acfc89d224b006c5b9e89449a8e4b7884ebacecf0647759b7b465",
+      "sha256": "85b93ca4fd12724f2f92f4956f09912c5e4d98d4b1fd288461000a2fb0fa1494",
+      "bytes": 20378
+    },
+    "crates/kfrc-son/src/transforms/ipo/mod.rs": {
+      "base_sha256": "0efeb953b604ef0c04f8937500e35c3f434e753cad8822b768c69d6f8fee6b6a",
+      "sha256": "bbe9365fdfb9ec5b71f0b6cdd1d785f45848b99cc66772dcb7ffdd2779da7312",
+      "bytes": 7149
+    },
+    "crates/kfrc-son/src/transforms/memory/observation.rs": {
+      "base_sha256": "b6033b261924e626ef4ef8a3abaff88f0b8c8283752b05a624e7bc28f134877b",
+      "sha256": "162c7162b4fb9229118c48af3be7c33856bdcc434c846e1db0916b127bf6d80b",
+      "bytes": 10881
+    },
+    "crates/kfrc-son/src/transforms/memory/observation/conditions.rs": {
+      "base_sha256": null,
+      "sha256": "81879daa57c799ec74cbe34220b2f32f589c060ee35cd8d6d6cbb659cc0f518b",
+      "bytes": 2939
+    },
+    "crates/kfrc-son/src/transforms/memory/observation_condition_tests.rs": {
+      "base_sha256": null,
+      "sha256": "d7f78579f6f3d2dabf3e7187a2bca8f7ca47710e56f372d0b467803753e3c854",
+      "bytes": 17615
+    },
+    "crates/kfrc-son/tests/semantic_inline_always.rs": {
+      "base_sha256": null,
+      "sha256": "e5651c17102d18271ba8f31ae0f79b2bb91c4afd1ee4132cee602bf254ef6ec5",
+      "bytes": 10862
+    },
+    "crates/kfrc-son/tests/semantic_inline_preparation_variant_facts.rs": {
+      "base_sha256": null,
+      "sha256": "c57a2327cfa02fb8d253759a22636a3b632add0ad7c243f77f7a55bbedce66a3",
+      "bytes": 12865
+    },
+    "crates/rustc_codegen_kfrc/src/codegen.rs": {
+      "base_sha256": "5400abee62408279d3ad6bcf62d1db7f6a6858af2265b8b5f29c777f520e957f",
+      "sha256": "e9c32f5f6abf9398fbcca20f4219ee5e0b28ff61263f5f218240927ecc072c5d",
+      "bytes": 17723
+    },
+    "crates/rustc_codegen_kfrc/src/inline_cost.rs": {
+      "base_sha256": "13da543e1c266910d789dd4058ee9fd36e91dd9d3f42dc97f4550c2649b9b478",
+      "sha256": "32d3eef165f620bd4a9bd1562130619703ecc257fe6b0a80ad15094ea68f56a8",
+      "bytes": 7785
+    },
+    "crates/rustc_codegen_kfrc/src/lib.rs": {
+      "base_sha256": "869ccaf543108971f9f3e03baf22657d54d1318f3dfbea284a0524e80ac665be",
+      "sha256": "88993eb930c20f00e1bc16b32da8da4fd105ebf11991468d8b42ee9d6b966dd2",
+      "bytes": 19321
+    }
+  },
+  "incremental_files": {
+    "crates/kfrc-son/src/lower_layout/copy_tests.rs": {
+      "parent_sha256": null,
+      "sha256": "940e9b84d255e8eea3ae67ccf93e339ab84f2bc6e535ee546953a7d17c152f00"
+    },
+    "crates/kfrc-son/src/lower_layout/private_memory.rs": {
+      "parent_sha256": "d27206e7fa3fcce8af760a95253a30c1208cd535da6e0f694fd6771223978030",
+      "sha256": "e935758956e46b2c77c67c441569df5c027923e0c380327dab2ce147e58e0083"
+    },
+    "crates/kfrc-son/src/lower_layout/private_memory_copy.rs": {
+      "parent_sha256": null,
+      "sha256": "815ee73932be24392b5c7363f84c4a4358c19483c8b888e50f32417bdf3ae9ba"
+    }
+  },
+  "archive_sha256": "f3012e3fa11ba980c3e48a26b88d04b82705d3ace0510cf62f59248355e554c3",
+  "source_json_sha256": "fbbcda5a5c3cd161892a43cc89f452378ef477d5eae9a4824c9b914327938c2e",
+  "patch_sha256": "2c3e102df3142e04741832127bccbc7d2c3e9f7f68f0352eb45d7c50ba12e2c6",
+  "incremental_patch_sha256": "f4c3d2834b37d02045a8d016fb153eda97335f89e86cdea539f46c15d08e681a",
+  "reconstruction_sha256": "4e19671479321704999b48275000c45421b956f650caf4f759ecf417f24d3006",
+  "reconstruction_script_sha256": "d01c9d032f098a147caa6263b4b4910df6f4ebda59a73ff0966cf70570ad9374",
+  "freeze_script_sha256": "3b1e64a0f43a7164c6e386c4e7d674960ca62e0732628b3efb655f837e1734cc",
+  "scope": "Exact decode-closure-v1 plus only the three delivered private-copy-v1 files; bounded initialized private integer memcpy forwarding at the original fixed point.",
+  "hard_quotas_changed": true,
+  "diagnostic_only": true,
+  "shared_inline_max_nodes": 4096,
+  "other_inline_limits_unchanged": true,
+  "incremental_hard_quotas_changed": false,
+  "source_libraries_modified": false,
+  "inherited_missing_archives": {
+    "tools/llvm-parity-suite/crates/base64-0.22.1/base64-0.22.1.crate": "72b3254f16251a8381aa12e40e3c4d2f0199f8c6508fbecb9d91f575e0fbb8c6",
+    "tools/llvm-parity-suite/crates/humantime-2.4.0/humantime-2.4.0.crate": "15cdd26707701c53297e2fa6afb323d55fbc1d0810c3aec078ae3ef0424c3c15",
+    "tools/llvm-parity-suite/crates/regex-syntax-0.8.8/regex-syntax-0.8.8.crate": "7a2d987857b319362043e95f5353c0535c1f58eec5336fdfcf626430af7def58",
+    "tools/llvm-parity-suite/crates/semver-1.0.28/semver-1.0.28.crate": "8a7852d02fc848982e0c167ef163aaff9cd91dc640ba85e263cb1ce46fae51cd",
+    "tools/llvm-parity-suite/crates/unicode-segmentation-1.13.3/unicode-segmentation-1.13.3.crate": "c6f5d3c3b1bf09027a88a6bc961fc00497d651009560b5463668dc81b0fa87a8"
+  },
+  "execution": {
+    "compile": false,
+    "tests": false,
+    "target": false,
+    "e2b": false,
+    "benchmark": false
+  }
+}

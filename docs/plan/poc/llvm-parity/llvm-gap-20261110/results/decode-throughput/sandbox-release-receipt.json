@@ -1,0 +1,59 @@
+{
+  "status": "released_and_confirmed_stopped",
+  "authorization": "Parent /root instructed release after local source, backend, raw evidence, and unified index verification.",
+  "sandbox_id": "imj3ukm7eqxdk2x0im3uh",
+  "template_id": "r6g8s7tmv7hjdgpouxk9",
+  "owner_thread": "01a1c558-efc3-71b3-a333-857da2c9d025",
+  "started_at_utc": "2026-11-11T10:15:30.602779+00:00",
+  "lease_end_before_release_utc": "2026-11-11 12:09:13.639932+00:00",
+  "live_handles_before_release": [
+    {
+      "pid": 503,
+      "cmd": "/bin/bash",
+      "args": [
+        "-l",
+        "-c",
+        "bash -c 'while true; do sleep 3600; done'"
+      ]
+    }
+  ],
+  "validation_measurements_active": false,
+  "other_sandboxes_touched": false,
+  "source_backend_and_all_archives_local_verified": true,
+  "evidence_index": "/Users/shom/Downloads/kfrc-callsite-opt-20261110/generic-parity-20261110/decode-private-copy-v1-r1-evidence-index.json",
+  "evidence_index_sha256_before_release": "34398077a4c6359f65d562303da2591e2557e765dd90b5776ef0187cd03b4139",
+  "state_before_release": {
+    "sandbox_id": "imj3ukm7eqxdk2x0im3uh",
+    "template_id": "r6g8s7tmv7hjdgpouxk9",
+    "created_at_utc": "2026-11-10T12:09:13.251411+00:00",
+    "sandbox_timeout_seconds": 14400,
+    "killed": false,
+    "sdk": "2.34.0",
+    "shared_task_parent": "/Users/shom/Downloads/kfrc-callsite-opt-20261110",
+    "experiment": "generic-parity-20261110"
+  },
+  "kill_returned": true,
+  "is_running_after_release": false,
+  "finished_at_utc": "2026-11-11T10:17:36.639430+00:00",
+  "post_kill_sdk_health_query": {
+    "result": "503",
+    "message": "The sandbox cannot be resumed right now. Try again in a moment.",
+    "interpretation": "is_running uses sandbox health route; not a control-plane existence check. No resume or repeat kill was attempted."
+  },
+  "control_plane_confirmation": {
+    "checked_at_utc": "2026-11-11T10:17:36.639430+00:00",
+    "sandbox_id": "imj3ukm7eqxdk2x0im3uh",
+    "no_repeat_kill": true,
+    "get_info": {
+      "result": "error",
+      "type": "SandboxNotFoundException",
+      "message": "Sandbox imj3ukm7eqxdk2x0im3uh not found"
+    },
+    "owner_filtered_list": {
+      "result": "ok",
+      "items": [],
+      "target_present": false
+    }
+  },
+  "control_plane_confirmation_sha256": "c85c246eb59f66b93feceb66486e8f07b132adfb9b651d3c821b998e4fd8aa73"
+}

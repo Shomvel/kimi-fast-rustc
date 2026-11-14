@@ -1,0 +1,852 @@
+--- a/crates/kfrc-son/src/lower_layout/owned_transport.rs
++++ b/crates/kfrc-son/src/lower_layout/owned_transport.rs
+@@ -93,10 +93,18 @@
+                 return false;
+             };
+             // Enum alternatives overlap physically. Retain storage only when the
+-            // full logical leaf representation is larger than that physical word
+-            // representation. This is an explicit representation-cost hypothesis,
+-            // not a claim that a memcpy is cheaper than every register move.
+-            scalar_leaves(graph, ty).is_some_and(|leaves| leaves > layout.size.div_ceil(8))
++            // full logical leaf representation is larger than its physical
++            // transport. A ScalarPair has two ABI lanes even when both fit in
++            // one storage word. This is a representation-cost hypothesis, not
++            // a claim that a memcpy is cheaper than every register move.
++            let transport_lanes = layout.size.div_ceil(8).max(
++                graph
++                    .oracle
++                    .abi_pairs
++                    .get(&ty)
++                    .map_or(0, |pair| pair.len() as u64),
++            );
++            scalar_leaves(graph, ty).is_some_and(|leaves| leaves > transport_lanes)
+                 && !cyclic_region(graph, graph.input(node, 0))
+         })
+         .collect();
+--- a/crates/kfrc-son/src/lower_layout/cleanup.rs
++++ b/crates/kfrc-son/src/lower_layout/cleanup.rs
+@@ -4,7 +4,7 @@
+ use super::*;
+ use crate::ComparePredicate as P;
+ use crate::transforms::{
+-    control::{conditions, simplify},
++    control::{conditions, sccp, simplify},
+     scalar::instcombine,
+ };
+ 
+@@ -72,6 +72,9 @@
+     for _ in 0..2 {
+         private_memory::run(graph);
+         instcombine::run(graph);
++        // Enum lowering creates scalar tag Phis after S-level SCCP. Propagate
++        // equal incoming bits before conditions and CFG threading consume them.
++        sccp::run(graph);
+         graph.resolve_edges();
+         bit_conditions(graph);
+         conditions::run(graph).map_err(|e| LayoutError::Malformed(e.to_string()))?;
+--- /dev/null
++++ b/crates/kfrc-son/tests/semantic_register_phi_transport.rs
+@@ -0,0 +1,371 @@
++//! Register-sized enum Phis retain scalar lanes until the return ABI boundary.
++use kfrc_body::{
++    AggregateLayout, EnumLayout, FieldLayout, FunctionAbi, IntegerWidth, PassMode, RecordedTypes,
++    SizeAlign, TagEncoding, TyId, TypeShape,
++};
++use kfrc_son::{
++    ComparePredicate, FunctionGraph, GraphLevel, InterpretError, Interpreter, LayoutStats, NodeId,
++    Opcode, Outcome, SemanticOutcome, Value, ValueType, lower_layout, verify_graph,
++};
++
++fn integer(types: &mut RecordedTypes, width: IntegerWidth, bytes: u64) -> TyId {
++    types.intern(
++        TypeShape::Int {
++            width,
++            signed: false,
++        },
++        Some(SizeAlign {
++            size: bytes,
++            align: bytes,
++        }),
++    )
++}
++
++fn enumeration(
++    types: &mut RecordedTypes,
++    tag: FieldLayout,
++    payload: FieldLayout,
++    layout: SizeAlign,
++    discriminants: &[u128],
++    empty_first: bool,
++) -> TyId {
++    let ty = types.intern(
++        TypeShape::Adt {
++            name: "RegisterPhiChoice".into(),
++        },
++        Some(layout),
++    );
++    types.record_aggregate(
++        ty,
++        AggregateLayout {
++            fields: vec![],
++            variants: (0..discriminants.len())
++                .map(|index| {
++                    if empty_first && index == 0 {
++                        vec![]
++                    } else {
++                        vec![payload]
++                    }
++                })
++                .collect(),
++        },
++    );
++    types.record_semantic_enum(ty, discriminants.to_vec());
++    types.enums.insert(
++        ty,
++        EnumLayout {
++            tag: Some(tag),
++            encoding: TagEncoding::Direct {
++                discriminants: discriminants.to_vec(),
++            },
++        },
++    );
++    // The producer's ScalarPair classification is independent of byte size:
++    // two u32 lanes occupy one eight-byte storage word, but return separately.
++    types.record_abi_pair(ty, [tag, payload]);
++    ty
++}
++
++// selector 0 chooses the first constructor, 1 the second, and all other
++// selectors the last. The third arm increments the narrowed payload, so the
++// multi-input case must transport distinct values even for the same variant.
++fn phi_graph(
++    mut types: RecordedTypes,
++    enumeration: TyId,
++    word: TyId,
++    payload: TyId,
++    variants: &[u32],
++) -> FunctionGraph {
++    let boolean = types.intern(TypeShape::Bool, Some(SizeAlign { size: 1, align: 1 }));
++    let mut graph = FunctionGraph::new(
++        "register_phi_transport",
++        FunctionAbi {
++            args: vec![PassMode::Direct; 2],
++            ret: PassMode::Pair,
++            c_variadic: false,
++        },
++        types,
++    );
++    graph.level = GraphLevel::Specialized;
++    let start = graph.add_node(
++        Opcode::Start,
++        NodeId::NONE,
++        &[],
++        0,
++        ValueType::Tuple(vec![
++            ValueType::Control,
++            ValueType::Effect,
++            ValueType::Rust(word),
++            ValueType::Rust(word),
++        ]),
++    );
++    graph.start = start;
++    let mut control = graph.add_node(
++        Opcode::Projection,
++        NodeId::NONE,
++        &[start],
++        0,
++        ValueType::Control,
++    );
++    let effect = graph.add_node(
++        Opcode::Projection,
++        NodeId::NONE,
++        &[start],
++        1,
++        ValueType::Effect,
++    );
++    let selector = graph.add_node(
++        Opcode::Projection,
++        NodeId::NONE,
++        &[start],
++        2,
++        ValueType::Rust(word),
++    );
++    let input = graph.add_node(
++        Opcode::Projection,
++        NodeId::NONE,
++        &[start],
++        3,
++        ValueType::Rust(word),
++    );
++    let input = graph.add_node(
++        Opcode::IntCast,
++        NodeId::NONE,
++        &[input],
++        0,
++        ValueType::Rust(payload),
++    );
++    let mut jumps = Vec::new();
++    let mut values = Vec::new();
++    for (index, &variant) in variants.iter().enumerate() {
++        let edge = if index + 1 == variants.len() {
++            control
++        } else {
++            let expected = graph.add_constant(index as u128, word);
++            let condition = graph.add_node(
++                Opcode::Compare,
++                NodeId::NONE,
++                &[selector, expected],
++                ComparePredicate::Equal as u32,
++                ValueType::Rust(boolean),
++            );
++            let branch = graph.add_node(
++                Opcode::If,
++                control,
++                &[condition],
++                0,
++                ValueType::Tuple(vec![ValueType::Control; 2]),
++            );
++            control = graph.add_node(
++                Opcode::Projection,
++                NodeId::NONE,
++                &[branch],
++                1,
++                ValueType::Control,
++            );
++            graph.add_node(
++                Opcode::Projection,
++                NodeId::NONE,
++                &[branch],
++                0,
++                ValueType::Control,
++            )
++        };
++        let fields = if graph.oracle.aggregates[&enumeration].variants[variant as usize].is_empty()
++        {
++            vec![]
++        } else {
++            let value = if index == 2 {
++                let one = graph.add_constant(1, payload);
++                graph.add_node(
++                    Opcode::Add,
++                    NodeId::NONE,
++                    &[input, one],
++                    0,
++                    ValueType::Rust(payload),
++                )
++            } else {
++                input
++            };
++            vec![value]
++        };
++        values.push(graph.add_node(
++            Opcode::MakeVariant,
++            NodeId::NONE,
++            &fields,
++            variant,
++            ValueType::Rust(enumeration),
++        ));
++        jumps.push(graph.add_node(Opcode::Jump, edge, &[], 0, ValueType::Control));
++    }
++    let region = graph.add_node(Opcode::Region, NodeId::NONE, &jumps, 0, ValueType::Control);
++    let mut incoming = vec![region];
++    incoming.extend(values);
++    let value = graph.add_node(
++        Opcode::Phi,
++        NodeId::NONE,
++        &incoming,
++        0,
++        ValueType::Rust(enumeration),
++    );
++    graph.add_node(
++        Opcode::Return,
++        region,
++        &[effect, value],
++        0,
++        ValueType::Control,
++    );
++    verify_graph(&mut graph).unwrap();
++    graph
++}
++
++// Independent expected semantic variant, physical tag, and active payload.
++// None leaves the second ABI lane unspecified, as Option's inactive payload is.
++type Case = (u64, u64, u32, u64, Option<u64>);
++
++fn lower_and_check(mut graph: FunctionGraph, cases: &[Case]) -> (FunctionGraph, LayoutStats) {
++    for &(selector, input, variant, _, payload) in cases {
++        assert_eq!(
++            Interpreter::new(&graph)
++                .run_values(
++                    &[Value::Scalar(selector), Value::Scalar(input)],
++                    &mut |name: &str, _: &[Value]| Err(InterpretError::UnknownCallee(name.into())),
++                )
++                .unwrap(),
++            SemanticOutcome::Return(Value::Variant {
++                variant,
++                fields: payload.into_iter().map(Value::Scalar).collect(),
++            })
++        );
++    }
++    let stats = lower_layout(&mut graph).unwrap();
++    assert_eq!(graph.level, GraphLevel::Layout);
++    verify_graph(&mut graph).unwrap();
++    for &(selector, input, _, tag, payload) in cases {
++        let result = Interpreter::new(&graph)
++            .run(&[selector, input], &mut |name: &str, _: &[u64]| {
++                Err(InterpretError::UnknownCallee(name.into()))
++            })
++            .unwrap();
++        match (result, payload) {
++            (Outcome::ReturnPair(actual_tag, actual_payload), Some(expected)) => {
++                assert_eq!((actual_tag, actual_payload), (tag, expected));
++            }
++            (Outcome::ReturnPair(actual_tag, _), None) => assert_eq!(actual_tag, tag),
++            (result, _) => panic!("expected ScalarPair return, got {result:?}"),
++        }
++    }
++    (graph, stats)
++}
++
++fn assert_scalar_transport(graph: &FunctionGraph, stats: &LayoutStats) {
++    assert_eq!(stats.owned_transport_phis, 0, "{}", graph.dump());
++    assert_eq!(stats.scalar_phis, 2, "tag and payload must remain SSA");
++    // The current L ABI boundary requires one return object. Constructor
++    // snapshots would add one slot per incoming arm and an address Phi.
++    assert_eq!(stats.abi_slots, 1);
++    assert_eq!(graph.stack_slots.len(), 1, "{}", graph.dump());
++    assert!(!graph.ids().any(|node| {
++        graph.op(node) == Opcode::Phi
++            && graph.rust_type(node).is_some_and(|ty| {
++                matches!(graph.oracle.table.shape(ty), TypeShape::PlaceAddress { .. })
++            })
++    }));
++}
++
++#[test]
++fn option_u32_phi_keeps_both_scalar_pair_lanes() {
++    let mut types = RecordedTypes::new();
++    let word = integer(&mut types, IntegerWidth::W64, 8);
++    let small = integer(&mut types, IntegerWidth::W32, 4);
++    let choice = enumeration(
++        &mut types,
++        FieldLayout {
++            ty: small,
++            offset: 0,
++        },
++        FieldLayout {
++            ty: small,
++            offset: 4,
++        },
++        SizeAlign { size: 8, align: 4 },
++        &[0, 1],
++        true,
++    );
++    let (graph, stats) = lower_and_check(
++        phi_graph(types, choice, word, small, &[0, 1]),
++        &[
++            (0, u64::MAX, 0, 0, None),
++            (1, 0, 1, 1, Some(0)),
++            (2, u64::MAX, 1, 1, Some(u32::MAX as u64)),
++            (99, 0x1234_5678_9abc_def0, 1, 1, Some(0x9abc_def0)),
++        ],
++    );
++    assert_scalar_transport(&graph, &stats);
++}
++
++#[test]
++fn padded_small_pair_phi_handles_sparse_tags_and_three_incoming_edges() {
++    let mut types = RecordedTypes::new();
++    let word = integer(&mut types, IntegerWidth::W64, 8);
++    let byte = integer(&mut types, IntegerWidth::W8, 1);
++    let half = integer(&mut types, IntegerWidth::W16, 2);
++    let choice = enumeration(
++        &mut types,
++        FieldLayout {
++            ty: byte,
++            offset: 0,
++        },
++        FieldLayout {
++            ty: half,
++            offset: 2,
++        },
++        SizeAlign { size: 4, align: 2 },
++        &[3, 17],
++        true,
++    );
++    let (graph, stats) = lower_and_check(
++        phi_graph(types, choice, word, half, &[0, 1, 1]),
++        &[
++            (0, u64::MAX, 0, 3, None),
++            (1, u64::MAX, 1, 17, Some(0xffff)),
++            (2, u64::MAX, 1, 17, Some(0)),
++            (7, 0x1234_5678, 1, 17, Some(0x5679)),
++        ],
++    );
++    assert_scalar_transport(&graph, &stats);
++}
++
++#[test]
++fn many_payload_alternatives_still_use_owned_transport() {
++    let mut types = RecordedTypes::new();
++    let word = integer(&mut types, IntegerWidth::W64, 8);
++    let choice = enumeration(
++        &mut types,
++        FieldLayout {
++            ty: word,
++            offset: 0,
++        },
++        FieldLayout {
++            ty: word,
++            offset: 8,
++        },
++        SizeAlign { size: 16, align: 8 },
++        &[2, 5, 9, 14, 20, 27, 35, 44],
++        false,
++    );
++    // Nine logical leaves still exceed the two physical ABI lanes. Correcting
++    // the small-pair cost must preserve the storage choice for this enum.
++    let (graph, stats) = lower_and_check(
++        phi_graph(types, choice, word, word, &[0, 3, 7]),
++        &[
++            (0, 0, 0, 2, Some(0)),
++            (1, 0x1234_5678_9abc_def0, 3, 14, Some(0x1234_5678_9abc_def0)),
++            (2, u64::MAX, 7, 44, Some(0)),
++            (9, 700, 7, 44, Some(701)),
++        ],
++    );
++    assert_eq!(stats.owned_transport_phis, 1, "{}", graph.dump());
++    assert_eq!(stats.abi_slots, 0, "return consumes the selected snapshot");
++    assert!(!graph.stack_slots.is_empty());
++}
+--- /dev/null
++++ b/crates/kfrc-son/tests/semantic_layout_tag_constants.rs
+@@ -0,0 +1,429 @@
++//! Nested error merges acquire equal tag bits only when S enums become L scalars.
++use kfrc_body::{
++    AggregateLayout, EnumLayout, FieldLayout, FunctionAbi, IntegerWidth, PassMode, RecordedTypes,
++    SizeAlign, TagEncoding, TyId, TypeShape,
++};
++use kfrc_son::{
++    CallTarget, FunctionGraph, GraphLevel, InterpretError, Interpreter, NodeId, Opcode, Outcome,
++    SemanticOutcome, Value, ValueType, lower_layout, optimize_specialized_graph, verify_graph,
++};
++
++#[derive(Clone, Copy)]
++enum Case {
++    Errors,
++    Mixed,
++    Poison,
++}
++
++#[derive(Clone, Copy)]
++struct Edge {
++    control: NodeId,
++    effect: NodeId,
++    value: NodeId,
++}
++
++struct Fixture {
++    graph: FunctionGraph,
++    word: TyId,
++    result: TyId,
++    leaf: u32,
++}
++
++fn project(graph: &mut FunctionGraph, source: NodeId, slot: u32, ty: ValueType) -> NodeId {
++    graph.add_node(Opcode::Projection, NodeId::NONE, &[source], slot, ty)
++}
++
++impl Fixture {
++    fn branch(&mut self, control: NodeId, condition: NodeId) -> [NodeId; 2] {
++        let branch = self.graph.add_node(
++            Opcode::If,
++            control,
++            &[condition],
++            0,
++            ValueType::Tuple(vec![ValueType::Control; 2]),
++        );
++        [0, 1].map(|slot| project(&mut self.graph, branch, slot, ValueType::Control))
++    }
++
++    fn call(&mut self, control: NodeId, effect: NodeId, target: u32, arguments: &[NodeId]) -> Edge {
++        let mut inputs = vec![effect];
++        inputs.extend_from_slice(arguments);
++        let call = self.graph.add_node(
++            Opcode::Call,
++            control,
++            &inputs,
++            target,
++            ValueType::Tuple(vec![
++                ValueType::Control,
++                ValueType::Effect,
++                ValueType::Rust(self.word),
++            ]),
++        );
++        Edge {
++            control: project(&mut self.graph, call, 0, ValueType::Control),
++            effect: project(&mut self.graph, call, 1, ValueType::Effect),
++            value: project(&mut self.graph, call, 2, ValueType::Rust(self.word)),
++        }
++    }
++
++    fn leaf(
++        &mut self,
++        control: NodeId,
++        effect: NodeId,
++        input: NodeId,
++        event: u128,
++        case: Case,
++    ) -> Edge {
++        let event_value = self.graph.add_constant(event, self.word);
++        let edge = self.call(control, effect, self.leaf, &[event_value, input]);
++        if matches!(case, Case::Poison) && event == 2 {
++            let poison = self.graph.add_node(
++                Opcode::Undefined,
++                NodeId::NONE,
++                &[],
++                0,
++                ValueType::Rust(self.word),
++            );
++            let three = self.graph.add_constant(3, self.word);
++            // Its unused result does not remove this fixed poison observation.
++            self.graph.add_node(
++                Opcode::DivUnsigned,
++                edge.control,
++                &[poison, three],
++                0,
++                ValueType::Rust(self.word),
++            );
++        }
++        let success = event == 0 || matches!(case, Case::Mixed) && event == 2;
++        let fields = if success { vec![] } else { vec![edge.value] };
++        let value = self.graph.add_node(
++            Opcode::MakeVariant,
++            NodeId::NONE,
++            &fields,
++            u32::from(!success),
++            ValueType::Rust(self.result),
++        );
++        Edge { value, ..edge }
++    }
++
++    fn merge(&mut self, mut edges: [Edge; 2], reverse: bool) -> Edge {
++        if reverse {
++            edges.reverse();
++        }
++        let jumps = edges.map(|edge| {
++            self.graph
++                .add_node(Opcode::Jump, edge.control, &[], 0, ValueType::Control)
++        });
++        let region =
++            self.graph
++                .add_node(Opcode::Region, NodeId::NONE, &jumps, 0, ValueType::Control);
++        let effect = self.graph.add_node(
++            Opcode::Phi,
++            NodeId::NONE,
++            &[region, edges[0].effect, edges[1].effect],
++            0,
++            ValueType::Effect,
++        );
++        let value = self.graph.add_node(
++            Opcode::Phi,
++            NodeId::NONE,
++            &[region, edges[0].value, edges[1].value],
++            0,
++            ValueType::Rust(self.result),
++        );
++        Edge {
++            control: region,
++            effect,
++            value,
++        }
++    }
++}
++
++fn source(case: Case, reverse: bool) -> FunctionGraph {
++    let mut types = RecordedTypes::new();
++    let mut integer = |width, size| {
++        types.intern(
++            TypeShape::Int {
++                width,
++                signed: false,
++            },
++            Some(SizeAlign { size, align: size }),
++        )
++    };
++    let word = integer(IntegerWidth::W64, 8);
++    let tag = integer(IntegerWidth::W8, 1);
++    let boolean = types.intern(TypeShape::Bool, Some(SizeAlign { size: 1, align: 1 }));
++    let result = types.intern(
++        TypeShape::Adt {
++            name: "DecodeResult".into(),
++        },
++        Some(SizeAlign { size: 16, align: 8 }),
++    );
++    types.record_aggregate(
++        result,
++        AggregateLayout {
++            fields: vec![],
++            variants: vec![
++                vec![],
++                vec![FieldLayout {
++                    ty: word,
++                    offset: 8,
++                }],
++            ],
++        },
++    );
++    types.record_semantic_enum(result, vec![0, 1]);
++    types.enums.insert(
++        result,
++        EnumLayout {
++            tag: Some(FieldLayout { ty: tag, offset: 0 }),
++            encoding: TagEncoding::Direct {
++                discriminants: vec![0, 1],
++            },
++        },
++    );
++    let mut graph = FunctionGraph::new(
++        "nested_error_tags",
++        FunctionAbi {
++            args: vec![PassMode::Direct; 4],
++            ret: PassMode::Direct,
++            c_variadic: false,
++        },
++        types,
++    );
++    graph.level = GraphLevel::Specialized;
++    graph.start = graph.add_node(
++        Opcode::Start,
++        NodeId::NONE,
++        &[],
++        0,
++        ValueType::Tuple(vec![
++            ValueType::Control,
++            ValueType::Effect,
++            ValueType::Rust(boolean),
++            ValueType::Rust(boolean),
++            ValueType::Rust(boolean),
++            ValueType::Rust(word),
++        ]),
++    );
++    let start = graph.start;
++    let control = project(&mut graph, start, 0, ValueType::Control);
++    let effect = project(&mut graph, start, 1, ValueType::Effect);
++    let selectors =
++        [2, 3, 4].map(|slot| project(&mut graph, start, slot, ValueType::Rust(boolean)));
++    let input = project(&mut graph, start, 5, ValueType::Rust(word));
++    let mut target = |name: &str, arguments| {
++        graph.add_callee(CallTarget {
++            symbol: name.into(),
++            abi: FunctionAbi {
++                args: vec![PassMode::Direct; arguments],
++                ret: PassMode::Direct,
++                c_variadic: false,
++            },
++        })
++    };
++    let leaf = target("tag_leaf", 2);
++    let consume = target("tag_consume", 1);
++    let mut f = Fixture {
++        graph,
++        word,
++        result,
++        leaf,
++    };
++    let [success, error] = f.branch(control, selectors[0]);
++    let success = f.leaf(success, effect, input, 0, case);
++    let [first, rest] = f.branch(error, selectors[1]);
++    let first = f.leaf(first, effect, input, 1, case);
++    let [second, third] = f.branch(rest, selectors[2]);
++    let second = f.leaf(second, effect, input, 2, case);
++    let third = f.leaf(third, effect, input, 3, case);
++    // Distinct constructors produce distinct equal-bit tag constants in L.
++    // Observable leaf calls keep both error-selection diamonds meaningful.
++    let rest = f.merge([second, third], reverse);
++    let errors = f.merge([first, rest], reverse);
++    let joined = f.merge([success, errors], reverse);
++    f.graph.variant_switches.push(vec![0, 1]);
++    let switch = f.graph.add_node(
++        Opcode::VariantSwitch,
++        joined.control,
++        &[joined.value],
++        0,
++        ValueType::Tuple(vec![ValueType::Control; 3]),
++    );
++    let yes = project(&mut f.graph, switch, 0, ValueType::Control);
++    let no = project(&mut f.graph, switch, 1, ValueType::Control);
++    let default = project(&mut f.graph, switch, 2, ValueType::Control);
++    let witness = f.graph.add_node(
++        Opcode::VariantWitness,
++        no,
++        &[joined.value, no],
++        1,
++        ValueType::Witness,
++    );
++    let field = f.graph.intern_variant_field(1, 0);
++    let payload = f.graph.add_node(
++        Opcode::VariantField,
++        NodeId::NONE,
++        &[joined.value, witness],
++        field,
++        ValueType::Rust(word),
++    );
++    let consumed = f.call(no, joined.effect, consume, &[payload]);
++    let answer = f.graph.add_constant(77, word);
++    f.graph.add_node(
++        Opcode::Return,
++        yes,
++        &[joined.effect, answer],
++        0,
++        ValueType::Control,
++    );
++    f.graph.add_node(
++        Opcode::Return,
++        consumed.control,
++        &[consumed.effect, consumed.value],
++        0,
++        ValueType::Control,
++    );
++    f.graph
++        .add_node(Opcode::Unreachable, default, &[], 0, ValueType::Control);
++    verify_graph(&mut f.graph).unwrap();
++    optimize_specialized_graph(&mut f.graph).unwrap();
++    verify_graph(&mut f.graph).unwrap();
++    f.graph
++}
++
++fn count(graph: &FunctionGraph, op: Opcode) -> usize {
++    graph.ids().filter(|&node| graph.op(node) == op).count()
++}
++
++fn lower(source: &FunctionGraph) -> FunctionGraph {
++    let mut graph = source.clone();
++    lower_layout(&mut graph).unwrap();
++    verify_graph(&mut graph).unwrap();
++    graph
++}
++
++#[derive(Debug, PartialEq, Eq)]
++enum Event {
++    Leaf(u64, u64),
++    Consume(u64),
++}
++
++fn respond(symbol: &str, arguments: &[u64], events: &mut Vec<Event>) -> u64 {
++    match (symbol, arguments) {
++        ("tag_leaf", &[event, input]) => {
++            events.push(Event::Leaf(event, input));
++            input.wrapping_add(event)
++        }
++        ("tag_consume", &[payload]) => {
++            events.push(Event::Consume(payload));
++            payload
++        }
++        other => panic!("unexpected call: {other:?}"),
++    }
++}
++
++fn compare(source: &FunctionGraph, target: &FunctionGraph, case: Case) {
++    for success in [0, 1] {
++        for first in [0, 1] {
++            for second in [0, 1] {
++                for input in [0, 17, u64::MAX] {
++                    let arguments = [success, first, second, input];
++                    let values = arguments.map(Value::Scalar);
++                    let mut before_events = vec![];
++                    let before = Interpreter::new(source)
++                        .run_values(&values, &mut |name: &str, args: &[Value]| {
++                            let args: Vec<_> = args
++                                .iter()
++                                .map(|arg| match arg {
++                                    Value::Scalar(bits) => *bits,
++                                    other => panic!("scalar argument expected: {other:?}"),
++                                })
++                                .collect();
++                            Ok(Value::Scalar(respond(name, &args, &mut before_events)))
++                        })
++                        .map(|outcome| match outcome {
++                            SemanticOutcome::Return(Value::Scalar(bits)) => bits,
++                            other => panic!("scalar return expected: {other:?}"),
++                        });
++                    let mut after_events = vec![];
++                    let after = Interpreter::new(target)
++                        .run(&arguments, &mut |name: &str, args: &[u64]| {
++                            Ok(respond(name, args, &mut after_events))
++                        })
++                        .map(|outcome| match outcome {
++                            Outcome::Return(bits) => bits,
++                            other => panic!("scalar return expected: {other:?}"),
++                        });
++                    let leaf = if success != 0 {
++                        0
++                    } else if first != 0 {
++                        1
++                    } else if second != 0 {
++                        2
++                    } else {
++                        3
++                    };
++                    let mut expected_events = vec![Event::Leaf(leaf, input)];
++                    if matches!(case, Case::Poison) && leaf == 2 {
++                        assert!(matches!(before, Err(InterpretError::PoisonObserved(_))));
++                        assert!(matches!(after, Err(InterpretError::PoisonObserved(_))));
++                    } else {
++                        let answer = if leaf == 0 || matches!(case, Case::Mixed) && leaf == 2 {
++                            77
++                        } else {
++                            let payload = input.wrapping_add(leaf);
++                            expected_events.push(Event::Consume(payload));
++                            payload
++                        };
++                        assert_eq!(before.unwrap(), answer, "source {arguments:?}");
++                        assert_eq!(after.unwrap(), answer, "layout {arguments:?}");
++                    }
++                    assert_eq!(before_events, expected_events, "source {arguments:?}");
++                    assert_eq!(after_events, expected_events, "layout {arguments:?}");
++                }
++            }
++        }
++    }
++}
++
++#[test]
++fn nested_errors_do_not_retest_tags_or_merge_inactive_success_payloads() {
++    for reverse in [false, true] {
++        let source = source(Case::Errors, reverse);
++        assert_eq!(count(&source, Opcode::If), 3);
++        assert_eq!(count(&source, Opcode::VariantSwitch), 1);
++        let target = lower(&source);
++        compare(&source, &target, Case::Errors);
++        assert_eq!(count(&target, Opcode::If), 3, "{}", target.dump());
++        assert!(
++            !target.ids().any(|node| {
++                target.op(node) == Opcode::Phi
++                    && target.inputs(node)[1..]
++                        .iter()
++                        .any(|&input| target.op(input) == Opcode::Undefined)
++            }),
++            "an error payload still merges the inactive success arm: {}",
++            target.dump()
++        );
++    }
++}
++
++#[test]
++fn a_success_among_nested_errors_keeps_its_real_dispatch() {
++    for reverse in [false, true] {
++        let source = source(Case::Mixed, reverse);
++        let target = lower(&source);
++        compare(&source, &target, Case::Mixed);
++    }
++}
++
++#[test]
++fn constant_error_tags_do_not_bypass_a_fixed_poison_observation() {
++    for reverse in [false, true] {
++        let source = source(Case::Poison, reverse);
++        let target = lower(&source);
++        assert_eq!(count(&target, Opcode::DivUnsigned), 1);
++        compare(&source, &target, Case::Poison);
++    }
++}

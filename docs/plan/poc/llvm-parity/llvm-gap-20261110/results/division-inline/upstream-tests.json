@@ -1,0 +1,272 @@
+{
+  "semver": {
+    "lockfile": "generated",
+    "sysroot": "cargo -Zbuild-std (MIR opt-level 0, panic=abort, O3, CGU16)",
+    "itest": {
+      "build_exit_code": 0,
+      "build_seconds": 19.706715370999973,
+      "crate_invocations": 1,
+      "crate_invocations_with_backend": 1,
+      "binaries": {
+        "suite_itest_semver": {
+          "exit_code": 0,
+          "seconds": 0.005434212000182015,
+          "listed": 0,
+          "counts": {
+            "ok": 0,
+            "failed": 0,
+            "ignored": 0,
+            "not_run": 0
+          },
+          "outcomes": {}
+        },
+        "test_autotrait": {
+          "exit_code": 0,
+          "seconds": 0.005407674000252882,
+          "listed": 1,
+          "counts": {
+            "ok": 1,
+            "failed": 0,
+            "ignored": 0,
+            "not_run": 0
+          },
+          "outcomes": {
+            "test": "ok"
+          }
+        },
+        "test_identifier": {
+          "exit_code": 0,
+          "seconds": 0.030744100999982038,
+          "listed": 3,
+          "counts": {
+            "ok": 3,
+            "failed": 0,
+            "ignored": 0,
+            "not_run": 0
+          },
+          "outcomes": {
+            "test_eq": "ok",
+            "test_new": "ok",
+            "test_prerelease": "ok"
+          }
+        },
+        "test_version": {
+          "exit_code": 0,
+          "seconds": 0.015559520999886445,
+          "listed": 10,
+          "counts": {
+            "ok": 10,
+            "failed": 0,
+            "ignored": 0,
+            "not_run": 0
+          },
+          "outcomes": {
+            "test_align": "ok",
+            "test_display": "ok",
+            "test_eq": "ok",
+            "test_ge": "ok",
+            "test_gt": "ok",
+            "test_le": "ok",
+            "test_lt": "ok",
+            "test_ne": "ok",
+            "test_parse": "ok",
+            "test_spec_order": "ok"
+          }
+        },
+        "test_version_req": {
+          "exit_code": 0,
+          "seconds": 0.020654737999848294,
+          "listed": 20,
+          "counts": {
+            "ok": 20,
+            "failed": 0,
+            "ignored": 0,
+            "not_run": 0
+          },
+          "outcomes": {
+            "test_any": "ok",
+            "test_basic": "ok",
+            "test_caret": "ok",
+            "test_cargo3202": "ok",
+            "test_comparator_parse": "ok",
+            "test_default": "ok",
+            "test_digit_after_wildcard": "ok",
+            "test_eq_hash": "ok",
+            "test_exact": "ok",
+            "test_greater_than": "ok",
+            "test_leading_digit_in_pre_and_build": "ok",
+            "test_less_than": "ok",
+            "test_logical_or": "ok",
+            "test_multiple": "ok",
+            "test_parse": "ok",
+            "test_pre": "ok",
+            "test_tilde": "ok",
+            "test_whitespace_delimited_comparator_sets": "ok",
+            "test_wildcard": "ok",
+            "test_wildcard_and_another": "ok"
+          }
+        }
+      },
+      "totals": {
+        "ok": 34,
+        "failed": 0,
+        "ignored": 0,
+        "not_run": 0
+      },
+      "all_exit_zero": true
+    }
+  },
+  "base64": {
+    "lockfile": "generated",
+    "sysroot": "cargo -Zbuild-std (MIR opt-level 0, panic=abort, O3, CGU16)",
+    "itest": {
+      "build_exit_code": 0,
+      "build_seconds": 3.3657363629999963,
+      "crate_invocations": 1,
+      "crate_invocations_with_backend": 1,
+      "binaries": {
+        "encode": {
+          "exit_code": 0,
+          "seconds": 0.010451825000018289,
+          "listed": 6,
+          "counts": {
+            "ok": 6,
+            "failed": 0,
+            "ignored": 0,
+            "not_run": 0
+          },
+          "outcomes": {
+            "encode_all_ascii": "ok",
+            "encode_all_bytes": "ok",
+            "encode_all_bytes_url": "ok",
+            "encoded_len_overflow": "ok",
+            "encoded_len_padded": "ok",
+            "encoded_len_unpadded": "ok"
+          }
+        },
+        "suite_itest_base64": {
+          "exit_code": 0,
+          "seconds": 0.005343457999970269,
+          "listed": 0,
+          "counts": {
+            "ok": 0,
+            "failed": 0,
+            "ignored": 0,
+            "not_run": 0
+          },
+          "outcomes": {}
+        },
+        "tests": {
+          "exit_code": 0,
+          "seconds": 0.35569301299983636,
+          "listed": 7,
+          "counts": {
+            "ok": 7,
+            "failed": 0,
+            "ignored": 0,
+            "not_run": 0
+          },
+          "outcomes": {
+            "display_wrapper_matches_normal_encode": "ok",
+            "encode_engine_slice_error_when_buffer_too_small": "ok",
+            "roundtrip_decode_trailing_10_bytes": "ok",
+            "roundtrip_random_no_padding": "ok",
+            "roundtrip_random_short_no_padding": "ok",
+            "roundtrip_random_short_standard": "ok",
+            "roundtrip_random_with_fast_loop_standard": "ok"
+          }
+        }
+      },
+      "totals": {
+        "ok": 13,
+        "failed": 0,
+        "ignored": 0,
+        "not_run": 0
+      },
+      "all_exit_zero": true
+    },
+    "unit": {
+      "build_exit_code": 101,
+      "build_seconds": 25.33914035099997,
+      "crate_invocations": 1,
+      "crate_invocations_with_backend": 1,
+      "build_error": [
+        "error: kfrc: cannot compile `core::f64::<impl f64>::abs` (_RNvMNtCshX3mvxHm3fC_4core3f64d3abs): MIR conversion: intrinsic `fabsf64` is not implemented"
+      ]
+    }
+  },
+  "unicode-segmentation": {
+    "lockfile": "generated",
+    "sysroot": "cargo -Zbuild-std (MIR opt-level 0, panic=abort, O3, CGU16)",
+    "itest": {
+      "build_exit_code": 0,
+      "build_seconds": 5.850907279999774,
+      "crate_invocations": 1,
+      "crate_invocations_with_backend": 1,
+      "binaries": {
+        "suite_itest_unicode_segmentation": {
+          "exit_code": 0,
+          "seconds": 0.005365600999994058,
+          "listed": 0,
+          "counts": {
+            "ok": 0,
+            "failed": 0,
+            "ignored": 0,
+            "not_run": 0
+          },
+          "outcomes": {}
+        },
+        "test": {
+          "exit_code": 0,
+          "seconds": 0.020586055999956443,
+          "listed": 8,
+          "counts": {
+            "ok": 8,
+            "failed": 0,
+            "ignored": 0,
+            "not_run": 0
+          },
+          "outcomes": {
+            "quickcheck_forward_reverse_graphemes_extended": "ok",
+            "quickcheck_forward_reverse_graphemes_legacy": "ok",
+            "quickcheck_forward_reverse_words": "ok",
+            "quickcheck_join_graphemes": "ok",
+            "quickcheck_join_words": "ok",
+            "test_graphemes": "ok",
+            "test_sentences": "ok",
+            "test_words": "ok"
+          }
+        }
+      },
+      "totals": {
+        "ok": 8,
+        "failed": 0,
+        "ignored": 0,
+        "not_run": 0
+      },
+      "all_exit_zero": true
+    },
+    "unit": {
+      "build_exit_code": 101,
+      "build_seconds": 16.659993819000192,
+      "crate_invocations": 1,
+      "crate_invocations_with_backend": 1,
+      "build_error": [
+        "error: kfrc: cannot compile `core::sync::atomic::atomic_sub::<usize, usize>` (_RINvNtNtCshX3mvxHm3fC_4core4sync6atomic10atomic_subjjECsgqMEnKrWds8_20unicode_segmentation): MIR conversion: intrinsic `atomic_xsub` is not implemented"
+      ]
+    }
+  },
+  "humantime": {
+    "lockfile": "generated",
+    "sysroot": "cargo -Zbuild-std (MIR opt-level 0, panic=abort, O3, CGU16)",
+    "unit": {
+      "build_exit_code": 101,
+      "build_seconds": 2.4410263590002614,
+      "crate_invocations": 1,
+      "crate_invocations_with_backend": 1,
+      "build_error": [
+        "error: kfrc: cannot compile `std::sync::atomic::atomic_load::<*mut std::ffi::c_void>` (_RINvNtNtCshX3mvxHm3fC_4core4sync6atomic11atomic_loadONtNtB6_3ffi6c_voidECsk7jP5b0JD0V_9humantime): MIR conversion: intrinsic `atomic_load` is not implemented"
+      ]
+    }
+  }
+}

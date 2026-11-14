@@ -1,0 +1,341 @@
+{
+  "label": "encode-whole-pack-v1",
+  "status": "implemented_static_only_not_compiled_or_executed",
+  "source_root": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108",
+  "baseline_source_tree_sha256": "9235520b2dd380f635c5c51d76baa2c890b9c84b61d2de9f10841dafeef495a3",
+  "baseline_backend_sha256": "6c25173e5b00a7056f891748beaf80294fba00e71fd3a4de15e9d81a0616521c",
+  "projected_base_plus_owned_rust_tree_sha256": "77ebfc0d1d78957be5e10c21f52f62ac96524290f306846670a9260be638da96",
+  "projected_tree_scope": "Frozen 923552 source map with exactly the 14 listed Rust overlays, excluding these handoff artifacts and any concurrent worktree edits.",
+  "patch_path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-son/src/lower_layout/whole_pack/evidence/whole-pack-v1-baseline.patch",
+  "patch_sha256": "c685da9ba004dcda735d36cca3d5a8b35b9d607ed6a2886f76b241c11c241172",
+  "files": [
+    {
+      "path": "crates/kfrc-son/src/lower_layout/representation.rs",
+      "baseline_sha256": "1adbaeb3fdaea6e5eb005c2b7195ffacd84df460918c9243439b30227cba9c63",
+      "sha256": "c356cf95c401ae9f972283185517a6b9111e29234a1170076d5ad687b2b07953",
+      "bytes": 8263,
+      "lines": 213,
+      "added": 23,
+      "removed": 16
+    },
+    {
+      "path": "crates/kfrc-son/src/lower_layout/whole_pack/index.rs",
+      "baseline_sha256": null,
+      "sha256": "cc9fc03b950d5decdbfc9af5319913a6d2ea1980137fd729cd54b5dbc1307503",
+      "bytes": 2626,
+      "lines": 83,
+      "added": 83,
+      "removed": 0,
+      "draft_path": "/Users/shom/Downloads/kfrc-callsite-opt-20261110/generic-parity-20261110/candidate-work/generic-v27-whole-pack-phi-v1/source/crates/kfrc-son/src/lower_layout/whole_pack/index.rs",
+      "draft_sha256": "cc9fc03b950d5decdbfc9af5319913a6d2ea1980137fd729cd54b5dbc1307503",
+      "exact_reuse": true
+    },
+    {
+      "path": "crates/kfrc-son/src/lower_layout/whole_pack/loads.rs",
+      "baseline_sha256": null,
+      "sha256": "84314bfd8ac5684b4dc3ee5175f55aa22f5ebe7cebc1dbc484e0d8498d222963",
+      "bytes": 6628,
+      "lines": 188,
+      "added": 188,
+      "removed": 0,
+      "draft_path": "/Users/shom/Downloads/kfrc-callsite-opt-20261110/generic-parity-20261110/candidate-work/generic-v27-whole-pack-phi-v1/source/crates/kfrc-son/src/lower_layout/whole_pack/loads.rs",
+      "draft_sha256": "84314bfd8ac5684b4dc3ee5175f55aa22f5ebe7cebc1dbc484e0d8498d222963",
+      "exact_reuse": true
+    },
+    {
+      "path": "crates/kfrc-son/src/lower_layout/whole_pack/pack.rs",
+      "baseline_sha256": null,
+      "sha256": "9df5ab52cb9b54a0ad1034bdab2541f86febf5b6460363c94a0d78df2385e378",
+      "bytes": 4024,
+      "lines": 129,
+      "added": 129,
+      "removed": 0,
+      "draft_path": "/Users/shom/Downloads/kfrc-callsite-opt-20261110/generic-parity-20261110/candidate-work/generic-v27-whole-pack-phi-v1/source/crates/kfrc-son/src/lower_layout/whole_pack/pack.rs",
+      "draft_sha256": "9df5ab52cb9b54a0ad1034bdab2541f86febf5b6460363c94a0d78df2385e378",
+      "exact_reuse": true
+    },
+    {
+      "path": "crates/kfrc-son/src/lower_layout/whole_pack/tests/fixture.rs",
+      "baseline_sha256": null,
+      "sha256": "153ea789254a29ee9689b03cad39bf2357dbbce115c19eb80e8142f576dd4c22",
+      "bytes": 14188,
+      "lines": 439,
+      "added": 439,
+      "removed": 0,
+      "draft_path": "/Users/shom/Downloads/kfrc-callsite-opt-20261110/generic-parity-20261110/candidate-work/generic-v27-whole-pack-phi-v1/source/crates/kfrc-son/src/lower_layout/whole_pack/tests/fixture.rs",
+      "draft_sha256": "153ea789254a29ee9689b03cad39bf2357dbbce115c19eb80e8142f576dd4c22",
+      "exact_reuse": true
+    },
+    {
+      "path": "crates/kfrc-son/src/lower_layout/whole_pack/tests/flow.rs",
+      "baseline_sha256": null,
+      "sha256": "d150db980ee0c1d5d00ef81965ac2e519cb0c9397411fc8195ae4ae19f3e2349",
+      "bytes": 9886,
+      "lines": 296,
+      "added": 296,
+      "removed": 0,
+      "draft_path": "/Users/shom/Downloads/kfrc-callsite-opt-20261110/generic-parity-20261110/candidate-work/generic-v27-whole-pack-phi-v1/source/crates/kfrc-son/src/lower_layout/whole_pack/tests/flow.rs",
+      "draft_sha256": "d150db980ee0c1d5d00ef81965ac2e519cb0c9397411fc8195ae4ae19f3e2349",
+      "exact_reuse": true
+    },
+    {
+      "path": "crates/kfrc-son/src/lower_layout/whole_pack/tests/rejections.rs",
+      "baseline_sha256": null,
+      "sha256": "03ced3c41b4a385aa0cd1633efeab19eddd83b5679b125cb87950fd8be76d0bd",
+      "bytes": 9568,
+      "lines": 270,
+      "added": 270,
+      "removed": 0,
+      "draft_path": "/Users/shom/Downloads/kfrc-callsite-opt-20261110/generic-parity-20261110/candidate-work/generic-v27-whole-pack-phi-v1/source/crates/kfrc-son/src/lower_layout/whole_pack/tests/rejections.rs",
+      "draft_sha256": "03ced3c41b4a385aa0cd1633efeab19eddd83b5679b125cb87950fd8be76d0bd",
+      "exact_reuse": true
+    },
+    {
+      "path": "crates/kfrc-son/src/lower_layout/whole_pack/tests/semantic.rs",
+      "baseline_sha256": null,
+      "sha256": "fe7ff7cb208e52eb3cdfcdd8dfaed045e951ea30e9fe98fa92c1cb0306a1d0b8",
+      "bytes": 12461,
+      "lines": 339,
+      "added": 339,
+      "removed": 0
+    },
+    {
+      "path": "crates/kfrc-son/src/lower_layout/whole_pack/tests/semantic_fixture.rs",
+      "baseline_sha256": null,
+      "sha256": "e00626a13946b3734f74148fc5bb0d73c584ceee32576f3c4991a92250bfa959",
+      "bytes": 11188,
+      "lines": 390,
+      "added": 390,
+      "removed": 0
+    },
+    {
+      "path": "crates/kfrc-son/src/lower_layout/whole_pack/tests/transmute_bridge.rs",
+      "baseline_sha256": null,
+      "sha256": "5d34d10821e38ce8c972790329155886a8058c65d6ea2978ed60b4c2eb20b33c",
+      "bytes": 6493,
+      "lines": 181,
+      "added": 181,
+      "removed": 0
+    },
+    {
+      "path": "crates/kfrc-son/src/lower_layout/whole_pack/tests.rs",
+      "baseline_sha256": null,
+      "sha256": "c53193a1f8fb1a658a204ff9c8af73da5cbc10d616536590a7817fe412b21111",
+      "bytes": 6641,
+      "lines": 188,
+      "added": 188,
+      "removed": 0,
+      "draft_path": "/Users/shom/Downloads/kfrc-callsite-opt-20261110/generic-parity-20261110/candidate-work/generic-v27-whole-pack-phi-v1/source/crates/kfrc-son/src/lower_layout/whole_pack/tests.rs",
+      "draft_sha256": "caf94ee0d60fd38be84ee7e2cef2c5d2eb8639c853dabae7f7cf7f1f6f8a0382",
+      "exact_reuse": false
+    },
+    {
+      "path": "crates/kfrc-son/src/lower_layout/whole_pack/transmute.rs",
+      "baseline_sha256": null,
+      "sha256": "35c2d3cb719c0b0462890258c58a4227dfe21935d91e01360612c5a274fd1eba",
+      "bytes": 2463,
+      "lines": 78,
+      "added": 78,
+      "removed": 0
+    },
+    {
+      "path": "crates/kfrc-son/src/lower_layout/whole_pack.rs",
+      "baseline_sha256": null,
+      "sha256": "a2c4f5cb37bd435453389f205a19dedd10fa33f73b051c0ff198452ba7512cab",
+      "bytes": 3635,
+      "lines": 127,
+      "added": 127,
+      "removed": 0,
+      "draft_path": "/Users/shom/Downloads/kfrc-callsite-opt-20261110/generic-parity-20261110/candidate-work/generic-v27-whole-pack-phi-v1/source/crates/kfrc-son/src/lower_layout/whole_pack.rs",
+      "draft_sha256": "1088947fb4c648dcf9acc1041eff56af793d0528f1711e7274730eaeb6668b7e",
+      "exact_reuse": false
+    },
+    {
+      "path": "crates/kfrc-son/src/lower_layout.rs",
+      "baseline_sha256": "05f41dbfd886bf0920dfa1b2a450da190dd003e70b2efc1f26a2a59065adc593",
+      "sha256": "bb67ead9ff5b3c49a2670dc44efa677f585957af1fcc4000d8ec78217505d6a2",
+      "bytes": 19130,
+      "lines": 509,
+      "added": 15,
+      "removed": 1,
+      "draft_path": "/Users/shom/Downloads/kfrc-callsite-opt-20261110/generic-parity-20261110/candidate-work/generic-v27-whole-pack-phi-v1/source/crates/kfrc-son/src/lower_layout.rs",
+      "draft_sha256": "4b78122b5a5491a9766e813278c311a0bad49d4b03574453b20a8241b11ab859",
+      "exact_reuse": false
+    }
+  ],
+  "provenance": {
+    "matcher": "/Users/shom/Downloads/kfrc-callsite-opt-20261110/generic-parity-20261110/candidate-work/generic-v27-whole-pack-phi-v1/source/crates/kfrc-son/src/lower_layout/whole_pack.rs",
+    "source_pipeline_fixture": "/Users/shom/Downloads/kfrc-callsite-opt-20261110/generic-parity-20261110/candidate-work/generic-v27-whole-pack-phi-v1/source/crates/kfrc-son/tests/whole_pack_phi/fixture.rs",
+    "source_pipeline_tests": "/Users/shom/Downloads/kfrc-callsite-opt-20261110/generic-parity-20261110/candidate-work/generic-v27-whole-pack-phi-v1/source/crates/kfrc-son/tests/semantic_whole_pack_phi.rs",
+    "draft_execution": "v27 queue was paused and never started; reuse does not imply validated behavior",
+    "baseline_adaptation": "New narrow unsigned byte-array transmute bridge; no v19 general representation selector/load/store paths imported."
+  },
+  "eligibility": [
+    "Transmute source: dense [u8; 2/4/8], exact matching array layout size, full validity, no union/vector, exact Fields of matching scalar byte leaves; target ordinary unsigned 16/32/64-bit integer with exact layout and no validity restriction; width within max_unrolled_memory_bytes.",
+    "Full pack: unique complete byte lanes in unsigned cast, exact shift 8*i and payload-zero OR tree, max 32 cone nodes; byte Phis in one two-input Region and no extra byte/intermediate observers; arbitrary root word users allowed.",
+    "Phi incoming: synchronized load-result slot and explicit Undefined on other slot; both region predecessors reachable from Start avoiding the region; no loop-header/backedge certificate.",
+    "Loads: exact contiguous offsets 0..N-1 of a common base, same partition, uninterrupted exclusive control/effect chain, exactly three unique projections, each value used only by matching byte Phi, final control used only by matching Jump and final effect only by matching effect Phi.",
+    "All L plans analyzed before mutation with disjoint owned cones. Fuel exhaustion discards every tentative plan. Wide load reuses first byte original control/effect/address; exact width, no added alignment or provenance claims."
+  ],
+  "observation_contract": "S verification and the existing erase_requirements publishing seam are unchanged. The bridge is selected only while lowering the original fixed TransmuteValue; it creates poison-propagating pure SSA from already-captured bytes and bypasses the same fixed continuation. Actual source reads/calls/stores keep their fixed positions. A wide read is committed only after the exclusive full-cone certificate.",
+  "complexity": {
+    "new_production_module_lines_including_comments_and_blanks": 605,
+    "new_test_module_lines_including_comments_and_blanks": 2103,
+    "owned_rust_added_lines": 2746,
+    "owned_rust_removed_lines": 17,
+    "matcher_fuel": 262144,
+    "bridge_nodes_at_width_8": 29,
+    "combine_new_nodes_per_group": 6,
+    "runtime_analysis": "One O(V) root scan; builds O(V+E) Uses only if an OR exists and the same charged fuel permits. Pack trees max 32 nodes, load groups max 8 bytes, forward-join searches charged against one all-or-nothing 262144 budget. One final O(V+E) compaction on successful publication.",
+    "memory": "O(V+E) dense Uses/reachability plus bounded plans; bridge uses at most 8 temporary leaves."
+  },
+  "checks_completed": [
+    "rustfmt --edition 2024 --config skip_children=true on exactly all 14 owned Rust files",
+    "rustfmt --edition 2024 --config skip_children=true --check on exactly all 14 owned Rust files",
+    "SHA-256 of the two modified existing files matched frozen baseline before editing",
+    "Inspected current APIs, requirement erasure, scalar cleanup, field layouts and graph forwarding; no dependencies or MSRV change"
+  ],
+  "execution": {
+    "compile": false,
+    "tests": false,
+    "target": false,
+    "e2b": false,
+    "benchmark": false
+  },
+  "tests": [
+    {
+      "file": "crates/kfrc-son/src/lower_layout/whole_pack/tests/flow.rs",
+      "function": "forward_diamond_inside_an_outer_loop_is_not_a_loop_carried_pack"
+    },
+    {
+      "file": "crates/kfrc-son/src/lower_layout/whole_pack/tests/flow.rs",
+      "function": "repeated_forward_diamonds_capture_each_iterations_bytes_before_the_next_store"
+    },
+    {
+      "file": "crates/kfrc-son/src/lower_layout/whole_pack/tests/flow.rs",
+      "function": "a_header_dominating_its_backedge_has_no_forward_join_certificate"
+    },
+    {
+      "file": "crates/kfrc-son/src/lower_layout/whole_pack/tests/flow.rs",
+      "function": "unreachable_and_duplicate_predecessors_have_no_forward_certificate"
+    },
+    {
+      "file": "crates/kfrc-son/src/lower_layout/whole_pack/tests/flow.rs",
+      "function": "shared_partial_observers_cannot_form_overlapping_plans"
+    },
+    {
+      "file": "crates/kfrc-son/src/lower_layout/whole_pack/tests/flow.rs",
+      "function": "sequential_independent_groups_publish_atomically_even_with_cross_plan_effects"
+    },
+    {
+      "file": "crates/kfrc-son/src/lower_layout/whole_pack/tests/rejections.rs",
+      "function": "individual_byte_and_pack_intermediate_observers_reject_the_group"
+    },
+    {
+      "file": "crates/kfrc-son/src/lower_layout/whole_pack/tests/rejections.rs",
+      "function": "duplicate_missing_out_of_order_and_different_base_addresses_reject"
+    },
+    {
+      "file": "crates/kfrc-son/src/lower_layout/whole_pack/tests/rejections.rs",
+      "function": "nonundefined_and_unsynchronized_phi_incoming_slots_reject"
+    },
+    {
+      "file": "crates/kfrc-son/src/lower_layout/whole_pack/tests/rejections.rs",
+      "function": "partial_shift_flags_repeated_terms_and_signed_bytes_reject"
+    },
+    {
+      "file": "crates/kfrc-son/src/lower_layout/whole_pack/tests/rejections.rs",
+      "function": "extra_control_effect_and_projection_observers_reject"
+    },
+    {
+      "file": "crates/kfrc-son/src/lower_layout/whole_pack/tests/rejections.rs",
+      "function": "an_interleaved_store_prevents_load_coalescing"
+    },
+    {
+      "file": "crates/kfrc-son/src/lower_layout/whole_pack/tests/rejections.rs",
+      "function": "differing_partitions_and_restricted_or_vector_words_reject"
+    },
+    {
+      "file": "crates/kfrc-son/src/lower_layout/whole_pack/tests/semantic.rs",
+      "function": "owned_enum_phi_loads_combine_through_the_public_layout_pipeline"
+    },
+    {
+      "file": "crates/kfrc-son/src/lower_layout/whole_pack/tests/semantic.rs",
+      "function": "semantic_and_both_layout_forms_keep_errors_effects_and_old_bytes"
+    },
+    {
+      "file": "crates/kfrc-son/src/lower_layout/whole_pack/tests/semantic.rs",
+      "function": "partial_source_bytes_still_poison_only_an_observed_whole_word"
+    },
+    {
+      "file": "crates/kfrc-son/src/lower_layout/whole_pack/tests/semantic.rs",
+      "function": "fixed_whole_value_requirement_keeps_the_existing_publishing_contract"
+    },
+    {
+      "file": "crates/kfrc-son/src/lower_layout/whole_pack/tests/transmute_bridge.rs",
+      "function": "narrow_bridge_checks_the_entire_representation_before_mutating"
+    },
+    {
+      "file": "crates/kfrc-son/src/lower_layout/whole_pack/tests/transmute_bridge.rs",
+      "function": "bridge_keeps_partial_byte_observers_and_their_independent_poison"
+    },
+    {
+      "file": "crates/kfrc-son/src/lower_layout/whole_pack/tests.rs",
+      "function": "complete_words_keep_little_endian_bits_in_both_phi_orders_and_or_trees"
+    },
+    {
+      "file": "crates/kfrc-son/src/lower_layout/whole_pack/tests.rs",
+      "function": "each_missing_byte_keeps_whole_word_poison_and_inactive_guard"
+    },
+    {
+      "file": "crates/kfrc-son/src/lower_layout/whole_pack/tests.rs",
+      "function": "poisoned_inactive_pointer_is_never_read"
+    },
+    {
+      "file": "crates/kfrc-son/src/lower_layout/whole_pack/tests.rs",
+      "function": "snapshot_stays_before_source_overwrite_after_the_join"
+    },
+    {
+      "file": "crates/kfrc-son/src/lower_layout/whole_pack/tests.rs",
+      "function": "erased_zero_offset_and_word_observers_keep_the_same_result"
+    },
+    {
+      "file": "crates/kfrc-son/src/lower_layout/whole_pack/tests.rs",
+      "function": "fuel_exhaustion_discards_every_tentative_plan"
+    },
+    {
+      "file": "crates/kfrc-son/src/lower_layout/whole_pack/tests.rs",
+      "function": "code_size_budget_and_wrong_graph_level_leave_storage_untouched"
+    }
+  ],
+  "required_unified_validator_gates": [
+    {
+      "gate": "module compile and 26 differential/certificate tests",
+      "command": "cargo test -p kfrc-son --lib lower_layout::whole_pack::tests"
+    },
+    {
+      "gate": "publishing observation/requirement integration regression",
+      "command": "cargo test -p kfrc-son --test semantic_observation_layout --test semantic_requirements"
+    },
+    {
+      "gate": "native both-emitter source pipeline + C driver",
+      "draft_fixture": "/Users/shom/Downloads/kfrc-callsite-opt-20261110/generic-parity-20261110/candidate-work/generic-v27-whole-pack-phi-v1/source/crates/kfrc-x86/tests/whole_pack_phi.rs",
+      "draft_driver": "/Users/shom/Downloads/kfrc-callsite-opt-20261110/generic-parity-20261110/candidate-work/generic-v27-whole-pack-phi-v1/source/crates/kfrc-x86/tests/whole_pack_phi/native.c",
+      "note": "Validator must adapt external integration test fixture path to the in-module semantic_fixture, or copy the unchanged draft S fixture externally; these x86 paths are outside my write scope."
+    },
+    {
+      "gate": "actual encode optimized L graph",
+      "expectation": "Observe exact pack/combine stats and verify wide loads remain at original guarded reads, byte/Phi residuals disappear only for certified groups; no baseline923552 hit count observed yet."
+    },
+    {
+      "gate": "full generic differential/corpus and pinned 13-workload benchmark",
+      "note": "Use unified generic_validation baseline/candidate fingerprints. No performance claim before its matched execution and scoring."
+    }
+  ],
+  "material_limits": [
+    "No compiler, interpreter, native or E2B gate has run on this candidate.",
+    "Draft matcher/tests were previously unexecuted.",
+    "Strict shape and budget guards can miss cases; eligibility was not broadened to force benchmark hits.",
+    "Whole-pack source has only full-width unsigned targets; signed/restricted/vector/union/repeat/storage/padded sources retain baseline path."
+  ]
+}

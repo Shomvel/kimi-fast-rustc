@@ -1,0 +1,20 @@
+pub mod artifact;
+pub mod audit;
+pub mod benchmark;
+pub mod cache;
+pub mod cache_admin;
+pub mod cargo;
+pub mod config;
+pub mod llvm;
+pub mod native_driver;
+pub mod pgo;
+pub mod pgo_driver;
+pub mod pipeline;
+pub mod rustc;
+pub mod scheduler;
+pub mod semantic_cli;
+pub mod system;
+pub mod tuning;
+pub mod tuning_runner;
+
+pub const VERSION: &str = env!("CARGO_PKG_VERSION");

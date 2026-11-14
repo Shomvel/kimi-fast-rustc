@@ -1,0 +1,162 @@
+{
+  "candidate": "candidate12",
+  "contract": "stage1 RequireDefined without business result; R/S source Ignore values retained; requirements erased before L representation demand. Refine280 remains in from_str: stage2 witness/Assume not yet accepted",
+  "source_sha256": "e69122714140141678153b4eb1b2133bb5d9e20b3834990d6f28c4212e1fb970",
+  "linux_tests": {
+    "suites": 66,
+    "passed": 592,
+    "ignored": 1
+  },
+  "semantic": "381 output lines equal in 3 arms and scope negatives rejected",
+  "features": "all three arms pass strict generic/prepared-once/dead-target/known-no-branch, nominal, MaybeUninit opaque/partial/invalid-bool raw-byte, array iterator clone, static callback/recursive emission roots",
+  "cli": "pass",
+  "semver": "unchanged 1.0.28: 34 upstream tests per arm and workload passed",
+  "not_rerun": [
+    "W01-W10 original walkthroughs",
+    "regex-syntax"
+  ],
+  "previous_coverage": "candidate10 receipts remain latest walkthrough/regex evidence; known f64/atomics/caller-location failures not rerun or claimed fixed",
+  "semver_performance": {
+    "compile_wall_seconds": 0.64,
+    "text_bytes": 998290,
+    "runtime_ns_medians": {
+      "parse": 145098092,
+      "req": 340290392,
+      "identifier": 139921680
+    },
+    "compile_rounds": 5,
+    "runtime_rounds": 7,
+    "shared_std_mir0": true,
+    "checksum_equal": true
+  },
+  "total_profile": {
+    "LLVM_instructions": 1667852731,
+    "kfrc_instructions": 5021183569,
+    "ratio": 3.010567705213057,
+    "rounds": 3,
+    "enabled_equals_running": true,
+    "object_bytes_unchanged": true,
+    "scope": "codegen_crate entry through join_codegen; user instructions for initial process threads and descendants; includes collector and kfrc MIR conversion, excludes linking; not a MIR-conversion-excluded metric",
+    "backend_sha256": {
+      "kfrc": "042d63cb948c84d90585500bf932e4570e61f46e045581bcc1e32c85d8b55135",
+      "llvm-wrapper": "7b947595a08f837858c3d4787cbf38029c602e42820f91dbfa6f4600868cf38a"
+    }
+  },
+  "from_str": {
+    "S_input_nodes": 532,
+    "S_after_opt_nodes": 845,
+    "S_Call": 31,
+    "S_RequireDefined": 24,
+    "L_nodes": 5216,
+    "If": 150,
+    "RequireDefined": 0,
+    "ObserveValue": 0,
+    "Load": 180,
+    "Store": 80,
+    "Refine": 280,
+    "text_bytes": 48229
+  },
+  "interpretation": "vs11 text -3.13%, parse -3.38%, req -3.26%, identifier -1.86%, total kfrc instructions -3.87%; parse remains +2.77% vs10. Stage1 improvement, not full redesign or performance-target acceptance",
+  "archives": {
+    "candidate12-results.tar.gz": "f471b82176efdd63861f6502e4f2cfe518cb510e5c4ec11c41712320d9ff9112",
+    "candidate12-attribution.tar.gz": "54879cd3f9aa915b5e271e9e75a707b36f910cfe55c1e8e16d0462f2dca1f92d"
+  },
+  "local_tests": {
+    "suites": 66,
+    "passed": 563,
+    "ignored": 1
+  },
+  "legacy_corpus": {
+    "suites": 7,
+    "fixtures": 394,
+    "vectors": 1295,
+    "traps": 19,
+    "arms": "LLVM/off/on pass"
+  },
+  "from_str_machine": {
+    "symbol": "<semver::Version as core::str::traits::FromStr>::from_str",
+    "disassembly_sha256": "eda8e3650e5f725dd9ae4bf4d71ff8358a3bd594cb9c7afaa87bde21b2dd6484",
+    "text_bytes": 48229,
+    "scope": "static exact ELF symbol; explicit memory operands only, implicit stack traffic excluded; mov_exact excludes movzx/movsx; rbp mov is a frame-memory proxy, not proven spill traffic",
+    "counts": {
+      "instructions": 9314,
+      "mov_exact": 7745,
+      "mov_family": 7989,
+      "rbp_memory_mov_exact": 4103,
+      "conditional_branches": 150,
+      "unconditional_branches": 142,
+      "calls": 31,
+      "returns": 9,
+      "explicit_memory_read_instructions": 2080,
+      "explicit_memory_write_instructions": 2363
+    },
+    "opcodes": {
+      "add": 229,
+      "and": 169,
+      "call": 31,
+      "cmp": 160,
+      "jmp": 142,
+      "jne": 150,
+      "lea": 58,
+      "leave": 9,
+      "mov": 7745,
+      "movzx": 244,
+      "neg": 12,
+      "not": 12,
+      "or": 16,
+      "push": 1,
+      "ret": 9,
+      "setbe": 12,
+      "sete": 136,
+      "setne": 12,
+      "sub": 13,
+      "test": 150,
+      "xor": 4
+    }
+  },
+  "from_str_machine_llvm": {
+    "symbol": "<semver::Version as core::str::traits::FromStr>::from_str",
+    "disassembly_sha256": "2322131a355f3a17597ba880d823d43ce4e5aaba660f49bf6a182f7ac231d63e",
+    "text_bytes": 917,
+    "scope": "static exact ELF symbol; explicit memory operands only, implicit stack traffic excluded; mov_exact excludes movzx/movsx; rbp mov is a frame-memory proxy, not proven spill traffic",
+    "counts": {
+      "instructions": 232,
+      "mov_exact": 62,
+      "mov_family": 78,
+      "rbp_memory_mov_exact": 0,
+      "conditional_branches": 25,
+      "unconditional_branches": 20,
+      "calls": 9,
+      "returns": 1,
+      "explicit_memory_read_instructions": 29,
+      "explicit_memory_write_instructions": 30
+    },
+    "opcodes": {
+      "add": 2,
+      "and": 10,
+      "call": 9,
+      "cmp": 13,
+      "dec": 4,
+      "inc": 4,
+      "jb": 4,
+      "je": 13,
+      "jmp": 20,
+      "jne": 6,
+      "js": 2,
+      "lea": 10,
+      "mov": 62,
+      "movdqu": 2,
+      "movzx": 14,
+      "or": 14,
+      "pcmpeqd": 1,
+      "pop": 6,
+      "push": 6,
+      "pxor": 1,
+      "ret": 1,
+      "shl": 13,
+      "sub": 1,
+      "test": 12,
+      "xor": 2
+    }
+  }
+}

@@ -1,0 +1,43 @@
+[
+  {
+    "crate": "semver",
+    "checks": [
+      "corpus",
+      "check-parse",
+      "check-req",
+      "check-identifier"
+    ],
+    "objects_identical_to_baseline": true
+  },
+  {
+    "crate": "base64",
+    "checks": [
+      "corpus",
+      "check-encode",
+      "check-decode",
+      "check-short"
+    ],
+    "objects_identical_to_baseline": true
+  },
+  {
+    "crate": "unicode-segmentation",
+    "checks": [
+      "corpus",
+      "check-graphemes-mixed",
+      "check-graphemes-ascii",
+      "check-graphemes-rev"
+    ],
+    "objects_identical_to_baseline": true
+  },
+  {
+    "crate": "humantime",
+    "checks": [
+      "corpus",
+      "check-dur-parse",
+      "check-dur-format",
+      "check-ts-parse",
+      "check-ts-format"
+    ],
+    "objects_identical_to_baseline": true
+  }
+]

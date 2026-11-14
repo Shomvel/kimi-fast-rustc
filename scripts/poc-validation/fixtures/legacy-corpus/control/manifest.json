@@ -1,0 +1,3375 @@
+{
+  "schema_version": 1,
+  "crate_name": "legacy_control",
+  "source_revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f",
+  "rustc_flags": [
+    "--edition=2021",
+    "-Cpanic=abort",
+    "-Coverflow-checks=off",
+    "-Copt-level=0",
+    "-Cdebug-assertions=off",
+    "-Zmir-opt-level=0",
+    "-Awarnings",
+    "-Aunconditional_panic",
+    "-Aarithmetic_overflow"
+  ],
+  "runs": [
+    {
+      "id": "control_normal",
+      "run_args": [],
+      "expected_exit": "success",
+      "expected_stdout": "control_flow__if_else_selects_the_expected_branch:0=42\ncontrol_flow__if_else_selects_the_expected_branch:1=-7\ncontrol_flow__if_else_selects_the_expected_branch:2=-7\ncontrol_flow__nested_if_preserves_control_and_phi_values:0=1\ncontrol_flow__nested_if_preserves_control_and_phi_values:1=2\ncontrol_flow__nested_if_preserves_control_and_phi_values:2=2\ncontrol_flow__nested_if_preserves_control_and_phi_values:3=3\ncontrol_flow__nested_if_preserves_control_and_phi_values:4=3\ncontrol_flow__nested_if_preserves_control_and_phi_values:5=3\nstatement_if__if_else_merges_assignments_from_both_branches:0=42\nstatement_if__if_else_merges_assignments_from_both_branches:1=41\nstatement_if__if_else_merges_assignments_from_both_branches:2=7\nstatement_if__if_else_merges_assignments_from_both_branches:3=7\nstatement_if__if_without_else_preserves_the_unmodified_value:0=8\nstatement_if__if_without_else_preserves_the_unmodified_value:1=6\nstatement_if__if_without_else_preserves_the_unmodified_value:2=5\nstatement_if__if_without_else_preserves_the_unmodified_value:3=5\nstatement_if__nested_if_statements_merge_each_control_level:0=2\nstatement_if__nested_if_statements_merge_each_control_level:1=2\nstatement_if__nested_if_statements_merge_each_control_level:2=1\nstatement_if__nested_if_statements_merge_each_control_level:3=1\nstatement_if__nested_if_statements_merge_each_control_level:4=-1\nstatement_if__nested_if_statements_merge_each_control_level:5=-1\nstatement_if__else_if_chains_merge_every_nested_branch:0=3\nstatement_if__else_if_chains_merge_every_nested_branch:1=2\nstatement_if__else_if_chains_merge_every_nested_branch:2=2\nstatement_if__else_if_chains_merge_every_nested_branch:3=1\nstatement_if__else_if_chains_merge_every_nested_branch:4=1\nstatement_if__else_if_chains_merge_every_nested_branch:5=-1\nstatement_if__else_if_chains_merge_every_nested_branch:6=-1\nearly_return__early_if_return_skips_the_function_tail:0=42\nearly_return__early_if_return_skips_the_function_tail:1=42\nearly_return__early_if_return_skips_the_function_tail:2=7\nearly_return__early_if_return_skips_the_function_tail:3=7\nearly_return__early_if_return_skips_the_function_tail:4=7\nearly_return__two_returning_arms_do_not_need_a_final_return:0=42\nearly_return__two_returning_arms_do_not_need_a_final_return:1=7\nshadowing__let_rhs_uses_the_previous_binding_and_shadowing_can_change_type:0=42\nshadowing__let_rhs_uses_the_previous_binding_and_shadowing_can_change_type:1=0\nshadowing__branch_shadows_do_not_leak_into_outer_phis:0=5\nshadowing__branch_shadows_do_not_leak_into_outer_phis:1=2\nbool_optimizer_regression__branch_local_values_do_not_replace_post_merge_expressions:0=6\nbool_optimizer_regression__branch_local_values_do_not_replace_post_merge_expressions:1=12\nbool_optimizer_regression__branch_local_values_do_not_replace_post_merge_expressions:2=0\nbool_optimizer_regression__branch_local_values_do_not_replace_post_merge_expressions:3=42\nbool_optimizer_regression__branch_local_values_do_not_replace_post_merge_expressions:4=84\ncontrol_algebra__additive_and_multiplicative_identities_are_removed:0=-9223372036854775808\ncontrol_algebra__additive_and_multiplicative_identities_are_removed:1=-9223372036854775808\ncontrol_algebra__additive_and_multiplicative_identities_are_removed:2=-42\ncontrol_algebra__additive_and_multiplicative_identities_are_removed:3=-42\ncontrol_algebra__additive_and_multiplicative_identities_are_removed:4=-1\ncontrol_algebra__additive_and_multiplicative_identities_are_removed:5=-1\ncontrol_algebra__additive_and_multiplicative_identities_are_removed:6=0\ncontrol_algebra__additive_and_multiplicative_identities_are_removed:7=0\ncontrol_algebra__additive_and_multiplicative_identities_are_removed:8=1\ncontrol_algebra__additive_and_multiplicative_identities_are_removed:9=1\ncontrol_algebra__additive_and_multiplicative_identities_are_removed:10=42\ncontrol_algebra__additive_and_multiplicative_identities_are_removed:11=42\ncontrol_algebra__additive_and_multiplicative_identities_are_removed:12=9223372036854775807\ncontrol_algebra__additive_and_multiplicative_identities_are_removed:13=9223372036854775807\ncontrol_algebra__zero_and_self_operations_become_constants:0=0\ncontrol_algebra__zero_and_self_operations_become_constants:1=0\ncontrol_algebra__zero_and_self_operations_become_constants:2=0\ncontrol_algebra__zero_and_self_operations_become_constants:3=0\ncontrol_algebra__zero_and_self_operations_become_constants:4=0\ncontrol_algebra__zero_and_self_operations_become_constants:5=0\ncontrol_algebra__zero_and_self_operations_become_constants:6=0\ncontrol_algebra__zero_and_self_operations_become_constants:7=0\ncontrol_algebra__zero_and_self_operations_become_constants:8=0\ncontrol_algebra__zero_and_self_operations_become_constants:9=0\ncontrol_algebra__zero_and_self_operations_become_constants:10=0\ncontrol_algebra__zero_and_self_operations_become_constants:11=0\ncontrol_algebra__zero_and_self_operations_become_constants:12=0\ncontrol_algebra__zero_and_self_operations_become_constants:13=0\ncontrol_algebra__self_comparison_simplifies_but_self_division_still_traps:0=1\ncontrol_algebra__self_comparison_simplifies_but_self_division_still_traps:2=1\nearly_return__unit_functions_support_early_and_implicit_returns:0=0\nearly_return__unit_functions_support_early_and_implicit_returns__both:0=0\nearly_return__unit_functions_support_early_and_implicit_returns__both:1=0\nscalar_match__signed_match_supports_negative_literals_blocks_and_trailing_commas:0=40\nscalar_match__signed_match_supports_negative_literals_blocks_and_trailing_commas:1=41\nscalar_match__signed_match_supports_negative_literals_blocks_and_trailing_commas:2=42\nscalar_match__signed_match_supports_negative_literals_blocks_and_trailing_commas:3=43\nscalar_match__signed_match_supports_negative_literals_blocks_and_trailing_commas:4=0\nscalar_match__unsigned_and_word_alias_patterns_preserve_the_full_bit_range__u64:0=40\nscalar_match__unsigned_and_word_alias_patterns_preserve_the_full_bit_range__u64:1=42\nscalar_match__unsigned_and_word_alias_patterns_preserve_the_full_bit_range__u64:2=1\nscalar_match__unsigned_and_word_alias_patterns_preserve_the_full_bit_range__isize:0=42\nscalar_match__unsigned_and_word_alias_patterns_preserve_the_full_bit_range__isize:1=0\nscalar_match__unsigned_and_word_alias_patterns_preserve_the_full_bit_range__usize:0=42\nscalar_match__unsigned_and_word_alias_patterns_preserve_the_full_bit_range__usize:1=0\nscalar_match__bool_patterns_and_tail_match_select_the_expected_value:0=0\nscalar_match__bool_patterns_and_tail_match_select_the_expected_value:1=42\nscalar_match__tail_detection_stops_at_the_current_function_and_wildcard_only_matches_work:0=42\nscalar_match__nested_match_and_shadowed_bindings_keep_their_values:0=42\nscalar_match__nested_match_and_shadowed_bindings_keep_their_values:1=40\nscalar_match__nested_match_and_shadowed_bindings_keep_their_values:2=0\nscalar_match__unsuffixed_arm_results_unify_with_unsigned_results:0=42\nscalar_match__unsuffixed_arm_results_unify_with_unsigned_results:1=0\nmatch_ranges__signed_ranges_include_zero_negative_values_and_full_type_boundaries:0=40\nmatch_ranges__signed_ranges_include_zero_negative_values_and_full_type_boundaries:1=40\nmatch_ranges__signed_ranges_include_zero_negative_values_and_full_type_boundaries:2=40\nmatch_ranges__signed_ranges_include_zero_negative_values_and_full_type_boundaries:3=42\nmatch_ranges__signed_ranges_include_zero_negative_values_and_full_type_boundaries:4=41\nmatch_ranges__signed_ranges_include_zero_negative_values_and_full_type_boundaries:5=41\nmatch_ranges__signed_ranges_include_zero_negative_values_and_full_type_boundaries:6=41\nmatch_ranges__unsigned_ranges_use_unsigned_ordering_across_the_sign_bit:0=40\nmatch_ranges__unsigned_ranges_use_unsigned_ordering_across_the_sign_bit:1=41\nmatch_ranges__unsigned_ranges_use_unsigned_ordering_across_the_sign_bit:2=41\nmatch_ranges__unsigned_ranges_use_unsigned_ordering_across_the_sign_bit:3=42\nmatch_ranges__unsigned_ranges_use_unsigned_ordering_across_the_sign_bit:4=42\nmatch_ranges__unsigned_ranges_use_unsigned_ordering_across_the_sign_bit:5=42\nmatch_ranges__unsigned_ranges_use_unsigned_ordering_across_the_sign_bit__usize:0=42\nmatch_ranges__unsigned_ranges_use_unsigned_ordering_across_the_sign_bit__usize:1=42\nmatch_ranges__guards_fall_through_and_preserve_nested_matches_and_shadowing:0=42\nmatch_ranges__guards_fall_through_and_preserve_nested_matches_and_shadowing:1=1\nmatch_ranges__guards_fall_through_and_preserve_nested_matches_and_shadowing:2=42\nmatch_ranges__guards_fall_through_and_preserve_nested_matches_and_shadowing:3=1\nmatch_ranges__guard_traps_and_short_circuiting_are_control_dependent_on_the_arm:0=7\nmatch_ranges__guard_traps_and_short_circuiting_are_control_dependent_on_the_arm:1=7\nmatch_ranges__guard_traps_and_short_circuiting_are_control_dependent_on_the_arm:2=42\nloop_and_tail__tail_literals_variables_and_bools_do_not_need_return__0:0=42\nloop_and_tail__tail_literals_variables_and_bools_do_not_need_return__1:0=42\nloop_and_tail__tail_literals_variables_and_bools_do_not_need_return__2:0=1\nloop_and_tail__tail_literals_variables_and_bools_do_not_need_return__2:1=0\nloop_and_tail__tail_expressions_support_casts_and_arithmetic:0=41\nloop_and_tail__tail_expressions_support_casts_and_arithmetic:1=42\nmain_unit__standard_main_forms_return_zero__0:0=0\nmain_unit__standard_main_forms_return_zero__1:0=0\nmain_unit__standard_main_forms_return_zero__2:0=0\nbranch_flags__if_condition_uses_flags_without_a_temporary_bool:0=42\nbranch_flags__if_condition_uses_flags_without_a_temporary_bool:1=0\nbranch_flags__loop_condition_uses_flags_without_a_temporary_bool:0=42\nbranch_flags__actual_bool_results_keep_setcc_and_zero_extension:0=1\nbranch_flags__actual_bool_results_keep_setcc_and_zero_extension:1=0\nbranch_flags__shared_comparison_still_materializes_its_bool_value:0=1\nbranch_flags__shared_comparison_still_materializes_its_bool_value:1=0\ncommutative_immediates__left_constant_addition_uses_rhs_immediate:0=42\ncommutative_immediates__left_constant_multiplication_uses_rhs_immediate:0=15\ncommutative_immediates__left_constant_bitwise_and_uses_rhs_immediate:0=5\ncommutative_immediates__subtraction_keeps_the_constant_on_the_left:0=40\ncompare_immediates__left_constants_do_not_materialize_a_register:0=0\ncompare_immediates__left_constants_do_not_materialize_a_register:1=0\ncompare_immediates__left_constants_do_not_materialize_a_register:2=1\ncompare_immediates__two_constant_comparisons_still_fold:0=1\ncontrol_algebra__unsigned_division_and_remainder_by_one_are_simplified:0=0\ncontrol_algebra__unsigned_division_and_remainder_by_one_are_simplified:1=-9223372036854775808\ncontrol_algebra__unsigned_division_and_remainder_by_one_are_simplified:2=0\ncontrol_algebra__unsigned_division_and_remainder_by_one_are_simplified:3=-1\ncontrol_algebra__unsigned_division_and_remainder_by_one_are_simplified:4=0\ncontrol_algebra__unsigned_division_and_remainder_by_one_are_simplified:5=0\ncontrol_algebra__unsigned_division_and_remainder_by_one_are_simplified:6=0\ncontrol_algebra__unsigned_division_and_remainder_by_one_are_simplified:7=1\ncontrol_algebra__unsigned_division_and_remainder_by_one_are_simplified:8=0\ncontrol_algebra__unsigned_division_and_remainder_by_one_are_simplified:9=9223372036854775807\ncontrol_optimization__if_branch_constants_fold_in_place:0=42\ncontrol_optimization__if_branch_constants_fold_in_place:1=-7\ncontrol_optimization__if_branch_constants_fold_in_place:2=-7\ncontrol_optimization__pure_expressions_are_value_numbered_across_regions:0=-9223372036854775807\ncontrol_optimization__pure_expressions_are_value_numbered_across_regions:1=-9223372036854775807\ncontrol_optimization__pure_expressions_are_value_numbered_across_regions:2=0\ncontrol_optimization__pure_expressions_are_value_numbered_across_regions:3=0\ncontrol_optimization__pure_expressions_are_value_numbered_across_regions:4=1\ncontrol_optimization__pure_expressions_are_value_numbered_across_regions:5=1\ncontrol_optimization__pure_expressions_are_value_numbered_across_regions:6=42\ncontrol_optimization__pure_expressions_are_value_numbered_across_regions:7=42\ncontrol_optimization__pure_expressions_are_value_numbered_across_regions:8=-9223372036854775808\ncontrol_optimization__pure_expressions_are_value_numbered_across_regions:9=-9223372036854775808\ncontrol_optimization__trapping_division_is_not_folded_or_removed:0=2\nimmediate_shifts__immediate_shifts_use_count_encodings_without_cl:0=40\nnative_copy_elision__variable_shift_count_does_not_make_an_r11_rcx_round_trip:0=40\nnative_copy_elision__variable_shift_count_does_not_make_an_r11_rcx_round_trip:1=-9223372036854775808\nnative_copy_elision__variable_shift_count_does_not_make_an_r11_rcx_round_trip:2=7\nphi_moves__acyclic_loop_phi_edges_do_not_allocate_temporaries:0=42\nredundant_moves__if_phi_moves_do_not_emit_self_assignments:0=42\nredundant_moves__if_phi_moves_do_not_emit_self_assignments:1=0\nredundant_moves__loop_back_edge_moves_do_not_emit_self_assignments:0=42\nshadowing__each_shadow_has_its_own_mutability:0=42\nzero_compare__native_zero_compare_example_evaluates_to_42:0=42\nzero_compare__native_zero_compare_example_evaluates_to_42:1=0\nzero_idiom__native_zero_return_uses_xor_and_saves_four_bytes:0=0\nzero_idiom__native_branch_example_uses_zero_idioms_and_returns_42:0=42\nzero_idiom__native_branch_example_uses_zero_idioms_and_returns_42:1=0\nzero_idiom__native_loop_preserves_conditions_and_returns_42:0=42\nshadowing__branch_shadows_do_not_leak_into_outer_phis__inner_type:0=42\nmatch_ranges__guard_calls_execute_only_after_their_pattern_matches:0=0\nmatch_ranges__guard_calls_execute_only_after_their_pattern_matches:1=42\nmatch_ranges__range_lowering_uses_unsigned_compares_control_regions_and_result_phi:0=0\nmatch_ranges__range_lowering_uses_unsigned_compares_control_regions_and_result_phi:1=42\nmatch_ranges__range_lowering_uses_unsigned_compares_control_regions_and_result_phi:2=42\nmatch_ranges__range_lowering_uses_unsigned_compares_control_regions_and_result_phi:3=0\nscalar_match__match_lowers_to_if_chains_and_a_multiway_phi:0=10\nscalar_match__match_lowers_to_if_chains_and_a_multiway_phi:1=20\nscalar_match__match_lowers_to_if_chains_and_a_multiway_phi:2=30\nscalar_match__tail_detection_stops_at_the_current_function_and_wildcard_only_matches_work__later_function:0=42\nscalar_match__tail_detection_stops_at_the_current_function_and_wildcard_only_matches_work__later_function:1=0\ncontrol_flow__direct_objects_resolve_control_relocations:0=0\ncontrol_flow__direct_objects_resolve_control_relocations:1=1\ncontrol_flow__direct_objects_resolve_control_relocations:2=1\n",
+      "source_refs": [
+        {
+          "path": "tests/control_flow.rs",
+          "test": "if_else_selects_the_expected_branch",
+          "line": 13,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/control_flow.rs",
+          "test": "nested_if_preserves_control_and_phi_values",
+          "line": 27,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/statement_if.rs",
+          "test": "if_else_merges_assignments_from_both_branches",
+          "line": 14,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/statement_if.rs",
+          "test": "if_without_else_preserves_the_unmodified_value",
+          "line": 24,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/statement_if.rs",
+          "test": "nested_if_statements_merge_each_control_level",
+          "line": 34,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/statement_if.rs",
+          "test": "else_if_chains_merge_every_nested_branch",
+          "line": 60,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/early_return.rs",
+          "test": "early_if_return_skips_the_function_tail",
+          "line": 13,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/early_return.rs",
+          "test": "two_returning_arms_do_not_need_a_final_return",
+          "line": 30,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/shadowing.rs",
+          "test": "let_rhs_uses_the_previous_binding_and_shadowing_can_change_type",
+          "line": 14,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/shadowing.rs",
+          "test": "branch_shadows_do_not_leak_into_outer_phis",
+          "line": 33,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/bool_optimizer_regression.rs",
+          "test": "branch_local_values_do_not_replace_post_merge_expressions",
+          "line": 102,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/control_algebra.rs",
+          "test": "additive_and_multiplicative_identities_are_removed",
+          "line": 24,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/control_algebra.rs",
+          "test": "zero_and_self_operations_become_constants",
+          "line": 39,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/control_algebra.rs",
+          "test": "self_comparison_simplifies_but_self_division_still_traps",
+          "line": 54,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/early_return.rs",
+          "test": "unit_functions_support_early_and_implicit_returns",
+          "line": 45,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/early_return.rs",
+          "test": "unit_functions_support_early_and_implicit_returns",
+          "line": 48,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/scalar_match.rs",
+          "test": "signed_match_supports_negative_literals_blocks_and_trailing_commas",
+          "line": 15,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/scalar_match.rs",
+          "test": "unsigned_and_word_alias_patterns_preserve_the_full_bit_range",
+          "line": 25,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/scalar_match.rs",
+          "test": "unsigned_and_word_alias_patterns_preserve_the_full_bit_range",
+          "line": 32,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/scalar_match.rs",
+          "test": "unsigned_and_word_alias_patterns_preserve_the_full_bit_range",
+          "line": 38,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/scalar_match.rs",
+          "test": "bool_patterns_and_tail_match_select_the_expected_value",
+          "line": 47,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/scalar_match.rs",
+          "test": "tail_detection_stops_at_the_current_function_and_wildcard_only_matches_work",
+          "line": 60,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/scalar_match.rs",
+          "test": "nested_match_and_shadowed_bindings_keep_their_values",
+          "line": 67,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/scalar_match.rs",
+          "test": "unsuffixed_arm_results_unify_with_unsigned_results",
+          "line": 77,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/match_ranges.rs",
+          "test": "signed_ranges_include_zero_negative_values_and_full_type_boundaries",
+          "line": 22,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/match_ranges.rs",
+          "test": "unsigned_ranges_use_unsigned_ordering_across_the_sign_bit",
+          "line": 40,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/match_ranges.rs",
+          "test": "unsigned_ranges_use_unsigned_ordering_across_the_sign_bit",
+          "line": 54,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/match_ranges.rs",
+          "test": "guards_fall_through_and_preserve_nested_matches_and_shadowing",
+          "line": 63,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/match_ranges.rs",
+          "test": "guard_traps_and_short_circuiting_are_control_dependent_on_the_arm",
+          "line": 86,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/loop_and_tail.rs",
+          "test": "tail_literals_variables_and_bools_do_not_need_return",
+          "line": 21,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/loop_and_tail.rs",
+          "test": "tail_literals_variables_and_bools_do_not_need_return",
+          "line": 24,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/loop_and_tail.rs",
+          "test": "tail_literals_variables_and_bools_do_not_need_return",
+          "line": 27,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/loop_and_tail.rs",
+          "test": "tail_expressions_support_casts_and_arithmetic",
+          "line": 34,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/main_unit.rs",
+          "test": "standard_main_forms_return_zero",
+          "line": 12,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/main_unit.rs",
+          "test": "standard_main_forms_return_zero",
+          "line": 13,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/main_unit.rs",
+          "test": "standard_main_forms_return_zero",
+          "line": 14,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/branch_flags.rs",
+          "test": "if_condition_uses_flags_without_a_temporary_bool",
+          "line": 21,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/branch_flags.rs",
+          "test": "loop_condition_uses_flags_without_a_temporary_bool",
+          "line": 30,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/branch_flags.rs",
+          "test": "actual_bool_results_keep_setcc_and_zero_extension",
+          "line": 38,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/branch_flags.rs",
+          "test": "shared_comparison_still_materializes_its_bool_value",
+          "line": 55,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/commutative_immediates.rs",
+          "test": "left_constant_addition_uses_rhs_immediate",
+          "line": 22,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/commutative_immediates.rs",
+          "test": "left_constant_multiplication_uses_rhs_immediate",
+          "line": 36,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/commutative_immediates.rs",
+          "test": "left_constant_bitwise_and_uses_rhs_immediate",
+          "line": 50,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/commutative_immediates.rs",
+          "test": "subtraction_keeps_the_constant_on_the_left",
+          "line": 64,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/compare_immediates.rs",
+          "test": "left_constants_do_not_materialize_a_register",
+          "line": 77,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/compare_immediates.rs",
+          "test": "two_constant_comparisons_still_fold",
+          "line": 95,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/control_algebra.rs",
+          "test": "unsigned_division_and_remainder_by_one_are_simplified",
+          "line": 73,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/control_optimization.rs",
+          "test": "if_branch_constants_fold_in_place",
+          "line": 19,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/control_optimization.rs",
+          "test": "pure_expressions_are_value_numbered_across_regions",
+          "line": 38,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/control_optimization.rs",
+          "test": "trapping_division_is_not_folded_or_removed",
+          "line": 62,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/immediate_shifts.rs",
+          "test": "immediate_shifts_use_count_encodings_without_cl",
+          "line": 13,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/native_copy_elision.rs",
+          "test": "variable_shift_count_does_not_make_an_r11_rcx_round_trip",
+          "line": 12,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/phi_moves.rs",
+          "test": "acyclic_loop_phi_edges_do_not_allocate_temporaries",
+          "line": 8,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/redundant_moves.rs",
+          "test": "if_phi_moves_do_not_emit_self_assignments",
+          "line": 21,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/redundant_moves.rs",
+          "test": "loop_back_edge_moves_do_not_emit_self_assignments",
+          "line": 30,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/shadowing.rs",
+          "test": "each_shadow_has_its_own_mutability",
+          "line": 22,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/zero_compare.rs",
+          "test": "native_zero_compare_example_evaluates_to_42",
+          "line": 240,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/zero_idiom.rs",
+          "test": "native_zero_return_uses_xor_and_saves_four_bytes",
+          "line": 262,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/zero_idiom.rs",
+          "test": "native_branch_example_uses_zero_idioms_and_returns_42",
+          "line": 286,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/zero_idiom.rs",
+          "test": "native_loop_preserves_conditions_and_returns_42",
+          "line": 306,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/shadowing.rs",
+          "test": "branch_shadows_do_not_leak_into_outer_phis",
+          "line": 39,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/match_ranges.rs",
+          "test": "guard_calls_execute_only_after_their_pattern_matches",
+          "line": 74,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/match_ranges.rs",
+          "test": "range_lowering_uses_unsigned_compares_control_regions_and_result_phi",
+          "line": 100,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/scalar_match.rs",
+          "test": "match_lowers_to_if_chains_and_a_multiway_phi",
+          "line": 86,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/scalar_match.rs",
+          "test": "tail_detection_stops_at_the_current_function_and_wildcard_only_matches_work",
+          "line": 55,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        },
+        {
+          "path": "tests/control_flow.rs",
+          "test": "direct_objects_resolve_control_relocations",
+          "line": 37,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ]
+    },
+    {
+      "id": "control_algebra__self_comparison_simplifies_but_self_division_still_traps:1",
+      "run_args": [
+        "control_algebra__self_comparison_simplifies_but_self_division_still_traps:1"
+      ],
+      "expected_exit": "trap",
+      "trap_kind": "division_by_zero",
+      "source_refs": [
+        {
+          "path": "tests/control_algebra.rs",
+          "test": "self_comparison_simplifies_but_self_division_still_traps",
+          "line": 54,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ]
+    },
+    {
+      "id": "match_ranges__guard_traps_and_short_circuiting_are_control_dependent_on_the_arm:3",
+      "run_args": [
+        "match_ranges__guard_traps_and_short_circuiting_are_control_dependent_on_the_arm:3"
+      ],
+      "expected_exit": "trap",
+      "trap_kind": "division_by_zero",
+      "source_refs": [
+        {
+          "path": "tests/match_ranges.rs",
+          "test": "guard_traps_and_short_circuiting_are_control_dependent_on_the_arm",
+          "line": 86,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ]
+    },
+    {
+      "id": "control_optimization__trapping_division_is_not_folded_or_removed:1",
+      "run_args": [
+        "control_optimization__trapping_division_is_not_folded_or_removed:1"
+      ],
+      "expected_exit": "trap",
+      "trap_kind": "division_by_zero",
+      "source_refs": [
+        {
+          "path": "tests/control_optimization.rs",
+          "test": "trapping_division_is_not_folded_or_removed",
+          "line": 62,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ]
+    }
+  ],
+  "cases": [
+    {
+      "id": "control_flow__if_else_selects_the_expected_branch",
+      "source_refs": [
+        {
+          "path": "tests/control_flow.rs",
+          "test": "if_else_selects_the_expected_branch",
+          "line": 13,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64"
+      ],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [
+            "(1i64)"
+          ],
+          "expected_bits": 42,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(0i64)"
+          ],
+          "expected_bits": -7,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(-9i64)"
+          ],
+          "expected_bits": -7,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(value: i64) -> i64 { return if value > 0 { 40 + 2 } else { 0 - 7 }; }",
+      "source": "#[inline(never)] pub fn test_fn(value: i64) -> i64 { return if value > 0 { 40 + 2 } else { 0 - 7 }; }",
+      "source_sha256": "a02780b98faaf123d9ee0515350e4ee0b1d0591f7fc0acb006b61a52c521f7bf",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_000"
+    },
+    {
+      "id": "control_flow__nested_if_preserves_control_and_phi_values",
+      "source_refs": [
+        {
+          "path": "tests/control_flow.rs",
+          "test": "nested_if_preserves_control_and_phi_values",
+          "line": 27,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64"
+      ],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [
+            "(30i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(20i64)"
+          ],
+          "expected_bits": 2,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(15i64)"
+          ],
+          "expected_bits": 2,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(10i64)"
+          ],
+          "expected_bits": 3,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(0i64)"
+          ],
+          "expected_bits": 3,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(-4i64)"
+          ],
+          "expected_bits": 3,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(value: i64) -> i64 { return if value > 10 { if value > 20 { 1 } else { 2 } } else { 3 }; }",
+      "source": "#[inline(never)] pub fn test_fn(value: i64) -> i64 { return if value > 10 { if value > 20 { 1 } else { 2 } } else { 3 }; }",
+      "source_sha256": "a0d2ad074186df5139a227d1fdb5d9a7953675535d44b5fefbb0fc806f1a9f29",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_001"
+    },
+    {
+      "id": "statement_if__if_else_merges_assignments_from_both_branches",
+      "source_refs": [
+        {
+          "path": "tests/statement_if.rs",
+          "test": "if_else_merges_assignments_from_both_branches",
+          "line": 14,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64"
+      ],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [
+            "(2i64)"
+          ],
+          "expected_bits": 42,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(1i64)"
+          ],
+          "expected_bits": 41,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(0i64)"
+          ],
+          "expected_bits": 7,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(-9i64)"
+          ],
+          "expected_bits": 7,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(value: i64) -> i64 { let mut result = 0; if value > 0 { let adjustment = 40; result = value + adjustment; } else { let adjustment = 7; result = adjustment; } return result; }",
+      "source": "#[inline(never)] pub fn test_fn(value: i64) -> i64 { let mut result = 0; if value > 0 { let adjustment = 40; result = value + adjustment; } else { let adjustment = 7; result = adjustment; } return result; }",
+      "source_sha256": "7d6ab756db02de935791eb1c9746e2cfa07bb46fc7af18d20f5b036330f38435",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_002"
+    },
+    {
+      "id": "statement_if__if_without_else_preserves_the_unmodified_value",
+      "source_refs": [
+        {
+          "path": "tests/statement_if.rs",
+          "test": "if_without_else_preserves_the_unmodified_value",
+          "line": 24,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64"
+      ],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [
+            "(3i64)"
+          ],
+          "expected_bits": 8,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(1i64)"
+          ],
+          "expected_bits": 6,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(0i64)"
+          ],
+          "expected_bits": 5,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(-4i64)"
+          ],
+          "expected_bits": 5,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(value: i64) -> i64 { let mut result = 5; if value > 0 { result = result + value; } return result; }",
+      "source": "#[inline(never)] pub fn test_fn(value: i64) -> i64 { let mut result = 5; if value > 0 { result = result + value; } return result; }",
+      "source_sha256": "7d33003d3b9b292beb71034546c866ca323c5557aeba77aab1eab5c2876ee4c1",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_003"
+    },
+    {
+      "id": "statement_if__nested_if_statements_merge_each_control_level",
+      "source_refs": [
+        {
+          "path": "tests/statement_if.rs",
+          "test": "nested_if_statements_merge_each_control_level",
+          "line": 34,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64"
+      ],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [
+            "(20i64)"
+          ],
+          "expected_bits": 2,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(11i64)"
+          ],
+          "expected_bits": 2,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(10i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(5i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(0i64)"
+          ],
+          "expected_bits": -1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(-3i64)"
+          ],
+          "expected_bits": -1,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(value: i64) -> i64 { let mut result = 0; if value > 0 { if value > 10 { result = 2; } else { result = 1; } } else { result = -1; } return result; }",
+      "source": "#[inline(never)] pub fn test_fn(value: i64) -> i64 { let mut result = 0; if value > 0 { if value > 10 { result = 2; } else { result = 1; } } else { result = -1; } return result; }",
+      "source_sha256": "61aef963cc1e2d688f88b27822cc7281de0b7063a335cb44913f69d7df531edf",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_004"
+    },
+    {
+      "id": "statement_if__else_if_chains_merge_every_nested_branch",
+      "source_refs": [
+        {
+          "path": "tests/statement_if.rs",
+          "test": "else_if_chains_merge_every_nested_branch",
+          "line": 60,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64"
+      ],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [
+            "(21i64)"
+          ],
+          "expected_bits": 3,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(20i64)"
+          ],
+          "expected_bits": 2,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(11i64)"
+          ],
+          "expected_bits": 2,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(10i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(1i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(0i64)"
+          ],
+          "expected_bits": -1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(-8i64)"
+          ],
+          "expected_bits": -1,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(value: i64) -> i64 { let mut result = 0; if value > 20 { result = 3; } else if value > 10 { result = 2; } else if value > 0 { result = 1; } else { result = -1; } return result; }",
+      "source": "#[inline(never)] pub fn test_fn(value: i64) -> i64 { let mut result = 0; if value > 20 { result = 3; } else if value > 10 { result = 2; } else if value > 0 { result = 1; } else { result = -1; } return result; }",
+      "source_sha256": "17cb579ea21573c0215d4cb54b783c7c050a08d5c629d6d79c692414288ac0f8",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_005"
+    },
+    {
+      "id": "early_return__early_if_return_skips_the_function_tail",
+      "source_refs": [
+        {
+          "path": "tests/early_return.rs",
+          "test": "early_if_return_skips_the_function_tail",
+          "line": 13,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64"
+      ],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [
+            "(11i64)"
+          ],
+          "expected_bits": 42,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(100i64)"
+          ],
+          "expected_bits": 42,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(10i64)"
+          ],
+          "expected_bits": 7,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(0i64)"
+          ],
+          "expected_bits": 7,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(-3i64)"
+          ],
+          "expected_bits": 7,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(value: i64) -> i64 { if value > 10 { return 42; } return 7; }",
+      "source": "#[inline(never)] pub fn test_fn(value: i64) -> i64 { if value > 10 { return 42; } return 7; }",
+      "source_sha256": "65b0ee857e15476f51d5a3d1db563b235510d0b7d271ad423d24e3fe17013361",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_006"
+    },
+    {
+      "id": "early_return__two_returning_arms_do_not_need_a_final_return",
+      "source_refs": [
+        {
+          "path": "tests/early_return.rs",
+          "test": "two_returning_arms_do_not_need_a_final_return",
+          "line": 30,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64"
+      ],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [
+            "(1i64)"
+          ],
+          "expected_bits": 42,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(0i64)"
+          ],
+          "expected_bits": 7,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(value: i64) -> i64 { if value > 0 { return 42; } else { return 7; } }",
+      "source": "#[inline(never)] pub fn test_fn(value: i64) -> i64 { if value > 0 { return 42; } else { return 7; } }",
+      "source_sha256": "960b39e343c0b473904165b4d95290217726e25d409d45e90a884e373bccea46",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_007"
+    },
+    {
+      "id": "shadowing__let_rhs_uses_the_previous_binding_and_shadowing_can_change_type",
+      "source_refs": [
+        {
+          "path": "tests/shadowing.rs",
+          "test": "let_rhs_uses_the_previous_binding_and_shadowing_can_change_type",
+          "line": 14,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64"
+      ],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [
+            "(2i64)"
+          ],
+          "expected_bits": 42,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(3i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(x: i64) -> i64 { let x = x + 1; let x = x * 2; let x = x == 6; if x { return 42; } return 0; }",
+      "source": "#[inline(never)] pub fn test_fn(x: i64) -> i64 { let x = x + 1; let x = x * 2; let x = x == 6; if x { return 42; } return 0; }",
+      "source_sha256": "3f84843e26e3ceb43317b162326a4e1b3425891e3e94e75bf3b501352682a2a7",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_008"
+    },
+    {
+      "id": "shadowing__branch_shadows_do_not_leak_into_outer_phis",
+      "source_refs": [
+        {
+          "path": "tests/shadowing.rs",
+          "test": "branch_shadows_do_not_leak_into_outer_phis",
+          "line": 33,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64"
+      ],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [
+            "(1i64)"
+          ],
+          "expected_bits": 5,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(0i64)"
+          ],
+          "expected_bits": 2,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(value: i64) -> i64 { let mut x = 1; if value > 0 { x = 5; let mut x = x + 1; x = 100; } else { x = 2; let x = 99; } return x; }",
+      "source": "#[inline(never)] pub fn test_fn(value: i64) -> i64 { let mut x = 1; if value > 0 { x = 5; let mut x = x + 1; x = 100; } else { x = 2; let x = 99; } return x; }",
+      "source_sha256": "b2b25245f697ea21a1959aa19459742dcd9f3112f781f57e8ee0a04a418638d8",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_009"
+    },
+    {
+      "id": "bool_optimizer_regression__branch_local_values_do_not_replace_post_merge_expressions",
+      "source_refs": [
+        {
+          "path": "tests/bool_optimizer_regression.rs",
+          "test": "branch_local_values_do_not_replace_post_merge_expressions",
+          "line": 102,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64",
+        "bool"
+      ],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [
+            "(5i64)",
+            "false"
+          ],
+          "expected_bits": 6,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(5i64)",
+            "true"
+          ],
+          "expected_bits": 12,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(-1i64)",
+            "true"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(41i64)",
+            "false"
+          ],
+          "expected_bits": 42,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(41i64)",
+            "true"
+          ],
+          "expected_bits": 84,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(value: i64, flag: bool) -> i64 { let branch_value = if flag { value + 1 } else { 0 }; let after = value + 1; return branch_value + after; }",
+      "source": "#[inline(never)] pub fn test_fn(value: i64, flag: bool) -> i64 { let branch_value = if flag { value + 1 } else { 0 }; let after = value + 1; return branch_value + after; }",
+      "source_sha256": "5d8e5d334728fc0742ea761649629539fcca0b28166338d69dc990699df26775",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_010"
+    },
+    {
+      "id": "control_algebra__additive_and_multiplicative_identities_are_removed",
+      "source_refs": [
+        {
+          "path": "tests/control_algebra.rs",
+          "test": "additive_and_multiplicative_identities_are_removed",
+          "line": 24,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64",
+        "bool"
+      ],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [
+            "(-9223372036854775808i64)",
+            "false"
+          ],
+          "expected_bits": -9223372036854775808,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(-9223372036854775808i64)",
+            "true"
+          ],
+          "expected_bits": -9223372036854775808,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(-42i64)",
+            "false"
+          ],
+          "expected_bits": -42,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(-42i64)",
+            "true"
+          ],
+          "expected_bits": -42,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(-1i64)",
+            "false"
+          ],
+          "expected_bits": -1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(-1i64)",
+            "true"
+          ],
+          "expected_bits": -1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(0i64)",
+            "false"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(0i64)",
+            "true"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(1i64)",
+            "false"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(1i64)",
+            "true"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(42i64)",
+            "false"
+          ],
+          "expected_bits": 42,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(42i64)",
+            "true"
+          ],
+          "expected_bits": 42,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(9223372036854775807i64)",
+            "false"
+          ],
+          "expected_bits": 9223372036854775807,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(9223372036854775807i64)",
+            "true"
+          ],
+          "expected_bits": 9223372036854775807,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(value: i64, flag: bool) -> i64 { return if flag { value + 0 } else { value * 1 }; }",
+      "source": "#[inline(never)] pub fn test_fn(value: i64, flag: bool) -> i64 { return if flag { value + 0 } else { value * 1 }; }",
+      "source_sha256": "862b1e12200bfe4c05f5310bc2e0fa8a1425e32b0802ff2c85097ee5f0c620cf",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_011"
+    },
+    {
+      "id": "control_algebra__zero_and_self_operations_become_constants",
+      "source_refs": [
+        {
+          "path": "tests/control_algebra.rs",
+          "test": "zero_and_self_operations_become_constants",
+          "line": 39,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64",
+        "bool"
+      ],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [
+            "(-9223372036854775808i64)",
+            "false"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(-9223372036854775808i64)",
+            "true"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(-42i64)",
+            "false"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(-42i64)",
+            "true"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(-1i64)",
+            "false"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(-1i64)",
+            "true"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(0i64)",
+            "false"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(0i64)",
+            "true"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(1i64)",
+            "false"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(1i64)",
+            "true"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(42i64)",
+            "false"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(42i64)",
+            "true"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(9223372036854775807i64)",
+            "false"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(9223372036854775807i64)",
+            "true"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(value: i64, flag: bool) -> i64 { let zero = value & 0; return if flag { zero } else { value ^ value }; }",
+      "source": "#[inline(never)] pub fn test_fn(value: i64, flag: bool) -> i64 { let zero = value & 0; return if flag { zero } else { value ^ value }; }",
+      "source_sha256": "03b7291654f35f9730ee6ef9e25fdf990f103b917987d998b4ec2629eaecab3e",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_012"
+    },
+    {
+      "id": "control_algebra__self_comparison_simplifies_but_self_division_still_traps",
+      "source_refs": [
+        {
+          "path": "tests/control_algebra.rs",
+          "test": "self_comparison_simplifies_but_self_division_still_traps",
+          "line": 54,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64",
+        "bool"
+      ],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [
+            "(0i64)",
+            "true"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(0i64)",
+            "false"
+          ],
+          "expected_bits": null,
+          "trap": "division_by_zero"
+        },
+        {
+          "arguments": [
+            "(42i64)",
+            "false"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(value: i64, flag: bool) -> i64 { let same = value == value; return if flag { same as i64 } else { value / value }; }",
+      "source": "#[inline(never)] pub fn test_fn(value: i64, flag: bool) -> i64 { let same = value == value; return if flag { same as i64 } else { value / value }; }",
+      "source_sha256": "b529912f6641aa1466045446906288e36a503d797faa3dca10160f2e6ba534b3",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_013"
+    },
+    {
+      "id": "early_return__unit_functions_support_early_and_implicit_returns",
+      "source_refs": [
+        {
+          "path": "tests/early_return.rs",
+          "test": "unit_functions_support_early_and_implicit_returns",
+          "line": 45,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "()",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 0,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main() { if true { return; } }",
+      "source": "#[inline(never)] pub fn test_fn() { if true { return; } }",
+      "source_sha256": "a2db9ace0561f99c3a44a3c7242fd7f3d5a9ce6055ceece3242d6d46be77c525",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_014"
+    },
+    {
+      "id": "early_return__unit_functions_support_early_and_implicit_returns__both",
+      "source_refs": [
+        {
+          "path": "tests/early_return.rs",
+          "test": "unit_functions_support_early_and_implicit_returns",
+          "line": 48,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "bool"
+      ],
+      "return_type": "()",
+      "vectors": [
+        {
+          "arguments": [
+            "false"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "true"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(flag: bool) { if flag { return; } else { return; } }",
+      "source": "#[inline(never)] pub fn test_fn(flag: bool) { if flag { return; } else { return; } }",
+      "source_sha256": "3d789d667b8d6010c13d6f07db304cfc0533a258437acad59f979437b1154e8f",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_015"
+    },
+    {
+      "id": "scalar_match__signed_match_supports_negative_literals_blocks_and_trailing_commas",
+      "source_refs": [
+        {
+          "path": "tests/scalar_match.rs",
+          "test": "signed_match_supports_negative_literals_blocks_and_trailing_commas",
+          "line": 15,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64"
+      ],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [
+            "(-1i64)"
+          ],
+          "expected_bits": 40,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(0i64)"
+          ],
+          "expected_bits": 41,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(42i64)"
+          ],
+          "expected_bits": 42,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(-9223372036854775808i64)"
+          ],
+          "expected_bits": 43,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(1i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(value: i64) -> i64 { return match value { -1 => 40, 0 => { 40 + 1 }, 42 => 42, -9223372036854775808 => 43, _ => 0, }; }",
+      "source": "#[inline(never)] pub fn test_fn(value: i64) -> i64 { return match value { -1 => 40, 0 => { 40 + 1 }, 42 => 42, -9223372036854775808 => 43, _ => 0, }; }",
+      "source_sha256": "57877c6d9836d8307d0357ac72d7e8b8c60bd59f179046ca1237f4e3a7940e1b",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_016"
+    },
+    {
+      "id": "scalar_match__unsigned_and_word_alias_patterns_preserve_the_full_bit_range__u64",
+      "source_refs": [
+        {
+          "path": "tests/scalar_match.rs",
+          "test": "unsigned_and_word_alias_patterns_preserve_the_full_bit_range",
+          "line": 25,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "u64"
+      ],
+      "return_type": "u64",
+      "vectors": [
+        {
+          "arguments": [
+            "0u64"
+          ],
+          "expected_bits": 40,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "18446744073709551615u64"
+          ],
+          "expected_bits": 42,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "1u64"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(value: u64) -> u64 { let result = match value { 0 => 40u64, 18446744073709551615u64 => 42, _ => 1 }; return result; }",
+      "source": "#[inline(never)] pub fn test_fn(value: u64) -> u64 { let result = match value { 0 => 40u64, 18446744073709551615u64 => 42, _ => 1 }; return result; }",
+      "source_sha256": "9d709cba09753bc992f32651d26616a79702393ac3dd6947ee141c75d1c26847",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_017"
+    },
+    {
+      "id": "scalar_match__unsigned_and_word_alias_patterns_preserve_the_full_bit_range__isize",
+      "source_refs": [
+        {
+          "path": "tests/scalar_match.rs",
+          "test": "unsigned_and_word_alias_patterns_preserve_the_full_bit_range",
+          "line": 32,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "isize"
+      ],
+      "return_type": "isize",
+      "vectors": [
+        {
+          "arguments": [
+            "(-2isize)"
+          ],
+          "expected_bits": 42,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(2isize)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(value: isize) -> isize { return match value { -2isize => 42isize, _ => 0isize }; }",
+      "source": "#[inline(never)] pub fn test_fn(value: isize) -> isize { return match value { -2isize => 42isize, _ => 0isize }; }",
+      "source_sha256": "df333042819740ce247041f2afee7401cd3a3b8bba79ad26aa72d9577db9d557",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_018"
+    },
+    {
+      "id": "scalar_match__unsigned_and_word_alias_patterns_preserve_the_full_bit_range__usize",
+      "source_refs": [
+        {
+          "path": "tests/scalar_match.rs",
+          "test": "unsigned_and_word_alias_patterns_preserve_the_full_bit_range",
+          "line": 38,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "usize"
+      ],
+      "return_type": "usize",
+      "vectors": [
+        {
+          "arguments": [
+            "42usize"
+          ],
+          "expected_bits": 42,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "0usize"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(value: usize) -> usize { return match value { 42usize => 42usize, _ => 0usize }; }",
+      "source": "#[inline(never)] pub fn test_fn(value: usize) -> usize { return match value { 42usize => 42usize, _ => 0usize }; }",
+      "source_sha256": "15026fe218f1c619d54c4e75cd80d4df059ed729e95732be16e5ae156ceaf9af",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_019"
+    },
+    {
+      "id": "scalar_match__bool_patterns_and_tail_match_select_the_expected_value",
+      "source_refs": [
+        {
+          "path": "tests/scalar_match.rs",
+          "test": "bool_patterns_and_tail_match_select_the_expected_value",
+          "line": 47,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "bool"
+      ],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [
+            "false"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "true"
+          ],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(flag: bool) -> i64 { match flag { true => 42, false => 0, _ => 1 } }",
+      "source": "#[inline(never)] pub fn test_fn(flag: bool) -> i64 { match flag { true => 42, false => 0, _ => 1 } }",
+      "source_sha256": "7901a970b6d31c0d71280b14b6fbe846fa59530b86560ab9d79bd9139cecad67",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_020"
+    },
+    {
+      "id": "scalar_match__tail_detection_stops_at_the_current_function_and_wildcard_only_matches_work",
+      "source_refs": [
+        {
+          "path": "tests/scalar_match.rs",
+          "test": "tail_detection_stops_at_the_current_function_and_wildcard_only_matches_work",
+          "line": 60,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64"
+      ],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [
+            "(100i64)"
+          ],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(value: i64) -> i64 { match value { _ => 42 } }",
+      "source": "#[inline(never)] pub fn test_fn(value: i64) -> i64 { match value { _ => 42 } }",
+      "source_sha256": "aca3e6b3ee7ed963c9e276edd81b054c446b5dec7cbd8e7f52486b26cc26bff5",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_021"
+    },
+    {
+      "id": "scalar_match__nested_match_and_shadowed_bindings_keep_their_values",
+      "source_refs": [
+        {
+          "path": "tests/scalar_match.rs",
+          "test": "nested_match_and_shadowed_bindings_keep_their_values",
+          "line": 67,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64"
+      ],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [
+            "(0i64)"
+          ],
+          "expected_bits": 42,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(2i64)"
+          ],
+          "expected_bits": 40,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(8i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(value: i64) -> i64 { let value = value + 1; let result = 40; match value { 1 => result + 2, _ => match value { 3 => { result }, _ => 0, }, } }",
+      "source": "#[inline(never)] pub fn test_fn(value: i64) -> i64 { let value = value + 1; let result = 40; match value { 1 => result + 2, _ => match value { 3 => { result }, _ => 0, }, } }",
+      "source_sha256": "3a48c606ec26ccb68a5bc95797232bce991d257ab092ca476afa222428b18718",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_022"
+    },
+    {
+      "id": "scalar_match__unsuffixed_arm_results_unify_with_unsigned_results",
+      "source_refs": [
+        {
+          "path": "tests/scalar_match.rs",
+          "test": "unsuffixed_arm_results_unify_with_unsigned_results",
+          "line": 77,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "u64"
+      ],
+      "return_type": "u64",
+      "vectors": [
+        {
+          "arguments": [
+            "2u64"
+          ],
+          "expected_bits": 42,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "9u64"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(value: u64) -> u64 { return match value { 0 => 40, 1 => 41, 2 => 42u64, _ => 0 }; }",
+      "source": "#[inline(never)] pub fn test_fn(value: u64) -> u64 { return match value { 0 => 40, 1 => 41, 2 => 42u64, _ => 0 }; }",
+      "source_sha256": "e815d75056c845caa4233425a1a19a96f32d01b93d26521feb8ce6ab37d96ab4",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_023"
+    },
+    {
+      "id": "match_ranges__signed_ranges_include_zero_negative_values_and_full_type_boundaries",
+      "source_refs": [
+        {
+          "path": "tests/match_ranges.rs",
+          "test": "signed_ranges_include_zero_negative_values_and_full_type_boundaries",
+          "line": 22,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64"
+      ],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [
+            "(-9223372036854775808i64)"
+          ],
+          "expected_bits": 40,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(-2i64)"
+          ],
+          "expected_bits": 40,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(-1i64)"
+          ],
+          "expected_bits": 40,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(0i64)"
+          ],
+          "expected_bits": 42,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(1i64)"
+          ],
+          "expected_bits": 41,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(2i64)"
+          ],
+          "expected_bits": 41,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(9223372036854775807i64)"
+          ],
+          "expected_bits": 41,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(value: i64) -> i64 { return match value { -9223372036854775808..=-1 => 40, 0..=0 => 42, 1..=9223372036854775807 => 41, _ => 0 }; }",
+      "source": "#[inline(never)] pub fn test_fn(value: i64) -> i64 { return match value { -9223372036854775808..=-1 => 40, 0..=0 => 42, 1..=9223372036854775807 => 41, _ => 0 }; }",
+      "source_sha256": "4f3e2a4d57ef19512072f3738e0a18ae7850f016fdf5fad20a394c68e5e6225d",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_024"
+    },
+    {
+      "id": "match_ranges__unsigned_ranges_use_unsigned_ordering_across_the_sign_bit",
+      "source_refs": [
+        {
+          "path": "tests/match_ranges.rs",
+          "test": "unsigned_ranges_use_unsigned_ordering_across_the_sign_bit",
+          "line": 40,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "u64"
+      ],
+      "return_type": "u64",
+      "vectors": [
+        {
+          "arguments": [
+            "0u64"
+          ],
+          "expected_bits": 40,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "1u64"
+          ],
+          "expected_bits": 41,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "9223372036854775807u64"
+          ],
+          "expected_bits": 41,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "9223372036854775808u64"
+          ],
+          "expected_bits": 42,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "18446744073709551614u64"
+          ],
+          "expected_bits": 42,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "18446744073709551615u64"
+          ],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(value: u64) -> u64 { return match value { 0..=0 => 40u64, 1..=9223372036854775807 => 41, 9223372036854775808..=18446744073709551615 => 42, _ => 0 }; }",
+      "source": "#[inline(never)] pub fn test_fn(value: u64) -> u64 { return match value { 0..=0 => 40u64, 1..=9223372036854775807 => 41, 9223372036854775808..=18446744073709551615 => 42, _ => 0 }; }",
+      "source_sha256": "18998e50a952af3ddf9fc4be6f65e5efb47ec603ddd89dfb244c8c2ad1229247",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_025"
+    },
+    {
+      "id": "match_ranges__unsigned_ranges_use_unsigned_ordering_across_the_sign_bit__usize",
+      "source_refs": [
+        {
+          "path": "tests/match_ranges.rs",
+          "test": "unsigned_ranges_use_unsigned_ordering_across_the_sign_bit",
+          "line": 54,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "usize"
+      ],
+      "return_type": "usize",
+      "vectors": [
+        {
+          "arguments": [
+            "42usize"
+          ],
+          "expected_bits": 42,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "18446744073709551615usize"
+          ],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(value: usize) -> usize { return match value { 0usize..=41usize => 0usize, 42usize..=18446744073709551615usize => 42usize, _ => 1usize }; }",
+      "source": "#[inline(never)] pub fn test_fn(value: usize) -> usize { return match value { 0usize..=41usize => 0usize, 42usize..=18446744073709551615usize => 42usize, _ => 1usize }; }",
+      "source_sha256": "202b7c35a2412c409649caacac5483b41b892702249029b5b227a0f2519ae689",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_026"
+    },
+    {
+      "id": "match_ranges__guards_fall_through_and_preserve_nested_matches_and_shadowing",
+      "source_refs": [
+        {
+          "path": "tests/match_ranges.rs",
+          "test": "guards_fall_through_and_preserve_nested_matches_and_shadowing",
+          "line": 63,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64",
+        "i64"
+      ],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [
+            "(-3i64)",
+            "(0i64)"
+          ],
+          "expected_bits": 42,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(-3i64)",
+            "(-2i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(2i64)",
+            "(0i64)"
+          ],
+          "expected_bits": 42,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(8i64)",
+            "(0i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(input: i64, limit: i64) -> i64 { let input = input + 1; let answer = 40; return match input { -2..=2 if input < limit => answer + 2, 3..=5 if false => 0, _ => match input { 3..=5 => { answer + 2 }, _ => 1, }, }; }",
+      "source": "#[inline(never)] pub fn test_fn(input: i64, limit: i64) -> i64 { let input = input + 1; let answer = 40; return match input { -2..=2 if input < limit => answer + 2, 3..=5 if false => 0, _ => match input { 3..=5 => { answer + 2 }, _ => 1, }, }; }",
+      "source_sha256": "68a065f070409569be059e6f3dd9183c73a68f2547eb381fc2e16e18df572177",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_027"
+    },
+    {
+      "id": "match_ranges__guard_traps_and_short_circuiting_are_control_dependent_on_the_arm",
+      "source_refs": [
+        {
+          "path": "tests/match_ranges.rs",
+          "test": "guard_traps_and_short_circuiting_are_control_dependent_on_the_arm",
+          "line": 86,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64",
+        "i64"
+      ],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [
+            "(-1i64)",
+            "(0i64)"
+          ],
+          "expected_bits": 7,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(0i64)",
+            "(0i64)"
+          ],
+          "expected_bits": 7,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(1i64)",
+            "(1i64)"
+          ],
+          "expected_bits": 42,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(1i64)",
+            "(0i64)"
+          ],
+          "expected_bits": null,
+          "trap": "division_by_zero"
+        }
+      ],
+      "original_source": "fn main(value: i64, divisor: i64) -> i64 { return match value { 0..=10 if value > 0 && 1 / divisor == 1 => 42, _ => 7 }; }",
+      "source": "#[inline(never)] pub fn test_fn(value: i64, divisor: i64) -> i64 { return match value { 0..=10 if value > 0 && 1 / divisor == 1 => 42, _ => 7 }; }",
+      "source_sha256": "f22fca495f93b8fc1cb4de7a52ef9e8a106f6c5889469067a6f4682a9ae82323",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_028"
+    },
+    {
+      "id": "loop_and_tail__tail_literals_variables_and_bools_do_not_need_return__0",
+      "source_refs": [
+        {
+          "path": "tests/loop_and_tail.rs",
+          "test": "tail_literals_variables_and_bools_do_not_need_return",
+          "line": 21,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main() -> i64 { 42 }",
+      "source": "#[inline(never)] pub fn test_fn() -> i64 { 42 }",
+      "source_sha256": "3b02a7dd1bf612c94c2176d74394d99f26cbf455a57b65ea158af50e9dd745f3",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_029"
+    },
+    {
+      "id": "loop_and_tail__tail_literals_variables_and_bools_do_not_need_return__1",
+      "source_refs": [
+        {
+          "path": "tests/loop_and_tail.rs",
+          "test": "tail_literals_variables_and_bools_do_not_need_return",
+          "line": 24,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64"
+      ],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [
+            "(41i64)"
+          ],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(value: i64) -> i64 { let result = value + 1; result }",
+      "source": "#[inline(never)] pub fn test_fn(value: i64) -> i64 { let result = value + 1; result }",
+      "source_sha256": "4b907e5cd0a3f1e29f6365b3a99a6f6d1a72e6983e67db241c126378629ee456",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_030"
+    },
+    {
+      "id": "loop_and_tail__tail_literals_variables_and_bools_do_not_need_return__2",
+      "source_refs": [
+        {
+          "path": "tests/loop_and_tail.rs",
+          "test": "tail_literals_variables_and_bools_do_not_need_return",
+          "line": 27,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64"
+      ],
+      "return_type": "bool",
+      "vectors": [
+        {
+          "arguments": [
+            "(1i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(0i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(value: i64) -> bool { value > 0 }",
+      "source": "#[inline(never)] pub fn test_fn(value: i64) -> bool { value > 0 }",
+      "source_sha256": "464331f1fb84cf355e2cf406bff516014b942b2310de75e9a803c4500a8e75c2",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_031"
+    },
+    {
+      "id": "loop_and_tail__tail_expressions_support_casts_and_arithmetic",
+      "source_refs": [
+        {
+          "path": "tests/loop_and_tail.rs",
+          "test": "tail_expressions_support_casts_and_arithmetic",
+          "line": 34,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "bool"
+      ],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [
+            "false"
+          ],
+          "expected_bits": 41,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "true"
+          ],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(flag: bool) -> i64 { flag as i64 + 41 }",
+      "source": "#[inline(never)] pub fn test_fn(flag: bool) -> i64 { flag as i64 + 41 }",
+      "source_sha256": "62547e18eb55cf98363251e7ec85fae3bf4f363e75d05571dd226440cebc15d5",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_032"
+    },
+    {
+      "id": "main_unit__standard_main_forms_return_zero__0",
+      "source_refs": [
+        {
+          "path": "tests/main_unit.rs",
+          "test": "standard_main_forms_return_zero",
+          "line": 12,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "()",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 0,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main() {}",
+      "source": "#[inline(never)] pub fn test_fn() {}",
+      "source_sha256": "ef32637cb9c3ec2e3968c9cbdf26a5e9c172be94f88af533e14bd43f892d5297",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_033"
+    },
+    {
+      "id": "main_unit__standard_main_forms_return_zero__1",
+      "source_refs": [
+        {
+          "path": "tests/main_unit.rs",
+          "test": "standard_main_forms_return_zero",
+          "line": 13,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "()",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 0,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main() { return; }",
+      "source": "#[inline(never)] pub fn test_fn() { return; }",
+      "source_sha256": "1375ea29f2367640d5c395d3a4f7990a7a322f2c6e00cee13f687a161a39c885",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_034"
+    },
+    {
+      "id": "main_unit__standard_main_forms_return_zero__2",
+      "source_refs": [
+        {
+          "path": "tests/main_unit.rs",
+          "test": "standard_main_forms_return_zero",
+          "line": 14,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "()",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 0,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main() { let value = 1; }",
+      "source": "#[inline(never)] pub fn test_fn() { let value = 1; }",
+      "source_sha256": "43e312519645c00e52a7f5637a2f7e07ae5d4b44c1cbe56c5706e92745486b8e",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_035"
+    },
+    {
+      "id": "branch_flags__if_condition_uses_flags_without_a_temporary_bool",
+      "source_refs": [
+        {
+          "path": "tests/branch_flags.rs",
+          "test": "if_condition_uses_flags_without_a_temporary_bool",
+          "line": 21,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64"
+      ],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [
+            "(1i64)"
+          ],
+          "expected_bits": 42,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(0i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(value: i64) -> i64 { return if value > 0 { 42 } else { 0 }; }",
+      "source": "#[inline(never)] pub fn test_fn(value: i64) -> i64 { return if value > 0 { 42 } else { 0 }; }",
+      "source_sha256": "dc5a6bd08074d226fe512b12791208f661685538f5b8498a054cbbd1c8d60019",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_036"
+    },
+    {
+      "id": "branch_flags__loop_condition_uses_flags_without_a_temporary_bool",
+      "source_refs": [
+        {
+          "path": "tests/branch_flags.rs",
+          "test": "loop_condition_uses_flags_without_a_temporary_bool",
+          "line": 30,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main() -> i64 { let mut sum = 0; let mut i = 0; while i < 5 { sum += i; i += 1; } return sum + 32; }",
+      "source": "#[inline(never)] pub fn test_fn() -> i64 { let mut sum = 0; let mut i = 0; while i < 5 { sum += i; i += 1; } return sum + 32; }",
+      "source_sha256": "f03b5bf8c59661d0806034f4c17a38a48e18a2f705f4ab02eb1c6c8f8d6e4a34",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_037"
+    },
+    {
+      "id": "branch_flags__actual_bool_results_keep_setcc_and_zero_extension",
+      "source_refs": [
+        {
+          "path": "tests/branch_flags.rs",
+          "test": "actual_bool_results_keep_setcc_and_zero_extension",
+          "line": 38,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64"
+      ],
+      "return_type": "bool",
+      "vectors": [
+        {
+          "arguments": [
+            "(0i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(1i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(value: i64) -> bool { return value == 0; }",
+      "source": "#[inline(never)] pub fn test_fn(value: i64) -> bool { return value == 0; }",
+      "source_sha256": "249f59a546c1a717fa0926bdbf447e8dfedc8e3d8c5e7a7fdef09e45091b655e",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_038"
+    },
+    {
+      "id": "branch_flags__shared_comparison_still_materializes_its_bool_value",
+      "source_refs": [
+        {
+          "path": "tests/branch_flags.rs",
+          "test": "shared_comparison_still_materializes_its_bool_value",
+          "line": 55,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64"
+      ],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [
+            "(1i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(0i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(value: i64) -> i64 { let positive = value > 0; return if positive { positive as i64 } else { 0 }; }",
+      "source": "#[inline(never)] pub fn test_fn(value: i64) -> i64 { let positive = value > 0; return if positive { positive as i64 } else { 0 }; }",
+      "source_sha256": "02503baff129260e2af2a377b3b2bd57dd998dd5a0cee09e2076f37700f38526",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_039"
+    },
+    {
+      "id": "commutative_immediates__left_constant_addition_uses_rhs_immediate",
+      "source_refs": [
+        {
+          "path": "tests/commutative_immediates.rs",
+          "test": "left_constant_addition_uses_rhs_immediate",
+          "line": 22,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64"
+      ],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [
+            "(37i64)"
+          ],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(value: i64) -> i64 { return 5 + value; }",
+      "source": "#[inline(never)] pub fn test_fn(value: i64) -> i64 { return 5 + value; }",
+      "source_sha256": "64048cd44e66ae8670c457ebc4ba7f57a832c95578c4e26efe7db0941ee9a46a",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_040"
+    },
+    {
+      "id": "commutative_immediates__left_constant_multiplication_uses_rhs_immediate",
+      "source_refs": [
+        {
+          "path": "tests/commutative_immediates.rs",
+          "test": "left_constant_multiplication_uses_rhs_immediate",
+          "line": 36,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64"
+      ],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [
+            "(5i64)"
+          ],
+          "expected_bits": 15,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(value: i64) -> i64 { return 3 * value; }",
+      "source": "#[inline(never)] pub fn test_fn(value: i64) -> i64 { return 3 * value; }",
+      "source_sha256": "2be15a8de20e7381a368d0ec6707094dff45d9d51e08539b6b62eef312a7d594",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_041"
+    },
+    {
+      "id": "commutative_immediates__left_constant_bitwise_and_uses_rhs_immediate",
+      "source_refs": [
+        {
+          "path": "tests/commutative_immediates.rs",
+          "test": "left_constant_bitwise_and_uses_rhs_immediate",
+          "line": 50,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64"
+      ],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [
+            "(5i64)"
+          ],
+          "expected_bits": 5,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(value: i64) -> i64 { return 7 & value; }",
+      "source": "#[inline(never)] pub fn test_fn(value: i64) -> i64 { return 7 & value; }",
+      "source_sha256": "51effbd621d4c72049de73865bdc5e3ec56d81160eef5b8cfa6de695e27ca5c3",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_042"
+    },
+    {
+      "id": "commutative_immediates__subtraction_keeps_the_constant_on_the_left",
+      "source_refs": [
+        {
+          "path": "tests/commutative_immediates.rs",
+          "test": "subtraction_keeps_the_constant_on_the_left",
+          "line": 64,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64"
+      ],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [
+            "(2i64)"
+          ],
+          "expected_bits": 40,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(value: i64) -> i64 { return 42 - value; }",
+      "source": "#[inline(never)] pub fn test_fn(value: i64) -> i64 { return 42 - value; }",
+      "source_sha256": "e58c70b94bf5303ef68fb94858546cb2f66cf21fbbe680199a0701f019848278",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_043"
+    },
+    {
+      "id": "compare_immediates__left_constants_do_not_materialize_a_register",
+      "source_refs": [
+        {
+          "path": "tests/compare_immediates.rs",
+          "test": "left_constants_do_not_materialize_a_register",
+          "line": 77,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64"
+      ],
+      "return_type": "bool",
+      "vectors": [
+        {
+          "arguments": [
+            "(1i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(2i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(3i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(value: i64) -> bool { return 2 < value; }",
+      "source": "#[inline(never)] pub fn test_fn(value: i64) -> bool { return 2 < value; }",
+      "source_sha256": "be90f86e2ea4f150d77c28dd5492be8eda03aa48d668dcd1287a2a3e8ebd018a",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_044"
+    },
+    {
+      "id": "compare_immediates__two_constant_comparisons_still_fold",
+      "source_refs": [
+        {
+          "path": "tests/compare_immediates.rs",
+          "test": "two_constant_comparisons_still_fold",
+          "line": 95,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "bool",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 1,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main() -> bool { return 2 < 3; }",
+      "source": "#[inline(never)] pub fn test_fn() -> bool { return 2 < 3; }",
+      "source_sha256": "218c1e85063bc56156efe0cb8795e234cb4aa6f3ec0ade4f8fa3fb1025137c17",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_045"
+    },
+    {
+      "id": "control_algebra__unsigned_division_and_remainder_by_one_are_simplified",
+      "source_refs": [
+        {
+          "path": "tests/control_algebra.rs",
+          "test": "unsigned_division_and_remainder_by_one_are_simplified",
+          "line": 73,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "u64",
+        "bool"
+      ],
+      "return_type": "u64",
+      "vectors": [
+        {
+          "arguments": [
+            "9223372036854775808u64",
+            "false"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "9223372036854775808u64",
+            "true"
+          ],
+          "expected_bits": -9223372036854775808,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "18446744073709551615u64",
+            "false"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "18446744073709551615u64",
+            "true"
+          ],
+          "expected_bits": -1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "0u64",
+            "false"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "0u64",
+            "true"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "1u64",
+            "false"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "1u64",
+            "true"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "9223372036854775807u64",
+            "false"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "9223372036854775807u64",
+            "true"
+          ],
+          "expected_bits": 9223372036854775807,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(value: u64, flag: bool) -> u64 { return if flag { value / 1 } else { value % 1 }; }",
+      "source": "#[inline(never)] pub fn test_fn(value: u64, flag: bool) -> u64 { return if flag { value / 1 } else { value % 1 }; }",
+      "source_sha256": "bdb717edc6bc16aaba7afbce6527b57c1c7fad00c566ae1198c32ef4018c0d81",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_046"
+    },
+    {
+      "id": "control_optimization__if_branch_constants_fold_in_place",
+      "source_refs": [
+        {
+          "path": "tests/control_optimization.rs",
+          "test": "if_branch_constants_fold_in_place",
+          "line": 19,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64"
+      ],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [
+            "(1i64)"
+          ],
+          "expected_bits": 42,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(0i64)"
+          ],
+          "expected_bits": -7,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(-1i64)"
+          ],
+          "expected_bits": -7,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(value: i64) -> i64 { return if value > 0 { 40 + 2 } else { 0 - 7 }; }",
+      "source": "#[inline(never)] pub fn test_fn(value: i64) -> i64 { return if value > 0 { 40 + 2 } else { 0 - 7 }; }",
+      "source_sha256": "a02780b98faaf123d9ee0515350e4ee0b1d0591f7fc0acb006b61a52c521f7bf",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_047"
+    },
+    {
+      "id": "control_optimization__pure_expressions_are_value_numbered_across_regions",
+      "source_refs": [
+        {
+          "path": "tests/control_optimization.rs",
+          "test": "pure_expressions_are_value_numbered_across_regions",
+          "line": 38,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64",
+        "bool"
+      ],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [
+            "(-9223372036854775808i64)",
+            "false"
+          ],
+          "expected_bits": -9223372036854775807,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(-9223372036854775808i64)",
+            "true"
+          ],
+          "expected_bits": -9223372036854775807,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(-1i64)",
+            "false"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(-1i64)",
+            "true"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(0i64)",
+            "false"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(0i64)",
+            "true"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(41i64)",
+            "false"
+          ],
+          "expected_bits": 42,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(41i64)",
+            "true"
+          ],
+          "expected_bits": 42,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(9223372036854775807i64)",
+            "false"
+          ],
+          "expected_bits": -9223372036854775808,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(9223372036854775807i64)",
+            "true"
+          ],
+          "expected_bits": -9223372036854775808,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(value: i64, flag: bool) -> i64 { let next = value + 1; return if flag { next } else { value + 1 }; }",
+      "source": "#[inline(never)] pub fn test_fn(value: i64, flag: bool) -> i64 { let next = value + 1; return if flag { next } else { value + 1 }; }",
+      "source_sha256": "3e9ea757b9ba929a653083412ede8d376cdecb3ee8fb13c47e9765fd2586e62f",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_048"
+    },
+    {
+      "id": "control_optimization__trapping_division_is_not_folded_or_removed",
+      "source_refs": [
+        {
+          "path": "tests/control_optimization.rs",
+          "test": "trapping_division_is_not_folded_or_removed",
+          "line": 62,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "bool"
+      ],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [
+            "false"
+          ],
+          "expected_bits": 2,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "true"
+          ],
+          "expected_bits": null,
+          "trap": "division_by_zero"
+        }
+      ],
+      "original_source": "fn main(flag: bool) -> i64 { let zero = 0; return if flag { 1 / zero } else { 2 }; }",
+      "source": "#[inline(never)] pub fn test_fn(flag: bool) -> i64 { let zero = 0; return if flag { 1 / zero } else { 2 }; }",
+      "source_sha256": "1f1226ccc7cce69b16832bf8edbcab822ea600a5df4015ab8c9a2f007029878a",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_049"
+    },
+    {
+      "id": "immediate_shifts__immediate_shifts_use_count_encodings_without_cl",
+      "source_refs": [
+        {
+          "path": "tests/immediate_shifts.rs",
+          "test": "immediate_shifts_use_count_encodings_without_cl",
+          "line": 13,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64"
+      ],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [
+            "(5i64)"
+          ],
+          "expected_bits": 40,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(value: i64) -> i64 { return value << 3; }",
+      "source": "#[inline(never)] pub fn test_fn(value: i64) -> i64 { return value << 3; }",
+      "source_sha256": "69ecf3ef57ad6d3f692d8c7fea6889d38560cec431c85e3bb705986bdabd0e56",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_050"
+    },
+    {
+      "id": "native_copy_elision__variable_shift_count_does_not_make_an_r11_rcx_round_trip",
+      "source_refs": [
+        {
+          "path": "tests/native_copy_elision.rs",
+          "test": "variable_shift_count_does_not_make_an_r11_rcx_round_trip",
+          "line": 12,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64",
+        "i64"
+      ],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [
+            "(5i64)",
+            "(3i64)"
+          ],
+          "expected_bits": 40,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(1i64)",
+            "(63i64)"
+          ],
+          "expected_bits": -9223372036854775808,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(7i64)",
+            "(64i64)"
+          ],
+          "expected_bits": 7,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(value: i64, count: i64) -> i64 { return value << count; }",
+      "source": "#[inline(never)] pub fn test_fn(value: i64, count: i64) -> i64 { return value << count; }",
+      "source_sha256": "97772723396abd856000c40f35253c93e92280d8cbf00a262d5aa19a051e8f41",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_051"
+    },
+    {
+      "id": "phi_moves__acyclic_loop_phi_edges_do_not_allocate_temporaries",
+      "source_refs": [
+        {
+          "path": "tests/phi_moves.rs",
+          "test": "acyclic_loop_phi_edges_do_not_allocate_temporaries",
+          "line": 8,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main() -> i64 { let mut sum = 0; let mut i = 0; while i < 5 { sum += i; i += 1; } return sum + 32; }",
+      "source": "#[inline(never)] pub fn test_fn() -> i64 { let mut sum = 0; let mut i = 0; while i < 5 { sum += i; i += 1; } return sum + 32; }",
+      "source_sha256": "f03b5bf8c59661d0806034f4c17a38a48e18a2f705f4ab02eb1c6c8f8d6e4a34",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_052"
+    },
+    {
+      "id": "redundant_moves__if_phi_moves_do_not_emit_self_assignments",
+      "source_refs": [
+        {
+          "path": "tests/redundant_moves.rs",
+          "test": "if_phi_moves_do_not_emit_self_assignments",
+          "line": 21,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64"
+      ],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [
+            "(41i64)"
+          ],
+          "expected_bits": 42,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(0i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(value: i64) -> i64 { return if value > 0 { value + 1 } else { value }; }",
+      "source": "#[inline(never)] pub fn test_fn(value: i64) -> i64 { return if value > 0 { value + 1 } else { value }; }",
+      "source_sha256": "c69dc271280bf6009beeb7859861ad1980282122b9c486f70ce534486f1e48d9",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_053"
+    },
+    {
+      "id": "redundant_moves__loop_back_edge_moves_do_not_emit_self_assignments",
+      "source_refs": [
+        {
+          "path": "tests/redundant_moves.rs",
+          "test": "loop_back_edge_moves_do_not_emit_self_assignments",
+          "line": 30,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main() -> i64 { let mut sum = 0; for i in 0..5 { sum += i; } return sum + 32; }",
+      "source": "#[inline(never)] pub fn test_fn() -> i64 { let mut sum = 0; for i in 0..5 { sum += i; } return sum + 32; }",
+      "source_sha256": "b602f97923f25f7dbdf7ce9b380af9b3af5cca0705af0fef2eabf6b06eb3b116",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_054"
+    },
+    {
+      "id": "shadowing__each_shadow_has_its_own_mutability",
+      "source_refs": [
+        {
+          "path": "tests/shadowing.rs",
+          "test": "each_shadow_has_its_own_mutability",
+          "line": 22,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64"
+      ],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [
+            "(1i64)"
+          ],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(x: i64) -> i64 { let mut x = x + 40; x += 1; return x; }",
+      "source": "#[inline(never)] pub fn test_fn(x: i64) -> i64 { let mut x = x + 40; x += 1; return x; }",
+      "source_sha256": "ac543c069f42b2528250795f111e4942bf52cb7758666566b441f76452c8a5be",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_055"
+    },
+    {
+      "id": "zero_compare__native_zero_compare_example_evaluates_to_42",
+      "source_refs": [
+        {
+          "path": "tests/zero_compare.rs",
+          "test": "native_zero_compare_example_evaluates_to_42",
+          "line": 240,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64"
+      ],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [
+            "(0i64)"
+          ],
+          "expected_bits": 42,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(-1i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(value: i64) -> i64 { let nonnegative = value >= 0; return if value == 0 { 40 + nonnegative as i64 + 1 } else { 0 }; }",
+      "source": "#[inline(never)] pub fn test_fn(value: i64) -> i64 { let nonnegative = value >= 0; return if value == 0 { 40 + nonnegative as i64 + 1 } else { 0 }; }",
+      "source_sha256": "6b9cd412941ab92c6cfc5ab08c75188aed64e38d8924aa5b0b92abd8d846decb",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_056"
+    },
+    {
+      "id": "zero_idiom__native_zero_return_uses_xor_and_saves_four_bytes",
+      "source_refs": [
+        {
+          "path": "tests/zero_idiom.rs",
+          "test": "native_zero_return_uses_xor_and_saves_four_bytes",
+          "line": 262,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 0,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main() -> i64 { return 0; }",
+      "source": "#[inline(never)] pub fn test_fn() -> i64 { return 0; }",
+      "source_sha256": "3804010e89f64c7d3320d9b312bc167c84fe50e6e7ed8f30f7dbfcf24399a948",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_057"
+    },
+    {
+      "id": "zero_idiom__native_branch_example_uses_zero_idioms_and_returns_42",
+      "source_refs": [
+        {
+          "path": "tests/zero_idiom.rs",
+          "test": "native_branch_example_uses_zero_idioms_and_returns_42",
+          "line": 286,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64"
+      ],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [
+            "(0i64)"
+          ],
+          "expected_bits": 42,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(1i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(value: i64) -> i64 { let zero = 0; return if value == 0 { 42 } else { zero }; }",
+      "source": "#[inline(never)] pub fn test_fn(value: i64) -> i64 { let zero = 0; return if value == 0 { 42 } else { zero }; }",
+      "source_sha256": "43a622e68362a845cb476bf431910fa56783985c46301a86f7a9cd5e4d176847",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_058"
+    },
+    {
+      "id": "zero_idiom__native_loop_preserves_conditions_and_returns_42",
+      "source_refs": [
+        {
+          "path": "tests/zero_idiom.rs",
+          "test": "native_loop_preserves_conditions_and_returns_42",
+          "line": 306,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main() -> i64 { let mut total = 0; let mut i = 0; while i < 6 { total += 7; i += 1; } return total; }",
+      "source": "#[inline(never)] pub fn test_fn() -> i64 { let mut total = 0; let mut i = 0; while i < 6 { total += 7; i += 1; } return total; }",
+      "source_sha256": "ea4e27430f10186dcd904c25d55b36aa31eb7444697e3968c132bbd2c6b2db81",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_059"
+    },
+    {
+      "id": "shadowing__branch_shadows_do_not_leak_into_outer_phis__inner_type",
+      "source_refs": [
+        {
+          "path": "tests/shadowing.rs",
+          "test": "branch_shadows_do_not_leak_into_outer_phis",
+          "line": 39,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64"
+      ],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [
+            "(1i64)"
+          ],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(value: i64) -> i64 { let x = 40; if value > 0 { let x = true; } return x + 2; }",
+      "source": "#[inline(never)] pub fn test_fn(value: i64) -> i64 { let x = 40; if value > 0 { let x = true; } return x + 2; }",
+      "source_sha256": "b166296bf781ec405c31b58286e663901911703334de525964517b1d5208af30",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_060"
+    },
+    {
+      "id": "match_ranges__guard_calls_execute_only_after_their_pattern_matches",
+      "source_refs": [
+        {
+          "path": "tests/match_ranges.rs",
+          "test": "guard_calls_execute_only_after_their_pattern_matches",
+          "line": 74,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64"
+      ],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [
+            "(0i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(1i64)"
+          ],
+          "expected_bits": 42,
+          "trap": null
+        }
+      ],
+      "original_source": "fn effect() -> bool { return true; } fn main(value: i64) -> i64 { return match value { 1..=2 if effect() => 42, _ => 0 }; }",
+      "source": "fn effect() -> bool { return true; } #[inline(never)] pub fn test_fn(value: i64) -> i64 { return match value { 1..=2 if effect() => 42, _ => 0 }; }",
+      "source_sha256": "638bc6dbe60dd3b6e95f25aa5e9c0e68c3e09563e3ba97bdd3542b14196f38fd",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_061"
+    },
+    {
+      "id": "match_ranges__range_lowering_uses_unsigned_compares_control_regions_and_result_phi",
+      "source_refs": [
+        {
+          "path": "tests/match_ranges.rs",
+          "test": "range_lowering_uses_unsigned_compares_control_regions_and_result_phi",
+          "line": 100,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "u64",
+        "bool"
+      ],
+      "return_type": "u64",
+      "vectors": [
+        {
+          "arguments": [
+            "0u64",
+            "false"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "0u64",
+            "true"
+          ],
+          "expected_bits": 42,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "42u64",
+            "true"
+          ],
+          "expected_bits": 42,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "43u64",
+            "true"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(value: u64, flag: bool) -> u64 { return match value { 0..=42 if flag => 42u64, _ => 0 }; }",
+      "source": "#[inline(never)] pub fn test_fn(value: u64, flag: bool) -> u64 { return match value { 0..=42 if flag => 42u64, _ => 0 }; }",
+      "source_sha256": "7ce96fc10c39bc0e5b8fc1c518f05dd4d1db905c80ab0b65041a51e6eab18a64",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_062"
+    },
+    {
+      "id": "scalar_match__match_lowers_to_if_chains_and_a_multiway_phi",
+      "source_refs": [
+        {
+          "path": "tests/scalar_match.rs",
+          "test": "match_lowers_to_if_chains_and_a_multiway_phi",
+          "line": 86,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64"
+      ],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [
+            "(0i64)"
+          ],
+          "expected_bits": 10,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(1i64)"
+          ],
+          "expected_bits": 20,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(2i64)"
+          ],
+          "expected_bits": 30,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(value: i64) -> i64 { return match value { 0 => 10, 1 => 20, _ => 30 }; }",
+      "source": "#[inline(never)] pub fn test_fn(value: i64) -> i64 { return match value { 0 => 10, 1 => 20, _ => 30 }; }",
+      "source_sha256": "b75345e530d77a38b72976757bbc03ca3badb928c47bdfb3c09436e355c3bb20",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_063"
+    },
+    {
+      "id": "scalar_match__tail_detection_stops_at_the_current_function_and_wildcard_only_matches_work__later_function",
+      "source_refs": [
+        {
+          "path": "tests/scalar_match.rs",
+          "test": "tail_detection_stops_at_the_current_function_and_wildcard_only_matches_work",
+          "line": 55,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64"
+      ],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [
+            "(1i64)"
+          ],
+          "expected_bits": 42,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(2i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(value: i64) -> i64 { match value { 1 => 42, _ => 0 } } fn later(value: i64) -> i64 { return value; }",
+      "source": "#[inline(never)] pub fn test_fn(value: i64) -> i64 { match value { 1 => 42, _ => 0 } } fn later(value: i64) -> i64 { return value; }",
+      "source_sha256": "9ab1f165270ac2cc926402b6fde90343ab95091fbc74fb804fb4b33f3581b327",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_064"
+    },
+    {
+      "id": "control_flow__direct_objects_resolve_control_relocations",
+      "source_refs": [
+        {
+          "path": "tests/control_flow.rs",
+          "test": "direct_objects_resolve_control_relocations",
+          "line": 37,
+          "revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f"
+        }
+      ],
+      "argument_types": [
+        "i64"
+      ],
+      "return_type": "i64",
+      "vectors": [
+        {
+          "arguments": [
+            "(0i64)"
+          ],
+          "expected_bits": 0,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(1i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        },
+        {
+          "arguments": [
+            "(-1i64)"
+          ],
+          "expected_bits": 1,
+          "trap": null
+        }
+      ],
+      "original_source": "fn main(value: i64) -> i64 { return if value != 0 { 1 } else { 0 }; }",
+      "source": "#[inline(never)] pub fn test_fn(value: i64) -> i64 { return if value != 0 { 1 } else { 0 }; }",
+      "source_sha256": "961b32fcc9d5af4069a1eada8e10bcbdcbf6be62cd3dc25d5b5d36f6a60f2206",
+      "adaptation": "Rename main to public test_fn; compile with overflow-checks=off; retain body and legacy expected bits.",
+      "module": "case_065"
+    }
+  ]
+}

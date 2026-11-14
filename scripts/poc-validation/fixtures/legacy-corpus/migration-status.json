@@ -1,0 +1,3472 @@
+{
+  "schema_version": 1,
+  "source_revision": "3e42a0ef168d4dab0987c2d1fedf7ad213439f0f",
+  "selection": "All HEAD tests/*.rs containing old frontend/son/native_program/placement/optimizer_pipeline/interpreter/compile_graph references. Includes short_jumps mixed machine tests; excludes pure machine-only files handled separately.",
+  "status_meanings": {
+    "migrated": "Selected explicit runtime source/vector coverage landed; compilation status is separate in runner receipts. Extra assertions and source variants are recorded separately.",
+    "covered-existing": "Exact replacement identified with a file/test reference; none assumed without evidence.",
+    "obsolete-old-API": "Deleted frontend/Graph/CLI API or subset-specific diagnostic contract, with a per-test reason.",
+    "pending": "Valid behavior or machine/safety proof not yet mapped; must not be claimed as passed."
+  },
+  "counts": {
+    "migrated": 213,
+    "obsolete-old-API": 55,
+    "covered-existing": 23
+  },
+  "files": [
+    {
+      "path": "tests/assignment_syntax.rs",
+      "status_counts": {
+        "migrated": 5
+      },
+      "tests": [
+        {
+          "test": "every_compound_assignment_uses_the_previous_value",
+          "line": 11,
+          "status": "migrated",
+          "replacement_cases": [
+            "arithmetic/assignment_syntax__every_compound_assignment_uses_the_previous_value"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "compound_assignments_work_inside_loops",
+          "line": 21,
+          "status": "migrated",
+          "replacement_cases": [
+            "loops/assignment_syntax__compound_assignments_work_inside_loops"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "mutable_parameters_can_be_assigned_and_loop_carried",
+          "line": 29,
+          "status": "migrated",
+          "replacement_cases": [
+            "arithmetic/assignment_syntax__mutable_parameters_can_be_assigned_and_loop_carried"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "mutable_parameters_survive_function_call_lowering",
+          "line": 39,
+          "status": "migrated",
+          "replacement_cases": [
+            "calls/assignment_syntax__mutable_parameters_survive_function_call_lowering"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "immutable_compound_assignment_and_compound_division_errors_are_preserved",
+          "line": 49,
+          "status": "migrated",
+          "replacement_cases": [
+            "arithmetic/assignment_syntax__immutable_compound_assignment_and_compound_division_errors_are_preserved"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus.",
+          "diagnostic_disposition": "obsolete-old-API: old parser wording/restrictions are owned by rustc; no reproduction of old frontend diagnostics.",
+          "unselected_literal_sources": [
+            "fn main() { let value = 1; value += 2; }"
+          ],
+          "unselected_note": "All remaining literal variants are explicitly classified; none is silently counted as runtime migrated.",
+          "unselected_source_dispositions": [
+            {
+              "source": "fn main() { let value = 1; value += 2; }",
+              "status": "obsolete-old-API",
+              "reason": "Negative parser/type/mutability/arity case from this mixed test. Exact old acceptance rules and diagnostics are rustc-owned."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "tests/bool_comparisons.rs",
+      "status_counts": {
+        "migrated": 7,
+        "obsolete-old-API": 1
+      },
+      "tests": [
+        {
+          "test": "bool_equality_and_inequality_cover_the_truth_table",
+          "line": 11,
+          "status": "migrated",
+          "replacement_cases": [
+            "comparison/bool_comparisons__bool_equality_and_inequality_cover_the_truth_table__eq",
+            "comparison/bool_comparisons__bool_equality_and_inequality_cover_the_truth_table__ne"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "bool_comparisons_preserve_short_circuit_evaluation_and_precedence",
+          "line": 27,
+          "status": "migrated",
+          "replacement_cases": [
+            "comparison/bool_comparisons__bool_comparisons_preserve_short_circuit_evaluation_and_precedence__and",
+            "comparison/bool_comparisons__bool_comparisons_preserve_short_circuit_evaluation_and_precedence__or"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "bool_comparisons_accept_branch_phi_values",
+          "line": 53,
+          "status": "migrated",
+          "replacement_cases": [
+            "comparison/bool_comparisons__bool_comparisons_accept_branch_phi_values"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "bool_comparisons_accept_loop_phi_values",
+          "line": 63,
+          "status": "migrated",
+          "replacement_cases": [
+            "loops/bool_comparisons__bool_comparisons_accept_loop_phi_values"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "bool_comparisons_use_function_parameter_and_return_signatures",
+          "line": 71,
+          "status": "migrated",
+          "replacement_cases": [
+            "calls/bool_comparisons__bool_comparisons_use_function_parameter_and_return_signatures"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "integer_comparisons_keep_signed_and_unsigned_semantics",
+          "line": 102,
+          "status": "migrated",
+          "replacement_cases": [
+            "comparison/bool_comparisons__integer_comparisons_keep_signed_and_unsigned_semantics__i64",
+            "comparison/bool_comparisons__integer_comparisons_keep_signed_and_unsigned_semantics__u64"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "mixed_bool_integer_unit_and_ordering_comparisons_are_rejected",
+          "line": 133,
+          "status": "obsolete-old-API",
+          "reason": "Old hand-written frontend acceptance/rejection and diagnostic wording. Real rustc owns syntax, typing and CTFE, including valid Rust that the old subset rejected."
+        },
+        {
+          "test": "native_bool_compare_example_returns_42",
+          "line": 169,
+          "status": "migrated",
+          "replacement_cases": [
+            "examples/example__native_bool_compare"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        }
+      ]
+    },
+    {
+      "path": "tests/bool_ops.rs",
+      "status_counts": {
+        "migrated": 6,
+        "obsolete-old-API": 1
+      },
+      "tests": [
+        {
+          "test": "comparisons_and_logical_not_return_bool",
+          "line": 11,
+          "status": "migrated",
+          "replacement_cases": [
+            "comparison/bool_ops__comparisons_and_logical_not_return_bool"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "bool_parameters_and_logical_operators_cover_truth_tables",
+          "line": 20,
+          "status": "migrated",
+          "replacement_cases": [
+            "comparison/bool_ops__bool_parameters_and_logical_operators_cover_truth_tables__0",
+            "comparison/bool_ops__bool_parameters_and_logical_operators_cover_truth_tables__1"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "logical_precedence_supports_not_and_parentheses",
+          "line": 32,
+          "status": "migrated",
+          "replacement_cases": [
+            "comparison/bool_ops__logical_precedence_supports_not_and_parentheses"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "short_circuit_rhs_does_not_execute_division",
+          "line": 46,
+          "status": "migrated",
+          "replacement_cases": [
+            "comparison/bool_ops__short_circuit_rhs_does_not_execute_division__0",
+            "comparison/bool_ops__short_circuit_rhs_does_not_execute_division__1"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "bool_values_survive_loops_and_if_expressions",
+          "line": 64,
+          "status": "migrated",
+          "replacement_cases": [
+            "loops/bool_ops__bool_values_survive_loops_and_if_expressions"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "bool_calls_use_function_signatures",
+          "line": 72,
+          "status": "migrated",
+          "replacement_cases": [
+            "calls/bool_ops__bool_calls_use_function_signatures"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "mixed_types_and_non_bool_conditions_are_rejected",
+          "line": 82,
+          "status": "obsolete-old-API",
+          "reason": "Old hand-written frontend acceptance/rejection and diagnostic wording. Real rustc owns syntax, typing and CTFE, including valid Rust that the old subset rejected."
+        }
+      ]
+    },
+    {
+      "path": "tests/bool_optimizer_regression.rs",
+      "status_counts": {
+        "migrated": 3,
+        "covered-existing": 2,
+        "obsolete-old-API": 2
+      },
+      "tests": [
+        {
+          "test": "native_bool_compare_example_uses_the_exit_comparison",
+          "line": 15,
+          "status": "migrated",
+          "replacement_cases": [
+            "examples/example__native_bool_compare"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "non_dominating_phi_expressions_only_merge_within_their_block",
+          "line": 53,
+          "status": "covered-existing",
+          "replacement_tests": [
+            "crates/kfrc-son/tests/build_and_run.rs::verifier_rejects_branch_value_used_after_merge",
+            "crates/kfrc-son/tests/semantic_optimize.rs::gvn_representative_placement_follows_fixed_inputs_not_creation_order",
+            "crates/kfrc-son/tests/semantic_control.rs::unused_traps_on_the_live_path_survive_control_and_compaction",
+            "corpus:loops/bool_optimizer_regression__loop_exit_expressions_use_current_phi_values__0",
+            "corpus:loops/bool_optimizer_regression__loop_exit_expressions_use_current_phi_values__1",
+            "corpus:loops/bool_optimizer_regression__loop_exit_expressions_use_current_phi_values__2"
+          ],
+          "coverage_evidence": "Verifier test constructs a division anchored in only one branch and rejects its post-merge use. GVN test allocates an expression before its fixed-input producer and verifies correct placement after merging. The three original Rust loop regressions check Add/Not/Equal using the current iteration Phi at exit; the fixed division test retains an unused live trap.",
+          "validation_status": "Source mapping verified; dynamic status belongs to candidate validation receipts.",
+          "retired_assertions": "Old pure-value block ownership and exact one-merge count do not apply to floating semantic values. Their legal placement is derived from inputs; fixed divisions are excluded from GVN."
+        },
+        {
+          "test": "dominating_expressions_still_merge_across_regions",
+          "line": 82,
+          "status": "covered-existing",
+          "replacement_tests": [
+            "crates/kfrc-son/tests/semantic_optimize.rs::repeated_pure_expressions_share_values_but_calls_keep_their_effects",
+            "crates/kfrc-son/tests/semantic_optimize.rs::gvn_representative_placement_follows_fixed_inputs_not_creation_order",
+            "corpus:control/control_optimization__pure_expressions_are_value_numbered_across_regions"
+          ],
+          "coverage_evidence": "The semantic GVN test asserts exactly one duplicate Add disappears while both calls execute in order. The fixed-input placement test checks merging independently of allocation order, and the original cross-branch source runs with both branch flags and signed boundaries.",
+          "validation_status": "Source mapping verified; dynamic status belongs to candidate validation receipts.",
+          "retired_assertions": "Old Graph node IDs and replacement-map identity are retired; observable results/effects and semantic merge count are asserted instead."
+        },
+        {
+          "test": "branch_local_values_do_not_replace_post_merge_expressions",
+          "line": 99,
+          "status": "migrated",
+          "replacement_cases": [
+            "control/bool_optimizer_regression__branch_local_values_do_not_replace_post_merge_expressions"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "loop_exit_expressions_use_current_phi_values",
+          "line": 108,
+          "status": "migrated",
+          "replacement_cases": [
+            "loops/bool_optimizer_regression__loop_exit_expressions_use_current_phi_values__0",
+            "loops/bool_optimizer_regression__loop_exit_expressions_use_current_phi_values__1",
+            "loops/bool_optimizer_regression__loop_exit_expressions_use_current_phi_values__2"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "large_branch_loop_and_unreachable_graph_is_deterministic",
+          "line": 132,
+          "status": "obsolete-old-API",
+          "reason": "Old Graph construction permits arbitrary multiple returns/unreachable edge patterns; exact IDs and merge counts are not semantic IR API contracts."
+        },
+        {
+          "test": "many_duplicate_expressions_preserve_graph_and_machine_code",
+          "line": 249,
+          "status": "obsolete-old-API",
+          "reason": "Old Graph GVN benchmark with fixed IDs/fingerprint and optimization time; must not be counted as a measured semantic IR performance improvement."
+        }
+      ]
+    },
+    {
+      "path": "tests/boolean_comparison_simplification.rs",
+      "status_counts": {
+        "migrated": 4
+      },
+      "tests": [
+        {
+          "test": "signed_negated_comparisons_use_their_inverse",
+          "line": 27,
+          "status": "migrated",
+          "replacement_cases": [
+            "comparison/boolean_comparison_simplification__signed_negated_comparisons_use_their_inverse__lt",
+            "comparison/boolean_comparison_simplification__signed_negated_comparisons_use_their_inverse__le",
+            "comparison/boolean_comparison_simplification__signed_negated_comparisons_use_their_inverse__gt",
+            "comparison/boolean_comparison_simplification__signed_negated_comparisons_use_their_inverse__ge",
+            "comparison/boolean_comparison_simplification__signed_negated_comparisons_use_their_inverse__eq",
+            "comparison/boolean_comparison_simplification__signed_negated_comparisons_use_their_inverse__ne"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "unsigned_negated_comparisons_use_their_inverse",
+          "line": 55,
+          "status": "migrated",
+          "replacement_cases": [
+            "comparison/boolean_comparison_simplification__unsigned_negated_comparisons_use_their_inverse__lt",
+            "comparison/boolean_comparison_simplification__unsigned_negated_comparisons_use_their_inverse__le",
+            "comparison/boolean_comparison_simplification__unsigned_negated_comparisons_use_their_inverse__gt",
+            "comparison/boolean_comparison_simplification__unsigned_negated_comparisons_use_their_inverse__ge",
+            "comparison/boolean_comparison_simplification__unsigned_negated_comparisons_use_their_inverse__eq",
+            "comparison/boolean_comparison_simplification__unsigned_negated_comparisons_use_their_inverse__ne"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "comparison_with_true_or_false_removes_the_outer_comparison",
+          "line": 80,
+          "status": "migrated",
+          "replacement_cases": [
+            "comparison/boolean_comparison_simplification__comparison_with_true_or_false_removes_the_outer_comparison__eq_true",
+            "comparison/boolean_comparison_simplification__comparison_with_true_or_false_removes_the_outer_comparison__ne_false",
+            "comparison/boolean_comparison_simplification__comparison_with_true_or_false_removes_the_outer_comparison__eq_false",
+            "comparison/boolean_comparison_simplification__comparison_with_true_or_false_removes_the_outer_comparison__ne_true"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "negated_branch_comparison_does_not_materialize_two_booleans",
+          "line": 92,
+          "status": "migrated",
+          "replacement_cases": [
+            "comparison/boolean_comparison_simplification__negated_branch_comparison_does_not_materialize_two_booleans"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        }
+      ]
+    },
+    {
+      "path": "tests/branch_flags.rs",
+      "status_counts": {
+        "migrated": 4
+      },
+      "tests": [
+        {
+          "test": "if_condition_uses_flags_without_a_temporary_bool",
+          "line": 19,
+          "status": "migrated",
+          "replacement_cases": [
+            "control/branch_flags__if_condition_uses_flags_without_a_temporary_bool"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "loop_condition_uses_flags_without_a_temporary_bool",
+          "line": 27,
+          "status": "migrated",
+          "replacement_cases": [
+            "control/branch_flags__loop_condition_uses_flags_without_a_temporary_bool"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "actual_bool_results_keep_setcc_and_zero_extension",
+          "line": 36,
+          "status": "migrated",
+          "replacement_cases": [
+            "control/branch_flags__actual_bool_results_keep_setcc_and_zero_extension"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus.",
+          "machine_shape_disposition": "Satisfied in candidate07 real-Rust object artifacts; later source changes require a new receipt.",
+          "machine_shape_check": "scripts/poc-validation/legacy-machine-shapes.py",
+          "machine_shape_evidence": "evidence/poc-semantic-only-20261109/results/candidate07/legacy-machine-shapes-normalized/summary.json",
+          "machine_shape_status": "satisfied",
+          "machine_shape_check_id": "tests/branch_flags.rs::actual_bool_results_keep_setcc_and_zero_extension"
+        },
+        {
+          "test": "shared_comparison_still_materializes_its_bool_value",
+          "line": 52,
+          "status": "migrated",
+          "replacement_cases": [
+            "control/branch_flags__shared_comparison_still_materializes_its_bool_value"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus.",
+          "machine_shape_disposition": "Satisfied in candidate07 real-Rust object artifacts; later source changes require a new receipt.",
+          "machine_shape_check": "scripts/poc-validation/legacy-machine-shapes.py",
+          "machine_shape_evidence": "evidence/poc-semantic-only-20261109/results/candidate07/legacy-machine-shapes-normalized/summary.json",
+          "machine_shape_status": "satisfied",
+          "machine_shape_check_id": "tests/branch_flags.rs::shared_comparison_still_materializes_its_bool_value"
+        }
+      ]
+    },
+    {
+      "path": "tests/casts.rs",
+      "status_counts": {
+        "migrated": 5
+      },
+      "tests": [
+        {
+          "test": "signed_and_unsigned_casts_preserve_bit_patterns",
+          "line": 11,
+          "status": "migrated",
+          "replacement_cases": [
+            "arithmetic/casts__signed_and_unsigned_casts_preserve_bit_patterns__i64",
+            "arithmetic/casts__signed_and_unsigned_casts_preserve_bit_patterns__u64"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "bool_casts_produce_zero_or_one",
+          "line": 22,
+          "status": "migrated",
+          "replacement_cases": [
+            "arithmetic/casts__bool_casts_produce_zero_or_one__i64",
+            "arithmetic/casts__bool_casts_produce_zero_or_one__usize"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "casts_bind_before_arithmetic_and_can_chain",
+          "line": 32,
+          "status": "migrated",
+          "replacement_cases": [
+            "arithmetic/casts__casts_bind_before_arithmetic_and_can_chain",
+            "arithmetic/casts__casts_bind_before_arithmetic_and_can_chain__cast_then_division"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "casts_work_in_calls_and_ranges",
+          "line": 44,
+          "status": "migrated",
+          "replacement_cases": [
+            "calls/casts__casts_work_in_calls_and_ranges"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "numeric_to_bool_and_numeric_conditions_are_rejected",
+          "line": 54,
+          "status": "migrated",
+          "replacement_cases": [
+            "comparison/casts__numeric_to_bool_and_numeric_conditions_are_rejected__identity"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus.",
+          "diagnostic_disposition": "obsolete-old-API: old parser wording/restrictions are owned by rustc; no reproduction of old frontend diagnostics.",
+          "unselected_literal_sources": [
+            "fn main() -> bool { return 1 as bool; }",
+            "fn main() { if 1 as u64 { let value = 2; } }"
+          ],
+          "unselected_note": "All remaining literal variants are explicitly classified; none is silently counted as runtime migrated.",
+          "unselected_source_dispositions": [
+            {
+              "source": "fn main() -> bool { return 1 as bool; }",
+              "status": "obsolete-old-API",
+              "reason": "Negative parser/type/mutability/arity case from this mixed test. Exact old acceptance rules and diagnostics are rustc-owned."
+            },
+            {
+              "source": "fn main() { if 1 as u64 { let value = 2; } }",
+              "status": "obsolete-old-API",
+              "reason": "Negative parser/type/mutability/arity case from this mixed test. Exact old acceptance rules and diagnostics are rustc-owned."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "tests/commutative_immediates.rs",
+      "status_counts": {
+        "migrated": 4
+      },
+      "tests": [
+        {
+          "test": "left_constant_addition_uses_rhs_immediate",
+          "line": 20,
+          "status": "migrated",
+          "replacement_cases": [
+            "control/commutative_immediates__left_constant_addition_uses_rhs_immediate"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus.",
+          "machine_shape_disposition": "Original machine shape remains unmet in candidate07 existing real-Rust objects; passing runtime results do not discharge this assertion.",
+          "machine_shape_check": "scripts/poc-validation/legacy-machine-shapes.py",
+          "machine_shape_evidence": "evidence/poc-semantic-only-20261109/results/candidate07/legacy-machine-shapes-normalized/summary.json",
+          "machine_shape_status": "shape-gap",
+          "machine_shape_check_id": "tests/commutative_immediates.rs::left_constant_addition_uses_rhs_immediate"
+        },
+        {
+          "test": "left_constant_multiplication_uses_rhs_immediate",
+          "line": 34,
+          "status": "migrated",
+          "replacement_cases": [
+            "control/commutative_immediates__left_constant_multiplication_uses_rhs_immediate"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus.",
+          "machine_shape_disposition": "Original machine shape remains unmet in candidate07 existing real-Rust objects; passing runtime results do not discharge this assertion.",
+          "machine_shape_check": "scripts/poc-validation/legacy-machine-shapes.py",
+          "machine_shape_evidence": "evidence/poc-semantic-only-20261109/results/candidate07/legacy-machine-shapes-normalized/summary.json",
+          "machine_shape_status": "shape-gap",
+          "machine_shape_check_id": "tests/commutative_immediates.rs::left_constant_multiplication_uses_rhs_immediate"
+        },
+        {
+          "test": "left_constant_bitwise_and_uses_rhs_immediate",
+          "line": 48,
+          "status": "migrated",
+          "replacement_cases": [
+            "control/commutative_immediates__left_constant_bitwise_and_uses_rhs_immediate"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus.",
+          "machine_shape_disposition": "Original machine shape remains unmet in candidate07 existing real-Rust objects; passing runtime results do not discharge this assertion.",
+          "machine_shape_check": "scripts/poc-validation/legacy-machine-shapes.py",
+          "machine_shape_evidence": "evidence/poc-semantic-only-20261109/results/candidate07/legacy-machine-shapes-normalized/summary.json",
+          "machine_shape_status": "shape-gap",
+          "machine_shape_check_id": "tests/commutative_immediates.rs::left_constant_bitwise_and_uses_rhs_immediate"
+        },
+        {
+          "test": "subtraction_keeps_the_constant_on_the_left",
+          "line": 62,
+          "status": "migrated",
+          "replacement_cases": [
+            "control/commutative_immediates__subtraction_keeps_the_constant_on_the_left"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus.",
+          "machine_shape_disposition": "Satisfied in candidate07 real-Rust object artifacts; later source changes require a new receipt.",
+          "machine_shape_check": "scripts/poc-validation/legacy-machine-shapes.py",
+          "machine_shape_evidence": "evidence/poc-semantic-only-20261109/results/candidate07/legacy-machine-shapes-normalized/summary.json",
+          "machine_shape_status": "satisfied",
+          "machine_shape_check_id": "tests/commutative_immediates.rs::subtraction_keeps_the_constant_on_the_left"
+        }
+      ]
+    },
+    {
+      "path": "tests/compare_immediates.rs",
+      "status_counts": {
+        "migrated": 4
+      },
+      "tests": [
+        {
+          "test": "signed_left_constants_swap_to_the_inverse_right_immediate_comparison",
+          "line": 26,
+          "status": "migrated",
+          "replacement_cases": [
+            "comparison/compare_immediates__signed_left_constants_swap_to_the_inverse_right_immediate_comparison__lt",
+            "comparison/compare_immediates__signed_left_constants_swap_to_the_inverse_right_immediate_comparison__le",
+            "comparison/compare_immediates__signed_left_constants_swap_to_the_inverse_right_immediate_comparison__gt",
+            "comparison/compare_immediates__signed_left_constants_swap_to_the_inverse_right_immediate_comparison__ge",
+            "comparison/compare_immediates__signed_left_constants_swap_to_the_inverse_right_immediate_comparison__eq",
+            "comparison/compare_immediates__signed_left_constants_swap_to_the_inverse_right_immediate_comparison__ne"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "unsigned_left_constants_swap_to_the_inverse_right_immediate_comparison",
+          "line": 50,
+          "status": "migrated",
+          "replacement_cases": [
+            "comparison/compare_immediates__unsigned_left_constants_swap_to_the_inverse_right_immediate_comparison__lt",
+            "comparison/compare_immediates__unsigned_left_constants_swap_to_the_inverse_right_immediate_comparison__le",
+            "comparison/compare_immediates__unsigned_left_constants_swap_to_the_inverse_right_immediate_comparison__gt",
+            "comparison/compare_immediates__unsigned_left_constants_swap_to_the_inverse_right_immediate_comparison__ge"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "left_constants_do_not_materialize_a_register",
+          "line": 75,
+          "status": "migrated",
+          "replacement_cases": [
+            "control/compare_immediates__left_constants_do_not_materialize_a_register"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus.",
+          "machine_shape_disposition": "Original machine shape remains unmet in candidate07 existing real-Rust objects; passing runtime results do not discharge this assertion.",
+          "machine_shape_check": "scripts/poc-validation/legacy-machine-shapes.py",
+          "machine_shape_evidence": "evidence/poc-semantic-only-20261109/results/candidate07/legacy-machine-shapes-normalized/summary.json",
+          "machine_shape_status": "shape-gap",
+          "machine_shape_check_id": "tests/compare_immediates.rs::left_constants_do_not_materialize_a_register"
+        },
+        {
+          "test": "two_constant_comparisons_still_fold",
+          "line": 93,
+          "status": "migrated",
+          "replacement_cases": [
+            "control/compare_immediates__two_constant_comparisons_still_fold"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        }
+      ]
+    },
+    {
+      "path": "tests/const_expressions.rs",
+      "status_counts": {
+        "migrated": 5,
+        "obsolete-old-API": 4
+      },
+      "tests": [
+        {
+          "test": "evaluates_arithmetic_bitwise_shift_parentheses_and_precedence",
+          "line": 38,
+          "status": "migrated",
+          "replacement_cases": [
+            "consts/const_expressions__evaluates_arithmetic_bitwise_shift_parentheses_and_precedence__0",
+            "consts/const_expressions__evaluates_arithmetic_bitwise_shift_parentheses_and_precedence__1",
+            "consts/const_expressions__evaluates_arithmetic_bitwise_shift_parentheses_and_precedence__2",
+            "consts/const_expressions__evaluates_arithmetic_bitwise_shift_parentheses_and_precedence__3",
+            "consts/const_expressions__evaluates_arithmetic_bitwise_shift_parentheses_and_precedence__4",
+            "consts/const_expressions__evaluates_arithmetic_bitwise_shift_parentheses_and_precedence__5",
+            "consts/const_expressions__evaluates_arithmetic_bitwise_shift_parentheses_and_precedence__6",
+            "consts/const_expressions__evaluates_arithmetic_bitwise_shift_parentheses_and_precedence__7",
+            "consts/const_expressions__evaluates_arithmetic_bitwise_shift_parentheses_and_precedence__8",
+            "consts/const_expressions__evaluates_arithmetic_bitwise_shift_parentheses_and_precedence__9",
+            "consts/const_expressions__evaluates_arithmetic_bitwise_shift_parentheses_and_precedence__10",
+            "consts/const_expressions__evaluates_arithmetic_bitwise_shift_parentheses_and_precedence__11",
+            "consts/const_expressions__evaluates_arithmetic_bitwise_shift_parentheses_and_precedence__12",
+            "consts/const_expressions__evaluates_arithmetic_bitwise_shift_parentheses_and_precedence__13",
+            "consts/const_expressions__evaluates_arithmetic_bitwise_shift_parentheses_and_precedence__14",
+            "consts/const_expressions__evaluates_arithmetic_bitwise_shift_parentheses_and_precedence__15",
+            "consts/const_expressions__evaluates_arithmetic_bitwise_shift_parentheses_and_precedence__16",
+            "consts/const_expressions__evaluates_arithmetic_bitwise_shift_parentheses_and_precedence__17"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "evaluates_comparisons_boolean_not_and_short_circuiting",
+          "line": 64,
+          "status": "migrated",
+          "replacement_cases": [
+            "consts/const_expressions__evaluates_comparisons_boolean_not_and_short_circuiting__0",
+            "consts/const_expressions__evaluates_comparisons_boolean_not_and_short_circuiting__1",
+            "consts/const_expressions__evaluates_comparisons_boolean_not_and_short_circuiting__2",
+            "consts/const_expressions__evaluates_comparisons_boolean_not_and_short_circuiting__3",
+            "consts/const_expressions__evaluates_comparisons_boolean_not_and_short_circuiting__4",
+            "consts/const_expressions__evaluates_comparisons_boolean_not_and_short_circuiting__5",
+            "consts/const_expressions__evaluates_comparisons_boolean_not_and_short_circuiting__6",
+            "consts/const_expressions__evaluates_comparisons_boolean_not_and_short_circuiting__7",
+            "consts/const_expressions__evaluates_comparisons_boolean_not_and_short_circuiting__8",
+            "consts/const_expressions__evaluates_comparisons_boolean_not_and_short_circuiting__9",
+            "consts/const_expressions__evaluates_comparisons_boolean_not_and_short_circuiting__10"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus.",
+          "unselected_literal_sources": [
+            "const VALUE: bool = false && 1; fn main() { return; }"
+          ],
+          "unselected_note": "All remaining literal variants are explicitly classified; none is silently counted as runtime migrated.",
+          "unselected_source_dispositions": [
+            {
+              "source": "const VALUE: bool = false && 1; fn main() { return; }",
+              "status": "obsolete-old-API",
+              "reason": "Negative parser/type/mutability/arity case from this mixed test. Exact old acceptance rules and diagnostics are rustc-owned."
+            }
+          ]
+        },
+        {
+          "test": "preserves_signed_and_unsigned_boundaries",
+          "line": 86,
+          "status": "migrated",
+          "replacement_cases": [
+            "consts/const_expressions__preserves_signed_and_unsigned_boundaries__0",
+            "consts/const_expressions__preserves_signed_and_unsigned_boundaries__1",
+            "consts/const_expressions__preserves_signed_and_unsigned_boundaries__2",
+            "consts/const_expressions__preserves_signed_and_unsigned_boundaries__3",
+            "consts/const_expressions__preserves_signed_and_unsigned_boundaries__4",
+            "consts/const_expressions__preserves_signed_and_unsigned_boundaries__5"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "resolves_forward_and_transitive_dependencies_without_emitting_runtime_operators",
+          "line": 105,
+          "status": "migrated",
+          "replacement_cases": [
+            "consts/const_expressions__resolves_forward_and_transitive_dependencies_without_emitting_runtime_operators"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "rejects_division_by_zero_and_arithmetic_overflow_at_compile_time",
+          "line": 128,
+          "status": "obsolete-old-API",
+          "reason": "These bodies only assert old frontend errors/type checking/CTFE diagnostics. rustc owns those checks; old subset-specific restrictions (including unreachable-statement or unit-equality rejection) are not backend contracts."
+        },
+        {
+          "test": "rejects_invalid_shift_counts_at_compile_time",
+          "line": 156,
+          "status": "obsolete-old-API",
+          "reason": "These bodies only assert old frontend errors/type checking/CTFE diagnostics. rustc owns those checks; old subset-specific restrictions (including unreachable-statement or unit-equality rejection) are not backend contracts."
+        },
+        {
+          "test": "rejects_unknown_and_cyclic_references",
+          "line": 173,
+          "status": "obsolete-old-API",
+          "reason": "These bodies only assert old frontend errors/type checking/CTFE diagnostics. rustc owns those checks; old subset-specific restrictions (including unreachable-statement or unit-equality rejection) are not backend contracts."
+        },
+        {
+          "test": "preserves_const_fn_function_indices_and_local_shadowing",
+          "line": 191,
+          "status": "obsolete-old-API",
+          "reason": "The old frontend let a local VALUE shadow const VALUE and assigned positional function indices. Rust treats the name in let VALUE as a const pattern, and the separate per-function semantic graph has no global positional call-index contract. Const function calls remain covered by the calls suite."
+        },
+        {
+          "test": "native_const_expression_example_returns_42",
+          "line": 208,
+          "status": "migrated",
+          "replacement_cases": [
+            "examples/example__native_const_expression"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        }
+      ]
+    },
+    {
+      "path": "tests/const_functions.rs",
+      "status_counts": {
+        "migrated": 4,
+        "obsolete-old-API": 2
+      },
+      "tests": [
+        {
+          "test": "const_fn_forward_calls_use_the_prescanned_signature",
+          "line": 4,
+          "status": "migrated",
+          "replacement_cases": [
+            "calls/const_functions__const_fn_forward_calls_use_the_prescanned_signature"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "const_fn_recursion_emits_a_runtime_call",
+          "line": 22,
+          "status": "migrated",
+          "replacement_cases": [
+            "calls/const_functions__const_fn_recursion_emits_a_runtime_call"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "const_fn_supports_all_visibilities_and_preserves_object_symbols",
+          "line": 41,
+          "status": "migrated",
+          "replacement_cases": [
+            "calls/const_functions__const_fn_supports_all_visibilities_and_preserves_object_symbols"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "const_fn_calls_in_initializers_are_explicitly_rejected",
+          "line": 90,
+          "status": "obsolete-old-API",
+          "reason": "Old hand-written frontend acceptance/rejection and diagnostic wording. Real rustc owns syntax, typing and CTFE, including valid Rust that the old subset rejected."
+        },
+        {
+          "test": "malformed_const_and_visibility_order_is_rejected",
+          "line": 107,
+          "status": "obsolete-old-API",
+          "reason": "Old hand-written frontend acceptance/rejection and diagnostic wording. Real rustc owns syntax, typing and CTFE, including valid Rust that the old subset rejected."
+        },
+        {
+          "test": "native_const_fn_example_returns_42",
+          "line": 123,
+          "status": "migrated",
+          "replacement_cases": [
+            "examples/example__native_const_fn"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        }
+      ]
+    },
+    {
+      "path": "tests/const_items.rs",
+      "status_counts": {
+        "migrated": 4,
+        "obsolete-old-API": 4
+      },
+      "tests": [
+        {
+          "test": "scalar_constants_support_visibilities_radices_suffixes_and_boolean_references",
+          "line": 21,
+          "status": "migrated",
+          "replacement_cases": [
+            "consts/const_items__scalar_constants_support_visibilities_radices_suffixes_and_boolean_references",
+            "consts/const_items__scalar_constants_support_visibilities_radices_suffixes_and_boolean_references__minimum"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "references_emit_typed_constants_and_locals_can_shadow_constant_names",
+          "line": 48,
+          "status": "migrated",
+          "replacement_cases": [
+            "consts/const_items__references_emit_typed_constants_and_locals_can_shadow_constant_names"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus.",
+          "unselected_literal_sources": [
+            "const VALUE: i64 = 1; fn main() -> i64 { let VALUE = 42; return VALUE; }",
+            "const VALUE: i64 = 1; fn main() -> i64 { let VALUE = 42; return VALUE; }"
+          ],
+          "unselected_note": "All remaining literal variants are explicitly classified; none is silently counted as runtime migrated.",
+          "unselected_source_dispositions": [
+            {
+              "source": "const VALUE: i64 = 1; fn main() -> i64 { let VALUE = 42; return VALUE; }",
+              "status": "obsolete-old-API",
+              "reason": "Old frontend const-name shadowing differs from Rust const-pattern semantics; retired syntax contract, not a numeric codegen behavior."
+            },
+            {
+              "source": "const VALUE: i64 = 1; fn main() -> i64 { let VALUE = 42; return VALUE; }",
+              "status": "obsolete-old-API",
+              "reason": "Old frontend const-name shadowing differs from Rust const-pattern semantics; retired syntax contract, not a numeric codegen behavior."
+            }
+          ]
+        },
+        {
+          "test": "constant_items_do_not_change_function_indices_and_const_fn_stays_a_function",
+          "line": 82,
+          "status": "migrated",
+          "replacement_cases": [
+            "consts/const_items__constant_items_do_not_change_function_indices_and_const_fn_stays_a_function"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "constants_share_the_top_level_name_namespace_with_functions",
+          "line": 103,
+          "status": "obsolete-old-API",
+          "reason": "These bodies only assert old frontend errors/type checking/CTFE diagnostics. rustc owns those checks; old subset-specific restrictions (including unreachable-statement or unit-equality rejection) are not backend contracts."
+        },
+        {
+          "test": "unknown_constant_references_and_type_mismatches_are_diagnosed",
+          "line": 116,
+          "status": "obsolete-old-API",
+          "reason": "Old hand-written frontend acceptance/rejection and diagnostic wording. Real rustc owns syntax, typing and CTFE, including valid Rust that the old subset rejected."
+        },
+        {
+          "test": "missing_constant_semicolons_have_a_specific_diagnostic",
+          "line": 135,
+          "status": "obsolete-old-API",
+          "reason": "Old hand-written frontend acceptance/rejection and diagnostic wording. Real rustc owns syntax, typing and CTFE, including valid Rust that the old subset rejected."
+        },
+        {
+          "test": "function_calls_in_constant_initializers_are_rejected_instead_of_miscompiled",
+          "line": 151,
+          "status": "obsolete-old-API",
+          "reason": "Old hand-written frontend acceptance/rejection and diagnostic wording. Real rustc owns syntax, typing and CTFE, including valid Rust that the old subset rejected."
+        },
+        {
+          "test": "native_const_item_example_returns_42",
+          "line": 165,
+          "status": "migrated",
+          "replacement_cases": [
+            "examples/example__native_const_item"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        }
+      ]
+    },
+    {
+      "path": "tests/control_algebra.rs",
+      "status_counts": {
+        "migrated": 4,
+        "obsolete-old-API": 2
+      },
+      "tests": [
+        {
+          "test": "additive_and_multiplicative_identities_are_removed",
+          "line": 21,
+          "status": "migrated",
+          "replacement_cases": [
+            "control/control_algebra__additive_and_multiplicative_identities_are_removed"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "zero_and_self_operations_become_constants",
+          "line": 36,
+          "status": "migrated",
+          "replacement_cases": [
+            "control/control_algebra__zero_and_self_operations_become_constants"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "self_comparison_simplifies_but_self_division_still_traps",
+          "line": 51,
+          "status": "migrated",
+          "replacement_cases": [
+            "control/control_algebra__self_comparison_simplifies_but_self_division_still_traps"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "unsigned_division_and_remainder_by_one_are_simplified",
+          "line": 70,
+          "status": "migrated",
+          "replacement_cases": [
+            "control/control_algebra__unsigned_division_and_remainder_by_one_are_simplified"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "deep_constant_expressions_match_sequential_replacement_exactly",
+          "line": 140,
+          "status": "obsolete-old-API",
+          "reason": "Old Graph in-place stable-ID replacement reference contract removed."
+        },
+        {
+          "test": "multi_function_external_constants_match_sequential_optimization",
+          "line": 164,
+          "status": "obsolete-old-API",
+          "reason": "Old global multi-function Graph slicing contract removed; semantic FunctionGraph owns separate oracle/constants."
+        }
+      ]
+    },
+    {
+      "path": "tests/control_flow.rs",
+      "status_counts": {
+        "migrated": 3
+      },
+      "tests": [
+        {
+          "test": "if_else_selects_the_expected_branch",
+          "line": 10,
+          "status": "migrated",
+          "replacement_cases": [
+            "control/control_flow__if_else_selects_the_expected_branch"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "nested_if_preserves_control_and_phi_values",
+          "line": 24,
+          "status": "migrated",
+          "replacement_cases": [
+            "control/control_flow__nested_if_preserves_control_and_phi_values"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "direct_objects_resolve_control_relocations",
+          "line": 34,
+          "status": "migrated",
+          "replacement_cases": [
+            "control/control_flow__direct_objects_resolve_control_relocations"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        }
+      ]
+    },
+    {
+      "path": "tests/control_optimization.rs",
+      "status_counts": {
+        "migrated": 5
+      },
+      "tests": [
+        {
+          "test": "if_branch_constants_fold_in_place",
+          "line": 16,
+          "status": "migrated",
+          "replacement_cases": [
+            "control/control_optimization__if_branch_constants_fold_in_place"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "pure_expressions_are_value_numbered_across_regions",
+          "line": 35,
+          "status": "migrated",
+          "replacement_cases": [
+            "control/control_optimization__pure_expressions_are_value_numbered_across_regions"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "loop_conditions_fold_without_changing_control_nodes",
+          "line": 45,
+          "status": "migrated",
+          "replacement_cases": [
+            "loops/control_optimization__loop_conditions_fold_without_changing_control_nodes"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "trapping_division_is_not_folded_or_removed",
+          "line": 59,
+          "status": "migrated",
+          "replacement_cases": [
+            "control/control_optimization__trapping_division_is_not_folded_or_removed"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "value_numbering_never_crosses_function_boundaries",
+          "line": 76,
+          "status": "migrated",
+          "replacement_cases": [
+            "calls/control_optimization__value_numbering_never_crosses_function_boundaries"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        }
+      ]
+    },
+    {
+      "path": "tests/div_differential.rs",
+      "status_counts": {
+        "migrated": 3
+      },
+      "tests": [
+        {
+          "test": "quotient_and_remainder_match_for_values_and_boundaries",
+          "line": 99,
+          "status": "migrated",
+          "replacement_cases": [
+            "arithmetic/div_differential__quotient_and_remainder_match_for_values_and_boundaries__division",
+            "arithmetic/div_differential__quotient_and_remainder_match_for_values_and_boundaries__remainder"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "division_by_zero_and_overflow_remain_traps",
+          "line": 108,
+          "status": "migrated",
+          "replacement_cases": [
+            "arithmetic/div_differential__division_by_zero_and_overflow_remain_traps__division",
+            "arithmetic/div_differential__division_by_zero_and_overflow_remain_traps__remainder"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "quotient_and_remainder_match_with_spills",
+          "line": 174,
+          "status": "migrated",
+          "replacement_cases": [
+            "arithmetic/div_differential__quotient_and_remainder_match_with_spills__division",
+            "arithmetic/div_differential__quotient_and_remainder_match_with_spills__remainder"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        }
+      ]
+    },
+    {
+      "path": "tests/early_return.rs",
+      "status_counts": {
+        "migrated": 5,
+        "obsolete-old-API": 1
+      },
+      "tests": [
+        {
+          "test": "early_if_return_skips_the_function_tail",
+          "line": 11,
+          "status": "migrated",
+          "replacement_cases": [
+            "control/early_return__early_if_return_skips_the_function_tail"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus.",
+          "machine_shape_disposition": "Original machine shape remains unmet in candidate07 existing real-Rust objects; passing runtime results do not discharge this assertion.",
+          "machine_shape_check": "scripts/poc-validation/legacy-machine-shapes.py",
+          "machine_shape_evidence": "evidence/poc-semantic-only-20261109/results/candidate07/legacy-machine-shapes-normalized/summary.json",
+          "machine_shape_status": "shape-gap",
+          "machine_shape_interpretation": "rustc MIR merges source returns into one exit, yielding one machine ret instead of the old parser graph two-ret shape. Numerical early-return behavior is tested separately; ret count alone is not a correctness or speed requirement.",
+          "machine_shape_check_id": "tests/early_return.rs::early_if_return_skips_the_function_tail"
+        },
+        {
+          "test": "two_returning_arms_do_not_need_a_final_return",
+          "line": 27,
+          "status": "migrated",
+          "replacement_cases": [
+            "control/early_return__two_returning_arms_do_not_need_a_final_return"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "return_inside_loop_leaves_without_updating_loop_phis",
+          "line": 35,
+          "status": "migrated",
+          "replacement_cases": [
+            "loops/early_return__return_inside_loop_leaves_without_updating_loop_phis"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "unit_functions_support_early_and_implicit_returns",
+          "line": 43,
+          "status": "migrated",
+          "replacement_cases": [
+            "control/early_return__unit_functions_support_early_and_implicit_returns",
+            "control/early_return__unit_functions_support_early_and_implicit_returns__both"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "bool_early_returns_work_across_function_calls",
+          "line": 53,
+          "status": "migrated",
+          "replacement_cases": [
+            "calls/early_return__bool_early_returns_work_across_function_calls"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "early_return_preserves_type_and_reachability_errors",
+          "line": 64,
+          "status": "obsolete-old-API",
+          "reason": "These bodies only assert old frontend errors/type checking/CTFE diagnostics. rustc owns those checks; old subset-specific restrictions (including unreachable-statement or unit-equality rejection) are not backend contracts."
+        }
+      ]
+    },
+    {
+      "path": "tests/expression_statements.rs",
+      "status_counts": {
+        "migrated": 3,
+        "obsolete-old-API": 1
+      },
+      "tests": [
+        {
+          "test": "unit_calls_with_arguments_work_as_statements",
+          "line": 3,
+          "status": "migrated",
+          "replacement_cases": [
+            "calls/expression_statements__unit_calls_with_arguments_work_as_statements"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "nonunit_calls_and_pure_expressions_can_be_discarded",
+          "line": 17,
+          "status": "migrated",
+          "replacement_cases": [
+            "calls/expression_statements__nonunit_calls_and_pure_expressions_can_be_discarded"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "unit_values_can_be_bound_and_returned_from_unit_functions",
+          "line": 27,
+          "status": "migrated",
+          "replacement_cases": [
+            "calls/expression_statements__unit_values_can_be_bound_and_returned_from_unit_functions"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "unit_values_cannot_be_used_as_numbers_or_typed_results",
+          "line": 37,
+          "status": "obsolete-old-API",
+          "reason": "These bodies only assert old frontend errors/type checking/CTFE diagnostics. rustc owns those checks; old subset-specific restrictions (including unreachable-statement or unit-equality rejection) are not backend contracts."
+        }
+      ]
+    },
+    {
+      "path": "tests/for_loops.rs",
+      "status_counts": {
+        "migrated": 7
+      },
+      "tests": [
+        {
+          "test": "exclusive_ranges_accumulate_and_empty_ranges_do_not_run",
+          "line": 11,
+          "status": "migrated",
+          "replacement_cases": [
+            "loops/for_loops__exclusive_ranges_accumulate_and_empty_ranges_do_not_run"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "continue_advances_the_range_index",
+          "line": 19,
+          "status": "migrated",
+          "replacement_cases": [
+            "loops/for_loops__continue_advances_the_range_index"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "break_exits_the_range_loop",
+          "line": 27,
+          "status": "migrated",
+          "replacement_cases": [
+            "loops/for_loops__break_exits_the_range_loop"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "nested_ranges_target_the_inner_loop_control_context",
+          "line": 35,
+          "status": "migrated",
+          "replacement_cases": [
+            "loops/for_loops__nested_ranges_target_the_inner_loop_control_context"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "usize_is_a_u64_alias_in_ranges_and_bindings",
+          "line": 43,
+          "status": "migrated",
+          "replacement_cases": [
+            "loops/for_loops__usize_is_a_u64_alias_in_ranges_and_bindings"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "early_return_works_inside_a_range_loop",
+          "line": 51,
+          "status": "migrated",
+          "replacement_cases": [
+            "loops/for_loops__early_return_works_inside_a_range_loop"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "range_calls_and_invalid_syntax_are_checked",
+          "line": 58,
+          "status": "migrated",
+          "replacement_cases": [
+            "calls/for_loops__range_calls_and_invalid_syntax_are_checked"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus.",
+          "diagnostic_disposition": "obsolete-old-API: old parser wording/restrictions are owned by rustc; no reproduction of old frontend diagnostics.",
+          "unselected_literal_sources": [
+            "fn main() { for i in 0..3 { i += 1; } }",
+            "fn main() { for i in 0..3 { } return i; }",
+            "fn main(a: i64, b: u64) { for i in a..b { } }"
+          ],
+          "unselected_note": "All remaining literal variants are explicitly classified; none is silently counted as runtime migrated.",
+          "unselected_source_dispositions": [
+            {
+              "source": "fn main() { for i in 0..3 { i += 1; } }",
+              "status": "obsolete-old-API",
+              "reason": "Negative parser/type/mutability/arity case from this mixed test. Exact old acceptance rules and diagnostics are rustc-owned."
+            },
+            {
+              "source": "fn main() { for i in 0..3 { } return i; }",
+              "status": "obsolete-old-API",
+              "reason": "Negative parser/type/mutability/arity case from this mixed test. Exact old acceptance rules and diagnostics are rustc-owned."
+            },
+            {
+              "source": "fn main(a: i64, b: u64) { for i in a..b { } }",
+              "status": "obsolete-old-API",
+              "reason": "Negative parser/type/mutability/arity case from this mixed test. Exact old acceptance rules and diagnostics are rustc-owned."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "tests/forward_calls.rs",
+      "status_counts": {
+        "migrated": 4
+      },
+      "tests": [
+        {
+          "test": "forward_calls_use_declaration_order_indices",
+          "line": 4,
+          "status": "migrated",
+          "replacement_cases": [
+            "calls/forward_calls__forward_calls_use_declaration_order_indices"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "self_recursion_emits_a_call_to_the_current_function",
+          "line": 23,
+          "status": "migrated",
+          "replacement_cases": [
+            "calls/forward_calls__self_recursion_emits_a_call_to_the_current_function"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "mutual_recursion_uses_each_forward_signature",
+          "line": 39,
+          "status": "migrated",
+          "replacement_cases": [
+            "calls/forward_calls__mutual_recursion_uses_each_forward_signature"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "signature_collection_checks_types_and_skips_nested_bodies",
+          "line": 58,
+          "status": "migrated",
+          "replacement_cases": [
+            "calls/forward_calls__signature_collection_checks_types_and_skips_nested_bodies"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus.",
+          "diagnostic_disposition": "obsolete-old-API: old parser wording/restrictions are owned by rustc; no reproduction of old frontend diagnostics.",
+          "unselected_literal_sources": [
+            "fn main() -> i64 { return later(1u64); } fn later(value: i64) -> i64 { return value; }",
+            "fn main() -> i64 { return later(); } fn later(value: i64) -> i64 { return value; }",
+            "fn main() -> i64 { return later(); } fn later() { return; }",
+            "fn main() -> i64 { return missing(); }"
+          ],
+          "unselected_note": "All remaining literal variants are explicitly classified; none is silently counted as runtime migrated.",
+          "unselected_source_dispositions": [
+            {
+              "source": "fn main() -> i64 { return later(1u64); } fn later(value: i64) -> i64 { return value; }",
+              "status": "obsolete-old-API",
+              "reason": "Negative parser/type/mutability/arity case from this mixed test. Exact old acceptance rules and diagnostics are rustc-owned."
+            },
+            {
+              "source": "fn main() -> i64 { return later(); } fn later(value: i64) -> i64 { return value; }",
+              "status": "obsolete-old-API",
+              "reason": "Negative parser/type/mutability/arity case from this mixed test. Exact old acceptance rules and diagnostics are rustc-owned."
+            },
+            {
+              "source": "fn main() -> i64 { return later(); } fn later() { return; }",
+              "status": "obsolete-old-API",
+              "reason": "Negative parser/type/mutability/arity case from this mixed test. Exact old acceptance rules and diagnostics are rustc-owned."
+            },
+            {
+              "source": "fn main() -> i64 { return missing(); }",
+              "status": "obsolete-old-API",
+              "reason": "Negative parser/type/mutability/arity case from this mixed test. Exact old acceptance rules and diagnostics are rustc-owned."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "tests/function_calls.rs",
+      "status_counts": {
+        "migrated": 3,
+        "obsolete-old-API": 2
+      },
+      "tests": [
+        {
+          "test": "zero_argument_calls_emit_symbols_and_relocations",
+          "line": 5,
+          "status": "migrated",
+          "replacement_cases": [
+            "calls/function_calls__zero_argument_calls_emit_symbols_and_relocations"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "register_arguments_are_loaded_before_the_call",
+          "line": 30,
+          "status": "migrated",
+          "replacement_cases": [
+            "calls/function_calls__register_arguments_are_loaded_before_the_call"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "call_arity_is_checked",
+          "line": 42,
+          "status": "obsolete-old-API",
+          "reason": "Old hand-written frontend acceptance/rejection and diagnostic wording. Real rustc owns syntax, typing and CTFE, including valid Rust that the old subset rejected."
+        },
+        {
+          "test": "unknown_calls_are_rejected_during_parsing",
+          "line": 50,
+          "status": "obsolete-old-API",
+          "reason": "Old hand-written frontend acceptance/rejection and diagnostic wording. Real rustc owns syntax, typing and CTFE, including valid Rust that the old subset rejected."
+        },
+        {
+          "test": "stack_arguments_are_stored_before_the_call",
+          "line": 55,
+          "status": "migrated",
+          "replacement_cases": [
+            "calls/function_calls__stack_arguments_are_stored_before_the_call"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        }
+      ]
+    },
+    {
+      "path": "tests/function_graph_performance.rs",
+      "status_counts": {
+        "obsolete-old-API": 2
+      },
+      "tests": [
+        {
+          "test": "holes_and_transitive_external_dependencies_match_the_reference",
+          "line": 103,
+          "status": "obsolete-old-API",
+          "reason": "Old Graph.function_graph extraction/reference indexing and its timing benchmark are removed; not a benchmark of semantic IR compilation."
+        },
+        {
+          "test": "extraction_optimization_and_elf_match_the_reference",
+          "line": 160,
+          "status": "obsolete-old-API",
+          "reason": "Old Graph.function_graph extraction/reference indexing and its timing benchmark are removed; not a benchmark of semantic IR compilation."
+        }
+      ]
+    },
+    {
+      "path": "tests/function_parallel.rs",
+      "status_counts": {
+        "obsolete-old-API": 7
+      },
+      "tests": [
+        {
+          "test": "function_parallel_preserves_order_and_object_bytes",
+          "line": 22,
+          "status": "obsolete-old-API",
+          "reason": "The old compile_graph_parallel worker API, job-count validation, ordering and indexed error/panic contract are removed; rustc owns CGU scheduling."
+        },
+        {
+          "test": "forward_and_recursive_calls_are_emitted_unchanged",
+          "line": 50,
+          "status": "obsolete-old-API",
+          "reason": "The old compile_graph_parallel worker API, job-count validation, ordering and indexed error/panic contract are removed; rustc owns CGU scheduling."
+        },
+        {
+          "test": "function_parallel_rejects_zero_jobs",
+          "line": 68,
+          "status": "obsolete-old-API",
+          "reason": "The old compile_graph_parallel worker API, job-count validation, ordering and indexed error/panic contract are removed; rustc owns CGU scheduling."
+        },
+        {
+          "test": "optimized_strength_constants_survive_function_splitting",
+          "line": 77,
+          "status": "obsolete-old-API",
+          "reason": "The old compile_graph_parallel worker API, job-count validation, ordering and indexed error/panic contract are removed; rustc owns CGU scheduling."
+        },
+        {
+          "test": "unbalanced_function_sizes_preserve_order_and_object_bytes",
+          "line": 94,
+          "status": "obsolete-old-API",
+          "reason": "The old compile_graph_parallel worker API, job-count validation, ordering and indexed error/panic contract are removed; rustc owns CGU scheduling."
+        },
+        {
+          "test": "function_parallel_errors_keep_declaration_index",
+          "line": 134,
+          "status": "obsolete-old-API",
+          "reason": "The old compile_graph_parallel worker API, job-count validation, ordering and indexed error/panic contract are removed; rustc owns CGU scheduling."
+        },
+        {
+          "test": "function_parallel_panics_keep_declaration_index",
+          "line": 152,
+          "status": "obsolete-old-API",
+          "reason": "The old compile_graph_parallel worker API, job-count validation, ordering and indexed error/panic contract are removed; rustc owns CGU scheduling."
+        }
+      ]
+    },
+    {
+      "path": "tests/function_visibility.rs",
+      "status_counts": {
+        "migrated": 4,
+        "obsolete-old-API": 1
+      },
+      "tests": [
+        {
+          "test": "supported_visibilities_do_not_change_function_names_or_indices",
+          "line": 4,
+          "status": "migrated",
+          "replacement_cases": [
+            "calls/function_visibility__supported_visibilities_do_not_change_function_names_or_indices"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "visibility_preserves_forward_calls_and_native_symbols",
+          "line": 27,
+          "status": "migrated",
+          "replacement_cases": [
+            "calls/function_visibility__visibility_preserves_forward_calls_and_native_symbols"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "unsupported_visibility_paths_and_malformed_parentheses_are_rejected",
+          "line": 45,
+          "status": "obsolete-old-API",
+          "reason": "Old hand-written frontend acceptance/rejection and diagnostic wording. Real rustc owns syntax, typing and CTFE, including valid Rust that the old subset rejected."
+        },
+        {
+          "test": "native_visibility_example_returns_42",
+          "line": 76,
+          "status": "migrated",
+          "replacement_cases": [
+            "examples/example__native_visibility"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "optimized_multifunction_constants_remain_inside_function_graphs",
+          "line": 90,
+          "status": "migrated",
+          "replacement_cases": [
+            "examples/example__native_visibility"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        }
+      ]
+    },
+    {
+      "path": "tests/immediate_arithmetic.rs",
+      "status_counts": {
+        "migrated": 3,
+        "covered-existing": 2
+      },
+      "tests": [
+        {
+          "test": "arithmetic_uses_immediate_operands_without_constant_moves",
+          "line": 12,
+          "status": "migrated",
+          "replacement_cases": [
+            "arithmetic/immediate_arithmetic__arithmetic_uses_immediate_operands_without_constant_moves"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus.",
+          "machine_shape_disposition": "Satisfied in candidate07 real-Rust object artifacts; later source changes require a new receipt.",
+          "machine_shape_check": "scripts/poc-validation/legacy-machine-shapes.py",
+          "machine_shape_evidence": "evidence/poc-semantic-only-20261109/results/candidate07/legacy-machine-shapes-normalized/summary.json",
+          "machine_shape_status": "satisfied",
+          "machine_shape_check_id": "tests/immediate_arithmetic.rs::arithmetic_uses_immediate_operands_without_constant_moves"
+        },
+        {
+          "test": "bitwise_multiply_and_compare_support_immediates",
+          "line": 31,
+          "status": "migrated",
+          "replacement_cases": [
+            "arithmetic/immediate_arithmetic__bitwise_multiply_and_compare_support_immediates__arithmetic",
+            "comparison/immediate_arithmetic__bitwise_multiply_and_compare_support_immediates__compare"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus.",
+          "machine_shape_disposition": "Satisfied in candidate07 real-Rust object artifacts; later source changes require a new receipt.",
+          "machine_shape_check": "scripts/poc-validation/legacy-machine-shapes.py",
+          "machine_shape_evidence": "evidence/poc-semantic-only-20261109/results/candidate07/legacy-machine-shapes-normalized/summary.json",
+          "machine_shape_status": "satisfied",
+          "machine_shape_check_id": "tests/immediate_arithmetic.rs::bitwise_multiply_and_compare_support_immediates"
+        },
+        {
+          "test": "large_constants_still_use_register_materialization",
+          "line": 69,
+          "status": "migrated",
+          "replacement_cases": [
+            "arithmetic/immediate_arithmetic__large_constants_still_use_register_materialization"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus.",
+          "machine_shape_disposition": "Satisfied in candidate07 real-Rust object artifacts; later source changes require a new receipt.",
+          "machine_shape_check": "scripts/poc-validation/legacy-machine-shapes.py",
+          "machine_shape_evidence": "evidence/poc-semantic-only-20261109/results/candidate07/legacy-machine-shapes-normalized/summary.json",
+          "machine_shape_status": "satisfied",
+          "machine_shape_check_id": "tests/immediate_arithmetic.rs::large_constants_still_use_register_materialization"
+        },
+        {
+          "test": "immediate_group_and_multiply_encodings_are_exact",
+          "line": 81,
+          "status": "covered-existing",
+          "replacement_tests": [
+            "crates/kfrc-x86/tests/mixed_machine_regressions.rs::immediate_arithmetic::immediate_group_and_multiply_encodings_are_exact"
+          ],
+          "coverage_evidence": "Original MachineFunction fixtures and exact byte/flags assertions moved verbatim; only imports/entry points changed. Independent of the removed frontend and Graph.",
+          "validation_status": "Source mapping verified; dynamic status belongs to candidate validation receipts."
+        },
+        {
+          "test": "immediate_division_is_rejected_explicitly",
+          "line": 125,
+          "status": "covered-existing",
+          "replacement_tests": [
+            "crates/kfrc-x86/tests/mixed_machine_regressions.rs::immediate_arithmetic::immediate_division_is_rejected_explicitly"
+          ],
+          "coverage_evidence": "Original MachineFunction fixtures and exact byte/flags assertions moved verbatim; only imports/entry points changed. Independent of the removed frontend and Graph.",
+          "validation_status": "Source mapping verified; dynamic status belongs to candidate validation receipts."
+        }
+      ]
+    },
+    {
+      "path": "tests/immediate_shifts.rs",
+      "status_counts": {
+        "migrated": 2,
+        "covered-existing": 1
+      },
+      "tests": [
+        {
+          "test": "immediate_shifts_use_count_encodings_without_cl",
+          "line": 11,
+          "status": "migrated",
+          "replacement_cases": [
+            "control/immediate_shifts__immediate_shifts_use_count_encodings_without_cl"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus.",
+          "machine_shape_disposition": "Original machine shape remains unmet in candidate07 existing real-Rust objects; passing runtime results do not discharge this assertion.",
+          "machine_shape_check": "scripts/poc-validation/legacy-machine-shapes.py",
+          "machine_shape_evidence": "evidence/poc-semantic-only-20261109/results/candidate07/legacy-machine-shapes-normalized/summary.json",
+          "machine_shape_status": "shape-gap",
+          "machine_shape_check_id": "tests/immediate_shifts.rs::immediate_shifts_use_count_encodings_without_cl"
+        },
+        {
+          "test": "immediate_count_is_masked_to_six_bits",
+          "line": 34,
+          "status": "migrated",
+          "replacement_cases": [
+            "arithmetic/immediate_shifts__immediate_count_is_masked_to_six_bits__0",
+            "arithmetic/immediate_shifts__immediate_count_is_masked_to_six_bits__1"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus.",
+          "machine_shape_disposition": "Original machine shape remains unmet in candidate07 existing real-Rust objects; passing runtime results do not discharge this assertion.",
+          "machine_shape_check": "scripts/poc-validation/legacy-machine-shapes.py",
+          "machine_shape_evidence": "evidence/poc-semantic-only-20261109/results/candidate07/legacy-machine-shapes-normalized/summary.json",
+          "machine_shape_status": "shape-gap",
+          "machine_shape_check_id": "tests/immediate_shifts.rs::immediate_count_is_masked_to_six_bits"
+        },
+        {
+          "test": "immediate_shift_machine_encodings_are_exact",
+          "line": 55,
+          "status": "covered-existing",
+          "replacement_tests": [
+            "crates/kfrc-x86/tests/mixed_machine_regressions.rs::immediate_shifts::immediate_shift_machine_encodings_are_exact"
+          ],
+          "coverage_evidence": "Original MachineFunction fixtures and exact byte/flags assertions moved verbatim; only imports/entry points changed. Independent of the removed frontend and Graph.",
+          "validation_status": "Source mapping verified; dynamic status belongs to candidate validation receipts."
+        }
+      ]
+    },
+    {
+      "path": "tests/inclusive_ranges.rs",
+      "status_counts": {
+        "migrated": 4
+      },
+      "tests": [
+        {
+          "test": "inclusive_ranges_include_the_end_and_skip_empty_ranges",
+          "line": 11,
+          "status": "migrated",
+          "replacement_cases": [
+            "loops/inclusive_ranges__inclusive_ranges_include_the_end_and_skip_empty_ranges"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "continue_on_the_last_inclusive_iteration_exits_cleanly",
+          "line": 19,
+          "status": "migrated",
+          "replacement_cases": [
+            "loops/inclusive_ranges__continue_on_the_last_inclusive_iteration_exits_cleanly"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "inclusive_u64_max_does_not_wrap_to_zero",
+          "line": 27,
+          "status": "migrated",
+          "replacement_cases": [
+            "loops/inclusive_ranges__inclusive_u64_max_does_not_wrap_to_zero__0",
+            "loops/inclusive_ranges__inclusive_u64_max_does_not_wrap_to_zero__1"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "inclusive_ranges_support_early_return",
+          "line": 40,
+          "status": "migrated",
+          "replacement_cases": [
+            "loops/inclusive_ranges__inclusive_ranges_support_early_return"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        }
+      ]
+    },
+    {
+      "path": "tests/integer_not.rs",
+      "status_counts": {
+        "migrated": 4
+      },
+      "tests": [
+        {
+          "test": "signed_integer_not_matches_bitwise_complement",
+          "line": 11,
+          "status": "migrated",
+          "replacement_cases": [
+            "arithmetic/integer_not__signed_integer_not_matches_bitwise_complement"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "unsigned_integer_not_preserves_the_full_bit_pattern",
+          "line": 19,
+          "status": "migrated",
+          "replacement_cases": [
+            "arithmetic/integer_not__unsigned_integer_not_preserves_the_full_bit_pattern"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "not_precedence_double_inversion_and_loop_phis_are_preserved",
+          "line": 27,
+          "status": "migrated",
+          "replacement_cases": [
+            "arithmetic/integer_not__not_precedence_double_inversion_and_loop_phis_are_preserved__0",
+            "arithmetic/integer_not__not_precedence_double_inversion_and_loop_phis_are_preserved__1"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "integer_not_emits_native_code_and_rejects_unit_or_signed_overflow",
+          "line": 43,
+          "status": "migrated",
+          "replacement_cases": [
+            "arithmetic/integer_not__integer_not_emits_native_code_and_rejects_unit_or_signed_overflow"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus.",
+          "diagnostic_disposition": "obsolete-old-API: old parser wording/restrictions are owned by rustc; no reproduction of old frontend diagnostics.",
+          "unselected_literal_sources": [
+            "fn helper() {} fn main() { helper(); return !helper(); }",
+            "fn main() -> i64 { return !9223372036854775808; }"
+          ],
+          "unselected_note": "All remaining literal variants are explicitly classified; none is silently counted as runtime migrated.",
+          "unselected_source_dispositions": [
+            {
+              "source": "fn helper() {} fn main() { helper(); return !helper(); }",
+              "status": "obsolete-old-API",
+              "reason": "Negative parser/type/mutability/arity case from this mixed test. Exact old acceptance rules and diagnostics are rustc-owned."
+            },
+            {
+              "source": "fn main() -> i64 { return !9223372036854775808; }",
+              "status": "obsolete-old-API",
+              "reason": "Negative parser/type/mutability/arity case from this mixed test. Exact old acceptance rules and diagnostics are rustc-owned."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "tests/integer_ops.rs",
+      "status_counts": {
+        "migrated": 6
+      },
+      "tests": [
+        {
+          "test": "variable_negation_wraps_at_the_i64_boundary",
+          "line": 26,
+          "status": "migrated",
+          "replacement_cases": [
+            "arithmetic/integer_ops__variable_negation_wraps_at_the_i64_boundary"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "bitwise_precedence_and_comparisons_match_the_interpreter",
+          "line": 37,
+          "status": "migrated",
+          "replacement_cases": [
+            "arithmetic/integer_ops__bitwise_precedence_and_comparisons_match_the_interpreter__0",
+            "arithmetic/integer_ops__bitwise_precedence_and_comparisons_match_the_interpreter__1",
+            "arithmetic/integer_ops__bitwise_precedence_and_comparisons_match_the_interpreter__2"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "every_bitwise_operator_matches_the_interpreter",
+          "line": 53,
+          "status": "migrated",
+          "replacement_cases": [
+            "arithmetic/integer_ops__every_bitwise_operator_matches_the_interpreter__and",
+            "arithmetic/integer_ops__every_bitwise_operator_matches_the_interpreter__or",
+            "arithmetic/integer_ops__every_bitwise_operator_matches_the_interpreter__xor"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "shifts_mask_counts_and_preserve_the_sign",
+          "line": 63,
+          "status": "migrated",
+          "replacement_cases": [
+            "arithmetic/integer_ops__shifts_mask_counts_and_preserve_the_sign__left",
+            "arithmetic/integer_ops__shifts_mask_counts_and_preserve_the_sign__right"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "shifts_survive_spills_and_loop_phi_values",
+          "line": 81,
+          "status": "migrated",
+          "replacement_cases": [
+            "arithmetic/integer_ops__shifts_survive_spills_and_loop_phi_values"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus.",
+          "machine_shape_disposition": "Satisfied in candidate07 real-Rust object artifacts; later source changes require a new receipt.",
+          "machine_shape_check": "scripts/poc-validation/legacy-machine-shapes.py",
+          "machine_shape_evidence": "evidence/poc-semantic-only-20261109/results/candidate07/legacy-machine-shapes-normalized/summary.json",
+          "machine_shape_status": "satisfied",
+          "machine_shape_check_id": "tests/integer_ops.rs::shifts_survive_spills_and_loop_phi_values"
+        },
+        {
+          "test": "son_bitwise_not_and_direct_objects_are_supported",
+          "line": 93,
+          "status": "migrated",
+          "replacement_cases": [
+            "arithmetic/integer_ops__son_bitwise_not_and_direct_objects_are_supported"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        }
+      ]
+    },
+    {
+      "path": "tests/integer_syntax.rs",
+      "status_counts": {
+        "migrated": 4,
+        "obsolete-old-API": 1
+      },
+      "tests": [
+        {
+          "test": "radix_literals_preserve_signed_and_unsigned_values",
+          "line": 25,
+          "status": "migrated",
+          "replacement_cases": [
+            "consts/integer_syntax__radix_literals_preserve_signed_and_unsigned_values",
+            "consts/integer_syntax__radix_literals_preserve_signed_and_unsigned_values__maximum"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "isize_is_the_signed_word_type_on_x86_64",
+          "line": 36,
+          "status": "migrated",
+          "replacement_cases": [
+            "arithmetic/integer_syntax__isize_is_the_signed_word_type_on_x86_64__0",
+            "arithmetic/integer_syntax__isize_is_the_signed_word_type_on_x86_64__1",
+            "arithmetic/integer_syntax__isize_is_the_signed_word_type_on_x86_64__2"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "bitwise_and_shift_compound_assignments_match_the_interpreter",
+          "line": 51,
+          "status": "migrated",
+          "replacement_cases": [
+            "arithmetic/integer_syntax__bitwise_and_shift_compound_assignments_match_the_interpreter__and",
+            "arithmetic/integer_syntax__bitwise_and_shift_compound_assignments_match_the_interpreter__or",
+            "arithmetic/integer_syntax__bitwise_and_shift_compound_assignments_match_the_interpreter__xor",
+            "arithmetic/integer_syntax__bitwise_and_shift_compound_assignments_match_the_interpreter__shl",
+            "arithmetic/integer_syntax__bitwise_and_shift_compound_assignments_match_the_interpreter__shr"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "combined_assignments_work_in_unsigned_loop_phi_values",
+          "line": 63,
+          "status": "migrated",
+          "replacement_cases": [
+            "arithmetic/integer_syntax__combined_assignments_work_in_unsigned_loop_phi_values__0",
+            "arithmetic/integer_syntax__combined_assignments_work_in_unsigned_loop_phi_values__1"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "invalid_radix_literals_and_compound_assignments_are_rejected",
+          "line": 75,
+          "status": "obsolete-old-API",
+          "reason": "Old hand-written frontend acceptance/rejection and diagnostic wording. Real rustc owns syntax, typing and CTFE, including valid Rust that the old subset rejected."
+        }
+      ]
+    },
+    {
+      "path": "tests/loop_and_tail.rs",
+      "status_counts": {
+        "migrated": 4,
+        "obsolete-old-API": 1
+      },
+      "tests": [
+        {
+          "test": "unconditional_loop_supports_break_and_continue",
+          "line": 11,
+          "status": "migrated",
+          "replacement_cases": [
+            "loops/loop_and_tail__unconditional_loop_supports_break_and_continue"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "tail_literals_variables_and_bools_do_not_need_return",
+          "line": 19,
+          "status": "migrated",
+          "replacement_cases": [
+            "control/loop_and_tail__tail_literals_variables_and_bools_do_not_need_return__0",
+            "control/loop_and_tail__tail_literals_variables_and_bools_do_not_need_return__1",
+            "control/loop_and_tail__tail_literals_variables_and_bools_do_not_need_return__2"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "tail_expressions_support_casts_and_arithmetic",
+          "line": 32,
+          "status": "migrated",
+          "replacement_cases": [
+            "control/loop_and_tail__tail_expressions_support_casts_and_arithmetic"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "tail_calls_work_after_a_range_loop",
+          "line": 39,
+          "status": "migrated",
+          "replacement_cases": [
+            "calls/loop_and_tail__tail_calls_work_after_a_range_loop"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "tail_type_mismatch_is_still_rejected",
+          "line": 49,
+          "status": "obsolete-old-API",
+          "reason": "Old hand-written frontend acceptance/rejection and diagnostic wording. Real rustc owns syntax, typing and CTFE, including valid Rust that the old subset rejected."
+        }
+      ]
+    },
+    {
+      "path": "tests/loop_control.rs",
+      "status_counts": {
+        "migrated": 6,
+        "obsolete-old-API": 1,
+        "covered-existing": 1
+      },
+      "tests": [
+        {
+          "test": "break_preserves_values_at_the_exit_edge",
+          "line": 11,
+          "status": "migrated",
+          "replacement_cases": [
+            "loops/loop_control__break_preserves_values_at_the_exit_edge"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "continue_skips_only_the_rest_of_the_current_iteration",
+          "line": 19,
+          "status": "migrated",
+          "replacement_cases": [
+            "loops/loop_control__continue_skips_only_the_rest_of_the_current_iteration"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "one_terminal_if_arm_still_merges_the_reachable_arm",
+          "line": 27,
+          "status": "migrated",
+          "replacement_cases": [
+            "loops/loop_control__one_terminal_if_arm_still_merges_the_reachable_arm"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "continue_and_break_can_terminate_different_if_arms",
+          "line": 35,
+          "status": "migrated",
+          "replacement_cases": [
+            "loops/loop_control__continue_and_break_can_terminate_different_if_arms"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "nested_loop_control_targets_the_innermost_loop",
+          "line": 43,
+          "status": "migrated",
+          "replacement_cases": [
+            "loops/loop_control__nested_loop_control_targets_the_innermost_loop"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "break_exit_phi_preserves_bool_and_integer_types",
+          "line": 51,
+          "status": "migrated",
+          "replacement_cases": [
+            "loops/loop_control__break_exit_phi_preserves_bool_and_integer_types"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "invalid_loop_control_is_rejected_explicitly",
+          "line": 59,
+          "status": "obsolete-old-API",
+          "reason": "Old hand-written frontend acceptance/rejection and diagnostic wording. Real rustc owns syntax, typing and CTFE, including valid Rust that the old subset rejected."
+        },
+        {
+          "test": "evaluator_stops_an_actual_infinite_loop",
+          "line": 81,
+          "status": "covered-existing",
+          "replacement_tests": [
+            "crates/kfrc-x86/tests/mixed_machine_regressions.rs::loop_control::evaluator_stops_an_actual_infinite_loop"
+          ],
+          "coverage_evidence": "Direct MachineFunction label/backedge regression retains the exact InstructionLimitExceeded assertion, with an unreachable return; no frontend or source compiler is involved.",
+          "validation_status": "Source mapping verified; dynamic status belongs to candidate validation receipts."
+        }
+      ]
+    },
+    {
+      "path": "tests/loop_invariant.rs",
+      "status_counts": {
+        "migrated": 3,
+        "covered-existing": 2
+      },
+      "tests": [
+        {
+          "test": "pure_expressions_hoist_and_match_baseline_for_zero_or_many_iterations",
+          "line": 48,
+          "status": "migrated",
+          "replacement_cases": [
+            "loops/loop_invariant__pure_expressions_hoist_and_match_baseline_for_zero_or_many_iterations"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "nested_loops_hoist_only_past_loops_whose_phis_are_not_inputs",
+          "line": 86,
+          "status": "migrated",
+          "replacement_cases": [
+            "loops/loop_invariant__nested_loops_hoist_only_past_loops_whose_phis_are_not_inputs"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "non_dominating_branch_value_is_not_used_as_a_hoisted_representative",
+          "line": 133,
+          "status": "covered-existing",
+          "replacement_tests": [
+            "crates/kfrc-son/tests/build_and_run.rs::verifier_rejects_branch_value_used_after_merge",
+            "crates/kfrc-son/tests/semantic_optimize.rs::gvn_representative_placement_follows_fixed_inputs_not_creation_order",
+            "corpus:control/bool_optimizer_regression__branch_local_values_do_not_replace_post_merge_expressions"
+          ],
+          "coverage_evidence": "The old test hand-built a branch-local value used past a merge. The semantic verifier explicitly rejects the anchored version of that shape; GVN derives placement from the fixed producer rather than NodeId. The original Rust branch-local regression preserves 42/84 for flag false/true.",
+          "validation_status": "Source mapping verified; dynamic status belongs to candidate validation receipts.",
+          "retired_assertions": "No semantic hoist_loop_invariants API exists. Exact zero hoist count over old block-attached arithmetic is retired; earliest placement/dominance remains enforced."
+        },
+        {
+          "test": "phi_dependent_and_memory_dependent_expressions_stay_in_the_loop",
+          "line": 161,
+          "status": "covered-existing",
+          "replacement_tests": [
+            "crates/kfrc-son/src/transforms/memory/promotion_tests.rs::loop_backedge_carries_promoted_storage_value",
+            "crates/kfrc-son/tests/semantic_memory_optimize.rs::unknown_call_can_change_memory_and_blocks_forwarding",
+            "corpus:loops/loop_invariant__trapping_division_is_not_hoisted_or_removed"
+          ],
+          "coverage_evidence": "The promotion test loads/stores a counter on the loop backedge and checks 0,1,9 iterations against the interpreter before/after promotion. The call mutation test changes stored 7 to 91 and proves the load is retained after optimization. The original zero-trip loop checks division by zero and MIN/-1 remain untaken at bound0 and trap at bound1.",
+          "validation_status": "Source mapping verified; dynamic status belongs to candidate validation receipts.",
+          "retired_assertions": "Arbitrary memory dependencies on old BinaryOp nodes and exact old hoist counts are retired; typed loads/effects and fixed traps represent those dependencies."
+        },
+        {
+          "test": "trapping_division_is_not_hoisted_or_removed",
+          "line": 201,
+          "status": "migrated",
+          "replacement_cases": [
+            "loops/loop_invariant__trapping_division_is_not_hoisted_or_removed"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        }
+      ]
+    },
+    {
+      "path": "tests/loop_values.rs",
+      "status_counts": {
+        "migrated": 9,
+        "obsolete-old-API": 2
+      },
+      "tests": [
+        {
+          "test": "loop_expression_produces_the_break_value",
+          "line": 15,
+          "status": "migrated",
+          "replacement_cases": [
+            "loops/loop_values__loop_expression_produces_the_break_value"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "loop_expression_can_be_the_function_tail",
+          "line": 26,
+          "status": "migrated",
+          "replacement_cases": [
+            "loops/loop_values__loop_expression_can_be_the_function_tail"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "conditional_break_and_continue_preserve_exit_snapshots",
+          "line": 31,
+          "status": "migrated",
+          "replacement_cases": [
+            "loops/loop_values__conditional_break_and_continue_preserve_exit_snapshots"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "nested_loop_expressions_target_the_innermost_loop",
+          "line": 39,
+          "status": "migrated",
+          "replacement_cases": [
+            "loops/loop_values__nested_loop_expressions_target_the_innermost_loop"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "nested_immediate_loops_preserve_result_types",
+          "line": 52,
+          "status": "migrated",
+          "replacement_cases": [
+            "loops/loop_values__nested_immediate_loops_preserve_result_types"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "loop_result_respects_shadowing_and_restores_the_outer_binding",
+          "line": 63,
+          "status": "migrated",
+          "replacement_cases": [
+            "loops/loop_values__loop_result_respects_shadowing_and_restores_the_outer_binding"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "break_literals_unify_with_other_breaks_and_the_expected_type",
+          "line": 74,
+          "status": "migrated",
+          "replacement_cases": [
+            "loops/loop_values__break_literals_unify_with_other_breaks_and_the_expected_type",
+            "loops/loop_values__break_literals_unify_with_other_breaks_and_the_expected_type__tail"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "unit_loop_expressions_allow_break_without_a_value",
+          "line": 84,
+          "status": "migrated",
+          "replacement_cases": [
+            "loops/loop_values__unit_loop_expressions_allow_break_without_a_value",
+            "loops/loop_values__unit_loop_expressions_allow_break_without_a_value__tail"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus.",
+          "unselected_literal_sources": [
+            "fn main() { loop {} }"
+          ],
+          "unselected_note": "All remaining literal variants are explicitly classified; none is silently counted as runtime migrated.",
+          "unselected_source_dispositions": [
+            {
+              "source": "fn main() { loop {} }",
+              "status": "obsolete-old-API",
+              "reason": "Old test only checked parser/Graph acceptance and never executed this diverging program. Syntax acceptance is rustc-owned; execution fuel belongs to the separately tracked evaluator test."
+            }
+          ]
+        },
+        {
+          "test": "native_loop_value_example_returns_42",
+          "line": 100,
+          "status": "migrated",
+          "replacement_cases": [
+            "examples/example__native_loop_value"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "while_and_for_reject_break_values",
+          "line": 108,
+          "status": "obsolete-old-API",
+          "reason": "Old hand-written frontend acceptance/rejection and diagnostic wording. Real rustc owns syntax, typing and CTFE, including valid Rust that the old subset rejected."
+        },
+        {
+          "test": "inconsistent_break_and_outer_types_are_rejected",
+          "line": 125,
+          "status": "obsolete-old-API",
+          "reason": "Old hand-written frontend acceptance/rejection and diagnostic wording. Real rustc owns syntax, typing and CTFE, including valid Rust that the old subset rejected."
+        }
+      ]
+    },
+    {
+      "path": "tests/loops.rs",
+      "status_counts": {
+        "migrated": 5,
+        "obsolete-old-API": 1
+      },
+      "tests": [
+        {
+          "test": "mutable_accumulator_runs_zero_or_many_iterations",
+          "line": 11,
+          "status": "migrated",
+          "replacement_cases": [
+            "loops/loops__mutable_accumulator_runs_zero_or_many_iterations"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "loop_phi_copies_preserve_sequential_assignments",
+          "line": 28,
+          "status": "migrated",
+          "replacement_cases": [
+            "loops/loops__loop_phi_copies_preserve_sequential_assignments"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "nested_loops_and_body_bindings_preserve_values",
+          "line": 41,
+          "status": "migrated",
+          "replacement_cases": [
+            "loops/loops__nested_loops_and_body_bindings_preserve_values"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "loop_survives_register_pressure",
+          "line": 56,
+          "status": "migrated",
+          "replacement_cases": [
+            "loops/loops__loop_survives_register_pressure"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus.",
+          "machine_shape_disposition": "Satisfied in candidate07 real-Rust object artifacts; later source changes require a new receipt.",
+          "machine_shape_check": "scripts/poc-validation/legacy-machine-shapes.py",
+          "machine_shape_evidence": "evidence/poc-semantic-only-20261109/results/candidate07/legacy-machine-shapes-normalized/summary.json",
+          "machine_shape_status": "satisfied",
+          "machine_shape_check_id": "tests/loops.rs::loop_survives_register_pressure"
+        },
+        {
+          "test": "calls_and_relocations_survive_loops",
+          "line": 68,
+          "status": "migrated",
+          "replacement_cases": [
+            "calls/loops__calls_and_relocations_survive_loops"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "immutable_assignment_is_rejected",
+          "line": 83,
+          "status": "obsolete-old-API",
+          "reason": "Old hand-written frontend acceptance/rejection and diagnostic wording. Real rustc owns syntax, typing and CTFE, including valid Rust that the old subset rejected."
+        }
+      ]
+    },
+    {
+      "path": "tests/machine_differential.rs",
+      "status_counts": {
+        "migrated": 5
+      },
+      "tests": [
+        {
+          "test": "constants_and_i64_wrapping_boundaries_match",
+          "line": 50,
+          "status": "migrated",
+          "replacement_cases": [
+            "arithmetic/machine_differential__constants_and_i64_wrapping_boundaries_match__0",
+            "arithmetic/machine_differential__constants_and_i64_wrapping_boundaries_match__1",
+            "arithmetic/machine_differential__constants_and_i64_wrapping_boundaries_match__2",
+            "arithmetic/machine_differential__constants_and_i64_wrapping_boundaries_match__3",
+            "arithmetic/machine_differential__constants_and_i64_wrapping_boundaries_match__4",
+            "arithmetic/machine_differential__constants_and_i64_wrapping_boundaries_match__5",
+            "arithmetic/machine_differential__constants_and_i64_wrapping_boundaries_match__6"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "every_supported_arithmetic_operator_matches_at_boundaries",
+          "line": 82,
+          "status": "migrated",
+          "replacement_cases": [
+            "arithmetic/machine_differential__every_supported_arithmetic_operator_matches_at_boundaries__add",
+            "arithmetic/machine_differential__every_supported_arithmetic_operator_matches_at_boundaries__sub",
+            "arithmetic/machine_differential__every_supported_arithmetic_operator_matches_at_boundaries__mul"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "every_supported_comparison_matches_at_boundaries",
+          "line": 95,
+          "status": "migrated",
+          "replacement_cases": [
+            "comparison/machine_differential__every_supported_comparison_matches_at_boundaries__lt",
+            "comparison/machine_differential__every_supported_comparison_matches_at_boundaries__le",
+            "comparison/machine_differential__every_supported_comparison_matches_at_boundaries__gt",
+            "comparison/machine_differential__every_supported_comparison_matches_at_boundaries__ge",
+            "comparison/machine_differential__every_supported_comparison_matches_at_boundaries__eq",
+            "comparison/machine_differential__every_supported_comparison_matches_at_boundaries__ne"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "register_and_stack_parameters_match",
+          "line": 111,
+          "status": "migrated",
+          "replacement_cases": [
+            "arithmetic/machine_differential__register_and_stack_parameters_match"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "high_register_pressure_and_spills_match",
+          "line": 126,
+          "status": "migrated",
+          "replacement_cases": [
+            "arithmetic/machine_differential__high_register_pressure_and_spills_match"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        }
+      ]
+    },
+    {
+      "path": "tests/main_unit.rs",
+      "status_counts": {
+        "migrated": 1,
+        "obsolete-old-API": 1
+      },
+      "tests": [
+        {
+          "test": "standard_main_forms_return_zero",
+          "line": 10,
+          "status": "migrated",
+          "replacement_cases": [
+            "control/main_unit__standard_main_forms_return_zero__0",
+            "control/main_unit__standard_main_forms_return_zero__1",
+            "control/main_unit__standard_main_forms_return_zero__2"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "i64_main_still_requires_a_value",
+          "line": 17,
+          "status": "obsolete-old-API",
+          "reason": "Old hand-written frontend acceptance/rejection and diagnostic wording. Real rustc owns syntax, typing and CTFE, including valid Rust that the old subset rejected."
+        }
+      ]
+    },
+    {
+      "path": "tests/match_ranges.rs",
+      "status_counts": {
+        "migrated": 7,
+        "obsolete-old-API": 4
+      },
+      "tests": [
+        {
+          "test": "signed_ranges_include_zero_negative_values_and_full_type_boundaries",
+          "line": 19,
+          "status": "migrated",
+          "replacement_cases": [
+            "control/match_ranges__signed_ranges_include_zero_negative_values_and_full_type_boundaries"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "unsigned_ranges_use_unsigned_ordering_across_the_sign_bit",
+          "line": 37,
+          "status": "migrated",
+          "replacement_cases": [
+            "control/match_ranges__unsigned_ranges_use_unsigned_ordering_across_the_sign_bit",
+            "control/match_ranges__unsigned_ranges_use_unsigned_ordering_across_the_sign_bit__usize"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "guards_fall_through_and_preserve_nested_matches_and_shadowing",
+          "line": 60,
+          "status": "migrated",
+          "replacement_cases": [
+            "control/match_ranges__guards_fall_through_and_preserve_nested_matches_and_shadowing"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "guard_calls_execute_only_after_their_pattern_matches",
+          "line": 71,
+          "status": "migrated",
+          "replacement_cases": [
+            "control/match_ranges__guard_calls_execute_only_after_their_pattern_matches"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "guard_traps_and_short_circuiting_are_control_dependent_on_the_arm",
+          "line": 83,
+          "status": "migrated",
+          "replacement_cases": [
+            "control/match_ranges__guard_traps_and_short_circuiting_are_control_dependent_on_the_arm"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "range_lowering_uses_unsigned_compares_control_regions_and_result_phi",
+          "line": 97,
+          "status": "migrated",
+          "replacement_cases": [
+            "control/match_ranges__range_lowering_uses_unsigned_compares_control_regions_and_result_phi"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "reversed_exclusive_and_non_integer_ranges_are_rejected",
+          "line": 122,
+          "status": "obsolete-old-API",
+          "reason": "Old hand-written frontend acceptance/rejection and diagnostic wording. Real rustc owns syntax, typing and CTFE, including valid Rust that the old subset rejected."
+        },
+        {
+          "test": "overlapping_ranges_and_literals_are_rejected",
+          "line": 145,
+          "status": "obsolete-old-API",
+          "reason": "Old hand-written frontend acceptance/rejection and diagnostic wording. Real rustc owns syntax, typing and CTFE, including valid Rust that the old subset rejected."
+        },
+        {
+          "test": "range_endpoint_and_guard_types_are_checked",
+          "line": 165,
+          "status": "obsolete-old-API",
+          "reason": "Old hand-written frontend acceptance/rejection and diagnostic wording. Real rustc owns syntax, typing and CTFE, including valid Rust that the old subset rejected."
+        },
+        {
+          "test": "guarded_wildcard_is_rejected_as_non_exhaustive",
+          "line": 185,
+          "status": "obsolete-old-API",
+          "reason": "Old hand-written frontend acceptance/rejection and diagnostic wording. Real rustc owns syntax, typing and CTFE, including valid Rust that the old subset rejected."
+        },
+        {
+          "test": "native_match_range_example_returns_42",
+          "line": 193,
+          "status": "migrated",
+          "replacement_cases": [
+            "examples/example__native_match_range"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        }
+      ]
+    },
+    {
+      "path": "tests/native_copy_elision.rs",
+      "status_counts": {
+        "migrated": 1
+      },
+      "tests": [
+        {
+          "test": "variable_shift_count_does_not_make_an_r11_rcx_round_trip",
+          "line": 10,
+          "status": "migrated",
+          "replacement_cases": [
+            "control/native_copy_elision__variable_shift_count_does_not_make_an_r11_rcx_round_trip"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus.",
+          "machine_shape_disposition": "Satisfied in candidate07 real-Rust object artifacts; later source changes require a new receipt.",
+          "machine_shape_check": "scripts/poc-validation/legacy-machine-shapes.py",
+          "machine_shape_evidence": "evidence/poc-semantic-only-20261109/results/candidate07/legacy-machine-shapes-normalized/summary.json",
+          "machine_shape_status": "satisfied",
+          "machine_shape_check_id": "tests/native_copy_elision.rs::variable_shift_count_does_not_make_an_r11_rcx_round_trip"
+        }
+      ]
+    },
+    {
+      "path": "tests/native_pipeline.rs",
+      "status_counts": {
+        "obsolete-old-API": 5,
+        "migrated": 2
+      },
+      "tests": [
+        {
+          "test": "native_cli_emits_assembly_for_optimized_constant_main",
+          "line": 51,
+          "status": "obsolete-old-API",
+          "reason": "Old .kfr CLI/batch compilation entry point and its output contract removed. Real rustc rlib/link execution is tested by the corpus runner."
+        },
+        {
+          "test": "native_cli_emits_value_numbered_repeated_expressions_as_assembly_and_object",
+          "line": 76,
+          "status": "obsolete-old-API",
+          "reason": "Old .kfr CLI/batch compilation entry point and its output contract removed. Real rustc rlib/link execution is tested by the corpus runner."
+        },
+        {
+          "test": "optimized_graph_is_placed_and_compiled_without_llvm",
+          "line": 124,
+          "status": "migrated",
+          "replacement_cases": [
+            "arithmetic/native_pipeline__optimized_graph_is_placed_and_compiled_without_llvm"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "optimization_preserves_interpreted_results",
+          "line": 137,
+          "status": "migrated",
+          "replacement_cases": [
+            "arithmetic/native_pipeline__optimization_preserves_interpreted_results"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "pipelined_sources_preserve_order_and_direct_object_bytes",
+          "line": 151,
+          "status": "obsolete-old-API",
+          "reason": "Old .kfr CLI/batch compilation entry point and its output contract removed. Real rustc rlib/link execution is tested by the corpus runner."
+        },
+        {
+          "test": "native_batch_multi_function_objects_preserve_order_calls_and_mode_bytes",
+          "line": 224,
+          "status": "obsolete-old-API",
+          "reason": "Old .kfr CLI/batch compilation entry point and its output contract removed. Real rustc rlib/link execution is tested by the corpus runner."
+        },
+        {
+          "test": "native_batch_multi_function_objects_link_and_return",
+          "line": 265,
+          "status": "obsolete-old-API",
+          "reason": "Old .kfr CLI/batch compilation entry point and its output contract removed. Real rustc rlib/link execution is tested by the corpus runner."
+        }
+      ]
+    },
+    {
+      "path": "tests/phi_moves.rs",
+      "status_counts": {
+        "migrated": 1,
+        "covered-existing": 1
+      },
+      "tests": [
+        {
+          "test": "acyclic_loop_phi_edges_do_not_allocate_temporaries",
+          "line": 5,
+          "status": "migrated",
+          "replacement_cases": [
+            "control/phi_moves__acyclic_loop_phi_edges_do_not_allocate_temporaries"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus.",
+          "machine_shape_disposition": "Original Phi temporary-allocation claim needs a virtual-instruction test; final object bytes alone do not prove it.",
+          "machine_shape_check": "scripts/poc-validation/legacy-machine-shapes.py",
+          "machine_shape_evidence": "evidence/poc-semantic-only-20261109/results/candidate07/legacy-machine-shapes-normalized/summary.json",
+          "machine_shape_status": "requires-virtual-instruction-test",
+          "machine_shape_check_id": "tests/phi_moves.rs::acyclic_loop_phi_edges_do_not_allocate_temporaries"
+        },
+        {
+          "test": "cyclic_phi_edges_keep_parallel_copies",
+          "line": 24,
+          "status": "covered-existing",
+          "replacement_tests": [
+            "crates/kfrc-son/tests/semantic_build.rs::loop_phi_carries_aggregate_values_and_updates_simultaneously",
+            "corpus:loops/loops__loop_phi_copies_preserve_sequential_assignments"
+          ],
+          "coverage_evidence": "The real Rust loop initializes x=1,y=2, snapshots both RHS values, swaps them on the backedge and returns21 through the actual compiler/native pipeline. The semantic builder test independently carries both Fibonacci fields simultaneously for 0,1,2,10,20 iterations.",
+          "validation_status": "Source mapping verified; dynamic status belongs to candidate validation receipts.",
+          "retired_assertions": "A specific temporary VirtualReg above the old Graph maximum is not required: register allocation may use a different correct parallel-copy implementation."
+        }
+      ]
+    },
+    {
+      "path": "tests/redundant_moves.rs",
+      "status_counts": {
+        "migrated": 3
+      },
+      "tests": [
+        {
+          "test": "if_phi_moves_do_not_emit_self_assignments",
+          "line": 18,
+          "status": "migrated",
+          "replacement_cases": [
+            "control/redundant_moves__if_phi_moves_do_not_emit_self_assignments"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "loop_back_edge_moves_do_not_emit_self_assignments",
+          "line": 27,
+          "status": "migrated",
+          "replacement_cases": [
+            "control/redundant_moves__loop_back_edge_moves_do_not_emit_self_assignments"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "calls_keep_only_required_argument_and_result_moves",
+          "line": 36,
+          "status": "migrated",
+          "replacement_cases": [
+            "calls/redundant_moves__calls_keep_only_required_argument_and_result_moves"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        }
+      ]
+    },
+    {
+      "path": "tests/repro.rs",
+      "status_counts": {
+        "obsolete-old-API": 4
+      },
+      "tests": [
+        {
+          "test": "repeated_public_compilation_has_identical_manifest_elf_and_json",
+          "line": 48,
+          "status": "obsolete-old-API",
+          "reason": "The deleted public compiler/cache API keyed the old Graph and target manifest. This API no longer exists; no claim about current rustc incremental caching."
+        },
+        {
+          "test": "changed_graph_is_an_input_change",
+          "line": 67,
+          "status": "obsolete-old-API",
+          "reason": "The deleted public compiler/cache API keyed the old Graph and target manifest. This API no longer exists; no claim about current rustc incremental caching."
+        },
+        {
+          "test": "changed_target_is_a_backend_change_even_though_graph_key_changes",
+          "line": 83,
+          "status": "obsolete-old-API",
+          "reason": "The deleted public compiler/cache API keyed the old Graph and target manifest. This API no longer exists; no claim about current rustc incremental caching."
+        },
+        {
+          "test": "changed_backend_version_is_a_backend_change",
+          "line": 95,
+          "status": "obsolete-old-API",
+          "reason": "The deleted public compiler/cache API keyed the old Graph and target manifest. This API no longer exists; no claim about current rustc incremental caching."
+        }
+      ]
+    },
+    {
+      "path": "tests/scalar_match.rs",
+      "status_counts": {
+        "migrated": 8,
+        "obsolete-old-API": 4
+      },
+      "tests": [
+        {
+          "test": "signed_match_supports_negative_literals_blocks_and_trailing_commas",
+          "line": 12,
+          "status": "migrated",
+          "replacement_cases": [
+            "control/scalar_match__signed_match_supports_negative_literals_blocks_and_trailing_commas"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "unsigned_and_word_alias_patterns_preserve_the_full_bit_range",
+          "line": 22,
+          "status": "migrated",
+          "replacement_cases": [
+            "control/scalar_match__unsigned_and_word_alias_patterns_preserve_the_full_bit_range__u64",
+            "control/scalar_match__unsigned_and_word_alias_patterns_preserve_the_full_bit_range__isize",
+            "control/scalar_match__unsigned_and_word_alias_patterns_preserve_the_full_bit_range__usize"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "bool_patterns_and_tail_match_select_the_expected_value",
+          "line": 44,
+          "status": "migrated",
+          "replacement_cases": [
+            "control/scalar_match__bool_patterns_and_tail_match_select_the_expected_value"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "tail_detection_stops_at_the_current_function_and_wildcard_only_matches_work",
+          "line": 52,
+          "status": "migrated",
+          "replacement_cases": [
+            "control/scalar_match__tail_detection_stops_at_the_current_function_and_wildcard_only_matches_work",
+            "control/scalar_match__tail_detection_stops_at_the_current_function_and_wildcard_only_matches_work__later_function"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "nested_match_and_shadowed_bindings_keep_their_values",
+          "line": 64,
+          "status": "migrated",
+          "replacement_cases": [
+            "control/scalar_match__nested_match_and_shadowed_bindings_keep_their_values"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "unsuffixed_arm_results_unify_with_unsigned_results",
+          "line": 74,
+          "status": "migrated",
+          "replacement_cases": [
+            "control/scalar_match__unsuffixed_arm_results_unify_with_unsigned_results"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "match_lowers_to_if_chains_and_a_multiway_phi",
+          "line": 83,
+          "status": "migrated",
+          "replacement_cases": [
+            "control/scalar_match__match_lowers_to_if_chains_and_a_multiway_phi"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "native_match_example_returns_42",
+          "line": 102,
+          "status": "migrated",
+          "replacement_cases": [
+            "examples/example__native_match"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "pattern_and_arm_types_are_checked",
+          "line": 108,
+          "status": "obsolete-old-API",
+          "reason": "Old hand-written frontend acceptance/rejection and diagnostic wording. Real rustc owns syntax, typing and CTFE, including valid Rust that the old subset rejected."
+        },
+        {
+          "test": "wildcard_is_required_last_and_unique",
+          "line": 126,
+          "status": "obsolete-old-API",
+          "reason": "Old hand-written frontend acceptance/rejection and diagnostic wording. Real rustc owns syntax, typing and CTFE, including valid Rust that the old subset rejected."
+        },
+        {
+          "test": "duplicate_literals_are_rejected_across_equal_spellings",
+          "line": 142,
+          "status": "obsolete-old-API",
+          "reason": "Old hand-written frontend acceptance/rejection and diagnostic wording. Real rustc owns syntax, typing and CTFE, including valid Rust that the old subset rejected."
+        },
+        {
+          "test": "unsupported_patterns_and_match_as_an_identifier_are_rejected",
+          "line": 158,
+          "status": "obsolete-old-API",
+          "reason": "Old hand-written frontend acceptance/rejection and diagnostic wording. Real rustc owns syntax, typing and CTFE, including valid Rust that the old subset rejected."
+        }
+      ]
+    },
+    {
+      "path": "tests/shadowing.rs",
+      "status_counts": {
+        "migrated": 6
+      },
+      "tests": [
+        {
+          "test": "let_rhs_uses_the_previous_binding_and_shadowing_can_change_type",
+          "line": 11,
+          "status": "migrated",
+          "replacement_cases": [
+            "control/shadowing__let_rhs_uses_the_previous_binding_and_shadowing_can_change_type"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "each_shadow_has_its_own_mutability",
+          "line": 20,
+          "status": "migrated",
+          "replacement_cases": [
+            "control/shadowing__each_shadow_has_its_own_mutability"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus.",
+          "diagnostic_disposition": "obsolete-old-API: old parser wording/restrictions are owned by rustc; no reproduction of old frontend diagnostics.",
+          "unselected_literal_sources": [
+            "fn main(mut x: i64) -> i64 { let x = x + 1; x = 2; return x; }"
+          ],
+          "unselected_note": "All remaining literal variants are explicitly classified; none is silently counted as runtime migrated.",
+          "unselected_source_dispositions": [
+            {
+              "source": "fn main(mut x: i64) -> i64 { let x = x + 1; x = 2; return x; }",
+              "status": "obsolete-old-API",
+              "reason": "Negative parser/type/mutability/arity case from this mixed test. Exact old acceptance rules and diagnostics are rustc-owned."
+            }
+          ]
+        },
+        {
+          "test": "branch_shadows_do_not_leak_into_outer_phis",
+          "line": 30,
+          "status": "migrated",
+          "replacement_cases": [
+            "control/shadowing__branch_shadows_do_not_leak_into_outer_phis",
+            "control/shadowing__branch_shadows_do_not_leak_into_outer_phis__inner_type"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "loop_shadows_do_not_leak_into_back_edges_or_breaks",
+          "line": 44,
+          "status": "migrated",
+          "replacement_cases": [
+            "loops/shadowing__loop_shadows_do_not_leak_into_back_edges_or_breaks",
+            "loops/shadowing__loop_shadows_do_not_leak_into_back_edges_or_breaks__break"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "for_variables_shadow_outer_bindings_without_losing_outer_mutability",
+          "line": 57,
+          "status": "migrated",
+          "replacement_cases": [
+            "loops/shadowing__for_variables_shadow_outer_bindings_without_losing_outer_mutability",
+            "loops/shadowing__for_variables_shadow_outer_bindings_without_losing_outer_mutability__range_bound"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus.",
+          "diagnostic_disposition": "obsolete-old-API: old parser wording/restrictions are owned by rustc; no reproduction of old frontend diagnostics.",
+          "unselected_literal_sources": [
+            "fn main() { let mut x = 0; for x in 0..3 { x = 1; } x = 2; }"
+          ],
+          "unselected_note": "All remaining literal variants are explicitly classified; none is silently counted as runtime migrated.",
+          "unselected_source_dispositions": [
+            {
+              "source": "fn main() { let mut x = 0; for x in 0..3 { x = 1; } x = 2; }",
+              "status": "obsolete-old-API",
+              "reason": "Negative parser/type/mutability/arity case from this mixed test. Exact old acceptance rules and diagnostics are rustc-owned."
+            }
+          ]
+        },
+        {
+          "test": "native_shadowing_example_returns_42",
+          "line": 74,
+          "status": "migrated",
+          "replacement_cases": [
+            "examples/example__native_shadowing"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        }
+      ]
+    },
+    {
+      "path": "tests/short_jumps.rs",
+      "status_counts": {
+        "covered-existing": 6
+      },
+      "tests": [
+        {
+          "test": "backward_branches_accept_minus_128_and_keep_minus_129_near",
+          "line": 48,
+          "status": "covered-existing",
+          "replacement_tests": [
+            "crates/kfrc-x86/tests/short_jumps.rs::backward_branches_accept_minus_128_and_keep_minus_129_near"
+          ],
+          "coverage_evidence": "The same branch-boundary/fixup assertions now use retained MachineFunction and FunctionCode ELF emission. Test name and boundary constants are preserved.",
+          "validation_status": "Source mapping verified; dynamic status belongs to candidate validation receipts."
+        },
+        {
+          "test": "forward_branches_accept_127_and_keep_128_near",
+          "line": 86,
+          "status": "covered-existing",
+          "replacement_tests": [
+            "crates/kfrc-x86/tests/short_jumps.rs::forward_branches_accept_127_and_keep_128_near"
+          ],
+          "coverage_evidence": "The same branch-boundary/fixup assertions now use retained MachineFunction and FunctionCode ELF emission. Test name and boundary constants are preserved.",
+          "validation_status": "Source mapping verified; dynamic status belongs to candidate validation receipts."
+        },
+        {
+          "test": "shortening_repeats_when_a_later_jump_enables_an_earlier_one",
+          "line": 119,
+          "status": "covered-existing",
+          "replacement_tests": [
+            "crates/kfrc-x86/tests/short_jumps.rs::shortening_repeats_when_a_later_jump_enables_an_earlier_one"
+          ],
+          "coverage_evidence": "The same branch-boundary/fixup assertions now use retained MachineFunction and FunctionCode ELF emission. Test name and boundary constants are preserved.",
+          "validation_status": "Source mapping verified; dynamic status belongs to candidate validation receipts."
+        },
+        {
+          "test": "near_fixups_survive_shortening_elsewhere",
+          "line": 148,
+          "status": "covered-existing",
+          "replacement_tests": [
+            "crates/kfrc-x86/tests/short_jumps.rs::near_fixups_survive_shortening_elsewhere"
+          ],
+          "coverage_evidence": "The same branch-boundary/fixup assertions now use retained MachineFunction and FunctionCode ELF emission. Test name and boundary constants are preserved.",
+          "validation_status": "Source mapping verified; dynamic status belongs to candidate validation receipts."
+        },
+        {
+          "test": "dense_shortening_and_chains_match_known_bytes_and_call_offsets",
+          "line": 188,
+          "status": "covered-existing",
+          "replacement_tests": [
+            "crates/kfrc-x86/tests/short_jumps.rs::dense_shortening_and_chains_match_known_bytes_and_call_offsets"
+          ],
+          "coverage_evidence": "The same branch-boundary/fixup assertions now use retained MachineFunction and FunctionCode ELF emission. Test name and boundary constants are preserved.",
+          "validation_status": "Source mapping verified; dynamic status belongs to candidate validation receipts."
+        },
+        {
+          "test": "labels_and_plt32_call_offsets_use_the_shortened_layout",
+          "line": 237,
+          "status": "covered-existing",
+          "replacement_tests": [
+            "crates/kfrc-x86/tests/short_jumps.rs::labels_and_plt32_call_offsets_use_the_shortened_layout"
+          ],
+          "coverage_evidence": "The same branch-boundary/fixup assertions now use retained MachineFunction and FunctionCode ELF emission. Test name and boundary constants are preserved.",
+          "validation_status": "Source mapping verified; dynamic status belongs to candidate validation receipts."
+        }
+      ]
+    },
+    {
+      "path": "tests/signed_division_strength.rs",
+      "status_counts": {
+        "migrated": 6
+      },
+      "tests": [
+        {
+          "test": "positive_powers_avoid_idiv_and_round_toward_zero",
+          "line": 71,
+          "status": "migrated",
+          "replacement_cases": [
+            "arithmetic/signed_division_strength__positive_powers_avoid_idiv_and_round_toward_zero__2",
+            "arithmetic/signed_division_strength__positive_powers_avoid_idiv_and_round_toward_zero__4",
+            "arithmetic/signed_division_strength__positive_powers_avoid_idiv_and_round_toward_zero__8",
+            "arithmetic/signed_division_strength__positive_powers_avoid_idiv_and_round_toward_zero__2147483648",
+            "arithmetic/signed_division_strength__positive_powers_avoid_idiv_and_round_toward_zero__4294967296",
+            "arithmetic/signed_division_strength__positive_powers_avoid_idiv_and_round_toward_zero__4611686018427387904"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus.",
+          "machine_shape_disposition": "Original machine shape remains unmet in candidate07 existing real-Rust objects; passing runtime results do not discharge this assertion.",
+          "machine_shape_check": "scripts/poc-validation/legacy-machine-shapes.py",
+          "machine_shape_evidence": "evidence/poc-semantic-only-20261109/results/candidate07/legacy-machine-shapes-normalized/summary.json",
+          "machine_shape_status": "shape-gap",
+          "machine_shape_check_id": "tests/signed_division_strength.rs::positive_powers_avoid_idiv_and_round_toward_zero"
+        },
+        {
+          "test": "native_division_by_one_is_a_copy",
+          "line": 96,
+          "status": "migrated",
+          "replacement_cases": [
+            "arithmetic/signed_division_strength__native_division_by_one_is_a_copy"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "two_to_63_bit_pattern_remains_signed_division_by_a_negative",
+          "line": 111,
+          "status": "migrated",
+          "replacement_cases": [
+            "arithmetic/signed_division_strength__two_to_63_bit_pattern_remains_signed_division_by_a_negative"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus.",
+          "machine_shape_disposition": "Satisfied in candidate07 real-Rust object artifacts; later source changes require a new receipt.",
+          "machine_shape_check": "scripts/poc-validation/legacy-machine-shapes.py",
+          "machine_shape_evidence": "evidence/poc-semantic-only-20261109/results/candidate07/legacy-machine-shapes-normalized/summary.json",
+          "machine_shape_status": "satisfied",
+          "machine_shape_check_id": "tests/signed_division_strength.rs::two_to_63_bit_pattern_remains_signed_division_by_a_negative"
+        },
+        {
+          "test": "dynamic_divisors_keep_all_signed_division_traps",
+          "line": 132,
+          "status": "migrated",
+          "replacement_cases": [
+            "arithmetic/signed_division_strength__dynamic_divisors_keep_all_signed_division_traps",
+            "arithmetic/signed_division_strength__dynamic_divisors_keep_all_signed_division_traps__remainder"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus.",
+          "machine_shape_disposition": "Satisfied in candidate07 real-Rust object artifacts; later source changes require a new receipt.",
+          "machine_shape_check": "scripts/poc-validation/legacy-machine-shapes.py",
+          "machine_shape_evidence": "evidence/poc-semantic-only-20261109/results/candidate07/legacy-machine-shapes-normalized/summary.json",
+          "machine_shape_status": "satisfied",
+          "machine_shape_check_id": "tests/signed_division_strength.rs::dynamic_divisors_keep_all_signed_division_traps"
+        },
+        {
+          "test": "reduced_division_handles_spilled_inputs_and_results",
+          "line": 157,
+          "status": "migrated",
+          "replacement_cases": [
+            "arithmetic/signed_division_strength__reduced_division_handles_spilled_inputs_and_results__early",
+            "arithmetic/signed_division_strength__reduced_division_handles_spilled_inputs_and_results__late"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus.",
+          "machine_shape_disposition": "Original machine shape remains unmet in candidate07 existing real-Rust objects; passing runtime results do not discharge this assertion.",
+          "machine_shape_check": "scripts/poc-validation/legacy-machine-shapes.py",
+          "machine_shape_evidence": "evidence/poc-semantic-only-20261109/results/candidate07/legacy-machine-shapes-normalized/summary.json",
+          "machine_shape_status": "shape-gap",
+          "machine_shape_check_id": "tests/signed_division_strength.rs::reduced_division_handles_spilled_inputs_and_results"
+        },
+        {
+          "test": "direct_object_emission_accepts_reduced_division",
+          "line": 234,
+          "status": "migrated",
+          "replacement_cases": [
+            "arithmetic/signed_division_strength__direct_object_emission_accepts_reduced_division"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        }
+      ]
+    },
+    {
+      "path": "tests/statement_if.rs",
+      "status_counts": {
+        "migrated": 6,
+        "obsolete-old-API": 1
+      },
+      "tests": [
+        {
+          "test": "if_else_merges_assignments_from_both_branches",
+          "line": 11,
+          "status": "migrated",
+          "replacement_cases": [
+            "control/statement_if__if_else_merges_assignments_from_both_branches"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "if_without_else_preserves_the_unmodified_value",
+          "line": 21,
+          "status": "migrated",
+          "replacement_cases": [
+            "control/statement_if__if_without_else_preserves_the_unmodified_value"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "nested_if_statements_merge_each_control_level",
+          "line": 31,
+          "status": "migrated",
+          "replacement_cases": [
+            "control/statement_if__nested_if_statements_merge_each_control_level"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "if_inside_loop_accumulates_selected_values",
+          "line": 41,
+          "status": "migrated",
+          "replacement_cases": [
+            "loops/statement_if__if_inside_loop_accumulates_selected_values"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "branch_with_inner_loop_jumps_to_the_outer_merge",
+          "line": 49,
+          "status": "migrated",
+          "replacement_cases": [
+            "loops/statement_if__branch_with_inner_loop_jumps_to_the_outer_merge"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "else_if_chains_merge_every_nested_branch",
+          "line": 57,
+          "status": "migrated",
+          "replacement_cases": [
+            "control/statement_if__else_if_chains_merge_every_nested_branch"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "branch_locals_do_not_escape_and_terminal_statements_end_bodies",
+          "line": 75,
+          "status": "obsolete-old-API",
+          "reason": "These bodies only assert old frontend errors/type checking/CTFE diagnostics. rustc owns those checks; old subset-specific restrictions (including unreachable-statement or unit-equality rejection) are not backend contracts."
+        }
+      ]
+    },
+    {
+      "path": "tests/strength_reduction.rs",
+      "status_counts": {
+        "migrated": 4
+      },
+      "tests": [
+        {
+          "test": "multiplication_by_power_of_two_becomes_left_shift",
+          "line": 11,
+          "status": "migrated",
+          "replacement_cases": [
+            "arithmetic/strength_reduction__multiplication_by_power_of_two_becomes_left_shift"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus.",
+          "machine_shape_disposition": "Original machine shape remains unmet in candidate07 existing real-Rust objects; passing runtime results do not discharge this assertion.",
+          "machine_shape_check": "scripts/poc-validation/legacy-machine-shapes.py",
+          "machine_shape_evidence": "evidence/poc-semantic-only-20261109/results/candidate07/legacy-machine-shapes-normalized/summary.json",
+          "machine_shape_status": "shape-gap",
+          "machine_shape_check_id": "tests/strength_reduction.rs::multiplication_by_power_of_two_becomes_left_shift"
+        },
+        {
+          "test": "power_of_two_on_the_left_also_becomes_left_shift",
+          "line": 28,
+          "status": "migrated",
+          "replacement_cases": [
+            "arithmetic/strength_reduction__power_of_two_on_the_left_also_becomes_left_shift"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus.",
+          "machine_shape_disposition": "Original machine shape remains unmet in candidate07 existing real-Rust objects; passing runtime results do not discharge this assertion.",
+          "machine_shape_check": "scripts/poc-validation/legacy-machine-shapes.py",
+          "machine_shape_evidence": "evidence/poc-semantic-only-20261109/results/candidate07/legacy-machine-shapes-normalized/summary.json",
+          "machine_shape_status": "shape-gap",
+          "machine_shape_check_id": "tests/strength_reduction.rs::power_of_two_on_the_left_also_becomes_left_shift"
+        },
+        {
+          "test": "unsigned_division_by_power_of_two_becomes_logical_shift",
+          "line": 44,
+          "status": "migrated",
+          "replacement_cases": [
+            "arithmetic/strength_reduction__unsigned_division_by_power_of_two_becomes_logical_shift"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus.",
+          "machine_shape_disposition": "Satisfied in candidate07 real-Rust object artifacts; later source changes require a new receipt.",
+          "machine_shape_check": "scripts/poc-validation/legacy-machine-shapes.py",
+          "machine_shape_evidence": "evidence/poc-semantic-only-20261109/results/candidate07/legacy-machine-shapes-normalized/summary.json",
+          "machine_shape_status": "satisfied",
+          "machine_shape_check_id": "tests/strength_reduction.rs::unsigned_division_by_power_of_two_becomes_logical_shift"
+        },
+        {
+          "test": "signed_power_division_uses_shifts_and_non_power_multiplication_is_unchanged",
+          "line": 63,
+          "status": "migrated",
+          "replacement_cases": [
+            "arithmetic/strength_reduction__signed_power_division_uses_shifts_and_non_power_multiplication_is_unchanged__division",
+            "arithmetic/strength_reduction__signed_power_division_uses_shifts_and_non_power_multiplication_is_unchanged__multiply"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus.",
+          "machine_shape_disposition": "Satisfied in candidate07 real-Rust object artifacts; later source changes require a new receipt.",
+          "machine_shape_check": "scripts/poc-validation/legacy-machine-shapes.py",
+          "machine_shape_evidence": "evidence/poc-semantic-only-20261109/results/candidate07/legacy-machine-shapes-normalized/summary.json",
+          "machine_shape_status": "satisfied",
+          "machine_shape_check_id": "tests/strength_reduction.rs::signed_power_division_uses_shifts_and_non_power_multiplication_is_unchanged"
+        }
+      ]
+    },
+    {
+      "path": "tests/u64_ops.rs",
+      "status_counts": {
+        "migrated": 6
+      },
+      "tests": [
+        {
+          "test": "u64_literals_and_inference_cover_the_full_bit_range",
+          "line": 25,
+          "status": "migrated",
+          "replacement_cases": [
+            "arithmetic/u64_ops__u64_literals_and_inference_cover_the_full_bit_range__0",
+            "arithmetic/u64_ops__u64_literals_and_inference_cover_the_full_bit_range__1",
+            "arithmetic/u64_ops__u64_literals_and_inference_cover_the_full_bit_range__2"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "unsigned_comparisons_do_not_use_signed_ordering",
+          "line": 38,
+          "status": "migrated",
+          "replacement_cases": [
+            "comparison/u64_ops__unsigned_comparisons_do_not_use_signed_ordering__lt",
+            "comparison/u64_ops__unsigned_comparisons_do_not_use_signed_ordering__le",
+            "comparison/u64_ops__unsigned_comparisons_do_not_use_signed_ordering__gt",
+            "comparison/u64_ops__unsigned_comparisons_do_not_use_signed_ordering__ge"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "unsigned_division_remainder_and_shifts_match_the_interpreter",
+          "line": 48,
+          "status": "migrated",
+          "replacement_cases": [
+            "arithmetic/u64_ops__unsigned_division_remainder_and_shifts_match_the_interpreter__division",
+            "arithmetic/u64_ops__unsigned_division_remainder_and_shifts_match_the_interpreter__remainder",
+            "arithmetic/u64_ops__unsigned_division_remainder_and_shifts_match_the_interpreter__shift"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "unsigned_division_has_no_signed_overflow_case",
+          "line": 66,
+          "status": "migrated",
+          "replacement_cases": [
+            "arithmetic/u64_ops__unsigned_division_has_no_signed_overflow_case"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "u64_arithmetic_compound_assignments_and_loops_preserve_bits",
+          "line": 76,
+          "status": "migrated",
+          "replacement_cases": [
+            "arithmetic/u64_ops__u64_arithmetic_compound_assignments_and_loops_preserve_bits__0",
+            "arithmetic/u64_ops__u64_arithmetic_compound_assignments_and_loops_preserve_bits__1",
+            "arithmetic/u64_ops__u64_arithmetic_compound_assignments_and_loops_preserve_bits__2"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "u64_calls_and_mixed_type_errors_are_checked",
+          "line": 93,
+          "status": "migrated",
+          "replacement_cases": [
+            "calls/u64_ops__u64_calls_and_mixed_type_errors_are_checked"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus.",
+          "diagnostic_disposition": "obsolete-old-API: old parser wording/restrictions are owned by rustc; no reproduction of old frontend diagnostics.",
+          "unselected_literal_sources": [
+            "fn main(a: u64, b: i64) -> u64 { return a + b; }",
+            "fn main() -> u64 { return -1; }",
+            "fn main() -> u64 { return true; }",
+            "fn main() -> i64 { return 1u64; }"
+          ],
+          "unselected_note": "All remaining literal variants are explicitly classified; none is silently counted as runtime migrated.",
+          "unselected_source_dispositions": [
+            {
+              "source": "fn main(a: u64, b: i64) -> u64 { return a + b; }",
+              "status": "obsolete-old-API",
+              "reason": "Negative parser/type/mutability/arity case from this mixed test. Exact old acceptance rules and diagnostics are rustc-owned."
+            },
+            {
+              "source": "fn main() -> u64 { return -1; }",
+              "status": "obsolete-old-API",
+              "reason": "Negative parser/type/mutability/arity case from this mixed test. Exact old acceptance rules and diagnostics are rustc-owned."
+            },
+            {
+              "source": "fn main() -> u64 { return true; }",
+              "status": "obsolete-old-API",
+              "reason": "Negative parser/type/mutability/arity case from this mixed test. Exact old acceptance rules and diagnostics are rustc-owned."
+            },
+            {
+              "source": "fn main() -> i64 { return 1u64; }",
+              "status": "obsolete-old-API",
+              "reason": "Negative parser/type/mutability/arity case from this mixed test. Exact old acceptance rules and diagnostics are rustc-owned."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "tests/unary_strength.rs",
+      "status_counts": {
+        "migrated": 3
+      },
+      "tests": [
+        {
+          "test": "zero_minus_becomes_wrapping_negation",
+          "line": 27,
+          "status": "migrated",
+          "replacement_cases": [
+            "arithmetic/unary_strength__zero_minus_becomes_wrapping_negation"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "multiplication_by_minus_one_becomes_negation_on_either_side",
+          "line": 39,
+          "status": "migrated",
+          "replacement_cases": [
+            "arithmetic/unary_strength__multiplication_by_minus_one_becomes_negation_on_either_side__signed",
+            "arithmetic/unary_strength__multiplication_by_minus_one_becomes_negation_on_either_side__unsigned"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "xor_with_all_ones_becomes_bitwise_not_on_either_side",
+          "line": 57,
+          "status": "migrated",
+          "replacement_cases": [
+            "arithmetic/unary_strength__xor_with_all_ones_becomes_bitwise_not_on_either_side__signed",
+            "arithmetic/unary_strength__xor_with_all_ones_becomes_bitwise_not_on_either_side__unsigned"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        }
+      ]
+    },
+    {
+      "path": "tests/unsigned_remainder.rs",
+      "status_counts": {
+        "migrated": 3
+      },
+      "tests": [
+        {
+          "test": "unsigned_remainder_by_a_power_of_two_becomes_a_mask",
+          "line": 13,
+          "status": "migrated",
+          "replacement_cases": [
+            "arithmetic/unsigned_remainder__unsigned_remainder_by_a_power_of_two_becomes_a_mask"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "shared_divisor_constants_keep_their_original_values",
+          "line": 42,
+          "status": "migrated",
+          "replacement_cases": [
+            "arithmetic/unsigned_remainder__shared_divisor_constants_keep_their_original_values"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        },
+        {
+          "test": "high_bit_division_remainder_and_multiplication_are_reduced",
+          "line": 56,
+          "status": "migrated",
+          "replacement_cases": [
+            "arithmetic/unsigned_remainder__high_bit_division_remainder_and_multiplication_are_reduced__division",
+            "arithmetic/unsigned_remainder__high_bit_division_remainder_and_multiplication_are_reduced__remainder",
+            "arithmetic/unsigned_remainder__high_bit_division_remainder_and_multiplication_are_reduced__multiply"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus."
+        }
+      ]
+    },
+    {
+      "path": "tests/zero_compare.rs",
+      "status_counts": {
+        "covered-existing": 3,
+        "migrated": 2
+      },
+      "tests": [
+        {
+          "test": "test_and_cmp_zero_have_exact_register_encodings",
+          "line": 43,
+          "status": "covered-existing",
+          "replacement_tests": [
+            "crates/kfrc-x86/tests/mixed_machine_regressions.rs::zero_compare::test_and_cmp_zero_have_exact_register_encodings"
+          ],
+          "coverage_evidence": "Original MachineFunction fixtures and exact byte/flags assertions moved verbatim; only imports/entry points changed. Independent of the removed frontend and Graph.",
+          "validation_status": "Source mapping verified; dynamic status belongs to candidate validation receipts."
+        },
+        {
+          "test": "test_zero_preserves_every_setcc_condition_and_opcode",
+          "line": 70,
+          "status": "covered-existing",
+          "replacement_tests": [
+            "crates/kfrc-x86/tests/mixed_machine_regressions.rs::zero_compare::test_zero_preserves_every_setcc_condition_and_opcode"
+          ],
+          "coverage_evidence": "Original MachineFunction fixtures and exact byte/flags assertions moved verbatim; only imports/entry points changed. Independent of the removed frontend and Graph.",
+          "validation_status": "Source mapping verified; dynamic status belongs to candidate validation receipts."
+        },
+        {
+          "test": "native_compare_and_direct_branch_use_test_for_zero",
+          "line": 115,
+          "status": "migrated",
+          "replacement_cases": [
+            "comparison/zero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_lt_compare",
+            "comparison/zero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_lt_branch",
+            "comparison/zero_compare__native_compare_and_direct_branch_use_test_for_zero__u64_lt_compare",
+            "comparison/zero_compare__native_compare_and_direct_branch_use_test_for_zero__u64_lt_branch",
+            "comparison/zero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_le_compare",
+            "comparison/zero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_le_branch",
+            "comparison/zero_compare__native_compare_and_direct_branch_use_test_for_zero__u64_le_compare",
+            "comparison/zero_compare__native_compare_and_direct_branch_use_test_for_zero__u64_le_branch",
+            "comparison/zero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_gt_compare",
+            "comparison/zero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_gt_branch",
+            "comparison/zero_compare__native_compare_and_direct_branch_use_test_for_zero__u64_gt_compare",
+            "comparison/zero_compare__native_compare_and_direct_branch_use_test_for_zero__u64_gt_branch",
+            "comparison/zero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_ge_compare",
+            "comparison/zero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_ge_branch",
+            "comparison/zero_compare__native_compare_and_direct_branch_use_test_for_zero__u64_ge_compare",
+            "comparison/zero_compare__native_compare_and_direct_branch_use_test_for_zero__u64_ge_branch",
+            "comparison/zero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_eq_compare",
+            "comparison/zero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_eq_branch",
+            "comparison/zero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_ne_compare",
+            "comparison/zero_compare__native_compare_and_direct_branch_use_test_for_zero__i64_ne_branch"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus.",
+          "machine_shape_disposition": "Original machine shape remains unmet in candidate07 existing real-Rust objects; passing runtime results do not discharge this assertion.",
+          "machine_shape_check": "scripts/poc-validation/legacy-machine-shapes.py",
+          "machine_shape_evidence": "evidence/poc-semantic-only-20261109/results/candidate07/legacy-machine-shapes-normalized/summary.json",
+          "machine_shape_status": "shape-gap",
+          "machine_shape_check_id": "tests/zero_compare.rs::native_compare_and_direct_branch_use_test_for_zero"
+        },
+        {
+          "test": "spilled_cmp_rhs_keeps_cmp_encoding_and_semantics",
+          "line": 192,
+          "status": "covered-existing",
+          "replacement_tests": [
+            "crates/kfrc-x86/tests/mixed_machine_regressions.rs::zero_compare::spilled_cmp_rhs_keeps_cmp_encoding_and_semantics"
+          ],
+          "coverage_evidence": "Original MachineFunction fixtures and exact byte/flags assertions moved verbatim; only imports/entry points changed. Independent of the removed frontend and Graph.",
+          "validation_status": "Source mapping verified; dynamic status belongs to candidate validation receipts."
+        },
+        {
+          "test": "native_zero_compare_example_evaluates_to_42",
+          "line": 237,
+          "status": "migrated",
+          "replacement_cases": [
+            "control/zero_compare__native_zero_compare_example_evaluates_to_42"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus.",
+          "machine_shape_disposition": "Satisfied in candidate07 real-Rust object artifacts; later source changes require a new receipt.",
+          "machine_shape_check": "scripts/poc-validation/legacy-machine-shapes.py",
+          "machine_shape_evidence": "evidence/poc-semantic-only-20261109/results/candidate07/legacy-machine-shapes-normalized/summary.json",
+          "machine_shape_status": "satisfied",
+          "machine_shape_check_id": "tests/zero_compare.rs::native_zero_compare_example_evaluates_to_42"
+        }
+      ]
+    },
+    {
+      "path": "tests/zero_idiom.rs",
+      "status_counts": {
+        "covered-existing": 5,
+        "migrated": 3
+      },
+      "tests": [
+        {
+          "test": "exact_bytes_save_four_bytes_per_zero_immediate",
+          "line": 47,
+          "status": "covered-existing",
+          "replacement_tests": [
+            "crates/kfrc-x86/tests/mixed_machine_regressions.rs::zero_idiom::exact_bytes_save_four_bytes_per_zero_immediate"
+          ],
+          "coverage_evidence": "Original MachineFunction fixtures and exact byte/flags assertions moved verbatim; only imports/entry points changed. Independent of the removed frontend and Graph.",
+          "validation_status": "Source mapping verified; dynamic status belongs to candidate validation receipts."
+        },
+        {
+          "test": "cmp_to_setcc_preserves_flags_for_every_condition",
+          "line": 85,
+          "status": "covered-existing",
+          "replacement_tests": [
+            "crates/kfrc-x86/tests/mixed_machine_regressions.rs::zero_idiom::cmp_to_setcc_preserves_flags_for_every_condition"
+          ],
+          "coverage_evidence": "Original MachineFunction fixtures and exact byte/flags assertions moved verbatim; only imports/entry points changed. Independent of the removed frontend and Graph.",
+          "validation_status": "Source mapping verified; dynamic status belongs to candidate validation receipts."
+        },
+        {
+          "test": "cmp_to_jcc_preserves_flags_for_every_condition",
+          "line": 122,
+          "status": "covered-existing",
+          "replacement_tests": [
+            "crates/kfrc-x86/tests/mixed_machine_regressions.rs::zero_idiom::cmp_to_jcc_preserves_flags_for_every_condition"
+          ],
+          "coverage_evidence": "Original MachineFunction fixtures and exact byte/flags assertions moved verbatim; only imports/entry points changed. Independent of the removed frontend and Graph.",
+          "validation_status": "Source mapping verified; dynamic status belongs to candidate validation receipts."
+        },
+        {
+          "test": "test_to_jcc_and_dead_flags_allow_the_correct_sites",
+          "line": 166,
+          "status": "covered-existing",
+          "replacement_tests": [
+            "crates/kfrc-x86/tests/mixed_machine_regressions.rs::zero_idiom::test_to_jcc_and_dead_flags_allow_the_correct_sites"
+          ],
+          "coverage_evidence": "Original MachineFunction fixtures and exact byte/flags assertions moved verbatim; only imports/entry points changed. Independent of the removed frontend and Graph.",
+          "validation_status": "Source mapping verified; dynamic status belongs to candidate validation receipts."
+        },
+        {
+          "test": "call_multiple_return_and_loop_label_boundaries_are_conservative",
+          "line": 214,
+          "status": "covered-existing",
+          "replacement_tests": [
+            "crates/kfrc-x86/tests/mixed_machine_regressions.rs::zero_idiom::call_multiple_return_and_loop_label_boundaries_are_conservative"
+          ],
+          "coverage_evidence": "Original MachineFunction fixtures and exact byte/flags assertions moved verbatim; only imports/entry points changed. Independent of the removed frontend and Graph.",
+          "validation_status": "Source mapping verified; dynamic status belongs to candidate validation receipts."
+        },
+        {
+          "test": "native_zero_return_uses_xor_and_saves_four_bytes",
+          "line": 260,
+          "status": "migrated",
+          "replacement_cases": [
+            "control/zero_idiom__native_zero_return_uses_xor_and_saves_four_bytes"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus.",
+          "machine_shape_disposition": "Original machine shape remains unmet in candidate07 existing real-Rust objects; passing runtime results do not discharge this assertion.",
+          "machine_shape_check": "scripts/poc-validation/legacy-machine-shapes.py",
+          "machine_shape_evidence": "evidence/poc-semantic-only-20261109/results/candidate07/legacy-machine-shapes-normalized/summary.json",
+          "machine_shape_status": "shape-gap",
+          "machine_shape_interpretation": "The old RCX-specific 12-byte sequence is not met: candidate04 emits xor rax, rax and a 9-byte whole function. This is a shorter valid shape, not evidence of a performance regression; the original byte assertion remains explicit.",
+          "machine_shape_check_id": "tests/zero_idiom.rs::native_zero_return_uses_xor_and_saves_four_bytes"
+        },
+        {
+          "test": "native_branch_example_uses_zero_idioms_and_returns_42",
+          "line": 283,
+          "status": "migrated",
+          "replacement_cases": [
+            "control/zero_idiom__native_branch_example_uses_zero_idioms_and_returns_42"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus.",
+          "machine_shape_disposition": "Satisfied in candidate07 real-Rust object artifacts; later source changes require a new receipt.",
+          "machine_shape_check": "scripts/poc-validation/legacy-machine-shapes.py",
+          "machine_shape_evidence": "evidence/poc-semantic-only-20261109/results/candidate07/legacy-machine-shapes-normalized/summary.json",
+          "machine_shape_status": "satisfied",
+          "machine_shape_check_id": "tests/zero_idiom.rs::native_branch_example_uses_zero_idioms_and_returns_42"
+        },
+        {
+          "test": "native_loop_preserves_conditions_and_returns_42",
+          "line": 303,
+          "status": "migrated",
+          "replacement_cases": [
+            "control/zero_idiom__native_loop_preserves_conditions_and_returns_42"
+          ],
+          "scope": "Selected original runtime source and explicit parameter/result or trap vectors; exact legacy Graph IDs and x86 register/byte-shape assertions are not asserted by this corpus.",
+          "machine_shape_disposition": "Original machine shape remains unmet in candidate07 existing real-Rust objects; passing runtime results do not discharge this assertion.",
+          "machine_shape_check": "scripts/poc-validation/legacy-machine-shapes.py",
+          "machine_shape_evidence": "evidence/poc-semantic-only-20261109/results/candidate07/legacy-machine-shapes-normalized/summary.json",
+          "machine_shape_status": "shape-gap",
+          "machine_shape_check_id": "tests/zero_idiom.rs::native_loop_preserves_conditions_and_returns_42"
+        }
+      ]
+    }
+  ],
+  "pending": []
+}

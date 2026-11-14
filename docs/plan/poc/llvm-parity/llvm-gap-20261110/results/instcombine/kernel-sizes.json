@@ -1,0 +1,26 @@
+{
+  "llvm": {
+    "reversed_add": 3,
+    "nested_add": 5,
+    "nested_and": 9,
+    "nested_mul": 9,
+    "nested_or": 10,
+    "nested_xor": 10
+  },
+  "baseline": {
+    "nested_add": 12,
+    "nested_mul": 12,
+    "reversed_add": 13,
+    "nested_and": 18,
+    "nested_or": 18,
+    "nested_xor": 18
+  },
+  "instcombine-v2": {
+    "nested_add": 8,
+    "nested_mul": 8,
+    "reversed_add": 10,
+    "nested_and": 11,
+    "nested_or": 11,
+    "nested_xor": 11
+  }
+}

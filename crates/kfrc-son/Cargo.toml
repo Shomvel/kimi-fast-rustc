@@ -1,0 +1,10 @@
+[package]
+name = "kfrc-son"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.89"
+description = "kfrc sea-of-nodes IR with Rust semantics: graph, Body builder, verifier, interpreter"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+kfrc-body = { path = "../kfrc-body" }

@@ -1,0 +1,119 @@
+[
+  {
+    "arm": "llvm",
+    "crate": "semver",
+    "function_ranges": 75,
+    "summed_function_bytes": 18515,
+    "counts": {
+      "instructions": 5061,
+      "memory_operand_instructions": 1087,
+      "branches": 831,
+      "non_cl_shifts": 159,
+      "calls": 189,
+      "direct_stack_operand_instructions": 330,
+      "cl_shifts": 1
+    }
+  },
+  {
+    "arm": "llvm",
+    "crate": "base64",
+    "function_ranges": 35,
+    "summed_function_bytes": 8648,
+    "counts": {
+      "instructions": 2168,
+      "memory_operand_instructions": 719,
+      "direct_stack_operand_instructions": 205,
+      "calls": 53,
+      "non_cl_shifts": 101,
+      "branches": 277,
+      "cl_shifts": 1
+    }
+  },
+  {
+    "arm": "llvm",
+    "crate": "unicode-segmentation",
+    "function_ranges": 24,
+    "summed_function_bytes": 8398,
+    "counts": {
+      "instructions": 2356,
+      "memory_operand_instructions": 492,
+      "direct_stack_operand_instructions": 112,
+      "calls": 46,
+      "branches": 450,
+      "non_cl_shifts": 58,
+      "cl_shifts": 1
+    }
+  },
+  {
+    "arm": "llvm",
+    "crate": "humantime",
+    "function_ranges": 32,
+    "summed_function_bytes": 10426,
+    "counts": {
+      "instructions": 2651,
+      "memory_operand_instructions": 582,
+      "direct_stack_operand_instructions": 219,
+      "branches": 450,
+      "calls": 60,
+      "non_cl_shifts": 109
+    }
+  },
+  {
+    "arm": "data",
+    "crate": "semver",
+    "function_ranges": 194,
+    "summed_function_bytes": 32705,
+    "counts": {
+      "instructions": 9500,
+      "memory_operand_instructions": 2100,
+      "branches": 1390,
+      "calls": 512,
+      "direct_stack_operand_instructions": 253,
+      "non_cl_shifts": 48,
+      "cl_shifts": 1
+    }
+  },
+  {
+    "arm": "data",
+    "crate": "base64",
+    "function_ranges": 90,
+    "summed_function_bytes": 28175,
+    "counts": {
+      "instructions": 6860,
+      "memory_operand_instructions": 2433,
+      "non_cl_shifts": 78,
+      "branches": 778,
+      "direct_stack_operand_instructions": 1152,
+      "calls": 279,
+      "cl_shifts": 1
+    }
+  },
+  {
+    "arm": "data",
+    "crate": "unicode-segmentation",
+    "function_ranges": 78,
+    "summed_function_bytes": 17878,
+    "counts": {
+      "instructions": 5314,
+      "memory_operand_instructions": 966,
+      "direct_stack_operand_instructions": 106,
+      "branches": 936,
+      "calls": 218,
+      "non_cl_shifts": 28
+    }
+  },
+  {
+    "arm": "data",
+    "crate": "humantime",
+    "function_ranges": 98,
+    "summed_function_bytes": 58034,
+    "counts": {
+      "instructions": 14423,
+      "memory_operand_instructions": 3651,
+      "calls": 317,
+      "branches": 2835,
+      "direct_stack_operand_instructions": 958,
+      "non_cl_shifts": 122
+    }
+  }
+]

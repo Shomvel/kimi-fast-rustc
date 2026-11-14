@@ -1,0 +1,20 @@
+{
+  "status": "passed_workspace_with_one_known_timing_ignore",
+  "raw_wrapper_status": "failed",
+  "raw_wrapper_failure": "RuntimeError('empty/failed/ignored tests: full-workspace')",
+  "raw_summary_sha256": "7e61a2b4dcd43e4eae6d808708fd89ba7f21a04867c73520105959ea54be6e5c",
+  "raw_cargo_exit_code": 0,
+  "test_totals": {
+    "passed": 1137,
+    "failed": 0,
+    "ignored": 1
+  },
+  "ignored_test_ids": [
+    "large_live_spill_set_allocation_time"
+  ],
+  "source_contract": "/workspace/callsite/generic-parity-20261110/decode-private-copy-v1-source/crates/kfrc-x86/tests/regalloc_preference.rs",
+  "source_contract_sha256": "09215fd41d3fc80b974d2bdd208e29e6cdfadb5f60e0b918644cac3472c25cd8",
+  "reason": "The narrow unit-test runner guard incorrectly rejected the accepted workspace timing ignore. Native workspace contract requires passing minimum and zero failed; no timing test was run. Raw runner and logs are preserved.",
+  "repeated_cargo_commands": 0,
+  "verified_at_utc": "2026-11-11T09:49:09.485862+00:00"
+}

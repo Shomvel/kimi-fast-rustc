@@ -1,0 +1,26 @@
+fn example_result() -> i64 {
+    return if even(10) { sum_down(9) - 3 } else { 0 };
+}
+
+fn sum_down(value: i64) -> i64 {
+    if value == 0 {
+        return 0;
+    }
+    return value + sum_down(value - 1);
+}
+
+fn even(value: u64) -> bool {
+    if value == 0 {
+        return true;
+    }
+    return odd(value - 1);
+}
+
+fn odd(value: u64) -> bool {
+    if value == 0 {
+        return false;
+    }
+    return even(value - 1);
+}
+
+fn main() { println!("{}", example_result()); }

@@ -1,0 +1,391 @@
+{
+  "crate": "semver",
+  "version": "1.0.28",
+  "arm": "c12-phi",
+  "backend": "/workspace/results/compile-c12-base/backend.so",
+  "backend_sha256": "4a49d09600bb6006d0f403869213592a48f230686af1f83268201ff98c97ccb4",
+  "flags": [
+    "-Cpanic=abort",
+    "-Copt-level=3",
+    "-Ccodegen-units=16",
+    "-Cembed-bitcode=no",
+    "-Cdebuginfo=0",
+    "-Coverflow-checks=off",
+    "-Cdebug-assertions=off",
+    "-Zmir-opt-level=0"
+  ],
+  "sysroot": "/workspace/shared-std-mir0/sysroot",
+  "library_command": [
+    "rustc",
+    "+1.94.1",
+    "--sysroot=/workspace/shared-std-mir0/sysroot",
+    "--crate-name",
+    "semver",
+    "--crate-type",
+    "rlib",
+    "--edition=2021",
+    "/workspace/results/integrated-final1/suite/src/semver-1.0.28/src/lib.rs",
+    "--cfg",
+    "feature=\"std\"",
+    "-Cpanic=abort",
+    "-Copt-level=3",
+    "-Ccodegen-units=16",
+    "-Cembed-bitcode=no",
+    "-Cdebuginfo=0",
+    "-Coverflow-checks=off",
+    "-Cdebug-assertions=off",
+    "-Zmir-opt-level=0",
+    "--cap-lints=allow",
+    "-o",
+    "/workspace/results/integrated-final1/suite/c12-phi/semver/ref/lib.rlib",
+    "-Zcodegen-backend=/workspace/results/compile-c12-base/backend.so"
+  ],
+  "status": "ok",
+  "size": {
+    "text_bytes": 34148,
+    "func_symbol_bytes": 32795,
+    "func_symbols": 196,
+    "rodata_bytes": 12525,
+    "object_count": 14,
+    "object_bytes": 151608,
+    "rlib_bytes": 304478
+  },
+  "kfrc_file_symbol": true,
+  "compile": {
+    "rounds": 3,
+    "checker": 0,
+    "order": "three rounds: llvm,c12-phi,integrated then reverse then forward; same sandbox serial",
+    "full": [
+      {
+        "exit_code": 0,
+        "wall_seconds": 0.6034666529958486,
+        "user_seconds": 0.522559,
+        "sys_seconds": 0.07790899999999999,
+        "maxrss_kib": 149572,
+        "instructions": 4537077084,
+        "instructions_running_pct": 100.0,
+        "cycles": 1963738047,
+        "cycles_running_pct": 100.0,
+        "objects_identical_to_reference": true
+      },
+      {
+        "exit_code": 0,
+        "wall_seconds": 0.5938266360026319,
+        "user_seconds": 0.542219,
+        "sys_seconds": 0.053139,
+        "maxrss_kib": 149536,
+        "instructions": 4537184328,
+        "instructions_running_pct": 100.0,
+        "cycles": 1935794902,
+        "cycles_running_pct": 100.0,
+        "objects_identical_to_reference": true
+      },
+      {
+        "exit_code": 0,
+        "wall_seconds": 0.5887179489945993,
+        "user_seconds": 0.5274989999999999,
+        "sys_seconds": 0.058568999999999996,
+        "maxrss_kib": 149392,
+        "instructions": 4537023144,
+        "instructions_running_pct": 100.0,
+        "cycles": 1910447947,
+        "cycles_running_pct": 100.0,
+        "objects_identical_to_reference": true
+      }
+    ],
+    "metadata_only": [
+      {
+        "exit_code": 0,
+        "wall_seconds": 0.1219225059976452,
+        "user_seconds": 0.066952,
+        "sys_seconds": 0.052943,
+        "maxrss_kib": 116276,
+        "instructions": 330805063,
+        "instructions_running_pct": 100.0,
+        "cycles": 271918707,
+        "cycles_running_pct": 100.0
+      },
+      {
+        "exit_code": 0,
+        "wall_seconds": 0.11728660000517266,
+        "user_seconds": 0.07267,
+        "sys_seconds": 0.044138,
+        "maxrss_kib": 116428,
+        "instructions": 330803024,
+        "instructions_running_pct": 100.0,
+        "cycles": 263652534,
+        "cycles_running_pct": 100.0
+      },
+      {
+        "exit_code": 0,
+        "wall_seconds": 0.11195646199485054,
+        "user_seconds": 0.066603,
+        "sys_seconds": 0.046791,
+        "maxrss_kib": 116508,
+        "instructions": 330798402,
+        "instructions_running_pct": 100.0,
+        "cycles": 250988675,
+        "cycles_running_pct": 100.0
+      }
+    ],
+    "instructions_median": 4537077084,
+    "cycles_median": 1935794902,
+    "wall_median": 0.5938266360026319,
+    "user_median": 0.5274989999999999,
+    "maxrss_kib_median": 149536,
+    "metadata_instructions_median": 330803024,
+    "metadata_wall_median": 0.11728660000517266,
+    "codegen_instructions_estimate": 4206274060
+  },
+  "driver": {
+    "command": [
+      "rustc",
+      "+1.94.1",
+      "--sysroot=/workspace/shared-std-mir0/sysroot",
+      "--edition=2021",
+      "/workspace/suite/drivers/semver.rs",
+      "--crate-name",
+      "driver",
+      "-Cpanic=abort",
+      "-Copt-level=3",
+      "-Cdebuginfo=0",
+      "-Zmir-opt-level=0",
+      "--extern",
+      "semver=/workspace/results/integrated-final1/suite/c12-phi/semver/ref/lib.rlib",
+      "-Csave-temps",
+      "-o",
+      "/workspace/results/integrated-final1/suite/c12-phi/semver/driver/driver"
+    ],
+    "exit_code": 0,
+    "objects_sha256": {
+      "driver.7q524ybyu92u8qns68khmscfx.rcgu.o": "92ad59834dc9a8be5aa70ed035327994668310cdf0f1c37cc1ae8dfbfb90b6d3",
+      "driver.driver.39fc946f9cbf83db-cgu.0.rcgu.o": "b683ac8e40b8d2041ab2831dae25a68c0ffd64b57639c817361c2fdd6d0d993a",
+      "driver.driver.39fc946f9cbf83db-cgu.1.rcgu.o": "b573c9bcbb5d4841cfd54adc7107c8e9c7a223d7661160fcd0c6cd72b18df83b",
+      "driver.driver.39fc946f9cbf83db-cgu.2.rcgu.o": "6c4f6240851c6e06c48b6cf03b09d6c2bae89a5352cf4f2bd793ad98dceb43b0",
+      "driver.driver.39fc946f9cbf83db-cgu.3.rcgu.o": "34483fecc7ca0ed845a72a3a0489e1c0f6d83f9cac2b129512ea2bbec80cced0",
+      "driver.driver.39fc946f9cbf83db-cgu.4.rcgu.o": "2dfac57cdc4ad2adde2ea96197524951cfb0885f435499e8628c135a074b132f"
+    },
+    "local_text_bytes": 12953,
+    "executable_sha256": "5a086278b68229b477cd7d5014888d67521998b811c905f221062463669d1987"
+  },
+  "corpus": {
+    "exit_code": 0,
+    "sha256": "96c9f6c125b42251fee60f392b8ecfbdbae5691d6651db27947d32f3b5e4d56a",
+    "lines": 87
+  },
+  "workload_check": {
+    "parse": {
+      "exit_code": 0,
+      "checksum": 9666685
+    },
+    "req": {
+      "exit_code": 0,
+      "checksum": 400000
+    },
+    "identifier": {
+      "exit_code": 0,
+      "checksum": 30750000
+    }
+  },
+  "tests": {
+    "lockfile": "suite",
+    "sysroot": "cargo -Zbuild-std (MIR opt-level 0, panic=abort, O3, CGU16)",
+    "itest": {
+      "build_exit_code": 0,
+      "build_seconds": 20.34786138799973,
+      "crate_invocations": 1,
+      "crate_invocations_with_backend": 1,
+      "binaries": {
+        "suite_itest_semver": {
+          "exit_code": 0,
+          "seconds": 0.005374585998652037,
+          "listed": 0,
+          "counts": {
+            "ok": 0,
+            "failed": 0,
+            "ignored": 0,
+            "not_run": 0
+          },
+          "outcomes": {}
+        },
+        "test_autotrait": {
+          "exit_code": 0,
+          "seconds": 0.005335588000889402,
+          "listed": 1,
+          "counts": {
+            "ok": 1,
+            "failed": 0,
+            "ignored": 0,
+            "not_run": 0
+          },
+          "outcomes": {
+            "test": "ok"
+          }
+        },
+        "test_identifier": {
+          "exit_code": 0,
+          "seconds": 0.025613127996621188,
+          "listed": 3,
+          "counts": {
+            "ok": 3,
+            "failed": 0,
+            "ignored": 0,
+            "not_run": 0
+          },
+          "outcomes": {
+            "test_eq": "ok",
+            "test_new": "ok",
+            "test_prerelease": "ok"
+          }
+        },
+        "test_version": {
+          "exit_code": 0,
+          "seconds": 0.01041062299918849,
+          "listed": 10,
+          "counts": {
+            "ok": 10,
+            "failed": 0,
+            "ignored": 0,
+            "not_run": 0
+          },
+          "outcomes": {
+            "test_align": "ok",
+            "test_display": "ok",
+            "test_eq": "ok",
+            "test_ge": "ok",
+            "test_gt": "ok",
+            "test_le": "ok",
+            "test_lt": "ok",
+            "test_ne": "ok",
+            "test_parse": "ok",
+            "test_spec_order": "ok"
+          }
+        },
+        "test_version_req": {
+          "exit_code": 0,
+          "seconds": 0.020655127002100926,
+          "listed": 20,
+          "counts": {
+            "ok": 20,
+            "failed": 0,
+            "ignored": 0,
+            "not_run": 0
+          },
+          "outcomes": {
+            "test_any": "ok",
+            "test_basic": "ok",
+            "test_caret": "ok",
+            "test_cargo3202": "ok",
+            "test_comparator_parse": "ok",
+            "test_default": "ok",
+            "test_digit_after_wildcard": "ok",
+            "test_eq_hash": "ok",
+            "test_exact": "ok",
+            "test_greater_than": "ok",
+            "test_leading_digit_in_pre_and_build": "ok",
+            "test_less_than": "ok",
+            "test_logical_or": "ok",
+            "test_multiple": "ok",
+            "test_parse": "ok",
+            "test_pre": "ok",
+            "test_tilde": "ok",
+            "test_whitespace_delimited_comparator_sets": "ok",
+            "test_wildcard": "ok",
+            "test_wildcard_and_another": "ok"
+          }
+        }
+      },
+      "totals": {
+        "ok": 34,
+        "failed": 0,
+        "ignored": 0,
+        "not_run": 0
+      },
+      "all_exit_zero": true
+    }
+  },
+  "compile_checker1_not_formal": {
+    "rounds": 3,
+    "full": [
+      {
+        "exit_code": 0,
+        "wall_seconds": 0.6342194930039113,
+        "user_seconds": 0.571951,
+        "sys_seconds": 0.045057,
+        "maxrss_kib": 149516,
+        "instructions": 4694876426,
+        "instructions_running_pct": 100.0,
+        "cycles": 1937536068,
+        "cycles_running_pct": 100.0,
+        "objects_identical_to_reference": true
+      },
+      {
+        "exit_code": 0,
+        "wall_seconds": 0.588641854999878,
+        "user_seconds": 0.533076,
+        "sys_seconds": 0.056038,
+        "maxrss_kib": 149376,
+        "instructions": 4694777744,
+        "instructions_running_pct": 100.0,
+        "cycles": 1921134819,
+        "cycles_running_pct": 100.0,
+        "objects_identical_to_reference": true
+      },
+      {
+        "exit_code": 0,
+        "wall_seconds": 0.5937524440014386,
+        "user_seconds": 0.538616,
+        "sys_seconds": 0.055976,
+        "maxrss_kib": 149664,
+        "instructions": 4694950153,
+        "instructions_running_pct": 100.0,
+        "cycles": 1946693930,
+        "cycles_running_pct": 100.0,
+        "objects_identical_to_reference": true
+      }
+    ],
+    "metadata_only": [
+      {
+        "exit_code": 0,
+        "wall_seconds": 0.11724075099482434,
+        "user_seconds": 0.067489,
+        "sys_seconds": 0.047098,
+        "maxrss_kib": 116216,
+        "instructions": 330804352,
+        "instructions_running_pct": 100.0,
+        "cycles": 256081865,
+        "cycles_running_pct": 100.0
+      },
+      {
+        "exit_code": 0,
+        "wall_seconds": 0.12202250699920114,
+        "user_seconds": 0.071612,
+        "sys_seconds": 0.05055,
+        "maxrss_kib": 116256,
+        "instructions": 330801527,
+        "instructions_running_pct": 100.0,
+        "cycles": 276475205,
+        "cycles_running_pct": 100.0
+      },
+      {
+        "exit_code": 0,
+        "wall_seconds": 0.11720190300547983,
+        "user_seconds": 0.07492,
+        "sys_seconds": 0.041323,
+        "maxrss_kib": 116212,
+        "instructions": 330794536,
+        "instructions_running_pct": 100.0,
+        "cycles": 263392208,
+        "cycles_running_pct": 100.0
+      }
+    ],
+    "instructions_median": 4694876426,
+    "cycles_median": 1937536068,
+    "wall_median": 0.5937524440014386,
+    "user_median": 0.538616,
+    "maxrss_kib_median": 149516,
+    "metadata_instructions_median": 330801527,
+    "metadata_wall_median": 0.11724075099482434,
+    "codegen_instructions_estimate": 4364074899
+  }
+}

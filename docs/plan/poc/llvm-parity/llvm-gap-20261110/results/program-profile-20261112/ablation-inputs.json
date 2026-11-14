@@ -1,0 +1,15 @@
+{
+  "status": "candidate_not_adopted_no_demonstrated_end_to_end_gain",
+  "base_source_tree_sha256": "dd3727e1902263ac8a16081baf38768001118597213af41e8dacf093aede4094",
+  "candidate_frozen_manifest_sha256": "f0a656a1f393fccf85f92c4d63bfcdc2a637b9c3013823736efce73646400a54",
+  "candidate_source_tree_sha256": "626e600b5ba8115e7b205f9897c27cd7d53209781a51571919a30aec1400ab10",
+  "patch_sha256": "b7bb9ff5fce530abcf9a15b587d5a05e72b9a97553de71a1183cae5c0a577cdd",
+  "files": {
+    "crates/kfrc-son/src/lower_layout/owned_transport.rs": "86b8a590f025d943e4dbf229efa3a7b745d068d97852b3a1bd0a7e349b9e56a7",
+    "crates/kfrc-son/src/lower_layout/cleanup.rs": "2be1a5c7acba1794c8a3fa2d2f193a8c80102004b19261529416d11b49c5f1c8",
+    "crates/kfrc-son/tests/semantic_register_phi_transport.rs": "570f4b9bb915c7b8bb74378abfec44861a79912994de2ed857064e2a140bc51c",
+    "crates/kfrc-son/tests/semantic_layout_tag_constants.rs": "1c66b4e9c1003c2cdc90e065574235857d9b24ec99e31f45856781ae4e86cf93"
+  },
+  "default_production_edits_reverted": true,
+  "experimental_regression_tests_preserved_in_patch": true
+}

@@ -1,0 +1,44 @@
+{
+  "status": "passed",
+  "archive_sha256": "4c30df7968c16e3e4aeff1c444800b32422e845fae978a92a4fd9dcf0e7aa1fa",
+  "archive_bytes": 8688083,
+  "members_verified": 2989,
+  "selection_sha256": "47b8b2b3412040fbb114d6932ccb2b211e8b334028df8ee4d569da7a0f01cd4d",
+  "arms": [
+    "generic-v18r2",
+    "decode-private-copy-v1-r1",
+    "llvm"
+  ],
+  "formal_v13_modified": false,
+  "performance_interpretation": "owned by root; raw evidence only",
+  "runtime_rows_total": 390,
+  "runtime_measured_rows": 351,
+  "runtime_warmup_rows": 39,
+  "compile_rows_total": 240,
+  "compile_measured_rows": 216,
+  "compile_warmup_rows": 24,
+  "complete_object_pairs_verified_byte_for_byte": 1500,
+  "normal_mode_text_bytes": {
+    "generic-v18r2": {
+      "semver": 30829,
+      "base64": 23597,
+      "unicode-segmentation": 18520,
+      "humantime": 49835
+    },
+    "decode-private-copy-v1-r1": {
+      "semver": 30780,
+      "base64": 25723,
+      "unicode-segmentation": 18210,
+      "humantime": 46959
+    },
+    "llvm": {
+      "semver": 18515,
+      "base64": 8648,
+      "unicode-segmentation": 8398,
+      "humantime": 10426
+    }
+  },
+  "every_row_fingerprints_verified": true,
+  "rotating_paired_order_verified": true,
+  "full_and_metadata_are_separate_measurements": true
+}

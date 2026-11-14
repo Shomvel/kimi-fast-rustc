@@ -1,0 +1,26 @@
+# 族名（与 census-passes.jq 一致）	流水线中的 pass 名（静态计数用，- 表示无）	类	位置	做什么	kfrc 承接
+InstCombine 类	instcombine aggressive-instcombine instsimplify	C/通用	pre+post	窥孔化简；niche 解码、derive 比较折叠	构建期窥孔 + R 级变体规则；L 级机器窥孔
+指令选择	-	M	后端	SelectionDAG 选择与 DAGCombine	Machine IR 选择 + L 级窥孔（kfrc 后端）
+循环	licm loop-rotate indvars loop-idiom loop-deletion loop-unroll loop-unroll-full simple-loop-unswitch loop-distribute loop-load-elim loop-instsimplify loop-simplifycfg loop-sink	M	pre+post（展开只在 post）	迭代器内联后的指针循环	GCM + L 级 IV/PRE；rotate/unswitch/idiom 尚缺（R3）；展开推迟
+内联器	inline always-inline	B	pre+post（CGSCC）	压平闭包、drop/trait glue、Fn shim	R/S 级拼接已优化图；跨 crate 用共享 S 图
+GVN/EarlyCSE	gvn early-cse	A/通用	pre+post	冗余值与重复 load	GVN 哈希 + 分区 load 转发；L 级 PRE
+JT/CVP/约束/SCCP	jump-threading correlated-propagation constraint-elimination sccp	C	pre+post	条件与范围传播、检查消除	按前驱拆分、Refine、Check 消除；乐观 SCCP 未写明（R3）
+过程间（IPSCCP/GlobalOpt/属性/参数）	ipsccp globalopt function-attrs rpo-function-attrs argpromotion deadargelim called-value-propagation	B/G	pre+post	过程间常量、属性推断、改签名	调用摘要承接属性；常量与改签名尚缺（R1、R2）
+机器级优化（CSE/LICM/sink/窥孔/布局…）	-	M	后端	机器 CSE/LICM/sink、if-conversion、分支折叠、块布局	SSA 段由 GVN+GCM 承接；布局只覆盖冷块（R5）
+寄存器分配与活跃性	-	M	后端	Greedy 分配、合并、两地址	线性扫描（总览固定决策；质量见 R5）
+SimplifyCFG	simplifycfg	B/C	pre+post	控制流化简、删空 landingpad、switch 查找表	R 级 DCE、常量 Phi；switch 降低尚缺（R4）
+后端分析	-	M	后端	机器级支配树、BPI/BFI	L 级算一次；冷热靠结构标记
+IR 级后端准备（LSR/CGP…）	-	M	后端	LSR、地址模式下沉、memcmp 展开	L 级强度削减与地址模式
+分析：其他	-	—	pre+post	LVI、SCEV、TTI 等	L 级循环需要 SCEV 类信息
+其他标量	reassociate tailcallelim div-rem-pairs float2int bdce adce speculative-execution callsite-splitting libcalls-shrinkwrap chr	M	pre+post	杂项标量变换	部分：L 级常量除法、if-conversion
+DSE/MemCpyOpt	dse memcpyopt mldst-motion	A	pre+post	move 的 memcpy 链、死 store	move 是值转发；分区死 store 删除（不需要大部分）
+SROA/mem2reg	sroa mem2reg	A	pre+post	每个 MIR local 的 alloca 提升为 SSA	聚合构图时即值；槽位提升（不需要大部分）
+分析：支配树/循环	-	—	pre+post	支配树、LoopInfo	placement 与 L 级一次
+调试信息	-	—	后端	变量位置（DEBUG_VALUE）	尚缺（R6）
+分析：别名	-	A	pre+post	BasicAA、TBAA、ScopedNoAlias、GlobalsAA	内存分区代替
+向量化	loop-vectorize slp-vectorizer vector-combine	M	post（vector-combine 两段都有）	循环与 SLP 向量化	推迟到 T38 之后
+发射/帧	-	M	后端	序言/尾声、汇编与对象发射	kfrc x86 后端（R5）
+分析：MemorySSA	-	A	pre+post	内存依赖	内存分区代替
+分析：BPI/BFI	-	—	pre+post	分支概率与块频率	结构性冷标记，不用 profile
+指令调度	-	M	后端	pre-RA 与 post-RA 调度	不做（总览固定决策）
+其他（PM 胶水、Coro/OpenMP 空转等）	-	—	pre+post	PM 胶水、协程/OpenMP 空转	不需要

@@ -1,0 +1,11 @@
+# kfrc patches to cranelift-codegen 0.134.4
+
+This directory is the crates.io release `cranelift-codegen 0.134.4` (Apache-2.0 WITH LLVM-exception, see
+`LICENSE`) with the changes below. Each change is marked `kfrc:` in the source. `Cargo.toml` of the workspace
+and of `crates/rustc_codegen_kfrc` select this copy through `[patch.crates-io]`.
+
+| # | File | Change |
+|---|---|---|
+| 1 | `src/isa/x64/abi.rs` | System V frames omit the frame pointer when the function has no incoming stack arguments, makes no tail call, and neither `preserve_frame_pointers` nor `unwind_info` is set. The frame takes eight padding bytes when it is non-empty or the function makes a call, so RSP stays 16-byte aligned. |
+| 2 | `src/machinst/copy_cleanup.rs`, `compile.rs`, `mod.rs` | After allocation, intersect physical-content equality at CFG joins, invalidate it on definitions and clobbers, and remove redundant or dead allocator copies before the allocation checker. A partially redundant join prefix or independent commuting copy may move onto single-successor incoming edges across an operand-free branch when the static copy count does not increase. Dead-source register copies can coalesce into predecessor reloads; real definitions or observations retain an edge copy, and original edit order is preserved. Each original edit may relocate once; new edge edits cannot relocate again. Spill-slot overlaps use the allocator's class sizes and slot-numbering convention. Debug value locations and fixed stack-register aliases keep their original output. No original instruction, operand allocation, CFG edge, or spill-slot offset changes. |
+| 3 | `src/isa/x64/inst.isle` | Zero extension to a 32/64-bit register reuses already materialized little/native-endian unsigned scalar loads whose lowering clears the complete register. Single-use loads retain the existing load/extension fusion. Signed loads, narrow arithmetic, parameters and block arguments retain their required extensions. |

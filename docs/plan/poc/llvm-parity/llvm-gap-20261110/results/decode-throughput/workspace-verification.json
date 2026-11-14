@@ -1,0 +1,11 @@
+{
+  "label": "decode-private-copy-v1-r1-final-workspace",
+  "path": "/workspace/callsite/generic-parity-20261110/results/decode-private-copy-v1-r1-final-workspace-evidence.tar.gz",
+  "bytes": 122945,
+  "sha256": "1246e70aa58a53f6141275c884924e3070b985450945c545bfa17aa10ba051ff",
+  "members": 50,
+  "local_archive": "/Users/shom/Downloads/kfrc-callsite-opt-20261110/generic-parity-20261110/decode-private-copy-v1-r1-final-workspace-evidence.tar.gz",
+  "local_evidence": "/Users/shom/Downloads/kfrc-callsite-opt-20261110/generic-parity-20261110/decode-private-copy-v1-r1-final-workspace-evidence",
+  "status": "all_manifest_members_verified",
+  "verified_at_utc": "2026-11-11T09:59:51.985158+00:00"
+}

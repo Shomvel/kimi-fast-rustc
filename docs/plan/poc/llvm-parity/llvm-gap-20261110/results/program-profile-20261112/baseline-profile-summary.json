@@ -1,0 +1,419 @@
+{
+  "status": "derived_from_sealed_profile",
+  "profile_summary_source_tree_sha256": "dd3727e1902263ac8a16081baf38768001118597213af41e8dacf093aede4094",
+  "profile_binary_sha256": {
+    "kfrc": {
+      "mechanisms": "2310c5e831ca673d9e273e1f3640dd104f044facaed878ec9a4cc780df455582",
+      "semver": "2e38cc1f4f69b1b470d6de2baa146aa37830fa1b4138bb034a471d0a4f8c1c94",
+      "base64": "1aa1b189d9392f26d62fd6be8886add89190b5c34f5a4b15d83490f7f043a1c5",
+      "unicode-segmentation": "d7e45fb65e90430ecad5caaa4d7af49cf245837f74e5efa9d2ee9cf33f88651d",
+      "humantime": "1126f1c9b6c28af2663a50f66223e30c78b4ea138c3b667166f0f6120f170a8a"
+    },
+    "llvm": {
+      "mechanisms": "c087cc76eca0f0df0941ff58a6596bbe389ca86280b317a5130882b5c0a4f43e",
+      "semver": "5ecd178d3d09edd56ca7361e61f7e84a53275247eedb90fafe91f25a12f192cc",
+      "base64": "72a8079bdc6d4c23f8ccf4cd497a625b0adab191018be2547cd45eddbd4a47fa",
+      "unicode-segmentation": "0340515b1f31475a84086c0cff1a5077a0cce9f36cba6818e6dfa53749429fa0",
+      "humantime": "59a0b40db65e1f9b6f6237e2a6989eaf6ba9134bf0a7a502bc2fcbc3c87602f7"
+    }
+  },
+  "formal_runtime_geomean_kfrc_llvm": 2.1927678792721066,
+  "counter_rounds": 3,
+  "counter_running_pct_all_100": true,
+  "sample_count": 37025,
+  "samples_with_callers": 36692,
+  "workloads": [
+    {
+      "crate": "semver",
+      "workload": "parse",
+      "original_iterations": 400000,
+      "per_iteration_median": {
+        "kfrc": {
+          "instructions": 1410.0344922368422,
+          "cycles": 337.66282539473684,
+          "branches": 306.50718460526315,
+          "branch-misses": 0.06339144736842105,
+          "cache-misses": 0.0017678947368421052
+        },
+        "llvm": {
+          "instructions": 432.20062355263155,
+          "cycles": 106.36778855263158,
+          "branches": 102.34034460526316,
+          "branch-misses": 0.0008626315789473684,
+          "cache-misses": 0.0010502631578947368
+        }
+      },
+      "kfrc_llvm_ratio": {
+        "instructions": 3.2624536277771803,
+        "cycles": 3.174483835655366,
+        "branches": 2.9949790162178145,
+        "branch-misses": 73.48611958511286,
+        "cache-misses": 1.6832873966424455
+      },
+      "extra_cycles_original_batch": 92518014.73684211
+    },
+    {
+      "crate": "semver",
+      "workload": "req",
+      "original_iterations": 400000,
+      "per_iteration_median": {
+        "kfrc": {
+          "instructions": 3481.3879708333334,
+          "cycles": 970.9136989583334,
+          "branches": 650.5114954166667,
+          "branch-misses": 0.746173125,
+          "cache-misses": 0.004627291666666667
+        },
+        "llvm": {
+          "instructions": 655.05369,
+          "cycles": 156.844320625,
+          "branches": 132.17774020833335,
+          "branch-misses": 0.0013002083333333333,
+          "cache-misses": 0.0019283333333333333
+        }
+      },
+      "kfrc_llvm_ratio": {
+        "instructions": 5.314660498795654,
+        "cycles": 6.190301919058304,
+        "branches": 4.921490520199211,
+        "branch-misses": 573.8873577952252,
+        "cache-misses": 2.3996326707000866
+      },
+      "extra_cycles_original_batch": 325627751.3333334
+    },
+    {
+      "crate": "semver",
+      "workload": "identifier",
+      "original_iterations": 30000,
+      "per_iteration_median": {
+        "kfrc": {
+          "instructions": 30380.088904166667,
+          "cycles": 7655.192691666667,
+          "branches": 9529.2258625,
+          "branch-misses": 1.133625,
+          "cache-misses": 0.04127083333333333
+        },
+        "llvm": {
+          "instructions": 18496.075795833334,
+          "cycles": 3447.9797,
+          "branches": 5318.222225,
+          "branch-misses": 1.0233125,
+          "cache-misses": 0.033475
+        }
+      },
+      "kfrc_llvm_ratio": {
+        "instructions": 1.6425153767487524,
+        "cycles": 2.2201965666058494,
+        "branches": 1.7918066337478025,
+        "branch-misses": 1.1077994258840775,
+        "cache-misses": 1.2328852377396067
+      },
+      "extra_cycles_original_batch": 126216389.75000001
+    },
+    {
+      "crate": "base64",
+      "workload": "encode",
+      "original_iterations": 10000,
+      "per_iteration_median": {
+        "kfrc": {
+          "instructions": 33928.5964,
+          "cycles": 7249.749775,
+          "branches": 2452.461625,
+          "branch-misses": 1.0434916666666667,
+          "cache-misses": 0.06561666666666667
+        },
+        "llvm": {
+          "instructions": 29247.579633333335,
+          "cycles": 6402.761508333333,
+          "branches": 556.458125,
+          "branch-misses": 0.04613333333333333,
+          "cache-misses": 0.06419166666666666
+        }
+      },
+      "kfrc_llvm_ratio": {
+        "instructions": 1.160048004838381,
+        "cycles": 1.1322848376539238,
+        "branches": 4.407270762737088,
+        "branch-misses": 22.61903901734104,
+        "cache-misses": 1.0221991431909647
+      },
+      "extra_cycles_original_batch": 8469882.666666672
+    },
+    {
+      "crate": "base64",
+      "workload": "decode",
+      "original_iterations": 10000,
+      "per_iteration_median": {
+        "kfrc": {
+          "instructions": 94539.17293636364,
+          "cycles": 16341.835718181817,
+          "branches": 12638.536981818183,
+          "branch-misses": 1.2205545454545454,
+          "cache-misses": 0.09256363636363636
+        },
+        "llvm": {
+          "instructions": 38533.109454545454,
+          "cycles": 6752.177136363636,
+          "branches": 5855.513018181819,
+          "branch-misses": 0.04794545454545455,
+          "cache-misses": 0.0708
+        }
+      },
+      "kfrc_llvm_ratio": {
+        "instructions": 2.453452998592917,
+        "cycles": 2.42023208043127,
+        "branches": 2.1583996043684905,
+        "branch-misses": 25.457148274554417,
+        "cache-misses": 1.3073959938366717
+      },
+      "extra_cycles_original_batch": 95896585.81818181
+    },
+    {
+      "crate": "base64",
+      "workload": "short",
+      "original_iterations": 200000,
+      "per_iteration_median": {
+        "kfrc": {
+          "instructions": 3488.7536133333333,
+          "cycles": 706.11474875,
+          "branches": 585.8999966666667,
+          "branch-misses": 0.3102904166666667,
+          "cache-misses": 0.0051875
+        },
+        "llvm": {
+          "instructions": 1677.4713675,
+          "cycles": 313.44448458333335,
+          "branches": 290.11843791666666,
+          "branch-misses": 0.0037183333333333335,
+          "cache-misses": 0.00348125
+        }
+      },
+      "kfrc_llvm_ratio": {
+        "instructions": 2.0797693963222494,
+        "cycles": 2.252758569635224,
+        "branches": 2.0195200307639873,
+        "branch-misses": 83.44878978036755,
+        "cache-misses": 1.4901256732495514
+      },
+      "extra_cycles_original_batch": 78534052.83333333
+    },
+    {
+      "crate": "unicode-segmentation",
+      "workload": "graphemes-mixed",
+      "original_iterations": 200,
+      "per_iteration_median": {
+        "kfrc": {
+          "instructions": 1738278.4166666667,
+          "cycles": 428851.40208333335,
+          "branches": 353711.2225,
+          "branch-misses": 51.67333333333333,
+          "cache-misses": 4.21
+        },
+        "llvm": {
+          "instructions": 1349155.0783333334,
+          "cycles": 316133.7225,
+          "branches": 296117.10125,
+          "branch-misses": 38.632083333333334,
+          "cache-misses": 3.57375
+        }
+      },
+      "kfrc_llvm_ratio": {
+        "instructions": 1.2884200227108313,
+        "cycles": 1.3565506352563617,
+        "branches": 1.194497788229311,
+        "branch-misses": 1.3375756333789919,
+        "cache-misses": 1.1780342777194823
+      },
+      "extra_cycles_original_batch": 22543535.916666675
+    },
+    {
+      "crate": "unicode-segmentation",
+      "workload": "graphemes-ascii",
+      "original_iterations": 200,
+      "per_iteration_median": {
+        "kfrc": {
+          "instructions": 2453287.41375,
+          "cycles": 556177.9125,
+          "branches": 573182.2425,
+          "branch-misses": 89.561875,
+          "cache-misses": 5.205
+        },
+        "llvm": {
+          "instructions": 2346782.0075,
+          "cycles": 504802.145625,
+          "branches": 556437.130625,
+          "branch-misses": 89.4775,
+          "cache-misses": 5.16375
+        }
+      },
+      "kfrc_llvm_ratio": {
+        "instructions": 1.0453835958813487,
+        "cycles": 1.1017740659786444,
+        "branches": 1.0300934480346264,
+        "branch-misses": 1.0009429744907936,
+        "cache-misses": 1.0079883805374001
+      },
+      "extra_cycles_original_batch": 10275153.374999994
+    },
+    {
+      "crate": "unicode-segmentation",
+      "workload": "graphemes-rev",
+      "original_iterations": 400,
+      "per_iteration_median": {
+        "kfrc": {
+          "instructions": 2786189.111,
+          "cycles": 578029.971,
+          "branches": 549717.627,
+          "branch-misses": 46.80025,
+          "cache-misses": 3.89325
+        },
+        "llvm": {
+          "instructions": 910734.84125,
+          "cycles": 197171.977,
+          "branches": 228122.4635,
+          "branch-misses": 3.3365,
+          "cache-misses": 2.14775
+        }
+      },
+      "kfrc_llvm_ratio": {
+        "instructions": 3.0592758559405775,
+        "cycles": 2.9316030593941855,
+        "branches": 2.409747898413345,
+        "branch-misses": 14.026749587891503,
+        "cache-misses": 1.8127109766034224
+      },
+      "extra_cycles_original_batch": 152343197.6
+    },
+    {
+      "crate": "humantime",
+      "workload": "dur-parse",
+      "original_iterations": 500000,
+      "per_iteration_median": {
+        "kfrc": {
+          "instructions": 4287.158063333333,
+          "cycles": 1265.2005173333334,
+          "branches": 939.1122684444445,
+          "branch-misses": 0.7565586666666667,
+          "cache-misses": 0.008052
+        },
+        "llvm": {
+          "instructions": 658.7570113333334,
+          "cycles": 168.05818844444445,
+          "branches": 160.0117857777778,
+          "branch-misses": 0.001413111111111111,
+          "cache-misses": 0.0017215555555555556
+        }
+      },
+      "kfrc_llvm_ratio": {
+        "instructions": 6.507950563829394,
+        "cycles": 7.528347943317114,
+        "branches": 5.86901935929064,
+        "branch-misses": 535.385123447083,
+        "cache-misses": 4.677165354330708
+      },
+      "extra_cycles_original_batch": 548571164.4444445
+    },
+    {
+      "crate": "humantime",
+      "workload": "dur-format",
+      "original_iterations": 100000,
+      "per_iteration_median": {
+        "kfrc": {
+          "instructions": 4374.65262,
+          "cycles": 955.8008022222223,
+          "branches": 834.3164333333333,
+          "branch-misses": 1.2461588888888888,
+          "cache-misses": 0.009224444444444445
+        },
+        "llvm": {
+          "instructions": 3803.3269744444447,
+          "cycles": 858.0493288888889,
+          "branches": 752.1665155555555,
+          "branch-misses": 1.21443,
+          "cache-misses": 0.008512222222222221
+        }
+      },
+      "kfrc_llvm_ratio": {
+        "instructions": 1.150217335873156,
+        "cycles": 1.1139229063437581,
+        "branches": 1.1092177278286595,
+        "branch-misses": 1.026126568751504,
+        "cache-misses": 1.0836705390941133
+      },
+      "extra_cycles_original_batch": 9775147.333333336
+    },
+    {
+      "crate": "humantime",
+      "workload": "ts-parse",
+      "original_iterations": 1000000,
+      "per_iteration_median": {
+        "kfrc": {
+          "instructions": 630.1509439,
+          "cycles": 135.0064269,
+          "branches": 150.2553602,
+          "branch-misses": 0.0006533,
+          "cache-misses": 0.0008337
+        },
+        "llvm": {
+          "instructions": 295.5256181,
+          "cycles": 79.9980957,
+          "branches": 56.1302906,
+          "branch-misses": 0.0005477,
+          "cache-misses": 0.0007478
+        }
+      },
+      "kfrc_llvm_ratio": {
+        "instructions": 2.1323056456201015,
+        "cycles": 1.6876205079466662,
+        "branches": 2.676903301120625,
+        "branch-misses": 1.1928062808106628,
+        "cache-misses": 1.1148702861727735
+      },
+      "extra_cycles_original_batch": 55008331.20000002
+    },
+    {
+      "crate": "humantime",
+      "workload": "ts-format",
+      "original_iterations": 400000,
+      "per_iteration_median": {
+        "kfrc": {
+          "instructions": 1174.4782152777777,
+          "cycles": 343.78293666666667,
+          "branches": 136.80979333333335,
+          "branch-misses": 0.03542666666666667,
+          "cache-misses": 0.0024975
+        },
+        "llvm": {
+          "instructions": 660.0651763888889,
+          "cycles": 209.85034555555555,
+          "branches": 95.31668555555555,
+          "branch-misses": 0.03467166666666667,
+          "cache-misses": 0.002095277777777778
+        }
+      },
+      "kfrc_llvm_ratio": {
+        "instructions": 1.7793367341436803,
+        "cycles": 1.6382290710865375,
+        "branches": 1.4353184076422112,
+        "branch-misses": 1.0217757054271017,
+        "cache-misses": 1.1919660612488399
+      },
+      "extra_cycles_original_batch": 53573036.44444445
+    }
+  ],
+  "priority_by_extra_cycles": [
+    "humantime:dur-parse",
+    "semver:req",
+    "unicode-segmentation:graphemes-rev",
+    "semver:identifier",
+    "base64:decode",
+    "semver:parse",
+    "base64:short",
+    "humantime:ts-parse",
+    "humantime:ts-format",
+    "unicode-segmentation:graphemes-mixed",
+    "unicode-segmentation:graphemes-ascii",
+    "humantime:dur-format",
+    "base64:encode"
+  ]
+}

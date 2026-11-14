@@ -1,0 +1,2188 @@
+{
+  "schema": "kfrc.generic-pass-gap-audit.inputs.v1",
+  "created_utc": "2026-11-11T14:24:08.855097+00:00",
+  "workspace": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108",
+  "head": "7fb99c5b057e7ce7f8481f8ce9cd2e05f2d599e6",
+  "working_tree_is_clean": false,
+  "scope": "Current production source capability and pipeline audit; inherited dirty changes included.",
+  "llvm_reference": {
+    "version": "21.1.0",
+    "commit": "3623fe661ae35c6c80ac221f14d85be76aa870f1",
+    "role": "algorithm and pipeline reference"
+  },
+  "historical_runtime_comparator": {
+    "rust": "1.94.1",
+    "llvm": "21.1.8",
+    "new_timing_performed": false
+  },
+  "external_design_context": [
+    {
+      "url": "https://github.com/Shomvel/kimi-fast-rustc/issues/11",
+      "role": "User-supplied simplification direction, read earlier in this session; source capability findings use pinned local inputs.",
+      "mutable_content_sha256": null
+    }
+  ],
+  "cited_inputs": [
+    {
+      "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-son/src/analysis/cost.rs",
+      "bytes": 6258,
+      "sha256": "f3400c4d9b6b4acf3822bb9707ae7b2a52893ce3b3e4f249b9dc0aa9ca90984a"
+    },
+    {
+      "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-son/src/analysis/demanded_bits.rs",
+      "bytes": 8970,
+      "sha256": "c8ae55403d64955c2f00fc73ff0a650703421a3876991aff8f61e85bead3ffe6"
+    },
+    {
+      "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-son/src/analysis/induction.rs",
+      "bytes": 2690,
+      "sha256": "0b7940a158fc56cb4d9a1c4366bc54ac79f4b4d2bf1272376d2166917fed1f6e"
+    },
+    {
+      "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-son/src/analysis/known_bits.rs",
+      "bytes": 7672,
+      "sha256": "2f28d8ef02532316449a902919d53161415153053cb00f8422365699d458a909"
+    },
+    {
+      "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-son/src/analysis/memory.rs",
+      "bytes": 8440,
+      "sha256": "1c9528cef701a7e973e335e8d3aa47b6a07fc7b952893f094d8e0b5b77605a37"
+    },
+    {
+      "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-son/src/analysis/memory_locations.rs",
+      "bytes": 10130,
+      "sha256": "653c783005f442c1c60095067accf0775ee118c1ef30fd09acd2f49b6b089247"
+    },
+    {
+      "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-son/src/analysis/ranges.rs",
+      "bytes": 15100,
+      "sha256": "08d4f7273d0e4abbf0d529b7d360b4f7545e6497d89338fbe169c0bd87794f97"
+    },
+    {
+      "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-son/src/graph.rs",
+      "bytes": 49407,
+      "sha256": "be0ff330586b409ac64df80904343b2c48a7b11439270214362a139670ca8855"
+    },
+    {
+      "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-son/src/lower_layout/private_memory.rs",
+      "bytes": 9788,
+      "sha256": "e935758956e46b2c77c67c441569df5c027923e0c380327dab2ce147e58e0083"
+    },
+    {
+      "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-son/src/lower_layout/private_memory_copy.rs",
+      "bytes": 9771,
+      "sha256": "815ee73932be24392b5c7363f84c4a4358c19483c8b888e50f32417bdf3ae9ba"
+    },
+    {
+      "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-son/src/lower_layout/semantic_memory.rs",
+      "bytes": 12987,
+      "sha256": "433f17a3a1989775b1805f40f39eb7ffa7543384bf92a82bfa4a0c0c2bbc66ec"
+    },
+    {
+      "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-son/src/pipeline.rs",
+      "bytes": 28566,
+      "sha256": "163d8c84bdcd75298500c91ac5f2567698bf14a45c8a7179c21f43c93c510ec3"
+    },
+    {
+      "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-son/src/specialize/mod.rs",
+      "bytes": 15914,
+      "sha256": "016f98232f2da45f424ebfec5e5e70df4196e44451d9960c2ddbfa020542df49"
+    },
+    {
+      "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-son/src/transforms/control/loop_simplify.rs",
+      "bytes": 5664,
+      "sha256": "8d218ac7f95f9c44a96d146b804626e3f9aedd592b68959671fbfe9742cbb991"
+    },
+    {
+      "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-son/src/transforms/control/sccp.rs",
+      "bytes": 9439,
+      "sha256": "d980a47de9944bb1e6152bc3b64f0a41d754459b547ff7fcc6b2e3b5f8b549ba"
+    },
+    {
+      "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-son/src/transforms/control/simplify.rs",
+      "bytes": 4650,
+      "sha256": "9a3e722539194de9469ef70236d169800d9ecc9555e27eb47ba86609e6df6e7c"
+    },
+    {
+      "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-son/src/transforms/ipo/arguments/cleanup.rs",
+      "bytes": 3021,
+      "sha256": "a0b4354da6e6ab87f767eaf8806c2716bff4d2806985d42f3acc4289171e6d79"
+    },
+    {
+      "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-son/src/transforms/ipo/arguments.rs",
+      "bytes": 22705,
+      "sha256": "a68f1acb7fc729a3e2db55a6d1febff945eb6a4a870a2d27daa58cd167aa550c"
+    },
+    {
+      "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-son/src/transforms/ipo/cost.rs",
+      "bytes": 6617,
+      "sha256": "322cb4c8d1834264c714a2600e01c9ad44e519ebc8c07dd813ebf52cad34daa1"
+    },
+    {
+      "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-son/src/transforms/ipo/driver.rs",
+      "bytes": 20378,
+      "sha256": "85b93ca4fd12724f2f92f4956f09912c5e4d98d4b1fd288461000a2fb0fa1494"
+    },
+    {
+      "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-son/src/transforms/ipo/identity.rs",
+      "bytes": 8985,
+      "sha256": "a2b789801575519c4d6c0d36b2196bdf0d1300caf0c42a8e56b9bbe241db113d"
+    },
+    {
+      "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-son/src/transforms/loops/count.rs",
+      "bytes": 4637,
+      "sha256": "cdcbece9b5bfe2fbfe371519d14209a899fcd38f65ba86760c880d69be7ffda2"
+    },
+    {
+      "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-son/src/transforms/loops/plan.rs",
+      "bytes": 7460,
+      "sha256": "588b027d41bdd8c3b94dbccd003239f324a4b837020edb010f57cc82e3e60bdd"
+    },
+    {
+      "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-son/src/transforms/loops/strength_reduce.rs",
+      "bytes": 8707,
+      "sha256": "8a54639bbcdece10abdf4fd2e8d34923cbc83b9285ae7bd851239072ce2a8b64"
+    },
+    {
+      "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-son/src/transforms/memory/dse_branches.rs",
+      "bytes": 8982,
+      "sha256": "090444444e8e3d2fa97b80105b7c7d50ebbf6d78a8d10f942a24aa3f1015a654"
+    },
+    {
+      "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-son/src/transforms/memory/dse_values.rs",
+      "bytes": 7950,
+      "sha256": "36e75c802cd9f43057295a20c09db5944a30ddca729e82fb440cfc97610ee49e"
+    },
+    {
+      "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-son/src/transforms/memory/forward.rs",
+      "bytes": 20663,
+      "sha256": "7272b45e8136ab31ecdd7841b29edd66376ddc832ed1d61ef6b6a3363f4cb94b"
+    },
+    {
+      "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-son/src/transforms/memory/partition.rs",
+      "bytes": 2776,
+      "sha256": "546a0abf37729147f91c1d78074935718bbe1ed4139ac56f0c385e42835f2811"
+    },
+    {
+      "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-son/src/transforms/memory/promotion.rs",
+      "bytes": 21020,
+      "sha256": "91fb5b3bd01f8fd188331284b4d44ff7f1b3df9c91e77d113251bd6dc5349c94"
+    },
+    {
+      "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-son/src/transforms/scalar/division.rs",
+      "bytes": 7569,
+      "sha256": "9bb6801f20fd3b831b1a39dd4ec6c739e7fefe8f784b1dd8aa0f1113881d17de"
+    },
+    {
+      "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-son/src/transforms/scalar/gvn.rs",
+      "bytes": 14072,
+      "sha256": "e6df7e144764eb7f5c940c0f98a741a23d74512ff2b111215d7d44a6560b41da"
+    },
+    {
+      "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-son/src/transforms/scalar/instcombine.rs",
+      "bytes": 14572,
+      "sha256": "702a59dbe88e360d1bc1221b8a4dbd4dea5fdb877b79073c32d476a736aaa4db"
+    },
+    {
+      "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-son/src/transforms/scalar/pre.rs",
+      "bytes": 5178,
+      "sha256": "f4588973e0bdf732a29de30ce50c4201dfe3a13afd22676e09eda4e3fb6f2660"
+    },
+    {
+      "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-x86/src/lower/allocated/emit.rs",
+      "bytes": 29013,
+      "sha256": "51a08ddc43b5192cb66013d5302ce267b793dd0de38e372382bbfde4e06e43b5"
+    },
+    {
+      "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-x86/src/lower/allocated/rematerialize.rs",
+      "bytes": 9356,
+      "sha256": "67e1aeb6c265157fa69aad63dcff6075fc8d30d868697c56ddfca8bf8d2026d0"
+    },
+    {
+      "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-x86/src/lower/allocated/scan.rs",
+      "bytes": 25205,
+      "sha256": "51e6ef66b89262a3530277173091b6c76c4346b2a27c125955d9310bc82a33d8"
+    },
+    {
+      "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-x86/src/lower/allocated.rs",
+      "bytes": 5420,
+      "sha256": "ae3f860abc8785e300787e066326bfc2a4790cfa98505405b3842e9fe64bb402"
+    },
+    {
+      "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-x86/src/lower/schedule.rs",
+      "bytes": 21130,
+      "sha256": "4d170f50dbeaeefbf5a734cbd0768db012866073f33a2c16c140c514ef4e9dc1"
+    },
+    {
+      "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-x86/src/lower.rs",
+      "bytes": 48687,
+      "sha256": "790b9194b803ba8be6db7da6f6d8233a9a226b7327a30c0066f639c6800850ef"
+    },
+    {
+      "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/rustc_codegen_kfrc/src/codegen.rs",
+      "bytes": 17735,
+      "sha256": "7ef57ae560d4f0fa2b24d3b4f9c1b25151bfa86d5acf7d509508a2845001dc6d"
+    },
+    {
+      "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/rustc_codegen_kfrc/src/inline_cost.rs",
+      "bytes": 7785,
+      "sha256": "32d3eef165f620bd4a9bd1562130619703ecc257fe6b0a80ad15094ea68f56a8"
+    },
+    {
+      "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/rustc_codegen_kfrc/src/permissions.rs",
+      "bytes": 8538,
+      "sha256": "fb7f1aed2e55adb902b75da623452022b82b18ba52608436f556ef95f5aef863"
+    },
+    {
+      "path": "/Users/shom/Downloads/kfrc-llvm-one-x-20261111/s-retyped-array-paused-20261111/llvm-reference/MemCpyOptimizer.cpp",
+      "bytes": 86763,
+      "sha256": "7180f01312e76679da78fe8efa43ff57d4fcaf3107682d6e4c208ebf0ea5f9b4"
+    },
+    {
+      "path": "/Users/shom/Downloads/kfrc-llvm-one-x-20261111/validation/validation-pause-status.json",
+      "bytes": 682,
+      "sha256": "3aa9aeb9deab5810165ed3021cfd196869d38a325fb5337c737db67fbe5981a2"
+    },
+    {
+      "path": "/Users/shom/Downloads/llvm-study/README.md",
+      "bytes": 5854,
+      "sha256": "c7d18bfbad873d9bd9600e7a5c44ee96d35b2451970f3836092165fb9a3c9793"
+    },
+    {
+      "path": "/Users/shom/Downloads/llvm-study/references/cache/llvm/lib/Passes/PassBuilderPipelines.cpp",
+      "bytes": 101429,
+      "sha256": "4d675be5e17e17505c83ef53acddc0c4b178c208ebd7260475abb23c71313f92"
+    }
+  ],
+  "context_inputs": [
+    {
+      "path": "/Users/shom/Downloads/llvm-study/references/cache/llvm/docs/MemorySSA.rst",
+      "bytes": 20399,
+      "sha256": "40cb34b66fc1df02b748fb5e42aa3ab4167298100af52788979aa77e11c68c43"
+    },
+    {
+      "path": "/Users/shom/Downloads/llvm-study/references/cache/llvm/include/llvm/Analysis/ScalarEvolution.h",
+      "bytes": 116102,
+      "sha256": "37eea86efdcc54799e23e44e81bb9f8f0fa1a8cbaf0d9f47a7d03096e0590f94"
+    },
+    {
+      "path": "/Users/shom/Downloads/llvm-study/references/cache/llvm/lib/CodeGen/MachineScheduler.cpp",
+      "bytes": 187733,
+      "sha256": "8788d67f152d62f0b5388aa9071d2d3c9fbd43fd9368017db18f87e8895f9226"
+    },
+    {
+      "path": "/Users/shom/Downloads/llvm-study/references/cache/llvm/lib/CodeGen/RegAllocGreedy.cpp",
+      "bytes": 111402,
+      "sha256": "c1905eae0464f4f71f95122d34e2790e8209e5ee15c357548b363a4c3107dcf8"
+    },
+    {
+      "path": "/Users/shom/Downloads/llvm-study/references/cache/llvm/lib/Transforms/Scalar/GVN.cpp",
+      "bytes": 128680,
+      "sha256": "4c41a810d0fe28c9082cea44dabd4237e357c240801203263c906ab8194cabf1"
+    },
+    {
+      "path": "/Users/shom/Downloads/llvm-study/references/cache/llvm/lib/Transforms/Scalar/LICM.cpp",
+      "bytes": 124198,
+      "sha256": "64065a4f4838ac53c20bd59e7fa41f9b5002750b121a051c53082c9f4d686065"
+    },
+    {
+      "path": "/Users/shom/Downloads/llvm-study/references/cache/llvm/lib/Transforms/Scalar/SROA.cpp",
+      "bytes": 235969,
+      "sha256": "b29efe3d5c94642b938d6dad3ddf1d20d1ea545ed04166a47d743abc6a1f6a8a"
+    },
+    {
+      "path": "/Users/shom/Downloads/llvm-study/references/cache/llvm/lib/Transforms/Vectorize/LoopVectorize.cpp",
+      "bytes": 451168,
+      "sha256": "e11043e76c76f776dad967498f73a159e20914c794927dbc88f05878fe9bb44d"
+    },
+    {
+      "path": "/Users/shom/Downloads/llvm-study/references/manifest.json",
+      "bytes": 16056,
+      "sha256": "d88795d722dfbc9198bec2f597e03aa32484b1bb0c0e975cbf35b2836fbe8ab5"
+    },
+    {
+      "path": "/Users/shom/Downloads/llvm-study/topics/00-architecture.md",
+      "bytes": 3535,
+      "sha256": "4e68cbbe8ad9055f30369b7f438e1c8d76d6c7e58b61396f26d8492a2f22c43a"
+    },
+    {
+      "path": "/Users/shom/Downloads/llvm-study/topics/01-ir-semantics.md",
+      "bytes": 3844,
+      "sha256": "febe50b21626b2dd51b5e4c29ca27840200c44f47a6f777d903f7c0e7e35497c"
+    },
+    {
+      "path": "/Users/shom/Downloads/llvm-study/topics/02-pass-manager.md",
+      "bytes": 3369,
+      "sha256": "25b14d81a1e0a809bb59d2eff80b79b8b91699d07645033e4b28dcff7b0641b0"
+    },
+    {
+      "path": "/Users/shom/Downloads/llvm-study/topics/03-sroa-mem2reg.md",
+      "bytes": 2965,
+      "sha256": "981996eaf11c3d874c0f06916988767c524363461f468904d42d6225e67979b1"
+    },
+    {
+      "path": "/Users/shom/Downloads/llvm-study/topics/04-instcombine.md",
+      "bytes": 3226,
+      "sha256": "0222d0055a2254944d99863b464d3c2fd155a1f0b94144012724478bbea6e951"
+    },
+    {
+      "path": "/Users/shom/Downloads/llvm-study/topics/05-sccp-cfg-dce.md",
+      "bytes": 3148,
+      "sha256": "201bd4a12e7e2c7eb203135b8357377d4482a6ff9bc86fcf85fe6c7bf527739b"
+    },
+    {
+      "path": "/Users/shom/Downloads/llvm-study/topics/06-memory-gvn-dse.md",
+      "bytes": 3670,
+      "sha256": "0f32bdf96fcd5cb7377c28c8b2bbcf22f5c36dac610fd4e03bb1829bdf768d50"
+    },
+    {
+      "path": "/Users/shom/Downloads/llvm-study/topics/07-loop-licm.md",
+      "bytes": 4122,
+      "sha256": "6b8a08225a705ffa36306ddb42021d1e6b74600d5343fcd6cef6c0aae2c5e2fc"
+    },
+    {
+      "path": "/Users/shom/Downloads/llvm-study/topics/08-vectorization-unrolling.md",
+      "bytes": 4171,
+      "sha256": "988efdfddf57829a32bc8989d93dfb85d358cd9effb822fbe9386f65a2da8740"
+    },
+    {
+      "path": "/Users/shom/Downloads/llvm-study/topics/09-ipo-lto.md",
+      "bytes": 3201,
+      "sha256": "94766b9a6dc566e8235011e7b44c48d3f5f949a7150a71fe8db9291198ef7aa8"
+    },
+    {
+      "path": "/Users/shom/Downloads/llvm-study/topics/10-instruction-selection.md",
+      "bytes": 3331,
+      "sha256": "6fab96ca2ba7a370297fd8d5f1db70bf799abf4d0a2cd58f9e03d944b4fa7700"
+    },
+    {
+      "path": "/Users/shom/Downloads/llvm-study/topics/11-register-allocation.md",
+      "bytes": 3610,
+      "sha256": "827563cca0bf5ff6b035cccccaf074b2c55a0e7945d1ee701263b4f506ec0e33"
+    },
+    {
+      "path": "/Users/shom/Downloads/llvm-study/topics/12-instruction-scheduling.md",
+      "bytes": 2968,
+      "sha256": "56e525d92bd81783f36a94ec84ee53e73b1a2b1b7f3ec1f7c24fc14b3470f0b9"
+    },
+    {
+      "path": "/Users/shom/Downloads/llvm-study/topics/13-pgo-layout.md",
+      "bytes": 3401,
+      "sha256": "f5d289b439811b0927c1919c3922c15c4d21659e206ff3979cf0b7bdd30e28ca"
+    },
+    {
+      "path": "/Users/shom/Downloads/llvm-study/topics/14-experiments.md",
+      "bytes": 6968,
+      "sha256": "d83fc87c39ec4cbe5bb02cd343c234eace471220c9b04e37612420de851aed3a"
+    },
+    {
+      "path": "/Users/shom/Downloads/llvm-study/topics/15-canonicalization.md",
+      "bytes": 3817,
+      "sha256": "4a376ada313f69cfbe63be33dc95892bd407d19955b9673b7133ba53fd78d2a7"
+    },
+    {
+      "path": "/Users/shom/Downloads/llvm-study/topics/16-phase-ordering-budget.md",
+      "bytes": 3926,
+      "sha256": "3b27efe67bde4423a7857a2eea84536e805c308f79ecec6e759baf734a9b265c"
+    },
+    {
+      "path": "/Users/shom/Downloads/llvm-study/topics/17-vplan.md",
+      "bytes": 3243,
+      "sha256": "6b38442d06b9e2523ec1e9c621a8d15c01534e3686c419524425efcee2ac275b"
+    },
+    {
+      "path": "/Users/shom/Downloads/llvm-study/topics/18-refinement-validation.md",
+      "bytes": 3892,
+      "sha256": "79ce1682eb7bbcf963486c96c0749e2bccc0b87c2fc989c12d5f5b37689b89dc"
+    },
+    {
+      "path": "/Users/shom/Downloads/llvm-study/topics/19-mlgo.md",
+      "bytes": 3492,
+      "sha256": "585b3f67c8556a2a6678625c47390169f7380f483515279e946470b10834d27b"
+    },
+    {
+      "path": "/Users/shom/Downloads/llvm-study/topics/20-bolt.md",
+      "bytes": 3328,
+      "sha256": "15eaf89f825cc865c638d5116666608c7fdf72cda472297f8cbef4c0dff2e85b"
+    },
+    {
+      "path": "/Users/shom/Downloads/llvm-study/topics/21-demanded-known-bits.md",
+      "bytes": 2934,
+      "sha256": "48af524a52b45043affd781865c5a48b1e426ef199d4a04953f49d09a50c82ba"
+    }
+  ],
+  "pause_and_rollback_receipts": [
+    {
+      "path": "/Users/shom/Downloads/kfrc-llvm-one-x-20261111/s-retyped-array-paused-20261111/manifest.json",
+      "bytes": 1278,
+      "sha256": "855987225d9e5a97aa84a7aa528c5b843b2adbde6e596e4a2ec4460c6ec26c0e"
+    },
+    {
+      "path": "/Users/shom/Downloads/kfrc-llvm-one-x-20261111/candidates/transparent-pointer-t-v1-owned/rollback-receipt.json",
+      "bytes": 4373,
+      "sha256": "8e2804e0942f58f80e4ce4a14ae0ec708e7ba7268ddc18fdf5838f17be1979a4"
+    },
+    {
+      "path": "/Users/shom/Downloads/kfrc-llvm-one-x-20261111/validation/validation-pause-status.json",
+      "bytes": 682,
+      "sha256": "3aa9aeb9deab5810165ed3021cfd196869d38a325fb5337c737db67fbe5981a2"
+    }
+  ],
+  "source_scope_inventory": {
+    "scopes": [
+      "crates/kfrc-son/src",
+      "crates/kfrc-x86/src",
+      "crates/rustc_codegen_kfrc/src"
+    ],
+    "file_count": 262,
+    "sha256": "61c3c98f8b7ed41efa1643a2cadb4ce0eafb251217d02be9055e2cd750a65d31",
+    "canonicalization": "UTF-8 JSON of inventory; sort_keys=True, ensure_ascii=False, separators=(comma,colon); file list ordered by scopes then path",
+    "inventory": [
+      {
+        "path": "crates/kfrc-son/src/analysis/cfg.rs",
+        "bytes": 5633,
+        "sha256": "6a671e1f0b28748f1b30bf9c0977ae213f68998d45f683a9544a492d771072ad"
+      },
+      {
+        "path": "crates/kfrc-son/src/analysis/cost.rs",
+        "bytes": 6258,
+        "sha256": "f3400c4d9b6b4acf3822bb9707ae7b2a52893ce3b3e4f249b9dc0aa9ca90984a"
+      },
+      {
+        "path": "crates/kfrc-son/src/analysis/demanded_bits.rs",
+        "bytes": 8970,
+        "sha256": "c8ae55403d64955c2f00fc73ff0a650703421a3876991aff8f61e85bead3ffe6"
+      },
+      {
+        "path": "crates/kfrc-son/src/analysis/dominators.rs",
+        "bytes": 1919,
+        "sha256": "427eda6292a0ff50ee0eab46a8b4dddb3af751ac933242ba7807b476391cdd83"
+      },
+      {
+        "path": "crates/kfrc-son/src/analysis/induction.rs",
+        "bytes": 2690,
+        "sha256": "0b7940a158fc56cb4d9a1c4366bc54ac79f4b4d2bf1272376d2166917fed1f6e"
+      },
+      {
+        "path": "crates/kfrc-son/src/analysis/known_bits.rs",
+        "bytes": 7672,
+        "sha256": "2f28d8ef02532316449a902919d53161415153053cb00f8422365699d458a909"
+      },
+      {
+        "path": "crates/kfrc-son/src/analysis/loops.rs",
+        "bytes": 10086,
+        "sha256": "6ecfef49557c6ea031a3a58556b513ba2591d011740ef962a651c33604475f73"
+      },
+      {
+        "path": "crates/kfrc-son/src/analysis/memory.rs",
+        "bytes": 8440,
+        "sha256": "1c9528cef701a7e973e335e8d3aa47b6a07fc7b952893f094d8e0b5b77605a37"
+      },
+      {
+        "path": "crates/kfrc-son/src/analysis/memory_locations.rs",
+        "bytes": 10130,
+        "sha256": "653c783005f442c1c60095067accf0775ee118c1ef30fd09acd2f49b6b089247"
+      },
+      {
+        "path": "crates/kfrc-son/src/analysis/mod.rs",
+        "bytes": 294,
+        "sha256": "bf0d239b2d28c868642f956f93ee18fdba092699f1de07eee54ac0a375788a6e"
+      },
+      {
+        "path": "crates/kfrc-son/src/analysis/ranges.rs",
+        "bytes": 15100,
+        "sha256": "08d4f7273d0e4abbf0d529b7d360b4f7545e6497d89338fbe169c0bd87794f97"
+      },
+      {
+        "path": "crates/kfrc-son/src/analysis/refinement/implication.rs",
+        "bytes": 6476,
+        "sha256": "36145ffef6f26fcd04f1c2dcdf32de53542214055f9e9d2bb5fb0430df0d5348"
+      },
+      {
+        "path": "crates/kfrc-son/src/analysis/refinement/implication_tests.rs",
+        "bytes": 4686,
+        "sha256": "3c6b9e80538af1a6460bd407dfc9323d1e86fea9e33ca538585530e16183866a"
+      },
+      {
+        "path": "crates/kfrc-son/src/analysis/refinement.rs",
+        "bytes": 16738,
+        "sha256": "b7544a69ae5d2ceb9c1044e63774a3b8137a615f9b05bedda5ef87c3ea0f71f4"
+      },
+      {
+        "path": "crates/kfrc-son/src/analysis/refinement_tests.rs",
+        "bytes": 9552,
+        "sha256": "ce450603ed31f6d4a317c27f6f696fa8bc12e04d0e797ea25f7ab8b6f3e813d1"
+      },
+      {
+        "path": "crates/kfrc-son/src/analysis/uses.rs",
+        "bytes": 2237,
+        "sha256": "cc1df93a1605c26ca27488ef10fa32c3cdcbd96680c6d8c135f862be57af08f7"
+      },
+      {
+        "path": "crates/kfrc-son/src/arithmetic.rs",
+        "bytes": 3863,
+        "sha256": "1cf8aaab505e3131e8871ba1a715668332e9e79c81c457e8836125e43d7fbea3"
+      },
+      {
+        "path": "crates/kfrc-son/src/build/calls.rs",
+        "bytes": 4392,
+        "sha256": "0c882e1b31d073d63082f6b3488a5be7d15422493854fd312d019cba638fc2ff"
+      },
+      {
+        "path": "crates/kfrc-son/src/build/control.rs",
+        "bytes": 2611,
+        "sha256": "6eb1a76d21ef37f1c859b4d3edde89161864716e4c12e173aac13d4b5179fdc1"
+      },
+      {
+        "path": "crates/kfrc-son/src/build/memory.rs",
+        "bytes": 17396,
+        "sha256": "b399300b838e53fd8a27f924edbdab39471f5ad3891d324f5c5ece5ddfd38742"
+      },
+      {
+        "path": "crates/kfrc-son/src/build/semantic/compare.rs",
+        "bytes": 6549,
+        "sha256": "28e5e5e6f6076561d89624a701a7e8673c5d1ddb0cd4eb7fbd604111190d3dcd"
+      },
+      {
+        "path": "crates/kfrc-son/src/build/semantic/maybe_uninit.rs",
+        "bytes": 2250,
+        "sha256": "6c10b3cdb1c59ee8170eb9e494faf15d03ea7a0a4bebf5ab4f9f05c2f0c927fc"
+      },
+      {
+        "path": "crates/kfrc-son/src/build/semantic/places.rs",
+        "bytes": 10600,
+        "sha256": "bfd499ff2658b9f325427b900433ec7f1abb81802e9a4460244f1639d2a50b78"
+      },
+      {
+        "path": "crates/kfrc-son/src/build/semantic/values.rs",
+        "bytes": 16757,
+        "sha256": "8982aacfa6495cf8e98f1ff873864c9d0dfdff4b452e07916c8e0d44b7756662"
+      },
+      {
+        "path": "crates/kfrc-son/src/build/semantic.rs",
+        "bytes": 7593,
+        "sha256": "20180699699dfdbc4f21990ceb862ca233a2d76e6b362943b6571ec43bf372e4"
+      },
+      {
+        "path": "crates/kfrc-son/src/build/values.rs",
+        "bytes": 7180,
+        "sha256": "1e1c68608ab5952fc8444dd6af4a5ec460b069c42c785b9f099037eca262dcb3"
+      },
+      {
+        "path": "crates/kfrc-son/src/build.rs",
+        "bytes": 29174,
+        "sha256": "e0d0a4861a9e16c07e0b27d44bd22b1e903a72c8fc4fb7ad51c062b6f4b657e8"
+      },
+      {
+        "path": "crates/kfrc-son/src/graph.rs",
+        "bytes": 49407,
+        "sha256": "be0ff330586b409ac64df80904343b2c48a7b11439270214362a139670ca8855"
+      },
+      {
+        "path": "crates/kfrc-son/src/interpret/rust.rs",
+        "bytes": 21444,
+        "sha256": "9ab7a40284852abfae1b8a3cf50f79ab1821251e8c204d1e397f89418ef1b4c1"
+      },
+      {
+        "path": "crates/kfrc-son/src/interpret/semantic.rs",
+        "bytes": 35342,
+        "sha256": "27def4a3e9ede3da36a6fa04125a979a5af2912bd2d7b1a8785f0cb765d383b8"
+      },
+      {
+        "path": "crates/kfrc-son/src/interpret/semantic_memory.rs",
+        "bytes": 24462,
+        "sha256": "7137740d32f7cc4b0d2ee22e070ece42f68deea7a6d2ae23cb796c59b0aa6201"
+      },
+      {
+        "path": "crates/kfrc-son/src/interpret/tls.rs",
+        "bytes": 3172,
+        "sha256": "2668ba8e12bc5c3d7de4911259d90cac62d193dc318da8befb192169998cf442"
+      },
+      {
+        "path": "crates/kfrc-son/src/interpret/value.rs",
+        "bytes": 13518,
+        "sha256": "2ce16a2e878e72750006727b83ba66e56fda08b0eb06258f96e9007a49bb6156"
+      },
+      {
+        "path": "crates/kfrc-son/src/interpret.rs",
+        "bytes": 65525,
+        "sha256": "ef5b1163927fa8a5b130bee68548acb154916c2b73049792ad1219dd1a11f472"
+      },
+      {
+        "path": "crates/kfrc-son/src/intrinsic.rs",
+        "bytes": 6923,
+        "sha256": "93d76cf5dcb873ebe9de124f7d2b41db8321814cdcb2ff929abd826d3da9413a"
+      },
+      {
+        "path": "crates/kfrc-son/src/lib.rs",
+        "bytes": 1578,
+        "sha256": "4c70eea155fbd51afd41a661c9efdac708e5762eccf116a04c36f59f92f12bbe"
+      },
+      {
+        "path": "crates/kfrc-son/src/lower_layout/address_cse.rs",
+        "bytes": 1705,
+        "sha256": "a6a7c14ee04118d6e92091a2b57ed49e3b2f37352f4b87334d19a01cfc4ac76e"
+      },
+      {
+        "path": "crates/kfrc-son/src/lower_layout/array_transport.rs",
+        "bytes": 3598,
+        "sha256": "ecf0d4c82cb5b2d4507f285fdf5be96b7b4de3318c6cd157fe42b40571a8300a"
+      },
+      {
+        "path": "crates/kfrc-son/src/lower_layout/boundary_transport.rs",
+        "bytes": 10834,
+        "sha256": "c33ed8d8de49e2e5d99144138d891e73929e51c65c6953ebf7ad0f248d8be793"
+      },
+      {
+        "path": "crates/kfrc-son/src/lower_layout/cleanup.rs",
+        "bytes": 3613,
+        "sha256": "143adf28b7e64c349717bc0f9549f2f0171e8679a1d8e06e972af96fdb78882f"
+      },
+      {
+        "path": "crates/kfrc-son/src/lower_layout/cleanup_tests.rs",
+        "bytes": 11386,
+        "sha256": "4014147d5d56c22de4381cc177cc91fbed10ecdeff43d8e281407fad4da0a3a6"
+      },
+      {
+        "path": "crates/kfrc-son/src/lower_layout/copy_tests.rs",
+        "bytes": 19319,
+        "sha256": "940e9b84d255e8eea3ae67ccf93e339ab84f2bc6e535ee546953a7d17c152f00"
+      },
+      {
+        "path": "crates/kfrc-son/src/lower_layout/demand.rs",
+        "bytes": 7386,
+        "sha256": "17486d19d4414eb9e8b039bb6cc6517c9397af4fc9583f2aeaa1f7076ab0c0ef"
+      },
+      {
+        "path": "crates/kfrc-son/src/lower_layout/encoded.rs",
+        "bytes": 4841,
+        "sha256": "b9093b165f408bcea9d83391adc52b0573be0952e055873fc344395cb02f2c1f"
+      },
+      {
+        "path": "crates/kfrc-son/src/lower_layout/ignored_abi.rs",
+        "bytes": 6346,
+        "sha256": "3db5f36bf1b92520254c4286582664577f33190a0f106fcf6beced19c9627930"
+      },
+      {
+        "path": "crates/kfrc-son/src/lower_layout/maybe_uninit.rs",
+        "bytes": 6749,
+        "sha256": "2dbfa3bda48d0a0ac0f4edfab4706f390e3f33ef61287914d72ae8ccc8b0f440"
+      },
+      {
+        "path": "crates/kfrc-son/src/lower_layout/memory.rs",
+        "bytes": 12271,
+        "sha256": "aeaabd2935d7e0ee22bc8893a5d008f2e252692f06e07a5218067820aaadcfa3"
+      },
+      {
+        "path": "crates/kfrc-son/src/lower_layout/observation.rs",
+        "bytes": 1442,
+        "sha256": "29533262f2a128ef660dd1502acaada93bc04a79deff2a652dc46e42657fcfb6"
+      },
+      {
+        "path": "crates/kfrc-son/src/lower_layout/owned_transport.rs",
+        "bytes": 7522,
+        "sha256": "8c8be33b65e6d60985df7ccc3604f4aa764aecd76d029fa29d91c2ff3c686975"
+      },
+      {
+        "path": "crates/kfrc-son/src/lower_layout/owned_transport_tests.rs",
+        "bytes": 6779,
+        "sha256": "7fa37b85ed9dd6e384bc249c2cc4adb87a40bab71f02f1ed7e64e14871a31b61"
+      },
+      {
+        "path": "crates/kfrc-son/src/lower_layout/private_memory.rs",
+        "bytes": 9788,
+        "sha256": "e935758956e46b2c77c67c441569df5c027923e0c380327dab2ce147e58e0083"
+      },
+      {
+        "path": "crates/kfrc-son/src/lower_layout/private_memory_copy.rs",
+        "bytes": 9771,
+        "sha256": "815ee73932be24392b5c7363f84c4a4358c19483c8b888e50f32417bdf3ae9ba"
+      },
+      {
+        "path": "crates/kfrc-son/src/lower_layout/private_memory_tests.rs",
+        "bytes": 18101,
+        "sha256": "00a4bd3b47bcceafc0a722e6c2ec34b1177766a99dd977154e31e90f9af708b7"
+      },
+      {
+        "path": "crates/kfrc-son/src/lower_layout/projections.rs",
+        "bytes": 7002,
+        "sha256": "2d5ca1e41ee78f470c0896f1645542bdc55cbb347206926075d0d3154f4ad782"
+      },
+      {
+        "path": "crates/kfrc-son/src/lower_layout/repeat.rs",
+        "bytes": 8111,
+        "sha256": "a33eda14851b06ea1c84e9723558fb535b5aee5484045d7ed87f165afd4caa7b"
+      },
+      {
+        "path": "crates/kfrc-son/src/lower_layout/representation.rs",
+        "bytes": 8263,
+        "sha256": "c356cf95c401ae9f972283185517a6b9111e29234a1170076d5ad687b2b07953"
+      },
+      {
+        "path": "crates/kfrc-son/src/lower_layout/semantic_memory.rs",
+        "bytes": 12987,
+        "sha256": "433f17a3a1989775b1805f40f39eb7ffa7543384bf92a82bfa4a0c0c2bbc66ec"
+      },
+      {
+        "path": "crates/kfrc-son/src/lower_layout/values.rs",
+        "bytes": 26082,
+        "sha256": "0c8f02044f773e8b515ee508bd25598afdcf9fb8d38a14d439ea921e7d6014a5"
+      },
+      {
+        "path": "crates/kfrc-son/src/lower_layout/variant_encoding.rs",
+        "bytes": 7409,
+        "sha256": "93905178cde687138bf606b3579ebfbe774fd5755490b774f30223447a807302"
+      },
+      {
+        "path": "crates/kfrc-son/src/lower_layout/variant_lanes.rs",
+        "bytes": 21869,
+        "sha256": "590ebdbb992a4e5d2bce30a02720818e9954690208eda014275426f7bc0f0b01"
+      },
+      {
+        "path": "crates/kfrc-son/src/lower_layout/variant_scalar.rs",
+        "bytes": 5041,
+        "sha256": "b38e600c3c8adfdb4c9145d50357e5e39bf8fd06596cbf9c09cdb7921e15fdbf"
+      },
+      {
+        "path": "crates/kfrc-son/src/lower_layout/variant_switch.rs",
+        "bytes": 8149,
+        "sha256": "9fd60fb9bb901b648c14d65c9700ee78a0cf9900e0043d4d025f47fb504a43ba"
+      },
+      {
+        "path": "crates/kfrc-son/src/lower_layout/variants.rs",
+        "bytes": 22334,
+        "sha256": "8d1132c3de980f0d8a824c68e156c7c6889f76ec8e2276dee349485f6c229b94"
+      },
+      {
+        "path": "crates/kfrc-son/src/lower_layout/whole_pack/index.rs",
+        "bytes": 2626,
+        "sha256": "cc9fc03b950d5decdbfc9af5319913a6d2ea1980137fd729cd54b5dbc1307503"
+      },
+      {
+        "path": "crates/kfrc-son/src/lower_layout/whole_pack/loads.rs",
+        "bytes": 7372,
+        "sha256": "143c8ce9f2076eeb685bec0a782426ce94301522fb089f48322ff2eb2df6ea45"
+      },
+      {
+        "path": "crates/kfrc-son/src/lower_layout/whole_pack/pack.rs",
+        "bytes": 4688,
+        "sha256": "67f245e4039cfad85ed717845335682a87b5c05583c32f2a6d80add7a765a985"
+      },
+      {
+        "path": "crates/kfrc-son/src/lower_layout/whole_pack/tests/direct.rs",
+        "bytes": 4847,
+        "sha256": "ba01d4b743357c7d9e5729898c24422c1e3a6795922071660ed1b23665eee04e"
+      },
+      {
+        "path": "crates/kfrc-son/src/lower_layout/whole_pack/tests/fixture.rs",
+        "bytes": 14188,
+        "sha256": "153ea789254a29ee9689b03cad39bf2357dbbce115c19eb80e8142f576dd4c22"
+      },
+      {
+        "path": "crates/kfrc-son/src/lower_layout/whole_pack/tests/flow.rs",
+        "bytes": 9886,
+        "sha256": "d150db980ee0c1d5d00ef81965ac2e519cb0c9397411fc8195ae4ae19f3e2349"
+      },
+      {
+        "path": "crates/kfrc-son/src/lower_layout/whole_pack/tests/rejections.rs",
+        "bytes": 9568,
+        "sha256": "03ced3c41b4a385aa0cd1633efeab19eddd83b5679b125cb87950fd8be76d0bd"
+      },
+      {
+        "path": "crates/kfrc-son/src/lower_layout/whole_pack/tests/semantic.rs",
+        "bytes": 12461,
+        "sha256": "fe7ff7cb208e52eb3cdfcdd8dfaed045e951ea30e9fe98fa92c1cb0306a1d0b8"
+      },
+      {
+        "path": "crates/kfrc-son/src/lower_layout/whole_pack/tests/semantic_fixture.rs",
+        "bytes": 11188,
+        "sha256": "e00626a13946b3734f74148fc5bb0d73c584ceee32576f3c4991a92250bfa959"
+      },
+      {
+        "path": "crates/kfrc-son/src/lower_layout/whole_pack/tests/transmute_bridge.rs",
+        "bytes": 6493,
+        "sha256": "5d34d10821e38ce8c972790329155886a8058c65d6ea2978ed60b4c2eb20b33c"
+      },
+      {
+        "path": "crates/kfrc-son/src/lower_layout/whole_pack/tests.rs",
+        "bytes": 6653,
+        "sha256": "96c35246c1bb69919cf84ccd238436ab9a25d849979ae8e2cb5414eab510f39a"
+      },
+      {
+        "path": "crates/kfrc-son/src/lower_layout/whole_pack/transmute.rs",
+        "bytes": 2463,
+        "sha256": "35c2d3cb719c0b0462890258c58a4227dfe21935d91e01360612c5a274fd1eba"
+      },
+      {
+        "path": "crates/kfrc-son/src/lower_layout/whole_pack.rs",
+        "bytes": 3658,
+        "sha256": "53867b837774abe325f1c29549b5cb595aa2c5680608d847abba9a96734cdee0"
+      },
+      {
+        "path": "crates/kfrc-son/src/lower_layout.rs",
+        "bytes": 20179,
+        "sha256": "2f0ac622b9b0f419d8b6890d60478e7982cc0c93a7f368a429bb4611409b3529"
+      },
+      {
+        "path": "crates/kfrc-son/src/optimize.rs",
+        "bytes": 244,
+        "sha256": "dc9c218700fc08bd04ae87f3502b1d1cbeb60fea0e7b1ccd0f3e21e196a23054"
+      },
+      {
+        "path": "crates/kfrc-son/src/pipeline.rs",
+        "bytes": 28566,
+        "sha256": "163d8c84bdcd75298500c91ac5f2567698bf14a45c8a7179c21f43c93c510ec3"
+      },
+      {
+        "path": "crates/kfrc-son/src/semantic_value.rs",
+        "bytes": 3040,
+        "sha256": "3886e501437340c0a13fa16b62814d5a2b8c7dbac2b49132fc487f3cbeacd810"
+      },
+      {
+        "path": "crates/kfrc-son/src/specialize/clone.rs",
+        "bytes": 5753,
+        "sha256": "2e2ee2b7e038e0bd8a12afe32247f06ff95a46e4139f49fcff22ea22265f003d"
+      },
+      {
+        "path": "crates/kfrc-son/src/specialize/constant.rs",
+        "bytes": 7940,
+        "sha256": "bf354bda64d69e91d238e5ef0c57c99c4d0762273e2ca52043961e75a7c980ef"
+      },
+      {
+        "path": "crates/kfrc-son/src/specialize/dependencies.rs",
+        "bytes": 2815,
+        "sha256": "4466b80c543839546a5210c6839b1412ed2679562503f3e5c9b7b3f95232cb4c"
+      },
+      {
+        "path": "crates/kfrc-son/src/specialize/inhabited.rs",
+        "bytes": 3594,
+        "sha256": "8e0b0bb1ef8b742456267f5f4f492d58f20cb1f92fe21314d6d667e77b757dc2"
+      },
+      {
+        "path": "crates/kfrc-son/src/specialize/mod.rs",
+        "bytes": 15914,
+        "sha256": "016f98232f2da45f424ebfec5e5e70df4196e44451d9960c2ddbfa020542df49"
+      },
+      {
+        "path": "crates/kfrc-son/src/specialize/prepare_control.rs",
+        "bytes": 4826,
+        "sha256": "ca572fb1e8123a721c4818b0b4bf24d376821721ab5a3f89e9a6440a78f36d84"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/control/conditions.rs",
+        "bytes": 9286,
+        "sha256": "26f28fa9fb7414d0a97f5370cf3e49fbb0afd45dbbe931dadba8a12fd7ce38fa"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/control/diamonds.rs",
+        "bytes": 5275,
+        "sha256": "9f36c3bcaac2d09a2f5329dd51c3abbce631fb1ad36813264ab48c3579af5c06"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/control/loop_simplify.rs",
+        "bytes": 5664,
+        "sha256": "8d218ac7f95f9c44a96d146b804626e3f9aedd592b68959671fbfe9742cbb991"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/control/loop_simplify_tests.rs",
+        "bytes": 13906,
+        "sha256": "0805daa15ed9610ff2e4af60910cd7f6a75bf9cd98ba51f7685087a98b9cdc19"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/control/mod.rs",
+        "bytes": 185,
+        "sha256": "ee4fa530620786a72f120426c579880d33fb5ee218de04630a97831c985ed74e"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/control/sccp.rs",
+        "bytes": 9439,
+        "sha256": "d980a47de9944bb1e6152bc3b64f0a41d754459b547ff7fcc6b2e3b5f8b549ba"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/control/simplify.rs",
+        "bytes": 4650,
+        "sha256": "9a3e722539194de9469ef70236d169800d9ecc9555e27eb47ba86609e6df6e7c"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/control/thread_variants.rs",
+        "bytes": 20736,
+        "sha256": "59e0e49a3f015449df1c6a3387900576bdbfa4b6cfab13fb0ed80dca227bc4be"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/control/thread_variants_tests.rs",
+        "bytes": 18946,
+        "sha256": "0e0e017ce597f88cd32c5427403e1b746b360ca07d2fa9213a562f86f8bdab31"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/control/variants.rs",
+        "bytes": 10427,
+        "sha256": "d1b2e732c520c45ca05a58153ee281dc9a992b4517c5225a69ee3c3c06610349"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/ipo/arguments/cleanup.rs",
+        "bytes": 3021,
+        "sha256": "a0b4354da6e6ab87f767eaf8806c2716bff4d2806985d42f3acc4289171e6d79"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/ipo/arguments/dump.rs",
+        "bytes": 5560,
+        "sha256": "8fb6ce04f3bd4a76323f4b66f387c70e8aaca39dd0e8cfd00c525bfa8dbf7233"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/ipo/arguments/facts.rs",
+        "bytes": 3918,
+        "sha256": "a66971ec1c8a64d8796a07d4650cdee8a1750cfe1d36999b0ebbe7b60a74f848"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/ipo/arguments/reapply.rs",
+        "bytes": 8848,
+        "sha256": "94e1c5713adbe9627a371898172f5a97ebb0d78d30e517a1bcf3bd6edf02112d"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/ipo/arguments.rs",
+        "bytes": 22705,
+        "sha256": "a68f1acb7fc729a3e2db55a6d1febff945eb6a4a870a2d27daa58cd167aa550c"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/ipo/cost.rs",
+        "bytes": 6617,
+        "sha256": "322cb4c8d1834264c714a2600e01c9ad44e519ebc8c07dd813ebf52cad34daa1"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/ipo/driver/priority.rs",
+        "bytes": 3352,
+        "sha256": "aa215d00ee109828882741acd36bb1251b3edd16af71f09f55df234f0184218b"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/ipo/driver.rs",
+        "bytes": 20378,
+        "sha256": "85b93ca4fd12724f2f92f4956f09912c5e4d98d4b1fd288461000a2fb0fa1494"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/ipo/identity.rs",
+        "bytes": 8985,
+        "sha256": "a2b789801575519c4d6c0d36b2196bdf0d1300caf0c42a8e56b9bbe241db113d"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/ipo/loop_constants.rs",
+        "bytes": 3022,
+        "sha256": "ad4f1abc240aa11f58a9035c4970b71baf63d2da59c9c8f0218d4976cbf17007"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/ipo/mod.rs",
+        "bytes": 7149,
+        "sha256": "bbe9365fdfb9ec5b71f0b6cdd1d785f45848b99cc66772dcb7ffdd2779da7312"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/ipo/plan/data.rs",
+        "bytes": 6724,
+        "sha256": "2bb1fdc53aa7ffc0693cb7fe9ada997ed9af74f39f6000f4c0f52439dd103cc4"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/ipo/plan.rs",
+        "bytes": 6925,
+        "sha256": "cd217c2c74d644ab80da87557e4670947d2ed414d7fc971dfa615511b00ddcc3"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/ipo/splice.rs",
+        "bytes": 12298,
+        "sha256": "d170dfda7ae3b6e695c53a3c91dc5d9c4205b48b16275c2b8f01c781c145e0fe"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/ipo/types.rs",
+        "bytes": 22918,
+        "sha256": "30f1393f9a445d63ccaa90e95f9fcb3d29b5b807fc01765889b097fd1cdcc424"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/loops/clone.rs",
+        "bytes": 4276,
+        "sha256": "05fdcf4718479a5d4c97e384712a4f413b22186ad55c0a7e057cdc2c2202bfce"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/loops/count.rs",
+        "bytes": 4637,
+        "sha256": "cdcbece9b5bfe2fbfe371519d14209a899fcd38f65ba86760c880d69be7ffda2"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/loops/mod.rs",
+        "bytes": 5139,
+        "sha256": "c5e85285aefeb08a9191457b1802f617f12cfacaf4d9090f7336a2e138bd9b0a"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/loops/plan.rs",
+        "bytes": 7460,
+        "sha256": "588b027d41bdd8c3b94dbccd003239f324a4b837020edb010f57cc82e3e60bdd"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/loops/strength_reduce.rs",
+        "bytes": 8707,
+        "sha256": "8a54639bbcdece10abdf4fd2e8d34923cbc83b9285ae7bd851239072ce2a8b64"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/loops/tests/conditions.rs",
+        "bytes": 2649,
+        "sha256": "3d0bd3546b965302bc5404170f6eb582f618213f8dfef5b5c3cd39d8bcba6660"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/loops/tests/effects.rs",
+        "bytes": 6969,
+        "sha256": "96f7b561fcd4a90e17a87934c4d6ec4bb94d1caedbdc25698271ace70b053c1c"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/loops/tests/modular.rs",
+        "bytes": 3083,
+        "sha256": "6fbb85f017b08e37427600f75ecef6d645759fa25dee02cc31ee3fad2db965cf"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/loops/tests/observations.rs",
+        "bytes": 914,
+        "sha256": "506f656276c8f35a008b8004f17af83aa546c2e067807f7acbfd37ada6bd5b59"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/loops/tests/strength_reduce.rs",
+        "bytes": 8843,
+        "sha256": "32cec45687ff41c22708039eb39295b621837004844936c23b81406cb4d1225f"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/loops/tests.rs",
+        "bytes": 12638,
+        "sha256": "e6fb3c91f1b98696c9e59cdd48d9b8d59b6b747f646d6b586738e8b7694f7c25"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/loops/values.rs",
+        "bytes": 6488,
+        "sha256": "cbf9598edd53c3b5ef07b74322e2730b44fd7f2467878287a5728844c9d728c0"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/memory/dse.rs",
+        "bytes": 5494,
+        "sha256": "8d54bed12f5145d2f54a6e90af7aae6bbdcdf89b5690ec7a52ac885adfa67b77"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/memory/dse_branch_tests/access_errors.rs",
+        "bytes": 8350,
+        "sha256": "e3234a159f822c99c037863bfedb4995eb24c2f00cd2339d7eac72949fd6053f"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/memory/dse_branch_tests/barriers.rs",
+        "bytes": 11829,
+        "sha256": "4c7596029dc1420241ef22b876387d47d1d65fb85ab97491c0dde91cce8ac44b"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/memory/dse_branch_tests/byte_coverage.rs",
+        "bytes": 6396,
+        "sha256": "f1a2b3128a84c514ea87ec3f56f810fcfa4b5fd874f3bb0d56ee636111693f8f"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/memory/dse_branch_tests/coverage.rs",
+        "bytes": 6333,
+        "sha256": "c6d073da392c4787934c7cff794cf11940924757b21935845c0c53ede04f3029"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/memory/dse_branch_tests/value_errors/encoding.rs",
+        "bytes": 7499,
+        "sha256": "5de82730791f305a861c074a26e6c7b0464f8a286405ae1cfa87ca6c1e6f58d6"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/memory/dse_branch_tests/value_errors/operands.rs",
+        "bytes": 10697,
+        "sha256": "b08762ba309ba7787d39b4de533757f4b5dd616ea4ecf23ec1f0bd7f60932f48"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/memory/dse_branch_tests/value_errors.rs",
+        "bytes": 7662,
+        "sha256": "7b55d4da8e4e563ff110f2e4ebc72b4f63d134940c230ed362bab25b2f768f59"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/memory/dse_branch_tests.rs",
+        "bytes": 11074,
+        "sha256": "ad32584462a7f9a60e5e73509f3d7ef1c7a6922405073eb1c9718d73b26b5704"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/memory/dse_branches.rs",
+        "bytes": 8982,
+        "sha256": "090444444e8e3d2fa97b80105b7c7d50ebbf6d78a8d10f942a24aa3f1015a654"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/memory/dse_tests.rs",
+        "bytes": 29849,
+        "sha256": "5f7f535b854897725f31f7e4f996fccd4421478897792cd7eaa69d1b0abd2da0"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/memory/dse_values.rs",
+        "bytes": 7950,
+        "sha256": "36e75c802cd9f43057295a20c09db5944a30ddca729e82fb440cfc97610ee49e"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/memory/forward.rs",
+        "bytes": 20663,
+        "sha256": "7272b45e8136ab31ecdd7841b29edd66376ddc832ed1d61ef6b6a3363f4cb94b"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/memory/forward_range_tests/boundaries.rs",
+        "bytes": 11341,
+        "sha256": "c1ad1124b43695318d42482fd7f1b5c727c1e7457dc8b7b7f8b341b6d839364d"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/memory/forward_range_tests/coverage.rs",
+        "bytes": 4274,
+        "sha256": "07b7429a4109466ffd751acfc64f95e9bf71ff08615db1bfe2887f65db661184"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/memory/forward_range_tests/errors.rs",
+        "bytes": 2531,
+        "sha256": "9ff05ba1beb5df46d75371b30dffdf286b87a880839857485232339e1f103724"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/memory/forward_range_tests.rs",
+        "bytes": 10997,
+        "sha256": "5870bb8061e4b615235d72ffbf14723d28afcc50b683b7e22ea360f33cd91748"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/memory/mod.rs",
+        "bytes": 124,
+        "sha256": "0e952068d6da9df6ef7a13b7165825e00352e74f1796b3302f3520a762bc572f"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/memory/observation/conditions.rs",
+        "bytes": 2939,
+        "sha256": "81879daa57c799ec74cbe34220b2f32f589c060ee35cd8d6d6cbb659cc0f518b"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/memory/observation/scalar.rs",
+        "bytes": 1465,
+        "sha256": "64d5eacd3b231f2e7bbe1d12d376a4872c1c82142406e512f82f2120f11d9dc1"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/memory/observation.rs",
+        "bytes": 10881,
+        "sha256": "162c7162b4fb9229118c48af3be7c33856bdcc434c846e1db0916b127bf6d80b"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/memory/observation_condition_tests.rs",
+        "bytes": 17615,
+        "sha256": "d7f78579f6f3d2dabf3e7187a2bca8f7ca47710e56f372d0b467803753e3c854"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/memory/observation_tests/scalar.rs",
+        "bytes": 6843,
+        "sha256": "f8dc2a0f30bc62cf27f387b4b5ef565046ad204b53fd7c898743c6142003505e"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/memory/observation_tests.rs",
+        "bytes": 23520,
+        "sha256": "3165e09bbaedde138b331cda65c1844977c3879a30e367e7bce42904c09c38fd"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/memory/partition.rs",
+        "bytes": 2776,
+        "sha256": "546a0abf37729147f91c1d78074935718bbe1ed4139ac56f0c385e42835f2811"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/memory/promotion.rs",
+        "bytes": 21020,
+        "sha256": "91fb5b3bd01f8fd188331284b4d44ff7f1b3df9c91e77d113251bd6dc5349c94"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/memory/promotion_index_tests.rs",
+        "bytes": 6728,
+        "sha256": "74e46c7883e893cd81d9f41e207fbc15b8f101af21f4f0eae0e80d5882b23dd7"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/memory/promotion_tests.rs",
+        "bytes": 28344,
+        "sha256": "0ad5bad075866d7fd20fd11a2f4933d4134d0470e02562a0b92d5c0a4d368629"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/mod.rs",
+        "bytes": 212,
+        "sha256": "819f4845c62af4ec0432b1f9261d38b7fc13cebe92fdae59f3b89892701d05a1"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/scalar/aggregate.rs",
+        "bytes": 8323,
+        "sha256": "02107c6017791edade80c1a0044eab40d0d82bcfa15554441edf744ccd4adaff"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/scalar/division.rs",
+        "bytes": 7569,
+        "sha256": "9bb6801f20fd3b831b1a39dd4ec6c739e7fefe8f784b1dd8aa0f1113881d17de"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/scalar/gvn.rs",
+        "bytes": 14072,
+        "sha256": "e6df7e144764eb7f5c940c0f98a741a23d74512ff2b111215d7d44a6560b41da"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/scalar/instcombine/bit_slices.rs",
+        "bytes": 4045,
+        "sha256": "0de73fa0d18c06675f52ad8d84ddddc415aa76c4c3ba7558084204d6d5758480"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/scalar/instcombine/casts.rs",
+        "bytes": 3426,
+        "sha256": "84d473dce655a7789ecff4a275990755bbbd4b14d050e22679eb828a1437a9b6"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/scalar/instcombine/demanded.rs",
+        "bytes": 5083,
+        "sha256": "3537257e99f68985133b1fa98c11c5d9fa19d44769856fd962617e0122a883da"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/scalar/instcombine.rs",
+        "bytes": 14572,
+        "sha256": "702a59dbe88e360d1bc1221b8a4dbd4dea5fdb877b79073c32d476a736aaa4db"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/scalar/mod.rs",
+        "bytes": 208,
+        "sha256": "afd10254a3274c960aa22142b61bdd6126c2fe7c57921e01b6f79a3367be2d0a"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/scalar/pre/expression.rs",
+        "bytes": 2153,
+        "sha256": "3937829d229d6bc2f1e12c6304a82e2f798a3e51f8b8dff1867cc7048523a37e"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/scalar/pre/plan.rs",
+        "bytes": 3981,
+        "sha256": "9d3f21fb8c0cc3cacd8c7c226d866068d5114bd78f96ebbe7f3a64f2e3963221"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/scalar/pre/proof.rs",
+        "bytes": 5991,
+        "sha256": "5eda3d60dcc89794f0b42848568ae52d5fa5be8699d69216783e117e4e967d7d"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/scalar/pre/tests/rejections.rs",
+        "bytes": 9419,
+        "sha256": "1aae522a4b9687ab0f1f1f75fb955e55a3f151f4b5156fbd958e4d446e81c9d0"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/scalar/pre/tests.rs",
+        "bytes": 14545,
+        "sha256": "6e38f6b88ecad73501bc291277afcc4e9d1c78a288d6c51edde09fab0e83e7e6"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/scalar/pre.rs",
+        "bytes": 5178,
+        "sha256": "f4588973e0bdf732a29de30ce50c4201dfe3a13afd22676e09eda4e3fb6f2660"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/scalar/ranges.rs",
+        "bytes": 2436,
+        "sha256": "e78df60c6fa0da81eb75acc58253b48eff9db8bee01cb058185e54227d9049aa"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/scalar/seam/fields/invariant.rs",
+        "bytes": 3525,
+        "sha256": "a9a86960d1919cefb5b5cd62d90b5938741ef3047a088967f73713c6a8954571"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/scalar/seam/fields/invariant_tests.rs",
+        "bytes": 3807,
+        "sha256": "a9079dbc21a57d56bf29b8877c0b5c219200b26c4e6179a864c58894bc2311aa"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/scalar/seam/fields.rs",
+        "bytes": 3651,
+        "sha256": "355231a4c42b29d80785a65f836fb541ee4568456b7b99c1c558c7a867b33b85"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/scalar/seam.rs",
+        "bytes": 3834,
+        "sha256": "a9d8d7fd50871a0545544cf4ea183514138b64bc1793a25d49c4fa6f63257c3b"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/utils/cfg.rs",
+        "bytes": 6993,
+        "sha256": "1d50f7a151a03deb4f39a9a337f84b92a0092e78f0bc0578ccee8b8421f14909"
+      },
+      {
+        "path": "crates/kfrc-son/src/transforms/utils/mod.rs",
+        "bytes": 176,
+        "sha256": "be4ed94410cd9ac192bc67b12579cdb6fd3f6ea0ea904711d0fb0779ab59a48b"
+      },
+      {
+        "path": "crates/kfrc-son/src/verify.rs",
+        "bytes": 79063,
+        "sha256": "d332441aacd08d75365e0fb6e5bedf35309d0d50b36051a73a23189eb45abb12"
+      },
+      {
+        "path": "crates/kfrc-x86/src/analysis/liveness.rs",
+        "bytes": 27782,
+        "sha256": "aacf3c36675619bf84a3f3155274db5d2256e0a59339493efe168c19314f3804"
+      },
+      {
+        "path": "crates/kfrc-x86/src/analysis/mod.rs",
+        "bytes": 84,
+        "sha256": "f3a6e72bb5b59b8eb0176ce23e8c77f5680bc285e9b12bde6b3a2f0e466cfa50"
+      },
+      {
+        "path": "crates/kfrc-x86/src/lib.rs",
+        "bytes": 2044,
+        "sha256": "dbf09917185f41f5d4ce9623457b8d70d84f7e8602e2dffbde5775ca3cef8c1a"
+      },
+      {
+        "path": "crates/kfrc-x86/src/lower/abi.rs",
+        "bytes": 14578,
+        "sha256": "adf8a2100c6586f0a35dfe9d35ce19d35d07c6c618e6f7e7232483ab55385c9b"
+      },
+      {
+        "path": "crates/kfrc-x86/src/lower/address_mode.rs",
+        "bytes": 8188,
+        "sha256": "85860bc53f9bc4c43f6b607e5662840589a199f4fe782f601014e8646c698900"
+      },
+      {
+        "path": "crates/kfrc-x86/src/lower/allocated/allocation.rs",
+        "bytes": 15989,
+        "sha256": "d5f9d8223b2388e423aded02da7d596e53b8102eb48ee665846475c224151f09"
+      },
+      {
+        "path": "crates/kfrc-x86/src/lower/allocated/checker.rs",
+        "bytes": 7807,
+        "sha256": "b5154adbc2fac6b4e449324d1cdcf900638ca1ee3f382c9286eb98ad7ef1e876"
+      },
+      {
+        "path": "crates/kfrc-x86/src/lower/allocated/constraints.rs",
+        "bytes": 26390,
+        "sha256": "ad1002886208b3a1a017c067596d89982878698fd48c6efd7d1debd5ebcbae4c"
+      },
+      {
+        "path": "crates/kfrc-x86/src/lower/allocated/emit.rs",
+        "bytes": 29013,
+        "sha256": "51a08ddc43b5192cb66013d5302ce267b793dd0de38e372382bbfde4e06e43b5"
+      },
+      {
+        "path": "crates/kfrc-x86/src/lower/allocated/fixed_input_tests.rs",
+        "bytes": 9821,
+        "sha256": "0cb19eebc33612a1b4ab502e0aae9589375b3605ebcc10a06a2a56452692d0ce"
+      },
+      {
+        "path": "crates/kfrc-x86/src/lower/allocated/intrinsic_tests.rs",
+        "bytes": 4318,
+        "sha256": "417047ed657df159777dcadc51226ee78606af7278b4d145b8f76e637374eacd"
+      },
+      {
+        "path": "crates/kfrc-x86/src/lower/allocated/moves.rs",
+        "bytes": 1923,
+        "sha256": "cea268536f593d2cd313afb34b3b875456f44cacc472513e7ddd15dc5557a1e1"
+      },
+      {
+        "path": "crates/kfrc-x86/src/lower/allocated/multiply_tests.rs",
+        "bytes": 10554,
+        "sha256": "6f1a116b1a60df72a34f1631656dbed7027b71856b6e7a45db23d8d2a686b307"
+      },
+      {
+        "path": "crates/kfrc-x86/src/lower/allocated/rematerialize/tests/native.rs",
+        "bytes": 7870,
+        "sha256": "1ef551671d60a55390b5d0d656fa9f212dac6561c948cfb21d5dc9e90f22215f"
+      },
+      {
+        "path": "crates/kfrc-x86/src/lower/allocated/rematerialize/tests.rs",
+        "bytes": 10893,
+        "sha256": "86c073a3aad2aa69673fbeb4b90b9f5d991ed7786c82122e3b0faed5fe959c85"
+      },
+      {
+        "path": "crates/kfrc-x86/src/lower/allocated/rematerialize.rs",
+        "bytes": 9356,
+        "sha256": "67e1aeb6c265157fa69aad63dcff6075fc8d30d868697c56ddfca8bf8d2026d0"
+      },
+      {
+        "path": "crates/kfrc-x86/src/lower/allocated/scan.rs",
+        "bytes": 25205,
+        "sha256": "51e6ef66b89262a3530277173091b6c76c4346b2a27c125955d9310bc82a33d8"
+      },
+      {
+        "path": "crates/kfrc-x86/src/lower/allocated/scratch_tests.rs",
+        "bytes": 6981,
+        "sha256": "679cc6fc5373b4db7506e75905d71dfd661b547802a752bff9fecf76427e3f0a"
+      },
+      {
+        "path": "crates/kfrc-x86/src/lower/allocated/tests.rs",
+        "bytes": 40963,
+        "sha256": "db5413fb4c297ac656f9d1380e04137e3338cab6ad6c074c2550b6fa4efeb7fd"
+      },
+      {
+        "path": "crates/kfrc-x86/src/lower/allocated.rs",
+        "bytes": 5420,
+        "sha256": "ae3f860abc8785e300787e066326bfc2a4790cfa98505405b3842e9fe64bb402"
+      },
+      {
+        "path": "crates/kfrc-x86/src/lower/arithmetic/division_magic.rs",
+        "bytes": 2027,
+        "sha256": "9faf33de32878935f68d0cea8ada367836516b8ab24871459f563dd623e2d4be"
+      },
+      {
+        "path": "crates/kfrc-x86/src/lower/arithmetic.rs",
+        "bytes": 8969,
+        "sha256": "83229d0785c67eb2b55f5a278110d325b2e66ad362bf06e4096650402020579b"
+      },
+      {
+        "path": "crates/kfrc-x86/src/lower/branch.rs",
+        "bytes": 6339,
+        "sha256": "c19b0c48fe8571f52d4efaafaafdbb93292ef7babe6fd0776d8869083195970e"
+      },
+      {
+        "path": "crates/kfrc-x86/src/lower/cast.rs",
+        "bytes": 13890,
+        "sha256": "2d4db19750dea33f816e105eb9b3c13a52b4b38f238e3bd772adc9fef264b92e"
+      },
+      {
+        "path": "crates/kfrc-x86/src/lower/checked.rs",
+        "bytes": 4471,
+        "sha256": "c784696449c2cafb0f7dadaac77041732f239ddea6d0fc1719d61cc357a8de29"
+      },
+      {
+        "path": "crates/kfrc-x86/src/lower/fallthrough.rs",
+        "bytes": 6468,
+        "sha256": "7ee5db28d9e41c6303a6acf64b3799a06e7ab027276132480b7405af2a94d0d7"
+      },
+      {
+        "path": "crates/kfrc-x86/src/lower/intrinsics.rs",
+        "bytes": 12495,
+        "sha256": "d017e9c0686b3c7c7a5e40740a4f7b8d551c059714d5074b8f6a27617a5f0448"
+      },
+      {
+        "path": "crates/kfrc-x86/src/lower/known_width.rs",
+        "bytes": 10959,
+        "sha256": "b2b271ddc075a6741e52dd9fce24b990f14b4415132e9ba9e0981be8778251a2"
+      },
+      {
+        "path": "crates/kfrc-x86/src/lower/known_width_tests.rs",
+        "bytes": 8221,
+        "sha256": "7b480fb5c238eb54343c6192562f216cd587263d9e34b60d8d03f17b5eeabc3d"
+      },
+      {
+        "path": "crates/kfrc-x86/src/lower/private_slots.rs",
+        "bytes": 20857,
+        "sha256": "658c05a89ad315b064026c6c7d7bd3912fc72c0094878e5432c3e206c1f8c79f"
+      },
+      {
+        "path": "crates/kfrc-x86/src/lower/private_slots_tests.rs",
+        "bytes": 11110,
+        "sha256": "03f42fcc8dcb0d7c2c7dcdb20c5ea7073c36e7f0f6ffa8511f4b0135d4c52961"
+      },
+      {
+        "path": "crates/kfrc-x86/src/lower/schedule.rs",
+        "bytes": 21130,
+        "sha256": "4d170f50dbeaeefbf5a734cbd0768db012866073f33a2c16c140c514ef4e9dc1"
+      },
+      {
+        "path": "crates/kfrc-x86/src/lower/vector.rs",
+        "bytes": 4017,
+        "sha256": "d51d34bd7633a8064d67ea563e8ed6f953e8f48a17742e55d14f8c6edaaad26b"
+      },
+      {
+        "path": "crates/kfrc-x86/src/lower.rs",
+        "bytes": 48687,
+        "sha256": "790b9194b803ba8be6db7da6f6d8233a9a226b7327a30c0066f639c6800850ef"
+      },
+      {
+        "path": "crates/kfrc-x86/src/machine/address.rs",
+        "bytes": 1520,
+        "sha256": "9c2027db99cd702efabc4c4211bcf7c89e2001af7ce366e4bd0383ab868e14b6"
+      },
+      {
+        "path": "crates/kfrc-x86/src/machine/allocate/tests.rs",
+        "bytes": 19808,
+        "sha256": "37f52b7ec20e1488f86df5b31669fe8fc351630213fc599eb09c6ca10e09fd7c"
+      },
+      {
+        "path": "crates/kfrc-x86/src/machine/allocate.rs",
+        "bytes": 29386,
+        "sha256": "e30f20e36bd72bcc2c880739fc3d858de18b950da3460338620706beb79fae72"
+      },
+      {
+        "path": "crates/kfrc-x86/src/machine/eval.rs",
+        "bytes": 36529,
+        "sha256": "b97bf0939b006b415474e18639fe47913cbc749a9b73892ed282714c5cc3d39d"
+      },
+      {
+        "path": "crates/kfrc-x86/src/machine/mod.rs",
+        "bytes": 321,
+        "sha256": "da4ae06c23e632faf729ce46bdd496870d0cce34fd192c439a38f880d4fbcfd8"
+      },
+      {
+        "path": "crates/kfrc-x86/src/machine/regalloc.rs",
+        "bytes": 26747,
+        "sha256": "76513d56a6500f23ef8c9ab52b437ea74d8a004d85aa519658e03e648b7324ce"
+      },
+      {
+        "path": "crates/kfrc-x86/src/machine/x86.rs",
+        "bytes": 56657,
+        "sha256": "a4176219864bf5ed79c03dda39915dcc38a986b8e64ac5f1cd4544235aedfe52"
+      },
+      {
+        "path": "crates/kfrc-x86/src/machine/x86_encode/layout.rs",
+        "bytes": 15435,
+        "sha256": "980e5c87faf8d41b84f6e0b0394123a5042f208920c1b2d20b56635d0b076186"
+      },
+      {
+        "path": "crates/kfrc-x86/src/machine/x86_encode.rs",
+        "bytes": 66601,
+        "sha256": "2a805a9745d170d28ae261097a3bce6dff817fa88207a3a2e18b90c829225e1f"
+      },
+      {
+        "path": "crates/kfrc-x86/src/object_file.rs",
+        "bytes": 9784,
+        "sha256": "9dc5f39aa2730d0f64e3f46764581b7305f18f283385496bcdecf442be296a00"
+      },
+      {
+        "path": "crates/rustc_codegen_kfrc/src/abi/cast.rs",
+        "bytes": 4671,
+        "sha256": "5f957c83e418c4098edaaa69916ea8e8e35e9873b28ba49b99d41d7a2154ad95"
+      },
+      {
+        "path": "crates/rustc_codegen_kfrc/src/abi/vector.rs",
+        "bytes": 1780,
+        "sha256": "17ff81e29d8af7c71d37c1fedbe59e82deb14728c76d391d17d2c1161e2dd423"
+      },
+      {
+        "path": "crates/rustc_codegen_kfrc/src/abi.rs",
+        "bytes": 6756,
+        "sha256": "c559946496ce87ba6c850650333e1e0da498b9ccabef22a425dc848a3f1deab9"
+      },
+      {
+        "path": "crates/rustc_codegen_kfrc/src/allocator.rs",
+        "bytes": 2827,
+        "sha256": "1666213d2eed945c81a9727d60c2fa87b5ee4b636cfa4c8502d0e3b082d02c28"
+      },
+      {
+        "path": "crates/rustc_codegen_kfrc/src/codegen/wrappers/tests.rs",
+        "bytes": 8240,
+        "sha256": "24ab1fa6db041371c959d3c5082a169641ff58b08132815bee06f5af04287fde"
+      },
+      {
+        "path": "crates/rustc_codegen_kfrc/src/codegen/wrappers.rs",
+        "bytes": 2875,
+        "sha256": "b706b584ca329cc338826bf9165a2d65e9656048eff3b02628823dcce97a2bb0"
+      },
+      {
+        "path": "crates/rustc_codegen_kfrc/src/codegen.rs",
+        "bytes": 17735,
+        "sha256": "7ef57ae560d4f0fa2b24d3b4f9c1b25151bfa86d5acf7d509508a2845001dc6d"
+      },
+      {
+        "path": "crates/rustc_codegen_kfrc/src/constants.rs",
+        "bytes": 10786,
+        "sha256": "af5582ed8a9979d7cf752554c8813242dc2fceef8a17ba6d348ba6350643c6ed"
+      },
+      {
+        "path": "crates/rustc_codegen_kfrc/src/convert/calls.rs",
+        "bytes": 7965,
+        "sha256": "45dd91fd0f2fc07673deeae9781d0f4a22f1b6a2123d66b380404d4d11ca1ec6"
+      },
+      {
+        "path": "crates/rustc_codegen_kfrc/src/convert/casts.rs",
+        "bytes": 6342,
+        "sha256": "02c3a6481fef2c209871b074d0b16f185f0caa7d601538e68caaeda505d010ca"
+      },
+      {
+        "path": "crates/rustc_codegen_kfrc/src/convert/definition/emit.rs",
+        "bytes": 29244,
+        "sha256": "ba2eb00bf6173fe153bca399ad29496825eb46c5c9935485480507922c798868"
+      },
+      {
+        "path": "crates/rustc_codegen_kfrc/src/convert/definition/oracle.rs",
+        "bytes": 5803,
+        "sha256": "5b8a87f2ceb4f65ebd1c98cefae8e3827cf53a84553349da80ca9412b829a14d"
+      },
+      {
+        "path": "crates/rustc_codegen_kfrc/src/convert/definition/types.rs",
+        "bytes": 4579,
+        "sha256": "87bbaf72e6f13e79bc26f1f644da3d6a6fce035ce3fbe39dd106ac075f743c38"
+      },
+      {
+        "path": "crates/rustc_codegen_kfrc/src/convert/definition.rs",
+        "bytes": 10637,
+        "sha256": "6c16a12edb7b9973899809fa6c703dde03bbaf440fc56cde297b71ef2c9c1b28"
+      },
+      {
+        "path": "crates/rustc_codegen_kfrc/src/convert/intrinsics/helpers.rs",
+        "bytes": 4953,
+        "sha256": "7e6ca964a74d6052f0f46d10cc9404b2f1b63005ea85d1c813b9305c7ef6ecb4"
+      },
+      {
+        "path": "crates/rustc_codegen_kfrc/src/convert/intrinsics/integer.rs",
+        "bytes": 1864,
+        "sha256": "93a71294e26d4d57823b90ed9c3cbd65e894d67322a602ca2296841d9127e9fb"
+      },
+      {
+        "path": "crates/rustc_codegen_kfrc/src/convert/intrinsics/saturating.rs",
+        "bytes": 589,
+        "sha256": "1cf15f2ba98b6569504eff2a95adf16cc96e0e05d78a3154a20d56a2694444c9"
+      },
+      {
+        "path": "crates/rustc_codegen_kfrc/src/convert/intrinsics/select.rs",
+        "bytes": 1385,
+        "sha256": "a60d304c5a7e3b113235b390bf846042bf9b1882d303916232373629aa9a7b2a"
+      },
+      {
+        "path": "crates/rustc_codegen_kfrc/src/convert/intrinsics/simd/lanes.rs",
+        "bytes": 3910,
+        "sha256": "13628df5b6cd4202977c4140d2634caa8a498329b19aabcc73f81fef70baf8bc"
+      },
+      {
+        "path": "crates/rustc_codegen_kfrc/src/convert/intrinsics/simd/masks.rs",
+        "bytes": 7578,
+        "sha256": "c94d7722d3109fb7087631dfddc7df61cf5fd4625178de8af38f4f06d36764eb"
+      },
+      {
+        "path": "crates/rustc_codegen_kfrc/src/convert/intrinsics/simd/mod.rs",
+        "bytes": 4058,
+        "sha256": "bbd89a800394e9413631b9cef5e34f37b58d1d4611cb0feba1ab3e4c68d28ae0"
+      },
+      {
+        "path": "crates/rustc_codegen_kfrc/src/convert/intrinsics/simd/numeric.rs",
+        "bytes": 2837,
+        "sha256": "2b7a44ba4a88128b5738a7f4e62fbc7f0fe20400c8a4c03320e841a786a4f739"
+      },
+      {
+        "path": "crates/rustc_codegen_kfrc/src/convert/intrinsics/simd/shuffle.rs",
+        "bytes": 5802,
+        "sha256": "1217f21242f98631df7a7c8b4ea9758637c7235d2af701f97b5f7245ac5afeb1"
+      },
+      {
+        "path": "crates/rustc_codegen_kfrc/src/convert/intrinsics/swap.rs",
+        "bytes": 2667,
+        "sha256": "05326f2fa0c83433ba77533bd9453d9bef7009f8789e17377b831e15b41eca98"
+      },
+      {
+        "path": "crates/rustc_codegen_kfrc/src/convert/intrinsics.rs",
+        "bytes": 23359,
+        "sha256": "3a639dfc99333c68dd28531e834f5eaa6c628dcc3b34e8fedbb836070b673757"
+      },
+      {
+        "path": "crates/rustc_codegen_kfrc/src/convert/places.rs",
+        "bytes": 7499,
+        "sha256": "44d159d746ece4810b79e99caf6055b1593fa44c85d0942b8e487782806bc11e"
+      },
+      {
+        "path": "crates/rustc_codegen_kfrc/src/convert/rvalues.rs",
+        "bytes": 9063,
+        "sha256": "1a2b6af50052158fe47a8ec235348664ef8dfde145361107cd75c44f2ee5cd24"
+      },
+      {
+        "path": "crates/rustc_codegen_kfrc/src/convert/statements.rs",
+        "bytes": 3203,
+        "sha256": "bd21469f90b5a46042150644e8e03266ada200d3b03c504d45bee479c8fe4ee9"
+      },
+      {
+        "path": "crates/rustc_codegen_kfrc/src/convert/terminators.rs",
+        "bytes": 8206,
+        "sha256": "cc3baa535b37c2c5ef457c4904020d58b9e6b183e554702fe7559992c3999ce2"
+      },
+      {
+        "path": "crates/rustc_codegen_kfrc/src/convert/trait_object.rs",
+        "bytes": 10671,
+        "sha256": "8cbc2eea0f630c63a276627a4f9a0f2be9c66a63172f26e3cc4c9b3bec290579"
+      },
+      {
+        "path": "crates/rustc_codegen_kfrc/src/convert/types.rs",
+        "bytes": 15628,
+        "sha256": "09b088b520add25eaaf9cb42ef2924a57653dc9131b967ff970d8faab15dadd0"
+      },
+      {
+        "path": "crates/rustc_codegen_kfrc/src/convert/unsize.rs",
+        "bytes": 6228,
+        "sha256": "e488fbd1282945c2e1c3734ef4d71b8789f529f170f91b548dca5e10e5c35677"
+      },
+      {
+        "path": "crates/rustc_codegen_kfrc/src/convert/unsize_adt.rs",
+        "bytes": 3739,
+        "sha256": "66675aab7243a94e3cfafe164679a3044f7b3c3455b53313ae7b1bd838b9dda6"
+      },
+      {
+        "path": "crates/rustc_codegen_kfrc/src/convert.rs",
+        "bytes": 6649,
+        "sha256": "a4e4feb60dd1b8525bb3e0809eead71fdc22de8f0e32aade1c65eefcf7c3a2ed"
+      },
+      {
+        "path": "crates/rustc_codegen_kfrc/src/definitions.rs",
+        "bytes": 4256,
+        "sha256": "e619bc7e6e497b687641bd721fc542c7e78e32a1bff55780bb24919af7e2def9"
+      },
+      {
+        "path": "crates/rustc_codegen_kfrc/src/emission.rs",
+        "bytes": 8864,
+        "sha256": "324c67d2ed79ca12096ea3c5de619e9b07d762bdf37e4cd3978b2cfa0ec1e87d"
+      },
+      {
+        "path": "crates/rustc_codegen_kfrc/src/enum_layout.rs",
+        "bytes": 3963,
+        "sha256": "d2578fbaf41f1d7752b4357ef9be572afc4f5b94caf0bd1bb9405efec1d5026a"
+      },
+      {
+        "path": "crates/rustc_codegen_kfrc/src/inline_cost.rs",
+        "bytes": 7785,
+        "sha256": "32d3eef165f620bd4a9bd1562130619703ecc257fe6b0a80ad15094ea68f56a8"
+      },
+      {
+        "path": "crates/rustc_codegen_kfrc/src/lib.rs",
+        "bytes": 19321,
+        "sha256": "88993eb930c20f00e1bc16b32da8da4fd105ebf11991468d8b42ee9d6b966dd2"
+      },
+      {
+        "path": "crates/rustc_codegen_kfrc/src/parallel.rs",
+        "bytes": 6797,
+        "sha256": "0cc9978ea6d31ab7e129b0a7f6451a8228ec8dfc5294752cd1071286270d25ee"
+      },
+      {
+        "path": "crates/rustc_codegen_kfrc/src/permissions.rs",
+        "bytes": 8538,
+        "sha256": "fb7f1aed2e55adb902b75da623452022b82b18ba52608436f556ef95f5aef863"
+      },
+      {
+        "path": "crates/rustc_codegen_kfrc/src/profile.rs",
+        "bytes": 10411,
+        "sha256": "a9fd8d4e4d1f242e299c02fe2a72fc027b0742cac0e4ccd72133c680f22f45f9"
+      },
+      {
+        "path": "crates/rustc_codegen_kfrc/src/shell_entry.rs",
+        "bytes": 13384,
+        "sha256": "5d7d2a74fb492959b884f207c2a79fb95c9dc0c54164ff800e9cccbf33017cf1"
+      },
+      {
+        "path": "crates/rustc_codegen_kfrc/src/type_identity.rs",
+        "bytes": 1225,
+        "sha256": "66edccd21a3f610f216fea0977b2b170f0d572df146fdc88ccd8167d85d0a6c2"
+      }
+    ]
+  },
+  "inherited_source_git_state": {
+    "porcelain": [
+      " M crates/kfrc-son/src/analysis/memory.rs",
+      " M crates/kfrc-son/src/analysis/mod.rs",
+      " M crates/kfrc-son/src/graph.rs",
+      " M crates/kfrc-son/src/lower_layout.rs",
+      " M crates/kfrc-son/src/lower_layout/private_memory.rs",
+      " M crates/kfrc-son/src/lower_layout/private_memory_tests.rs",
+      " M crates/kfrc-son/src/lower_layout/representation.rs",
+      " M crates/kfrc-son/src/pipeline.rs",
+      " M crates/kfrc-son/src/transforms/control/mod.rs",
+      " M crates/kfrc-son/src/transforms/ipo/cost.rs",
+      " M crates/kfrc-son/src/transforms/ipo/mod.rs",
+      " M crates/kfrc-son/src/transforms/ipo/plan.rs",
+      " M crates/kfrc-son/src/transforms/ipo/plan/data.rs",
+      " M crates/kfrc-son/src/transforms/ipo/splice.rs",
+      " M crates/kfrc-son/src/transforms/memory/forward.rs",
+      " M crates/kfrc-son/src/transforms/memory/mod.rs",
+      " M crates/kfrc-son/src/transforms/memory/observation.rs",
+      " M crates/kfrc-son/src/transforms/memory/observation_tests.rs",
+      " M crates/kfrc-son/src/transforms/memory/promotion.rs",
+      " M crates/kfrc-son/src/transforms/memory/promotion_tests.rs",
+      " M crates/kfrc-son/src/transforms/mod.rs",
+      " M crates/kfrc-son/src/transforms/scalar/instcombine.rs",
+      " M crates/kfrc-son/src/transforms/scalar/mod.rs",
+      " M crates/kfrc-son/src/transforms/utils/cfg.rs",
+      " M crates/kfrc-x86/src/lower.rs",
+      " M crates/kfrc-x86/src/lower/address_mode.rs",
+      " M crates/kfrc-x86/src/lower/allocated.rs",
+      " M crates/kfrc-x86/src/lower/allocated/constraints.rs",
+      " M crates/kfrc-x86/src/lower/allocated/emit.rs",
+      " M crates/kfrc-x86/src/lower/known_width.rs",
+      " M crates/kfrc-x86/src/lower/private_slots.rs",
+      " M crates/kfrc-x86/src/machine/eval.rs",
+      " M crates/kfrc-x86/src/machine/mod.rs",
+      " M crates/kfrc-x86/src/machine/x86.rs",
+      " M crates/kfrc-x86/src/machine/x86_encode.rs",
+      " M crates/rustc_codegen_kfrc/src/codegen.rs",
+      " M crates/rustc_codegen_kfrc/src/inline_cost.rs",
+      " M crates/rustc_codegen_kfrc/src/lib.rs",
+      "?? crates/kfrc-son/src/analysis/demanded_bits.rs",
+      "?? crates/kfrc-son/src/analysis/induction.rs",
+      "?? crates/kfrc-son/src/analysis/memory_locations.rs",
+      "?? crates/kfrc-son/src/lower_layout/copy_tests.rs",
+      "?? crates/kfrc-son/src/lower_layout/private_memory_copy.rs",
+      "?? crates/kfrc-son/src/lower_layout/whole_pack.rs",
+      "?? crates/kfrc-son/src/lower_layout/whole_pack/evidence/whole-pack-v1-baseline.patch",
+      "?? crates/kfrc-son/src/lower_layout/whole_pack/evidence/whole-pack-v1-manifest.json",
+      "?? crates/kfrc-son/src/lower_layout/whole_pack/index.rs",
+      "?? crates/kfrc-son/src/lower_layout/whole_pack/loads.rs",
+      "?? crates/kfrc-son/src/lower_layout/whole_pack/pack.rs",
+      "?? crates/kfrc-son/src/lower_layout/whole_pack/tests.rs",
+      "?? crates/kfrc-son/src/lower_layout/whole_pack/tests/direct.rs",
+      "?? crates/kfrc-son/src/lower_layout/whole_pack/tests/fixture.rs",
+      "?? crates/kfrc-son/src/lower_layout/whole_pack/tests/flow.rs",
+      "?? crates/kfrc-son/src/lower_layout/whole_pack/tests/rejections.rs",
+      "?? crates/kfrc-son/src/lower_layout/whole_pack/tests/semantic.rs",
+      "?? crates/kfrc-son/src/lower_layout/whole_pack/tests/semantic_fixture.rs",
+      "?? crates/kfrc-son/src/lower_layout/whole_pack/tests/transmute_bridge.rs",
+      "?? crates/kfrc-son/src/lower_layout/whole_pack/transmute.rs",
+      "?? crates/kfrc-son/src/transforms/control/loop_simplify.rs",
+      "?? crates/kfrc-son/src/transforms/control/loop_simplify_tests.rs",
+      "?? crates/kfrc-son/src/transforms/ipo/arguments.rs",
+      "?? crates/kfrc-son/src/transforms/ipo/arguments/cleanup.rs",
+      "?? crates/kfrc-son/src/transforms/ipo/arguments/dump.rs",
+      "?? crates/kfrc-son/src/transforms/ipo/arguments/facts.rs",
+      "?? crates/kfrc-son/src/transforms/ipo/arguments/reapply.rs",
+      "?? crates/kfrc-son/src/transforms/ipo/driver.rs",
+      "?? crates/kfrc-son/src/transforms/ipo/driver/priority.rs",
+      "?? crates/kfrc-son/src/transforms/ipo/loop_constants.rs",
+      "?? crates/kfrc-son/src/transforms/loops/clone.rs",
+      "?? crates/kfrc-son/src/transforms/loops/count.rs",
+      "?? crates/kfrc-son/src/transforms/loops/mod.rs",
+      "?? crates/kfrc-son/src/transforms/loops/plan.rs",
+      "?? crates/kfrc-son/src/transforms/loops/strength_reduce.rs",
+      "?? crates/kfrc-son/src/transforms/loops/tests.rs",
+      "?? crates/kfrc-son/src/transforms/loops/tests/conditions.rs",
+      "?? crates/kfrc-son/src/transforms/loops/tests/effects.rs",
+      "?? crates/kfrc-son/src/transforms/loops/tests/modular.rs",
+      "?? crates/kfrc-son/src/transforms/loops/tests/observations.rs",
+      "?? crates/kfrc-son/src/transforms/loops/tests/strength_reduce.rs",
+      "?? crates/kfrc-son/src/transforms/loops/values.rs",
+      "?? crates/kfrc-son/src/transforms/memory/dse.rs",
+      "?? crates/kfrc-son/src/transforms/memory/dse_branch_tests.rs",
+      "?? crates/kfrc-son/src/transforms/memory/dse_branch_tests/access_errors.rs",
+      "?? crates/kfrc-son/src/transforms/memory/dse_branch_tests/barriers.rs",
+      "?? crates/kfrc-son/src/transforms/memory/dse_branch_tests/byte_coverage.rs",
+      "?? crates/kfrc-son/src/transforms/memory/dse_branch_tests/coverage.rs",
+      "?? crates/kfrc-son/src/transforms/memory/dse_branch_tests/value_errors.rs",
+      "?? crates/kfrc-son/src/transforms/memory/dse_branch_tests/value_errors/encoding.rs",
+      "?? crates/kfrc-son/src/transforms/memory/dse_branch_tests/value_errors/operands.rs",
+      "?? crates/kfrc-son/src/transforms/memory/dse_branches.rs",
+      "?? crates/kfrc-son/src/transforms/memory/dse_tests.rs",
+      "?? crates/kfrc-son/src/transforms/memory/dse_values.rs",
+      "?? crates/kfrc-son/src/transforms/memory/forward_range_tests.rs",
+      "?? crates/kfrc-son/src/transforms/memory/forward_range_tests/boundaries.rs",
+      "?? crates/kfrc-son/src/transforms/memory/forward_range_tests/coverage.rs",
+      "?? crates/kfrc-son/src/transforms/memory/forward_range_tests/errors.rs",
+      "?? crates/kfrc-son/src/transforms/memory/observation/conditions.rs",
+      "?? crates/kfrc-son/src/transforms/memory/observation/scalar.rs",
+      "?? crates/kfrc-son/src/transforms/memory/observation_condition_tests.rs",
+      "?? crates/kfrc-son/src/transforms/memory/observation_tests/scalar.rs",
+      "?? crates/kfrc-son/src/transforms/memory/promotion_index_tests.rs",
+      "?? crates/kfrc-son/src/transforms/scalar/instcombine/bit_slices.rs",
+      "?? crates/kfrc-son/src/transforms/scalar/instcombine/casts.rs",
+      "?? crates/kfrc-son/src/transforms/scalar/instcombine/demanded.rs",
+      "?? crates/kfrc-son/src/transforms/scalar/pre.rs",
+      "?? crates/kfrc-son/src/transforms/scalar/pre/expression.rs",
+      "?? crates/kfrc-son/src/transforms/scalar/pre/plan.rs",
+      "?? crates/kfrc-son/src/transforms/scalar/pre/proof.rs",
+      "?? crates/kfrc-son/src/transforms/scalar/pre/tests.rs",
+      "?? crates/kfrc-son/src/transforms/scalar/pre/tests/rejections.rs",
+      "?? crates/kfrc-x86/src/lower/allocated/multiply_tests.rs",
+      "?? crates/kfrc-x86/src/lower/allocated/rematerialize.rs",
+      "?? crates/kfrc-x86/src/lower/allocated/rematerialize/tests.rs",
+      "?? crates/kfrc-x86/src/lower/allocated/rematerialize/tests/native.rs",
+      "?? crates/kfrc-x86/src/machine/address.rs",
+      "?? crates/rustc_codegen_kfrc/src/codegen/wrappers.rs",
+      "?? crates/rustc_codegen_kfrc/src/codegen/wrappers/tests.rs"
+    ],
+    "tracked_diff_sha256": "8898dba8722811a322ccce5928842e1267725a7f21c4389e18aedeccd56898ba"
+  },
+  "verification": {
+    "local_reference_targets_valid": true,
+    "source_line_targets_valid": true,
+    "source_line_checks": [
+      {
+        "reference": "llvm-function",
+        "path": "/Users/shom/Downloads/llvm-study/references/cache/llvm/lib/Passes/PassBuilderPipelines.cpp",
+        "line": 566
+      },
+      {
+        "reference": "llvm-ipo",
+        "path": "/Users/shom/Downloads/llvm-study/references/cache/llvm/lib/Passes/PassBuilderPipelines.cpp",
+        "line": 955
+      },
+      {
+        "reference": "llvm-ipsccp",
+        "path": "/Users/shom/Downloads/llvm-study/references/cache/llvm/lib/Passes/PassBuilderPipelines.cpp",
+        "line": 1169
+      },
+      {
+        "reference": "llvm-vector",
+        "path": "/Users/shom/Downloads/llvm-study/references/cache/llvm/lib/Passes/PassBuilderPipelines.cpp",
+        "line": 1299
+      },
+      {
+        "reference": "llvm-slp",
+        "path": "/Users/shom/Downloads/llvm-study/references/cache/llvm/lib/Passes/PassBuilderPipelines.cpp",
+        "line": 1386
+      },
+      {
+        "reference": "llvm-memcpy",
+        "path": "/Users/shom/Downloads/kfrc-llvm-one-x-20261111/s-retyped-array-paused-20261111/llvm-reference/MemCpyOptimizer.cpp",
+        "line": 1107
+      },
+      {
+        "reference": "promotion",
+        "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-son/src/transforms/memory/promotion.rs",
+        "line": 205
+      },
+      {
+        "reference": "promotion-ssa",
+        "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-son/src/transforms/memory/promotion.rs",
+        "line": 407
+      },
+      {
+        "reference": "memory-facts",
+        "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-son/src/analysis/memory.rs",
+        "line": 59
+      },
+      {
+        "reference": "locations",
+        "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-son/src/analysis/memory_locations.rs",
+        "line": 49
+      },
+      {
+        "reference": "forward-preserve",
+        "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-son/src/transforms/memory/forward.rs",
+        "line": 349
+      },
+      {
+        "reference": "forward-phi",
+        "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-son/src/transforms/memory/forward.rs",
+        "line": 239
+      },
+      {
+        "reference": "dse-values",
+        "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-son/src/transforms/memory/dse_values.rs",
+        "line": 19
+      },
+      {
+        "reference": "dse-branches",
+        "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-son/src/transforms/memory/dse_branches.rs",
+        "line": 25
+      },
+      {
+        "reference": "call-target",
+        "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-son/src/graph.rs",
+        "line": 505
+      },
+      {
+        "reference": "private-memory",
+        "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-son/src/lower_layout/private_memory.rs",
+        "line": 163
+      },
+      {
+        "reference": "private-copy",
+        "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-son/src/lower_layout/private_memory_copy.rs",
+        "line": 65
+      },
+      {
+        "reference": "partition",
+        "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-son/src/transforms/memory/partition.rs",
+        "line": 47
+      },
+      {
+        "reference": "copy-lowering",
+        "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-son/src/lower_layout/semantic_memory.rs",
+        "line": 229
+      },
+      {
+        "reference": "loop-simplify",
+        "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-son/src/transforms/control/loop_simplify.rs",
+        "line": 1
+      },
+      {
+        "reference": "induction",
+        "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-son/src/analysis/induction.rs",
+        "line": 1
+      },
+      {
+        "reference": "loop-count",
+        "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-son/src/transforms/loops/count.rs",
+        "line": 47
+      },
+      {
+        "reference": "loop-plan",
+        "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-son/src/transforms/loops/plan.rs",
+        "line": 76
+      },
+      {
+        "reference": "strength",
+        "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-son/src/transforms/loops/strength_reduce.rs",
+        "line": 1
+      },
+      {
+        "reference": "gcm",
+        "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-x86/src/lower/schedule.rs",
+        "line": 399
+      },
+      {
+        "reference": "x86-lower",
+        "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-x86/src/lower.rs",
+        "line": 90
+      },
+      {
+        "reference": "allocated",
+        "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-x86/src/lower/allocated.rs",
+        "line": 22
+      },
+      {
+        "reference": "emit",
+        "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-x86/src/lower/allocated/emit.rs",
+        "line": 440
+      },
+      {
+        "reference": "scan",
+        "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-x86/src/lower/allocated/scan.rs",
+        "line": 312
+      },
+      {
+        "reference": "remat",
+        "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-x86/src/lower/allocated/rematerialize.rs",
+        "line": 13
+      },
+      {
+        "reference": "schedule",
+        "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-x86/src/lower/schedule.rs",
+        "line": 27
+      },
+      {
+        "reference": "cost-model",
+        "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-son/src/analysis/cost.rs",
+        "line": 82
+      },
+      {
+        "reference": "division",
+        "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-son/src/transforms/scalar/division.rs",
+        "line": 21
+      },
+      {
+        "reference": "r-prepare",
+        "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-son/src/specialize/mod.rs",
+        "line": 120
+      },
+      {
+        "reference": "s-prepare",
+        "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/rustc_codegen_kfrc/src/codegen.rs",
+        "line": 383
+      },
+      {
+        "reference": "seam-exposed",
+        "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-son/src/pipeline.rs",
+        "line": 340
+      },
+      {
+        "reference": "scratch",
+        "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-son/src/transforms/ipo/arguments/cleanup.rs",
+        "line": 26
+      },
+      {
+        "reference": "driver-cost",
+        "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-son/src/transforms/ipo/driver.rs",
+        "line": 235
+      },
+      {
+        "reference": "arguments-nested",
+        "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-son/src/transforms/ipo/arguments.rs",
+        "line": 486
+      },
+      {
+        "reference": "s-pipeline",
+        "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-son/src/pipeline.rs",
+        "line": 195
+      },
+      {
+        "reference": "seam-promotion",
+        "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-son/src/pipeline.rs",
+        "line": 271
+      },
+      {
+        "reference": "unroll-promotion",
+        "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-son/src/pipeline.rs",
+        "line": 425
+      },
+      {
+        "reference": "wrapper",
+        "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/rustc_codegen_kfrc/src/codegen.rs",
+        "line": 65
+      },
+      {
+        "reference": "identity",
+        "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-son/src/transforms/ipo/identity.rs",
+        "line": 95
+      },
+      {
+        "reference": "argument-facts",
+        "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-son/src/transforms/ipo/arguments.rs",
+        "line": 577
+      },
+      {
+        "reference": "permissions",
+        "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/rustc_codegen_kfrc/src/permissions.rs",
+        "line": 55
+      },
+      {
+        "reference": "driver-schedule",
+        "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-son/src/transforms/ipo/driver.rs",
+        "line": 363
+      },
+      {
+        "reference": "inline-policy",
+        "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/rustc_codegen_kfrc/src/inline_cost.rs",
+        "line": 7
+      },
+      {
+        "reference": "inline-size",
+        "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-son/src/transforms/ipo/cost.rs",
+        "line": 169
+      },
+      {
+        "reference": "gvn",
+        "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-son/src/transforms/scalar/gvn.rs",
+        "line": 1
+      },
+      {
+        "reference": "pre",
+        "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-son/src/transforms/scalar/pre.rs",
+        "line": 1
+      },
+      {
+        "reference": "sccp",
+        "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-son/src/transforms/control/sccp.rs",
+        "line": 13
+      },
+      {
+        "reference": "ranges",
+        "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-son/src/analysis/ranges.rs",
+        "line": 81
+      },
+      {
+        "reference": "known-bits",
+        "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-son/src/analysis/known_bits.rs",
+        "line": 40
+      },
+      {
+        "reference": "demanded-bits",
+        "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-son/src/analysis/demanded_bits.rs",
+        "line": 27
+      },
+      {
+        "reference": "instcombine",
+        "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-son/src/transforms/scalar/instcombine.rs",
+        "line": 38
+      },
+      {
+        "reference": "simplify",
+        "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/kfrc-son/src/transforms/control/simplify.rs",
+        "line": 97
+      },
+      {
+        "reference": "preparation-graph",
+        "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/crates/rustc_codegen_kfrc/src/codegen.rs",
+        "line": 167
+      }
+    ],
+    "compiler_source_unchanged_during_document_preparation": true,
+    "compile_run": false,
+    "test_run": false,
+    "performance_run": false,
+    "performance_claims": null
+  },
+  "outputs": [
+    {
+      "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/docs/plan/poc/llvm-parity/llvm-gap-20261110/generic-pass-gaps-20261111.md",
+      "bytes": 27085,
+      "sha256": "893893a26769bbf426ed5aaa61abdec2a57997433d44f24a5ac8ca9e1e5e3b33"
+    },
+    {
+      "path": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108/docs/plan/poc/llvm-parity/llvm-gap-20261110/generic-optimization-audit.md",
+      "bytes": 19485,
+      "sha256": "9af0fb55f38cdf86f360c0142dd603c7c28404213c86e53bfe9c8aa2f54e9aad"
+    }
+  ]
+}

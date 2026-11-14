@@ -1,0 +1,225 @@
+{
+  "warmups": 1,
+  "rounds": 21,
+  "protocol": "rotating/reversing four arms, serial commands, warm filesystem, fresh rustc to rlib; checker object equality verified",
+  "crates": [
+    {
+      "crate": "semver",
+      "paired_ratio": {
+        "llvm": 1.1186705205213432,
+        "baseline": 1.0,
+        "shared": 0.9827954434101778,
+        "data": 0.9880726343574353
+      },
+      "bootstrap95": {
+        "llvm": [
+          1.1044184417705802,
+          1.1368639353951682
+        ],
+        "baseline": [
+          1.0,
+          1.0
+        ],
+        "shared": [
+          0.9713302514592979,
+          0.9920989941443112
+        ],
+        "data": [
+          0.9727291120394593,
+          1.0038453958722466
+        ]
+      },
+      "metrics": {
+        "llvm": {
+          "wall_seconds": 0.2578336040000977,
+          "user_seconds": 0.451939,
+          "sys_seconds": 0.112325,
+          "maxrss_kib": 150996
+        },
+        "baseline": {
+          "wall_seconds": 0.23029956599975776,
+          "user_seconds": 0.33943799999999996,
+          "sys_seconds": 0.084186,
+          "maxrss_kib": 162296
+        },
+        "shared": {
+          "wall_seconds": 0.22601183300002958,
+          "user_seconds": 0.31987699999999997,
+          "sys_seconds": 0.09267199999999999,
+          "maxrss_kib": 162364
+        },
+        "data": {
+          "wall_seconds": 0.2279601229997752,
+          "user_seconds": 0.324998,
+          "sys_seconds": 0.088152,
+          "maxrss_kib": 162440
+        }
+      }
+    },
+    {
+      "crate": "base64",
+      "paired_ratio": {
+        "llvm": 0.9927746153649081,
+        "baseline": 1.0,
+        "shared": 0.9851544938337548,
+        "data": 0.9837333550674937
+      },
+      "bootstrap95": {
+        "llvm": [
+          0.9870824525786305,
+          1.0188130152828547
+        ],
+        "baseline": [
+          1.0,
+          1.0
+        ],
+        "shared": [
+          0.9712772389138188,
+          1.0158991637407293
+        ],
+        "data": [
+          0.9703697945779177,
+          1.0176006027647724
+        ]
+      },
+      "metrics": {
+        "llvm": {
+          "wall_seconds": 0.24300653699992836,
+          "user_seconds": 0.31585399999999997,
+          "sys_seconds": 0.113518,
+          "maxrss_kib": 149112
+        },
+        "baseline": {
+          "wall_seconds": 0.2443761029999223,
+          "user_seconds": 0.25823599999999997,
+          "sys_seconds": 0.08755299999999999,
+          "maxrss_kib": 151324
+        },
+        "shared": {
+          "wall_seconds": 0.2453702869997869,
+          "user_seconds": 0.26061,
+          "sys_seconds": 0.086933,
+          "maxrss_kib": 151272
+        },
+        "data": {
+          "wall_seconds": 0.2432763699998759,
+          "user_seconds": 0.256692,
+          "sys_seconds": 0.09335199999999999,
+          "maxrss_kib": 151524
+        }
+      }
+    },
+    {
+      "crate": "unicode-segmentation",
+      "paired_ratio": {
+        "llvm": 1.0898633274194633,
+        "baseline": 1.0,
+        "shared": 0.9901978812780851,
+        "data": 0.9806111902985644
+      },
+      "bootstrap95": {
+        "llvm": [
+          1.0650019251702545,
+          1.1108553853914591
+        ],
+        "baseline": [
+          1.0,
+          1.0
+        ],
+        "shared": [
+          0.9621562426481441,
+          1.0010189702403816
+        ],
+        "data": [
+          0.9644655235098493,
+          0.9955868846573798
+        ]
+      },
+      "metrics": {
+        "llvm": {
+          "wall_seconds": 0.3212046690000534,
+          "user_seconds": 0.379636,
+          "sys_seconds": 0.09000999999999999,
+          "maxrss_kib": 145052
+        },
+        "baseline": {
+          "wall_seconds": 0.297650161999627,
+          "user_seconds": 0.298819,
+          "sys_seconds": 0.087155,
+          "maxrss_kib": 144416
+        },
+        "shared": {
+          "wall_seconds": 0.294238759000109,
+          "user_seconds": 0.29294,
+          "sys_seconds": 0.086158,
+          "maxrss_kib": 144308
+        },
+        "data": {
+          "wall_seconds": 0.29106566100017517,
+          "user_seconds": 0.300537,
+          "sys_seconds": 0.08116799999999999,
+          "maxrss_kib": 144528
+        }
+      }
+    },
+    {
+      "crate": "humantime",
+      "paired_ratio": {
+        "llvm": 0.8356003647957326,
+        "baseline": 1.0,
+        "shared": 0.9936711501716915,
+        "data": 1.0082934728106312
+      },
+      "bootstrap95": {
+        "llvm": [
+          0.818054287777666,
+          0.8414507212395889
+        ],
+        "baseline": [
+          1.0,
+          1.0
+        ],
+        "shared": [
+          0.9889119313747314,
+          1.0236799108904144
+        ],
+        "data": [
+          0.9997305204410619,
+          1.023034692966278
+        ]
+      },
+      "metrics": {
+        "llvm": {
+          "wall_seconds": 0.22446373100001438,
+          "user_seconds": 0.280553,
+          "sys_seconds": 0.09754399999999999,
+          "maxrss_kib": 142612
+        },
+        "baseline": {
+          "wall_seconds": 0.2706076459999167,
+          "user_seconds": 0.286381,
+          "sys_seconds": 0.10502399999999999,
+          "maxrss_kib": 172012
+        },
+        "shared": {
+          "wall_seconds": 0.27288727999984985,
+          "user_seconds": 0.294639,
+          "sys_seconds": 0.095201,
+          "maxrss_kib": 171876
+        },
+        "data": {
+          "wall_seconds": 0.2720380529999602,
+          "user_seconds": 0.299118,
+          "sys_seconds": 0.09905399999999999,
+          "maxrss_kib": 172056
+        }
+      }
+    }
+  ],
+  "geomean": {
+    "llvm": 1.0028382248511247,
+    "baseline": 1.0,
+    "shared": 0.9879456143273735,
+    "data": 0.9901192797989803
+  }
+}

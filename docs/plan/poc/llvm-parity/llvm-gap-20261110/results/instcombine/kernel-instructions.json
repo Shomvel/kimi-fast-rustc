@@ -1,0 +1,104 @@
+{
+  "llvm": {
+    "nested_add": [
+      "lea    0x2a(%rdi),%rax",
+      "ret"
+    ],
+    "nested_and": [
+      "mov    %rdi,%rax",
+      "and    $0xf000f,%eax",
+      "ret"
+    ],
+    "nested_mul": [
+      "lea    (%rdi,%rdi,4),%rax",
+      "lea    (%rdi,%rax,4),%rax",
+      "ret"
+    ],
+    "nested_or": [
+      "mov    %rdi,%rax",
+      "or     $0xff00,%rax",
+      "ret"
+    ],
+    "nested_xor": [
+      "mov    %rdi,%rax",
+      "xor    $0xff00,%rax",
+      "ret"
+    ],
+    "reversed_add": [
+      "xor    %eax,%eax",
+      "ret"
+    ]
+  },
+  "baseline": {
+    "nested_add": [
+      "add    $0xd,%rdi",
+      "add    $0x1d,%rdi",
+      "mov    %rdi,%rax",
+      "ret"
+    ],
+    "nested_and": [
+      "and    $0xff00ff,%rdi",
+      "and    $0xf000f,%rdi",
+      "mov    %rdi,%rax",
+      "ret"
+    ],
+    "nested_mul": [
+      "imul   $0x3,%rdi,%rdi",
+      "imul   $0x7,%rdi,%rdi",
+      "mov    %rdi,%rax",
+      "ret"
+    ],
+    "nested_or": [
+      "or     $0x5500,%rdi",
+      "or     $0xaa00,%rdi",
+      "mov    %rdi,%rax",
+      "ret"
+    ],
+    "nested_xor": [
+      "xor    $0x5500,%rdi",
+      "xor    $0xaa00,%rdi",
+      "mov    %rdi,%rax",
+      "ret"
+    ],
+    "reversed_add": [
+      "mov    %rdi,%rax",
+      "add    %rsi,%rax",
+      "add    %rdi,%rsi",
+      "xor    %rsi,%rax",
+      "ret"
+    ]
+  },
+  "instcombine-v2": {
+    "nested_add": [
+      "add    $0x2a,%rdi",
+      "mov    %rdi,%rax",
+      "ret"
+    ],
+    "nested_and": [
+      "and    $0xf000f,%rdi",
+      "mov    %rdi,%rax",
+      "ret"
+    ],
+    "nested_mul": [
+      "imul   $0x15,%rdi,%rdi",
+      "mov    %rdi,%rax",
+      "ret"
+    ],
+    "nested_or": [
+      "or     $0xff00,%rdi",
+      "mov    %rdi,%rax",
+      "ret"
+    ],
+    "nested_xor": [
+      "xor    $0xff00,%rdi",
+      "mov    %rdi,%rax",
+      "ret"
+    ],
+    "reversed_add": [
+      "add    %rsi,%rdi",
+      "mov    %rdi,%rax",
+      "xor    %rdi,%rax",
+      "ret"
+    ]
+  }
+}

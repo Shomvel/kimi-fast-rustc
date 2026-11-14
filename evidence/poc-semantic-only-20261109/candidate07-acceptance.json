@@ -1,0 +1,76 @@
+{
+  "candidate": "candidate07",
+  "source_sha256": "186df0f5b6e476fb93fed0be80b3a8f23b360ee7334aa0ae710e33a0500e8c56",
+  "linux_backend_build": "pass",
+  "linux_tests": {
+    "suites": 59,
+    "passed": 519,
+    "ignored": 1
+  },
+  "semantic": {
+    "status": "pass",
+    "output_lines_per_arm": 381,
+    "arms": [
+      "LLVM",
+      "semantic-off",
+      "semantic-on"
+    ],
+    "scope_rejections": [
+      "general union",
+      "TLS",
+      "SIMD"
+    ]
+  },
+  "legacy_corpus": {
+    "status": "pass",
+    "suites": 7,
+    "fixtures": 394,
+    "vectors": 1295,
+    "traps": 19,
+    "arms": [
+      "LLVM",
+      "semantic-off",
+      "semantic-on"
+    ]
+  },
+  "cli": "pass",
+  "features": {
+    "LLVM": "all passed",
+    "semantic-off_generic_and_nominal": "pass",
+    "definition_prepared_once": "raw log confirmed; corrected external validator reused successful command receipts",
+    "maybe_uninit_semantic_off": "failed: array iterator clone_into_new unsized struct-tail field address requires explicit address type",
+    "semantic-on": "not reached"
+  },
+  "semver": {
+    "LLVM": "passed",
+    "kfrc": "failed before object emission: Cmp requires semantic Ordering enum after nominal identity change"
+  },
+  "performance": "not a successful semver performance candidate",
+  "machine_shape_audit": {
+    "initial_report": {
+      "satisfied": 10,
+      "shape_gap": 19,
+      "requires_virtual_instruction_test": 1
+    },
+    "corrected_report": {
+      "satisfied": 15,
+      "shape_gap": 14,
+      "requires_virtual_instruction_test": 1
+    },
+    "correction": "read-only reanalysis of unchanged binaries after normalizing LLVM objdump hex immediate spelling; original report retained",
+    "corrected_evidence": "results/candidate07/legacy-machine-shapes-normalized"
+  },
+  "result_archive_sha256": "fa264cdfefee6d9713feb14fbda7c20dacbca9e483186715ea42928cbef2b633",
+  "mu_diagnostic_archive_sha256": "761020e4af2a9ae9c59993ccd9f58d66536371286c312a7bd31879ffc8025e78",
+  "total_counter_probe": {
+    "workload": "legacy arithmetic O0, release backends",
+    "LLVM_instructions_median": 39337032,
+    "kfrc_instructions_median": 117561291,
+    "kfrc_over_llvm": 2.988565354905271,
+    "rounds": 3,
+    "profile_transparent_object_bytes": true,
+    "counter_enabled_equals_running": true,
+    "scope": "codegen_crate through join; includes collector and MIR conversion; not semver or full PoC performance",
+    "archive_sha256": "9f5c4bb8fcbc177b732970383b11635754bd51bb2cd07de29c98a56fbffb8fa1"
+  }
+}

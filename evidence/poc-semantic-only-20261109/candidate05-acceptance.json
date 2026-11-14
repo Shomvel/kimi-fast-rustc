@@ -1,0 +1,18 @@
+{
+  "candidate": "candidate05",
+  "source_sha256": "4e6fac81db7d288bc9bd88217a086005e19b17bf5affa7f95460f9a894218c00",
+  "linux_backend_build": "pass",
+  "linux_tests": {
+    "suites": 54,
+    "passed": 486,
+    "ignored": 1
+  },
+  "semantic": "failed",
+  "first_failure": "definition R accepted std::mem::size_of_val::<dyn Value>; trait/static resolution reached unsupported Instance::Intrinsic(size_of_val)",
+  "remaining_stages": "not run after first class failure",
+  "llvm_wrapper_probe_evidence": "results/llvm-wrapper-probe",
+  "llvm_wrapper_transparency_evidence": "results/llvm-wrapper-transparency",
+  "pending_evidence_archive_sha256": "14167ee06735684b18c7e0155fff8359d5467c9055d6fa6f2b473e46c7b72928",
+  "result_archive_sha256": "61b8dacf7886114380e13b9f5325f4e3b10ece283b38933d853e604d6f2fa553",
+  "array_intoiter_instance_mir_archive_sha256": "2ebb64338c35fe14d038eee1412f14d9652005e7bee779ed3c010e405bb74524"
+}

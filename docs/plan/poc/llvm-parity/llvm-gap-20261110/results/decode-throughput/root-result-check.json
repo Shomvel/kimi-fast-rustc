@@ -1,0 +1,20 @@
+{
+  "archive_sha256": "4c30df7968c16e3e4aeff1c444800b32422e845fae978a92a4fd9dcf0e7aa1fa",
+  "archive_pin_matches": true,
+  "compile_rows": 240,
+  "full_object_pairs": 1500,
+  "all_compile_exit_zero": true,
+  "serial_totals_paired_medians": {
+    "full": {
+      "wall_seconds": 1.049420440180261,
+      "instructions": 1.0513114463378697,
+      "cycles": 1.0339093721315749
+    },
+    "metadata": {
+      "wall_seconds": 1.0011979455931537,
+      "instructions": 1.0000041001926452,
+      "cycles": 1.0201829115693162
+    }
+  },
+  "runtime_quick_vs_sealed_provenance_identical": true
+}

@@ -1,0 +1,16 @@
+{
+  "macos": {
+    "passed": 825,
+    "failed": 0,
+    "ignored": 1,
+    "log_sha256": "148932fbcc39aef6b63c846deedcb73a40cb35fc31d51a655ba44e50d70c9940",
+    "log_path": "/Users/shom/Downloads/kfrc-divshift-20261110/macos-final-workspace.log"
+  },
+  "linux": {
+    "passed": 859,
+    "failed": 0,
+    "ignored": 1,
+    "log_sha256": "3d3adf9ba8fe1de3c7863da564fdaeef4508168f88f47b5d8bac24d68fdbab0d",
+    "log_path": "/Users/shom/Downloads/kfrc-divshift-20261110/evidence/results/bootstrap/final-source-tests.log"
+  }
+}

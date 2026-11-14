@@ -1,0 +1,9 @@
+[package]
+name = "kfrc-body"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.89"
+description = "kfrc Typed Body contract and TypeOracle interface (no rustc dependencies)"
+license = "MIT OR Apache-2.0"
+
+[dependencies]

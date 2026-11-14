@@ -1,0 +1,51 @@
+{
+  "candidate": "candidate09",
+  "source_sha256": "d2fe659c4b9071cef684bba28b7bdc75e4fe65f55e2e15caa01072642ea15ab7",
+  "linux_tests": {
+    "suites": 62,
+    "passed": 554,
+    "ignored": 1
+  },
+  "semantic": "381 output lines equal in 3 arms and scope negatives rejected",
+  "cli": "pass",
+  "semver": "unchanged 1.0.28, 34 upstream tests per arm and workload passed",
+  "w05_original": "LLVM/off/on passed after uninhabited Ignore ABI fix",
+  "features": {
+    "generic_contract": "all 3 arms pass prepared-once, exact instance counts, lazy ZST dead-target, nominal identity, variant dispatch; optimized known R now contains no conditional branch",
+    "MaybeUninit_off": "pass",
+    "MaybeUninit_on": "failed at invalid_bool_storage L verifier: Local partition allocation escapes after memmove lowering; next-candidate fix pending",
+    "on_emission": "not reached"
+  },
+  "semver_measurement": {
+    "rounds_compile": 5,
+    "rounds_runtime": 7,
+    "same_shared_std_mir0": true,
+    "kfrc_compile_wall": 0.76,
+    "kfrc_text_bytes": 1134533,
+    "kfrc_runtime_ns": {
+      "parse": 167356461,
+      "req": 376671748,
+      "identifier": 154788157
+    },
+    "kfrc_total_instructions": 6785016333,
+    "LLVM_total_instructions": 1668383450,
+    "profile_objects_identical": true,
+    "profile_enabled_equals_running": true,
+    "scope": "codegen_crate through join includes collector/MIR conversion, excludes link"
+  },
+  "from_str": {
+    "S_after_opt_nodes": 1129,
+    "L_nodes": 12473,
+    "If": 607,
+    "Store": 158,
+    "Load": 258,
+    "Refine": 280,
+    "text_bytes": 80781
+  },
+  "remaining": "full legacy corpus, remaining walkthroughs, regex deferred to next candidate after known MU partition class fix",
+  "archives": {
+    "candidate09-results.tar.gz": "5cd95072963bbb727f77040d5932a0ca00ffd1292ad1ec82b968e835a28dc978",
+    "candidate09-features.tar.gz": "4ac2509cad6426864516677bdc367aef6f8c06a56b32c559c909fda62496681e",
+    "candidate09-attribution.tar.gz": "0678c6774ed6b97b943e5e240a51e827eb1b232dc2bb2e61323f7d00104af8b9"
+  }
+}

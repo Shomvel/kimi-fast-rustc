@@ -1,0 +1,264 @@
+{
+  "performance": {
+    "candidate04-llvm": {
+      "compile_wall_median": 0.26,
+      "object_text_bytes": 18515,
+      "runtime_ns_medians": {
+        "parse": 2870449,
+        "req": 2169546,
+        "identifier": 9559640
+      }
+    },
+    "candidate04-kfrc": {
+      "compile_wall_median": 3.08,
+      "object_text_bytes": 3931990,
+      "runtime_ns_medians": {
+        "parse": 362417532,
+        "req": 600099142,
+        "identifier": 229515312
+      }
+    },
+    "candidate08a-llvm": {
+      "compile_wall_median": 0.26,
+      "object_text_bytes": 18515,
+      "runtime_ns_medians": {
+        "parse": 2827172,
+        "req": 2306392,
+        "identifier": 9543893
+      }
+    },
+    "candidate08a-kfrc": {
+      "compile_wall_median": 0.79,
+      "object_text_bytes": 1142645,
+      "runtime_ns_medians": {
+        "parse": 170882535,
+        "req": 377502153,
+        "identifier": 154476644
+      }
+    }
+  },
+  "version_from_str_graphs": {
+    "candidate04": {
+      "symbol": "_RNvXNtCslLN4iPamcnI_6semver5parseNtB4_7VersionNtNtNtCshX3mvxHm3fC_4core3str6traits7FromStr8from_str",
+      "stages": [
+        {
+          "level": "Specialized",
+          "nodes": 569,
+          "opcodes": {
+            "Start": 1,
+            "Projection": 221,
+            "LocalSlot": 5,
+            "Region": 11,
+            "Field": 38,
+            "PointerCast": 29,
+            "WidePtr": 12,
+            "Call": 38,
+            "Not": 4,
+            "If": 21,
+            "MakeVariant": 15,
+            "Jump": 31,
+            "Discriminant": 10,
+            "Const": 19,
+            "Compare": 17,
+            "VariantField": 17,
+            "SymbolAddress": 9,
+            "LoadValue": 6,
+            "Aggregate": 5,
+            "SlotLive": 5,
+            "Undefined": 8,
+            "InsertField": 4,
+            "StoreValue": 9,
+            "SlotDead": 10,
+            "Phi": 22,
+            "Unreachable": 1,
+            "Return": 1
+          }
+        },
+        {
+          "level": "Specialized",
+          "nodes": 1067,
+          "opcodes": {
+            "Start": 1,
+            "Projection": 412,
+            "LocalSlot": 7,
+            "Region": 22,
+            "Field": 42,
+            "PointerCast": 63,
+            "WidePtr": 24,
+            "Not": 4,
+            "If": 39,
+            "MakeVariant": 53,
+            "Jump": 53,
+            "Call": 37,
+            "Discriminant": 21,
+            "Const": 24,
+            "Compare": 37,
+            "VariantField": 42,
+            "SymbolAddress": 9,
+            "LoadValue": 6,
+            "Aggregate": 11,
+            "SlotLive": 9,
+            "StoreValue": 11,
+            "SlotDead": 14,
+            "Undefined": 4,
+            "Phi": 37,
+            "Unreachable": 8,
+            "Return": 1,
+            "ObserveValue": 69,
+            "FieldAddr": 7
+          }
+        },
+        {
+          "level": "Layout",
+          "nodes": 34517,
+          "opcodes": {
+            "Start": 1,
+            "Projection": 7414,
+            "StackSlot": 39,
+            "Region": 1854,
+            "PtrOffset": 1354,
+            "Not": 840,
+            "If": 1871,
+            "Jump": 3717,
+            "Call": 37,
+            "Const": 5706,
+            "Compare": 2705,
+            "SymbolAddress": 9,
+            "SlotLive": 9,
+            "SlotDead": 14,
+            "Phi": 2473,
+            "Unreachable": 8,
+            "Return": 1,
+            "ObserveValue": 685,
+            "Load": 258,
+            "Undefined": 608,
+            "Cast": 860,
+            "Sub": 12,
+            "Add": 12,
+            "Neg": 836,
+            "BitAnd": 1672,
+            "BitOr": 836,
+            "Store": 686
+          }
+        }
+      ]
+    },
+    "candidate08a": {
+      "symbol": "_RNvXNtCslLN4iPamcnI_6semver5parseNtB4_7VersionNtNtNtCshX3mvxHm3fC_4core3str6traits7FromStr8from_str",
+      "stages": [
+        {
+          "level": "Specialized",
+          "nodes": 532,
+          "opcodes": {
+            "Start": 1,
+            "Projection": 214,
+            "LocalSlot": 5,
+            "Region": 11,
+            "Field": 38,
+            "PointerCast": 33,
+            "WidePtr": 12,
+            "Call": 38,
+            "Not": 4,
+            "If": 4,
+            "MakeVariant": 15,
+            "Jump": 31,
+            "VariantSwitch": 10,
+            "VariantField": 17,
+            "SymbolAddress": 9,
+            "Const": 2,
+            "LoadValue": 6,
+            "Aggregate": 5,
+            "SlotLive": 5,
+            "Undefined": 8,
+            "InsertField": 4,
+            "StoreValue": 9,
+            "SlotDead": 10,
+            "Phi": 22,
+            "Unreachable": 1,
+            "Return": 1,
+            "Refine": 17
+          }
+        },
+        {
+          "level": "Specialized",
+          "nodes": 1129,
+          "opcodes": {
+            "Start": 1,
+            "Projection": 413,
+            "LocalSlot": 7,
+            "Region": 51,
+            "Field": 42,
+            "PointerCast": 75,
+            "WidePtr": 24,
+            "Not": 4,
+            "If": 4,
+            "MakeVariant": 53,
+            "Jump": 82,
+            "Call": 37,
+            "VariantSwitch": 28,
+            "VariantField": 42,
+            "SymbolAddress": 9,
+            "Const": 10,
+            "LoadValue": 6,
+            "Aggregate": 11,
+            "SlotLive": 9,
+            "StoreValue": 11,
+            "SlotDead": 14,
+            "Undefined": 4,
+            "Phi": 66,
+            "Unreachable": 8,
+            "Return": 1,
+            "Refine": 35,
+            "ObserveValue": 73,
+            "Compare": 2,
+            "FieldAddr": 7
+          }
+        },
+        {
+          "level": "Layout",
+          "nodes": 12689,
+          "opcodes": {
+            "Start": 1,
+            "Projection": 3550,
+            "StackSlot": 39,
+            "Region": 619,
+            "PtrOffset": 810,
+            "Not": 16,
+            "If": 607,
+            "Jump": 1218,
+            "Call": 37,
+            "SymbolAddress": 9,
+            "Const": 1530,
+            "SlotLive": 9,
+            "SlotDead": 14,
+            "Phi": 1238,
+            "Unreachable": 8,
+            "Return": 1,
+            "Compare": 617,
+            "ObserveValue": 545,
+            "Load": 258,
+            "Cast": 236,
+            "Sub": 12,
+            "Add": 12,
+            "Neg": 12,
+            "BitAnd": 24,
+            "BitOr": 12,
+            "Undefined": 566,
+            "Refine": 531,
+            "Store": 158
+          }
+        }
+      ]
+    }
+  },
+  "version_from_str_text_bytes": {
+    "candidate04": 262604,
+    "candidate08a": 82658,
+    "LLVM": 917
+  },
+  "text_symbol_counts": {
+    "candidate04": 1013,
+    "candidate08a": 250,
+    "LLVM": 81
+  }
+}

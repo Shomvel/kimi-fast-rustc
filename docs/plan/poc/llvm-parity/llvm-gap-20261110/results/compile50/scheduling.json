@@ -1,0 +1,31 @@
+[
+  {
+    "extra_tokens": 0,
+    "returned_tokens": 0,
+    "object_byte_identity": true,
+    "elapsed": 0.3436695430000327
+  },
+  {
+    "extra_tokens": 1,
+    "returned_tokens": 1,
+    "object_byte_identity": true,
+    "elapsed": 0.2809610569997858
+  },
+  {
+    "extra_tokens": 3,
+    "returned_tokens": 3,
+    "object_byte_identity": true,
+    "elapsed": 0.24955921199989461
+  },
+  {
+    "cgu": 1,
+    "object_byte_identity": true
+  },
+  {
+    "cgu": 4,
+    "object_byte_identity": true
+  },
+  {
+    "invalid_zero_rejected": true
+  }
+]

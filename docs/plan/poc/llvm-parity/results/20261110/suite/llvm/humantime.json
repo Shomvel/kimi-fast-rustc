@@ -1,0 +1,344 @@
+{
+  "crate": "humantime",
+  "version": "2.4.0",
+  "arm": "llvm",
+  "backend": "llvm",
+  "backend_sha256": "LLVM",
+  "flags": [
+    "-Cpanic=abort",
+    "-Copt-level=3",
+    "-Ccodegen-units=16",
+    "-Cembed-bitcode=no",
+    "-Cdebuginfo=0",
+    "-Coverflow-checks=off",
+    "-Cdebug-assertions=off",
+    "-Zmir-opt-level=0"
+  ],
+  "sysroot": "/workspace/shared-std-mir0/sysroot",
+  "library_command": [
+    "rustc",
+    "+1.94.1",
+    "--sysroot=/workspace/shared-std-mir0/sysroot",
+    "--crate-name",
+    "humantime",
+    "--crate-type",
+    "rlib",
+    "--edition=2021",
+    "/workspace/results/integrated-final1/suite/src/humantime-2.4.0/src/lib.rs",
+    "-Cpanic=abort",
+    "-Copt-level=3",
+    "-Ccodegen-units=16",
+    "-Cembed-bitcode=no",
+    "-Cdebuginfo=0",
+    "-Coverflow-checks=off",
+    "-Cdebug-assertions=off",
+    "-Zmir-opt-level=0",
+    "--cap-lints=allow",
+    "-o",
+    "/workspace/results/integrated-final1/suite/llvm/humantime/ref/lib.rlib"
+  ],
+  "status": "ok",
+  "size": {
+    "text_bytes": 10426,
+    "func_symbol_bytes": 10426,
+    "func_symbols": 32,
+    "rodata_bytes": 1692,
+    "object_count": 13,
+    "object_bytes": 53800,
+    "rlib_bytes": 148824
+  },
+  "kfrc_file_symbol": false,
+  "compile": {
+    "rounds": 3,
+    "checker": 0,
+    "order": "three rounds: llvm,c12-phi,integrated then reverse then forward; same sandbox serial",
+    "full": [
+      {
+        "exit_code": 0,
+        "wall_seconds": 0.23898657300014747,
+        "user_seconds": 0.305297,
+        "sys_seconds": 0.09956699999999999,
+        "maxrss_kib": 142872,
+        "instructions": 1390173894,
+        "instructions_running_pct": 100.0,
+        "cycles": 1008639624,
+        "cycles_running_pct": 100.0,
+        "objects_identical_to_reference": true
+      },
+      {
+        "exit_code": 0,
+        "wall_seconds": 0.2338417529972503,
+        "user_seconds": 0.252232,
+        "sys_seconds": 0.139034,
+        "maxrss_kib": 142488,
+        "instructions": 1389877466,
+        "instructions_running_pct": 100.0,
+        "cycles": 1002357228,
+        "cycles_running_pct": 100.0,
+        "objects_identical_to_reference": true
+      },
+      {
+        "exit_code": 0,
+        "wall_seconds": 0.23937103900243528,
+        "user_seconds": 0.284545,
+        "sys_seconds": 0.11447199999999999,
+        "maxrss_kib": 140584,
+        "instructions": 1390153638,
+        "instructions_running_pct": 100.0,
+        "cycles": 987082963,
+        "cycles_running_pct": 100.0,
+        "objects_identical_to_reference": true
+      }
+    ],
+    "metadata_only": [
+      {
+        "exit_code": 0,
+        "wall_seconds": 0.10183385900018038,
+        "user_seconds": 0.059046999999999995,
+        "sys_seconds": 0.041413,
+        "maxrss_kib": 110456,
+        "instructions": 280389207,
+        "instructions_running_pct": 100.0,
+        "cycles": 209475864,
+        "cycles_running_pct": 100.0
+      },
+      {
+        "exit_code": 0,
+        "wall_seconds": 0.09668296999734594,
+        "user_seconds": 0.055908,
+        "sys_seconds": 0.037043,
+        "maxrss_kib": 110412,
+        "instructions": 280391799,
+        "instructions_running_pct": 100.0,
+        "cycles": 196882173,
+        "cycles_running_pct": 100.0
+      },
+      {
+        "exit_code": 0,
+        "wall_seconds": 0.09697995600436116,
+        "user_seconds": 0.063744,
+        "sys_seconds": 0.03248,
+        "maxrss_kib": 110280,
+        "instructions": 280378795,
+        "instructions_running_pct": 100.0,
+        "cycles": 201463618,
+        "cycles_running_pct": 100.0
+      }
+    ],
+    "instructions_median": 1390153638,
+    "cycles_median": 1002357228,
+    "wall_median": 0.23898657300014747,
+    "user_median": 0.284545,
+    "maxrss_kib_median": 142488,
+    "metadata_instructions_median": 280389207,
+    "metadata_wall_median": 0.09697995600436116,
+    "codegen_instructions_estimate": 1109764431
+  },
+  "driver": {
+    "command": [
+      "rustc",
+      "+1.94.1",
+      "--sysroot=/workspace/shared-std-mir0/sysroot",
+      "--edition=2021",
+      "/workspace/suite/drivers/humantime.rs",
+      "--crate-name",
+      "driver",
+      "-Cpanic=abort",
+      "-Copt-level=3",
+      "-Cdebuginfo=0",
+      "-Zmir-opt-level=0",
+      "--extern",
+      "humantime=/workspace/results/integrated-final1/suite/llvm/humantime/ref/lib.rlib",
+      "-Csave-temps",
+      "-o",
+      "/workspace/results/integrated-final1/suite/llvm/humantime/driver/driver"
+    ],
+    "exit_code": 0,
+    "objects_sha256": {
+      "driver.7q524ybyu92u8qns68khmscfx.rcgu.o": "92ad59834dc9a8be5aa70ed035327994668310cdf0f1c37cc1ae8dfbfb90b6d3",
+      "driver.driver.39fc946f9cbf83db-cgu.0.rcgu.o": "bc768ce65210eb28f804cf683ec72bb4114ed933f6055e1a09f955afa2ed6b0b",
+      "driver.driver.39fc946f9cbf83db-cgu.1.rcgu.o": "56f78a594fbc671caa7edb89124ff9c704f35f3a479f2dccb1b3a8bb477bc211",
+      "driver.driver.39fc946f9cbf83db-cgu.2.rcgu.o": "5b9e2f41968f6cfe08c91c91c494a12fa276d0a9207d9dbf703b61eae05afdc7",
+      "driver.driver.39fc946f9cbf83db-cgu.3.rcgu.o": "c9a1709b817f45dd9af9aff4b58f1cde552d908fb3f3036315a19afc059fcd24"
+    },
+    "local_text_bytes": 11184,
+    "executable_sha256": "ae14ee1e9f8d600bb6249225b322e24ab337117bece2351bbc85ff2e59a00a44"
+  },
+  "corpus": {
+    "exit_code": 0,
+    "sha256": "a9425cd88ba9a9d39fae77ce8c1399af21168d6e2938ad1377b560e49a029b1d",
+    "lines": 553
+  },
+  "workload_check": {
+    "dur-parse": {
+      "exit_code": 0,
+      "checksum": 9931678550000
+    },
+    "dur-format": {
+      "exit_code": 0,
+      "checksum": 9619162
+    },
+    "ts-parse": {
+      "exit_code": 0,
+      "checksum": 10339638455182523344
+    },
+    "ts-format": {
+      "exit_code": 0,
+      "checksum": 32966122
+    }
+  },
+  "tests": {
+    "lockfile": "suite",
+    "sysroot": "cargo -Zbuild-std (MIR opt-level 0, panic=abort, O3, CGU16)",
+    "unit": {
+      "build_exit_code": 0,
+      "build_seconds": 3.3228973779987427,
+      "crate_invocations": 1,
+      "crate_invocations_with_backend": 0,
+      "binaries": {
+        "humantime-unit": {
+          "exit_code": 0,
+          "seconds": 0.08148394100135192,
+          "listed": 38,
+          "counts": {
+            "ok": 38,
+            "failed": 0,
+            "ignored": 0,
+            "not_run": 0
+          },
+          "outcomes": {
+            "date::test::all_86400_seconds": "ok",
+            "date::test::big_day": "ok",
+            "date::test::big_day2": "ok",
+            "date::test::big_hour": "ok",
+            "date::test::big_minute": "ok",
+            "date::test::big_month": "ok",
+            "date::test::big_second": "ok",
+            "date::test::break_data": "ok",
+            "date::test::first_731_days": "ok",
+            "date::test::leap_second": "ok",
+            "date::test::milliseconds": "ok",
+            "date::test::parse_offset_00": "ok",
+            "date::test::random_past": "ok",
+            "date::test::random_wide_range": "ok",
+            "date::test::smoke_tests_format": "ok",
+            "date::test::smoke_tests_format_micros": "ok",
+            "date::test::smoke_tests_format_millis": "ok",
+            "date::test::smoke_tests_format_nanos": "ok",
+            "date::test::smoke_tests_parse": "ok",
+            "date::test::the_731_consecutive_days": "ok",
+            "date::test::upper_bound": "ok",
+            "date::test::weak_parse_offset_00": "ok",
+            "date::test::weak_smoke_tests": "ok",
+            "date::test::zero_day": "ok",
+            "date::test::zero_month": "ok",
+            "duration::test::all_86400_seconds": "ok",
+            "duration::test::allow_0_with_no_unit": "ok",
+            "duration::test::random_any": "ok",
+            "duration::test::random_second": "ok",
+            "duration::test::test_combo": "ok",
+            "duration::test::test_error_cases": "ok",
+            "duration::test::test_format_micros": "ok",
+            "duration::test::test_fractional_bad_input": "ok",
+            "duration::test::test_fractional_combined": "ok",
+            "duration::test::test_fractional_units": "ok",
+            "duration::test::test_nice_error_message": "ok",
+            "duration::test::test_overlow": "ok",
+            "duration::test::test_units": "ok"
+          }
+        }
+      },
+      "totals": {
+        "ok": 38,
+        "failed": 0,
+        "ignored": 0,
+        "not_run": 0
+      },
+      "all_exit_zero": true
+    }
+  },
+  "compile_checker1_not_formal": {
+    "rounds": 3,
+    "full": [
+      {
+        "exit_code": 0,
+        "wall_seconds": 0.2710292789997766,
+        "user_seconds": 0.281865,
+        "sys_seconds": 0.12838,
+        "maxrss_kib": 141472,
+        "instructions": 1389624872,
+        "instructions_running_pct": 100.0,
+        "cycles": 997118670,
+        "cycles_running_pct": 100.0,
+        "objects_identical_to_reference": true
+      },
+      {
+        "exit_code": 0,
+        "wall_seconds": 0.23375380099605536,
+        "user_seconds": 0.2647,
+        "sys_seconds": 0.126745,
+        "maxrss_kib": 142120,
+        "instructions": 1389924609,
+        "instructions_running_pct": 100.0,
+        "cycles": 980767473,
+        "cycles_running_pct": 100.0,
+        "objects_identical_to_reference": true
+      },
+      {
+        "exit_code": 0,
+        "wall_seconds": 0.23002534599800128,
+        "user_seconds": 0.281504,
+        "sys_seconds": 0.109577,
+        "maxrss_kib": 142584,
+        "instructions": 1389906251,
+        "instructions_running_pct": 100.0,
+        "cycles": 972270303,
+        "cycles_running_pct": 100.0,
+        "objects_identical_to_reference": true
+      }
+    ],
+    "metadata_only": [
+      {
+        "exit_code": 0,
+        "wall_seconds": 0.10181989000557223,
+        "user_seconds": 0.06562699999999999,
+        "sys_seconds": 0.03306,
+        "maxrss_kib": 110304,
+        "instructions": 280391259,
+        "instructions_running_pct": 100.0,
+        "cycles": 209203855,
+        "cycles_running_pct": 100.0
+      },
+      {
+        "exit_code": 0,
+        "wall_seconds": 0.09698244000173872,
+        "user_seconds": 0.058079,
+        "sys_seconds": 0.039888,
+        "maxrss_kib": 110372,
+        "instructions": 280395648,
+        "instructions_running_pct": 100.0,
+        "cycles": 204371801,
+        "cycles_running_pct": 100.0
+      },
+      {
+        "exit_code": 0,
+        "wall_seconds": 0.10675006800011033,
+        "user_seconds": 0.058559,
+        "sys_seconds": 0.046009999999999995,
+        "maxrss_kib": 110224,
+        "instructions": 280391399,
+        "instructions_running_pct": 100.0,
+        "cycles": 222949779,
+        "cycles_running_pct": 100.0
+      }
+    ],
+    "instructions_median": 1389906251,
+    "cycles_median": 980767473,
+    "wall_median": 0.23375380099605536,
+    "user_median": 0.281504,
+    "maxrss_kib_median": 142120,
+    "metadata_instructions_median": 280391399,
+    "metadata_wall_median": 0.10181989000557223,
+    "codegen_instructions_estimate": 1109514852
+  }
+}

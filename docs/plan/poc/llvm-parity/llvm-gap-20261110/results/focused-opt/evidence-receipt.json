@@ -1,0 +1,27 @@
+{
+  "sandbox_id": "itmdyt5e3uvkqwmscvqme",
+  "durable_root": "/Users/shom/Downloads/kfrc-focused-opt-20261110/final-evidence/results",
+  "archive": {
+    "path": "/Users/shom/Downloads/kfrc-focused-opt-20261110/focused-evidence.tar.gz",
+    "bytes": 6153516,
+    "sha256": "c01f72f851b747aea0bc117c5f834e842b1a6fe1c5d6e54902a7723340edf560"
+  },
+  "manifest_files_verified": 1055,
+  "sandbox_release": {
+    "killed": true,
+    "killed_at_utc": "2026-11-10T11:27:53.766342+00:00",
+    "sandbox_id": "itmdyt5e3uvkqwmscvqme",
+    "verification": "1055 main-archive files and 190 supplement files reverified immediately before kill; both backends present locally"
+  },
+  "final_source_evidence": {
+    "root": "/Users/shom/Downloads/kfrc-focused-opt-20261110/accepted-evidence/results",
+    "archive": "/Users/shom/Downloads/kfrc-focused-opt-20261110/natural-evidence.tar.gz",
+    "archive_bytes": 4640806,
+    "archive_sha256": "b332be00074ad6f7a288e660d99a2d20707011b1b600c8a876fe8d639a07535c",
+    "manifest_files_verified": 190,
+    "includes_backends": [
+      "start.so",
+      "natural.so"
+    ]
+  }
+}

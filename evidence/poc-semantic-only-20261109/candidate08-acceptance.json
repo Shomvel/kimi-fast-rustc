@@ -1,0 +1,12 @@
+{
+  "candidate": "candidate08",
+  "source_sha256": "a1c0f771f15ec710debb9eeb75b67074438d4d6943012e37ce463f5bd9d3c37a",
+  "local_workspace": {
+    "suites": 62,
+    "passed": 515,
+    "ignored": 1
+  },
+  "linux_backend_build": "failed",
+  "first_failure": "Rust1.94.1 rustc_index IndexVec has no .last() method: convert/types.rs:291; follow-on E0282 at field.ty",
+  "remaining_stages": "not run; no performance claim"
+}

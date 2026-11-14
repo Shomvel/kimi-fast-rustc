@@ -1,0 +1,11 @@
+{
+  "label": "decode-private-copy-v1-r1",
+  "path": "/workspace/callsite/generic-parity-20261110/results/decode-private-copy-v1-r1-evidence.tar.gz",
+  "bytes": 1396195,
+  "sha256": "dd8c75e2694fe7ebdd878b3a262c4026bbeeb8bc7191e29b9cfb33d759ac4dae",
+  "members": 95,
+  "local_archive": "/Users/shom/Downloads/kfrc-callsite-opt-20261110/generic-parity-20261110/decode-private-copy-v1-r1-evidence.tar.gz",
+  "local_evidence": "/Users/shom/Downloads/kfrc-callsite-opt-20261110/generic-parity-20261110/decode-private-copy-v1-r1-evidence",
+  "status": "all_manifest_members_verified",
+  "verified_at_utc": "2026-11-11T09:59:38.727497+00:00"
+}

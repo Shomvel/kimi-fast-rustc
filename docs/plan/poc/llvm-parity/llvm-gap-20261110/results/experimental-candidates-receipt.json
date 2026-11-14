@@ -1,0 +1,98 @@
+{
+  "source_baseline": "b254941179c6f052bc2b732814c61ed299e39a3b",
+  "sandbox_id": "ivnaqo0ohks51dg9savz9",
+  "sandbox_state": "released after final built-in cost-model validation; see builtin-cost-model/release-receipt.json",
+  "candidate_v1": {
+    "source_manifest": "combined.json",
+    "backend_sha256": "f5ccacd12bfb27a4469063db1f39edeee2c3a7afdb63b1b8fbface8cf851fc72",
+    "performance_accepted": false,
+    "reason": "semver parse and req paired regressions",
+    "linux_workspace_passed": 827,
+    "linux_workspace_ignored": 1,
+    "semantic_lines_per_arm": 824,
+    "full_suite_completed": true
+  },
+  "candidate_v2": {
+    "source_manifest": "candidate-v2.json",
+    "backend_sha256": "f623c7a953ea83f3957362dce6b4473aa4af5a61e7289f839dd582a6ee5ed019",
+    "performance_accepted": false,
+    "reason": "semver identifier paired regression 15.3%; layout hypothesis unproven",
+    "linux_semantic_memory_tests_passed": 18,
+    "full_acceptance_run": false,
+    "focused_libraries": [
+      "semver",
+      "base64"
+    ]
+  },
+  "supported_scope_limitations": [
+    "regex-syntax library: union/SIMD unsupported",
+    "base64 upstream unit: TLS unsupported",
+    "unicode-segmentation upstream unit: atomic_xsub unsupported",
+    "humantime upstream unit incomplete as recorded in preflight.json",
+    "legacy p1-memory: union/SIMD unsupported in both frozen baseline and candidate-v1"
+  ],
+  "old_evidence_archive_remote": {
+    "bytes": 171763813,
+    "sha256": "59280042f7d54cadbd9b459c2fa07c94071135d80d1a73a9ede7ae2a43600cd8"
+  },
+  "downloaded_archives": {
+    "suite-inputs.tar.gz": {
+      "bytes": 617245,
+      "sha256": "1cdfdae377dd093231bd93b87a3ce67facde4131a73fe5e941fbc8e2d492f1e8"
+    },
+    "combined.tar.gz": {
+      "bytes": 24068,
+      "sha256": "3b140c868351684c7a01faf3a87352613f59d2773d31b3bd350ef52315fc0ea7"
+    },
+    "semver-diagnosis.tar.gz": {
+      "bytes": 372842,
+      "sha256": "fecb5b344ecc87647eb6cbdc88e287d4dfb499af66fbb410c23a58baf5c068d4"
+    },
+    "candidate-v2.tar.gz": {
+      "bytes": 24073,
+      "sha256": "06300e72af4e6bfe6fe73eef28067742a3d6673cbfc8a12e0d79bbb594e52b80"
+    },
+    "compact.tar.gz": {
+      "bytes": 88809,
+      "sha256": "15f469a2eaa77444e779815d7db091bf303db5571c0105d83cce3ffc864cd0b3"
+    },
+    "identifier-profile.tar.gz": {
+      "bytes": 2886984,
+      "sha256": "d7fedc5ba36843805e5c9fd06439c8ef6193c634adcb4640355f25e1495db5c5"
+    },
+    "cost-model-partial.tar.gz": {
+      "bytes": 198970,
+      "sha256": "d3e1dd0678ff0d52e7b59efde954ab3ba0950bf1a00a93a9b6e81642c45c86ca"
+    },
+    "candidates.tar.gz": {
+      "bytes": 304268,
+      "sha256": "4e6323f037fd915cb876edbde802f8adfab88d4308db248a078cda8bcf980e0b"
+    },
+    "shift-only.tar.gz": {
+      "bytes": 11766,
+      "sha256": "201023f057e74e197f280b258126c1b54e1429da0585a95cc9267fbe8371028b"
+    },
+    "cost-model-source.tar.gz": {
+      "bytes": 26250,
+      "sha256": "facfd2102e53e086e1ac61c161343ab82103ef37ec29222dd2dac7437962b7cd"
+    },
+    "identifier-annotate.tar.gz": {
+      "bytes": 4671,
+      "sha256": "52212674fe25e8516878b19d41658b692269bbc2ca5eeb1656db9c62a86c5d8a"
+    },
+    "v2-diagnosis.tar.gz": {
+      "bytes": 542225,
+      "sha256": "5ec4fc1a0420592e0747facd80a93d836d5bb4de1c7046b1723192d200b46db0"
+    },
+    "diagnosis.tar.gz": {
+      "bytes": 1462740,
+      "sha256": "34e4de47a94ac9d6dc4b6bc53c4d54300f133f1588be6d31df2bd60c8f958622"
+    }
+  },
+  "old_evidence_archive_local": {
+    "file": "/Users/shom/Downloads/kfrc-llvm-gap-20261110/optimization-run/validation/final-evidence.tar.gz",
+    "bytes": 171763813,
+    "sha256": "59280042f7d54cadbd9b459c2fa07c94071135d80d1a73a9ede7ae2a43600cd8",
+    "member_hashes_verified": 6009
+  }
+}

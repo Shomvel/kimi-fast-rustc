@@ -1,0 +1,42 @@
+{
+  "roots": [
+    "_RNvMNtCslLN4iPamcnI_6semver10identifierNtB2_10Identifier6as_str",
+    "_RNvXs0_NtCslLN4iPamcnI_6semver10identifierNtB5_10IdentifierNtNtNtCshX3mvxHm3fC_4core3ops4drop4Drop4drop",
+    "_RNvXs1_NtCslLN4iPamcnI_6semver10identifierNtB5_10IdentifierNtNtCshX3mvxHm3fC_4core3cmp9PartialEq2eq",
+    "_RNvXs_NtCslLN4iPamcnI_6semver10identifierNtB4_10IdentifierNtNtCshX3mvxHm3fC_4core5clone5Clone5clone",
+    "_RNvMs2_CslLN4iPamcnI_6semverNtB5_10Prerelease3new"
+  ],
+  "closure": [
+    "_RINvMNtCshX3mvxHm3fC_4core3stre11starts_withcECslLN4iPamcnI_6semver",
+    "_RNvMNtCshX3mvxHm3fC_4core3stre16is_char_boundary",
+    "_RNvMNtCshX3mvxHm3fC_4core3stre18split_at_unchecked",
+    "_RNvMNtCshX3mvxHm3fC_4core3stre8split_at",
+    "_RNvMNtCshX3mvxHm3fC_4core5sliceSh11starts_withCslLN4iPamcnI_6semver",
+    "_RNvMNtCslLN4iPamcnI_6semver10identifierNtB2_10Identifier13new_unchecked",
+    "_RNvMNtCslLN4iPamcnI_6semver10identifierNtB2_10Identifier6as_str",
+    "_RNvMs2_CslLN4iPamcnI_6semverNtB5_10Prerelease3new",
+    "_RNvNtCslLN4iPamcnI_6semver10identifier10decode_len",
+    "_RNvNtCslLN4iPamcnI_6semver10identifier10inline_len",
+    "_RNvNtCslLN4iPamcnI_6semver10identifier10ptr_as_str",
+    "_RNvNtCslLN4iPamcnI_6semver10identifier11ptr_to_repr",
+    "_RNvNtCslLN4iPamcnI_6semver10identifier13inline_as_str",
+    "_RNvNtCslLN4iPamcnI_6semver5parse10identifier",
+    "_RNvNtCslLN4iPamcnI_6semver5parse21prerelease_identifier",
+    "_RNvNtNtCshX3mvxHm3fC_4core4char7methods15encode_utf8_raw",
+    "_RNvNtNtCshX3mvxHm3fC_4core4char7methods25encode_utf8_raw_unchecked",
+    "_RNvNvNtCslLN4iPamcnI_6semver10identifier10decode_len15decode_len_cold",
+    "_RNvNvNtNtCshX3mvxHm3fC_4core4char7methods15encode_utf8_raw8do_panic",
+    "_RNvNvNvNtNtCshX3mvxHm3fC_4core4char7methods15encode_utf8_raw8do_panic7runtime",
+    "_RNvXs0_NtCslLN4iPamcnI_6semver10identifierNtB5_10IdentifierNtNtNtCshX3mvxHm3fC_4core3ops4drop4Drop4drop",
+    "_RNvXs1_NtCslLN4iPamcnI_6semver10identifierNtB5_10IdentifierNtNtCshX3mvxHm3fC_4core3cmp9PartialEq2eq",
+    "_RNvXs1_NtCslLN4iPamcnI_6semver5parseNtB7_10PrereleaseNtNtNtCshX3mvxHm3fC_4core3str6traits7FromStr8from_str",
+    "_RNvXs3_NtNtCshX3mvxHm3fC_4core5slice3cmpShINtB5_14SlicePartialEqhE5equalCslLN4iPamcnI_6semver",
+    "_RNvXs9_NtNtCshX3mvxHm3fC_4core3str6traitsINtNtNtB9_3ops5range9RangeFromjEINtNtNtB9_5slice5index10SliceIndexeE13get_unchecked",
+    "_RNvXs_NtCslLN4iPamcnI_6semver10identifierNtB4_10IdentifierNtNtCshX3mvxHm3fC_4core5clone5Clone5clone",
+    "_RNvXsf_NtCshX3mvxHm3fC_4core6optionINtB5_6OptionRhENtNtB7_3cmp9PartialEq2eqCslLN4iPamcnI_6semver"
+  ],
+  "unmodified_object_code_and_relocations": [
+    "h1",
+    "address"
+  ]
+}

@@ -1,0 +1,74 @@
+{
+  "backend": "/workspace/results/compile-c12-base/backend.so",
+  "backend_sha256": "4a49d09600bb6006d0f403869213592a48f230686af1f83268201ff98c97ccb4",
+  "rows": [
+    {
+      "crate": "semver",
+      "arm": "total-check0",
+      "exit_code": 0,
+      "objects": 14,
+      "reference_created": true,
+      "objects_identical_to_reference": true,
+      "total_instructions": 4150361974
+    },
+    {
+      "crate": "semver",
+      "arm": "stages-check0",
+      "exit_code": 0,
+      "objects": 14,
+      "objects_identical_to_reference": true,
+      "stage_window_sum": 3969706699
+    },
+    {
+      "crate": "base64",
+      "arm": "total-check0",
+      "exit_code": 0,
+      "objects": 14,
+      "reference_created": true,
+      "objects_identical_to_reference": true,
+      "total_instructions": 4449007135
+    },
+    {
+      "crate": "base64",
+      "arm": "stages-check0",
+      "exit_code": 0,
+      "objects": 14,
+      "objects_identical_to_reference": true,
+      "stage_window_sum": 4338617805
+    },
+    {
+      "crate": "unicode-segmentation",
+      "arm": "total-check0",
+      "exit_code": 0,
+      "objects": 9,
+      "reference_created": true,
+      "objects_identical_to_reference": true,
+      "total_instructions": 2312452047
+    },
+    {
+      "crate": "unicode-segmentation",
+      "arm": "stages-check0",
+      "exit_code": 0,
+      "objects": 9,
+      "objects_identical_to_reference": true,
+      "stage_window_sum": 2227038143
+    },
+    {
+      "crate": "humantime",
+      "arm": "total-check0",
+      "exit_code": 0,
+      "objects": 13,
+      "reference_created": true,
+      "objects_identical_to_reference": true,
+      "total_instructions": 9801196586
+    },
+    {
+      "crate": "humantime",
+      "arm": "stages-check0",
+      "exit_code": 0,
+      "objects": 13,
+      "objects_identical_to_reference": true,
+      "stage_window_sum": 9680434818
+    }
+  ]
+}

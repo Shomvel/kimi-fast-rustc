@@ -1,0 +1,419 @@
+{
+  "baseline": "b254941179c6f052bc2b732814c61ed299e39a3b",
+  "source_files_sha256": {
+    "crates/kfrc-son/src/analysis/cost.rs": "f3400c4d9b6b4acf3822bb9707ae7b2a52893ce3b3e4f249b9dc0aa9ca90984a",
+    "crates/kfrc-son/src/analysis/mod.rs": "c8877df4dc7488c8dccdcee589e9090e9e23fb4d744b498bcd8d357999f3088b",
+    "crates/kfrc-son/src/lib.rs": "4c70eea155fbd51afd41a661c9efdac708e5762eccf116a04c36f59f92f12bbe",
+    "crates/kfrc-son/src/transforms/ipo/cost.rs": "0f610506fcca59d284c84dc143bb75c5c374b980210503356b504ac6b06d4963",
+    "crates/kfrc-son/src/transforms/ipo/mod.rs": "53a4da3997739f5cf51a4dbe65dcee6c6b4fd99f1bd6147cfa8b8b874aa306f7",
+    "crates/kfrc-son/tests/semantic_inline.rs": "cb85616e1315e3ef011abf51bf5bbc272781bf6a7ab05961606be2b034f6dc16",
+    "crates/rustc_codegen_kfrc/src/inline_cost.rs": "08f0e687a0b91d1f79edf95f0bf329b59c6f12c06d9984cc3c31085baa123d51",
+    "crates/rustc_codegen_kfrc/src/lib.rs": "8ae8be6549b4b74d2efe5748edc607b34398f2d31c268520067b48c292aaa55a",
+    "crates/rustc_codegen_kfrc/src/profile.rs": "a9fd8d4e4d1f242e299c02fe2a72fc027b0742cac0e4ccd72133c680f22f45f9",
+    "crates/kfrc-son/src/lower_layout/memory.rs": "aeaabd2935d7e0ee22bc8893a5d008f2e252692f06e07a5218067820aaadcfa3",
+    "crates/kfrc-son/tests/semantic_memory_optimize.rs": "1e38db6f7493be3179a448374434c0e10824196749a345d0c8b199c9140ca4a9"
+  },
+  "source_archive_sha256": "14c44906f6d94435130de8948c3568858599d23e6b976db8a1a28b4b2f7409f0",
+  "backend_sha256": "fcb4dc20d17e2ab3004a858c8b0e25ad98f73da311605bea26581fcb2fa341ad",
+  "toolchain": "rustc 1.94.1 / LLVM 21.1.8 / x86_64-unknown-linux-gnu",
+  "sandbox": {
+    "id": "ivnaqo0ohks51dg9savz9",
+    "cpu": "AMD EPYC",
+    "vcpus": 8,
+    "ram_gib": 16
+  },
+  "linux_workspace": {
+    "passed": 831,
+    "ignored": 1
+  },
+  "default_and_observe": [
+    {
+      "crate": "semver",
+      "mode": "default",
+      "objects_identical_to_baseline": true,
+      "objects": 14,
+      "decision_records": 0
+    },
+    {
+      "crate": "semver",
+      "mode": "observe",
+      "objects_identical_to_baseline": true,
+      "objects": 14,
+      "decision_records": 2186
+    },
+    {
+      "crate": "base64",
+      "mode": "default",
+      "objects_identical_to_baseline": true,
+      "objects": 14,
+      "decision_records": 0
+    },
+    {
+      "crate": "base64",
+      "mode": "observe",
+      "objects_identical_to_baseline": true,
+      "objects": 14,
+      "decision_records": 1054
+    },
+    {
+      "crate": "unicode-segmentation",
+      "mode": "default",
+      "objects_identical_to_baseline": true,
+      "objects": 9,
+      "decision_records": 0
+    },
+    {
+      "crate": "unicode-segmentation",
+      "mode": "observe",
+      "objects_identical_to_baseline": true,
+      "objects": 9,
+      "decision_records": 1113
+    },
+    {
+      "crate": "humantime",
+      "mode": "default",
+      "objects_identical_to_baseline": true,
+      "objects": 13,
+      "decision_records": 0
+    },
+    {
+      "crate": "humantime",
+      "mode": "observe",
+      "objects_identical_to_baseline": true,
+      "objects": 13,
+      "decision_records": 1354
+    }
+  ],
+  "decisions": {
+    "observe": {
+      "records": 5707,
+      "outcomes": {
+        "inlined": 4280,
+        "Size": 217,
+        "Missing": 554,
+        "DataConflict": 387,
+        "Budget": 222,
+        "Unsupported": 40,
+        "TypeConflict": 3,
+        "Recursive": 4
+      },
+      "per_crate": {
+        "semver": {
+          "records": 2186,
+          "outcomes": {
+            "inlined": 1635,
+            "Size": 85,
+            "Missing": 230,
+            "DataConflict": 158,
+            "Budget": 51,
+            "Unsupported": 20,
+            "TypeConflict": 3,
+            "Recursive": 4
+          }
+        },
+        "base64": {
+          "records": 1054,
+          "outcomes": {
+            "DataConflict": 74,
+            "Missing": 168,
+            "inlined": 764,
+            "Budget": 37,
+            "Size": 11
+          }
+        },
+        "unicode-segmentation": {
+          "records": 1113,
+          "outcomes": {
+            "inlined": 864,
+            "DataConflict": 99,
+            "Missing": 63,
+            "Budget": 14,
+            "Size": 57,
+            "Unsupported": 16
+          }
+        },
+        "humantime": {
+          "records": 1354,
+          "outcomes": {
+            "inlined": 1017,
+            "DataConflict": 56,
+            "Budget": 120,
+            "Size": 64,
+            "Missing": 93,
+            "Unsupported": 4
+          }
+        }
+      },
+      "all_schema1": true,
+      "all_budget_fields": true
+    },
+    "size": {
+      "records": 4319,
+      "outcomes": {
+        "UnknownCost": 3515,
+        "Missing": 502,
+        "inlined": 277,
+        "Unsupported": 20,
+        "Recursive": 5
+      },
+      "per_crate": {
+        "semver": {
+          "records": 1641,
+          "outcomes": {
+            "UnknownCost": 1353,
+            "Missing": 170,
+            "inlined": 102,
+            "Unsupported": 11,
+            "Recursive": 5
+          }
+        },
+        "base64": {
+          "records": 917,
+          "outcomes": {
+            "UnknownCost": 667,
+            "Missing": 169,
+            "inlined": 81
+          }
+        },
+        "unicode-segmentation": {
+          "records": 846,
+          "outcomes": {
+            "UnknownCost": 713,
+            "Missing": 66,
+            "Unsupported": 7,
+            "inlined": 60
+          }
+        },
+        "humantime": {
+          "records": 915,
+          "outcomes": {
+            "UnknownCost": 782,
+            "Missing": 97,
+            "inlined": 34,
+            "Unsupported": 2
+          }
+        }
+      },
+      "all_schema1": true,
+      "all_budget_fields": true
+    }
+  },
+  "size_correctness": {
+    "libraries": [
+      {
+        "crate": "semver",
+        "corpus_equal": true,
+        "workloads_equal": true,
+        "upstream_incomplete": {},
+        "decision_outcomes": {
+          "UnknownCost": 1353,
+          "Missing": 170,
+          "inlined": 102,
+          "Unsupported": 11,
+          "Recursive": 5
+        }
+      },
+      {
+        "crate": "base64",
+        "corpus_equal": true,
+        "workloads_equal": true,
+        "upstream_incomplete": {
+          "unit": [
+            "error: kfrc: cannot compile `std::hash::RandomState::new::KEYS::{constant#0}::{closure#1}` (_RNCNKNvNvMNtNtCskdEs339NOXv_3std4hash6randomNtB8_11RandomState3new4KEYS0s_0CskNtPapaolRk_6base64): SoN construction: unsupported: TLS is outside the semantic path"
+          ]
+        },
+        "decision_outcomes": {
+          "UnknownCost": 667,
+          "Missing": 169,
+          "inlined": 81
+        }
+      },
+      {
+        "crate": "unicode-segmentation",
+        "corpus_equal": true,
+        "workloads_equal": true,
+        "upstream_incomplete": {
+          "unit": [
+            "error: kfrc: cannot compile `core::sync::atomic::atomic_sub::<usize, usize>` (_RINvNtNtCshX3mvxHm3fC_4core4sync6atomic10atomic_subjjECsjedSu4mXo2U_20unicode_segmentation): MIR conversion: intrinsic `atomic_xsub` is not implemented"
+          ]
+        },
+        "decision_outcomes": {
+          "UnknownCost": 713,
+          "Missing": 66,
+          "Unsupported": 7,
+          "inlined": 60
+        }
+      },
+      {
+        "crate": "humantime",
+        "corpus_equal": true,
+        "workloads_equal": true,
+        "upstream_incomplete": {
+          "unit": [
+            "error: kfrc: cannot compile `<u64 as rand::distr::utils::WideningMultiply>::wmul` (_RNvXs4_NtNtCs9WOZcrf9gIs_4rand5distr5utilsyNtB5_16WideningMultiply4wmul): SoN construction: unsupported: unsupported semantic type u128"
+          ]
+        },
+        "decision_outcomes": {
+          "UnknownCost": 782,
+          "Missing": 97,
+          "inlined": 34,
+          "Unsupported": 2
+        }
+      }
+    ],
+    "workload_checksums_equal": 13,
+    "semantic": {
+      "lines_per_arm": 824,
+      "arms": 3,
+      "trace_records": 1118,
+      "mode_proved_by_trace": true
+    },
+    "pressure": {
+      "vectors_per_arm": 2048,
+      "arms": 3,
+      "trace_records": 121,
+      "mode_proved_by_trace": true
+    },
+    "invalid_mode_exit": 1
+  },
+  "compile_overhead": {
+    "method": "three serial same-sandbox rounds forward/reverse/forward; checker=0; each output object byte-identical to baseline",
+    "rows": [
+      {
+        "crate": "semver",
+        "rounds": 3,
+        "checker": 0,
+        "order": "forward/reverse/forward",
+        "medians": {
+          "baseline": {
+            "instructions": 1837257694,
+            "cycles": 1048676840,
+            "wall_seconds": 0.34527732400056266,
+            "user_seconds": 0.304842,
+            "maxrss_kib": 148420
+          },
+          "default": {
+            "instructions": 1850055809,
+            "cycles": 1087408833,
+            "wall_seconds": 0.3618182460004391,
+            "user_seconds": 0.301386,
+            "maxrss_kib": 148476
+          }
+        },
+        "paired_instruction_ratio": 1.0069679519423917,
+        "paired_wall_ratio": 1.0293669599318285,
+        "paired_rss_ratio": 1.0003773076404798
+      },
+      {
+        "crate": "base64",
+        "rounds": 3,
+        "checker": 0,
+        "order": "forward/reverse/forward",
+        "medians": {
+          "baseline": {
+            "instructions": 1493643199,
+            "cycles": 895633876,
+            "wall_seconds": 0.30486829900019075,
+            "user_seconds": 0.242587,
+            "maxrss_kib": 143832
+          },
+          "default": {
+            "instructions": 1498457361,
+            "cycles": 891937234,
+            "wall_seconds": 0.30454923399975087,
+            "user_seconds": 0.237867,
+            "maxrss_kib": 143868
+          }
+        },
+        "paired_instruction_ratio": 1.0032264547821497,
+        "paired_wall_ratio": 0.9829959034227577,
+        "paired_rss_ratio": 1.000250292007342
+      },
+      {
+        "crate": "unicode-segmentation",
+        "rounds": 3,
+        "checker": 0,
+        "order": "forward/reverse/forward",
+        "medians": {
+          "baseline": {
+            "instructions": 1834493988,
+            "cycles": 1044031932,
+            "wall_seconds": 0.3558716950001326,
+            "user_seconds": 0.297048,
+            "maxrss_kib": 137920
+          },
+          "default": {
+            "instructions": 1839382605,
+            "cycles": 989231401,
+            "wall_seconds": 0.3404426050001348,
+            "user_seconds": 0.273042,
+            "maxrss_kib": 137792
+          }
+        },
+        "paired_instruction_ratio": 1.0026779205399288,
+        "paired_wall_ratio": 0.9558772467146387,
+        "paired_rss_ratio": 0.9988691390958913
+      },
+      {
+        "crate": "humantime",
+        "rounds": 3,
+        "checker": 0,
+        "order": "forward/reverse/forward",
+        "medians": {
+          "baseline": {
+            "instructions": 2208887299,
+            "cycles": 1018916929,
+            "wall_seconds": 0.3554466500008857,
+            "user_seconds": 0.28023899999999996,
+            "maxrss_kib": 164904
+          },
+          "default": {
+            "instructions": 2228535360,
+            "cycles": 996880356,
+            "wall_seconds": 0.3453249960002722,
+            "user_seconds": 0.27131,
+            "maxrss_kib": 165412
+          }
+        },
+        "paired_instruction_ratio": 1.0088840169907516,
+        "paired_wall_ratio": 0.9760183889687974,
+        "paired_rss_ratio": 1.0030805802163683
+      }
+    ],
+    "wall_and_rss_note": "Three-run wall and RSS ratios are noisy observations, not evidence of a speedup."
+  },
+  "limitations": [
+    "Size is explicit experimental mode; no runtime performance benchmark was run for it.",
+    "Cost rejection count is 0 in the four-library trace; the directed unit test covers Cost.",
+    "UnknownCost is 3515 / 4319 size-mode decisions, so the seed model is incomplete.",
+    "Base64, unicode-segmentation and humantime upstream unit suites remain incomplete due to existing TLS, atomic_xsub and u128 support gaps.",
+    "Old shift/address-CSE v1 and v2 candidates were not accepted and are not in this backend."
+  ],
+  "evidence_archive": {
+    "file": "cost-model-evidence.tar.gz",
+    "bytes": 34778792,
+    "sha256": "e26f4b0860036f07939f8d4e8dac22c1e2c15c6b3260ec0540bff0c03e284823",
+    "member_hashes_verified": 1516
+  },
+  "release_receipt": {
+    "sandbox_id": "ivnaqo0ohks51dg9savz9",
+    "template": "mirx-rust1941-linux",
+    "released": true,
+    "released_at_utc": "2026-11-10T04:09:13.751924+00:00",
+    "evidence": [
+      {
+        "archive": "final-evidence.tar.gz",
+        "bytes": 171763813,
+        "sha256": "59280042f7d54cadbd9b459c2fa07c94071135d80d1a73a9ede7ae2a43600cd8",
+        "all_member_hashes_verified": true
+      },
+      {
+        "archive": "cost-model-evidence.tar.gz",
+        "bytes": 34778792,
+        "sha256": "e26f4b0860036f07939f8d4e8dac22c1e2c15c6b3260ec0540bff0c03e284823",
+        "all_member_hashes_verified": true
+      }
+    ],
+    "local_evidence_preserved": true
+  }
+}

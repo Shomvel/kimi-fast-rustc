@@ -1,0 +1,9 @@
+{
+  "sandbox_id": "itmdyt5e3uvkqwmscvqme",
+  "template_id": "r6g8s7tmv7hjdgpouxk9",
+  "metadata": "{'experiment': 'rust1941-compile', 'project': 'mirx', 'run': '20261009'}",
+  "cpu_count": "8",
+  "memory_mb": "16384",
+  "started_at": "2026-11-10 08:50:56.124366+00:00",
+  "end_at": "2026-11-10 14:30:07.099121+00:00"
+}
