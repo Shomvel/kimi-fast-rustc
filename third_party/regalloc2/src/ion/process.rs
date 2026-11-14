@@ -978,7 +978,9 @@ impl<'a, F: Function> Env<'a, F> {
     }
 
     /// Returns the point just after the bundle's first use when that use is a
-    /// def and the bundle's only fixed-register operand; `None` otherwise.
+    /// def, the bundle's only fixed-register operand, and the value is used
+    /// inside a loop deeper than its def; `None` otherwise. Straight-line
+    /// uses keep the fixed register, which needs no move.
     fn after_sole_leading_fixed_def(&self, bundle: LiveBundleIndex) -> Option<ProgPoint> {
         let ranges = &self.ctx.bundles[bundle].ranges;
         let end = ranges.last()?.range.to;
@@ -988,12 +990,22 @@ impl<'a, F: Function> Env<'a, F> {
         let first = uses.next()?;
         if first.operand.kind() != OperandKind::Def
             || !matches!(first.operand.constraint(), OperandConstraint::FixedReg(_))
-            || uses.any(|u| matches!(u.operand.constraint(), OperandConstraint::FixedReg(_)))
         {
             return None;
         }
+        let depth = |pos: ProgPoint| {
+            self.ctx.cfginfo.approx_loop_depth[self.ctx.cfginfo.insn_block[pos.inst().index()].index()]
+        };
+        let def_depth = depth(first.pos);
+        let mut deeper = false;
+        for u in uses {
+            if matches!(u.operand.constraint(), OperandConstraint::FixedReg(_)) {
+                return None;
+            }
+            deeper |= depth(u.pos) > def_depth;
+        }
         let after = ProgPoint::before(first.pos.inst().next());
-        (after < end).then_some(after)
+        (deeper && after < end).then_some(after)
     }
 
     pub fn process_bundle(
