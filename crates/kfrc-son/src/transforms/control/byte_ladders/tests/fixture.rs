@@ -15,6 +15,49 @@ fn projection(graph: &mut FunctionGraph, source: NodeId, slot: u32, ty: ValueTyp
     graph.add_node(Opcode::Projection, NodeId::NONE, &[source], slot, ty)
 }
 
+/// Every compared buffer starts with these bytes; a literal matches the input
+/// exactly when it keeps them.
+const MATCH: u8 = b'a';
+const MISMATCH: u8 = b'b';
+const INPUT_SYMBOL: &str = "input";
+
+fn literal_symbol(index: usize) -> String {
+    format!("literal_{index}")
+}
+
+/// Defines a read-only data object and returns a node holding its address.
+fn data_address(graph: &mut FunctionGraph, symbol: String, bytes: Vec<u8>, pointer: TyId) -> NodeId {
+    graph.symbols.push((symbol.clone(), 0));
+    graph.data_objects.push(DataObject {
+        symbol,
+        bytes,
+        align: 1,
+        ..Default::default()
+    });
+    graph.add_node(
+        Opcode::SymbolAddress,
+        NodeId::NONE,
+        &[],
+        graph.symbols.len() as u32 - 1,
+        ValueType::Rust(pointer),
+    )
+}
+
+/// Records the (literal address, length) pair of every executed comparison.
+#[derive(Default)]
+struct ComparisonTrace(Vec<(u64, u64)>);
+
+impl CallHandler for ComparisonTrace {
+    fn call(&mut self, symbol: &str, _arguments: &[u64]) -> Result<u64, InterpretError> {
+        Err(InterpretError::UnknownCallee(symbol.to_owned()))
+    }
+
+    fn observe(&mut self, symbol: &str, arguments: &[u64]) {
+        assert_eq!(symbol, RuntimeComparison::Bcmp.symbol());
+        self.0.push((arguments[1], arguments[2]));
+    }
+}
+
 fn wrap(graph: &mut FunctionGraph, control: NodeId, value: NodeId) -> (NodeId, NodeId) {
     let jump = graph.add_node(Opcode::Jump, control, &[], 0, ValueType::Control);
     let region = graph.add_node(Opcode::Region, NodeId::NONE, &[jump], 0, ValueType::Control);
@@ -91,7 +134,7 @@ impl Fixture {
         let mut failures = Vec::new();
         let mut success_jumps = Vec::new();
         let mut success_effects = Vec::new();
-        let left = graph.add_constant(0x1234, pointer);
+        let left = data_address(&mut graph, INPUT_SYMBOL.to_owned(), vec![MATCH; 32], pointer);
         let target = graph.add_runtime_comparison(RuntimeComparison::Bcmp);
         let mut success_regions = Vec::new();
         let mut success_returns = Vec::new();
@@ -116,23 +159,8 @@ impl Fixture {
             let bypass = projection(&mut graph, guard, 1, ValueType::Control);
             let bypass = graph.add_node(Opcode::Jump, bypass, &[], 0, ValueType::Control);
             let is_byte = byte_loads && count == 1;
-            let right = graph.add_constant(index as u128, pointer);
             let event = if is_byte {
-                let symbol = format!("byte_{index}");
-                graph.symbols.push((symbol.clone(), 0));
-                graph.data_objects.push(DataObject {
-                    symbol,
-                    bytes: vec![b'x'],
-                    align: 1,
-                    ..Default::default()
-                });
-                let address = graph.add_node(
-                    Opcode::SymbolAddress,
-                    NodeId::NONE,
-                    &[],
-                    graph.symbols.len() as u32 - 1,
-                    ValueType::Rust(pointer),
-                );
+                let address = data_address(&mut graph, format!("byte_{index}"), vec![b'x'], pointer);
                 graph.add_node(
                     Opcode::Load,
                     selected,
@@ -145,6 +173,12 @@ impl Fixture {
                     ]),
                 )
             } else {
+                let right = data_address(
+                    &mut graph,
+                    literal_symbol(index),
+                    vec![MATCH; count as usize],
+                    pointer,
+                );
                 graph.add_node(
                     Opcode::Call,
                     selected,
@@ -316,21 +350,24 @@ impl Fixture {
         }
     }
 
+    /// Runs `graph` on `length`; bit `i` of `outcomes` makes cell `i`'s
+    /// literal equal the input. Returns the outcome and the comparisons made.
     pub fn execute(
         graph: &FunctionGraph,
         length: u64,
         outcomes: u64,
     ) -> (Outcome, Vec<(u64, u64)>) {
-        let mut trace = Vec::new();
-        let answer = Interpreter::new(graph)
-            .run(&[length], &mut |symbol: &str, inputs: &[u64]| {
-                assert_eq!(symbol, "bcmp");
-                let index = inputs[1];
-                trace.push((index, inputs[2]));
-                Ok::<_, InterpretError>(u64::from(outcomes & (1 << index) == 0))
-            })
-            .unwrap();
-        (answer, trace)
+        let mut graph = graph.clone();
+        for object in &mut graph.data_objects {
+            let Some(cell) = (0..64).find(|cell| object.symbol == literal_symbol(*cell)) else {
+                continue;
+            };
+            let byte = if outcomes & (1 << cell) != 0 { MATCH } else { MISMATCH };
+            object.bytes.fill(byte);
+        }
+        let mut trace = ComparisonTrace::default();
+        let answer = Interpreter::new(&graph).run(&[length], &mut trace).unwrap();
+        (answer, trace.0)
     }
 
     pub fn decline(&mut self) {

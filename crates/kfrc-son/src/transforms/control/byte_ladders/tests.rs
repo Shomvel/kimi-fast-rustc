@@ -1,4 +1,5 @@
 use super::*;
+use crate::interpret::CallHandler;
 use crate::{CallTarget, GraphState, InterpretError, Interpreter, Outcome, verify_graph};
 use kfrc_body::{DataObject, FunctionAbi, Mutability, PassMode, RecordedTypes, SizeAlign, TyId};
 

@@ -55,6 +55,10 @@ pub trait CallHandler {
             "callee {symbol} has no pair-return interpreter"
         )))
     }
+
+    /// Sees every executed call with its lowered arguments, including the
+    /// memory routines the interpreter evaluates itself.
+    fn observe(&mut self, _symbol: &str, _arguments: &[u64]) {}
 }
 
 impl<F: FnMut(&str, &[u64]) -> Result<u64, InterpretError>> CallHandler for F {
@@ -824,6 +828,7 @@ impl<'a> Interpreter<'a> {
                             arguments.push(value.bits);
                         }
                     }
+                    calls.observe(&symbol, &arguments);
                     let memory_result = match symbol.as_str() {
                         "memcpy" | "memmove" if arguments.len() == 3 => {
                             let destination = arguments[0];
