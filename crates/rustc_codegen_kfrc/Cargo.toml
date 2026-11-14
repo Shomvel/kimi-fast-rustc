@@ -19,6 +19,7 @@ kfrc-x86 = { path = "../kfrc-x86" }
 # third_party/cranelift-codegen/KFRC-PATCHES.md.
 [patch.crates-io]
 cranelift-codegen = { path = "../../third_party/cranelift-codegen" }
+regalloc2 = { path = "../../third_party/regalloc2" }
 
 [package.metadata.rust-analyzer]
 rustc_private = true
