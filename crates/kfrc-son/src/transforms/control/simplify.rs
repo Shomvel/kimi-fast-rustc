@@ -18,8 +18,8 @@ pub struct ControlStats {
     pub phis_folded: usize,
 }
 
-/// Forward every Phi whose incoming values, ignoring the Phi itself, are one
-/// value of the same type. Inlined merges otherwise leave chains of such Phis
+/// Forward every acyclic Phi whose incoming values are one value of the same
+/// type. Inlined merges otherwise leave chains of such Phis
 /// (a slice pointer re-merged at every join), so equal SSA values appear as
 /// distinct nodes to later pattern matching.
 fn fold_redundant_phis(graph: &mut FunctionGraph) -> usize {
@@ -47,8 +47,12 @@ fn fold_redundant_phis(graph: &mut FunctionGraph) -> usize {
         let mut distinct = false;
         for &input in &graph.inputs(phi)[1..] {
             let input = graph.resolve(input);
+            // A loop-carried merge keeps its identity: the register allocator
+            // then assigns the value a loop-local register instead of one
+            // live range spanning the whole function and its calls.
             if input == phi {
-                continue;
+                distinct = true;
+                break;
             }
             match same {
                 None => same = Some(input),
