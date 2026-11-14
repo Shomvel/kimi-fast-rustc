@@ -38,6 +38,7 @@ path = "src/main.rs"
 # third_party/cranelift-codegen/KFRC-PATCHES.md.
 [patch.crates-io]
 cranelift-codegen = { path = "third_party/cranelift-codegen" }
+regalloc2 = { path = "third_party/regalloc2" }
 
 [profile.release]
 opt-level = 3
