@@ -112,7 +112,7 @@ pub fn normalize(graph: &mut FunctionGraph) -> VariantNormalizeStats {
     let dominators = Dominators::new(&cfg);
     let uses = Uses::new(graph);
     let proofs = variant_proofs(graph);
-    stats.nodes_indexed += graph.ids().count() * 3;
+    stats.nodes_indexed += graph.live_count() * 3;
     let mut candidates = Vec::new();
     for field in nodes
         .into_iter()

@@ -17,6 +17,7 @@ pub fn is_anchored_value(op: Opcode) -> bool {
     is_anchored_arithmetic(op)
 }
 
+#[inline]
 pub fn is_control_flow(graph: &FunctionGraph, node: NodeId) -> bool {
     let op = graph.op(node);
     (op.is_fixed() && !is_anchored_value(op))
@@ -53,6 +54,36 @@ impl std::ops::Index<&NodeId> for NodePositions {
     }
 }
 
+/// Predecessor positions of every reachable control node, indexed by its
+/// position in [`ControlFlow::order`]: one flat list grouped by target.
+#[derive(Clone, Debug)]
+pub struct Predecessors {
+    starts: Vec<u32>,
+    list: Vec<usize>,
+}
+
+impl Predecessors {
+    pub fn len(&self) -> usize {
+        self.starts.len() - 1
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
+    pub fn iter(&self) -> impl ExactSizeIterator<Item = &[usize]> + '_ {
+        (0..self.len()).map(|position| &self[position])
+    }
+}
+
+impl std::ops::Index<usize> for Predecessors {
+    type Output = [usize];
+
+    fn index(&self, position: usize) -> &[usize] {
+        &self.list[self.starts[position] as usize..self.starts[position + 1] as usize]
+    }
+}
+
 #[derive(Clone, Debug)]
 pub struct ControlFlow {
     data: Arc<ControlFlowData>,
@@ -65,7 +96,7 @@ pub struct ControlFlow {
 pub struct ControlFlowData {
     pub order: Vec<NodeId>,
     pub position: NodePositions,
-    pub predecessors: Vec<Vec<usize>>,
+    pub predecessors: Predecessors,
     /// Successors of node `n` are `successor_list[successor_starts[n]..successor_starts[n + 1]]`.
     successor_starts: Vec<u32>,
     successor_list: Vec<NodeId>,
@@ -90,7 +121,7 @@ impl ControlFlow {
 
     pub(crate) fn build(graph: &FunctionGraph) -> Self {
         // Edges in discovery order, grouped by source with a counting sort.
-        let mut edges: Vec<(NodeId, NodeId)> = Vec::new();
+        let mut edges: Vec<(NodeId, NodeId)> = Vec::with_capacity(graph.len() / 2);
         let mut edge = |source: NodeId, target: NodeId| {
             let source = graph.resolve(source);
             if !source.is_none() && !graph.is_dead(source) {
@@ -153,12 +184,30 @@ impl ControlFlow {
         for (index, node) in order.iter().enumerate() {
             positions[node.index()] = index;
         }
-        let mut predecessors = vec![Vec::new(); order.len()];
-        for (index, node) in order.iter().enumerate() {
+        // Same order as pushing `index` onto per-target lists while walking
+        // `order` and each node's successors: a counting sort by target.
+        let mut predecessor_starts = vec![0u32; order.len() + 1];
+        for node in &order {
             for successor in successors(*node) {
-                predecessors[positions[successor.index()]].push(index);
+                predecessor_starts[positions[successor.index()] + 1] += 1;
             }
         }
+        for index in 1..predecessor_starts.len() {
+            predecessor_starts[index] += predecessor_starts[index - 1];
+        }
+        let mut next = predecessor_starts.clone();
+        let mut predecessor_list = vec![0usize; predecessor_starts[order.len()] as usize];
+        for (index, node) in order.iter().enumerate() {
+            for successor in successors(*node) {
+                let slot = &mut next[positions[successor.index()]];
+                predecessor_list[*slot as usize] = index;
+                *slot += 1;
+            }
+        }
+        let predecessors = Predecessors {
+            starts: predecessor_starts,
+            list: predecessor_list,
+        };
         Self {
             data: Arc::new(ControlFlowData {
                 order,

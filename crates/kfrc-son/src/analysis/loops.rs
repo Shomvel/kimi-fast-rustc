@@ -69,7 +69,7 @@ impl LoopInfo {
         let count = cfg.order.len();
         let mut stats = LoopStats {
             control_nodes: count,
-            control_edges: cfg.predecessors.iter().map(Vec::len).sum(),
+            control_edges: cfg.predecessors.iter().map(<[usize]>::len).sum(),
             ..LoopStats::default()
         };
         let mut backedges = vec![Vec::new(); count];

@@ -90,7 +90,7 @@ pub(crate) fn prune(graph: &mut FunctionGraph) -> Result<ControlStats, CfgEditEr
 
 fn run_impl(graph: &mut FunctionGraph, fold_diamonds: bool) -> Result<ControlStats, CfgEditError> {
     graph.resolve_edges();
-    let before = graph.ids().count();
+    let before = graph.live_count();
     let mut stats = ControlStats::default();
     if fold_diamonds {
         stats.branches_folded += super::diamonds::run(graph);
@@ -190,6 +190,6 @@ fn run_impl(graph: &mut FunctionGraph, fold_diamonds: bool) -> Result<ControlSta
     for node in dead {
         graph.remove_node(node);
     }
-    stats.nodes_removed = before - graph.ids().count();
+    stats.nodes_removed = before - graph.live_count();
     Ok(stats)
 }

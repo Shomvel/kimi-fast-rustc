@@ -1319,19 +1319,16 @@ impl FunctionGraph {
                 continue;
             }
             let node = NodeId(index as u32);
-            let inputs: Vec<NodeId> = self
-                .inputs(node)
-                .iter()
-                .map(|input| remap(*input))
-                .collect();
             let mut record = self.records[index];
             if record.flags & FLAG_POOLED_INPUTS != 0 {
-                record.in0 = NodeId(extra.len() as u32);
-                record.in1 = NodeId(inputs.len() as u32);
-                extra.extend(inputs);
+                let start = extra.len();
+                extra.extend(self.inputs(node).iter().map(|input| remap(*input)));
+                record.in0 = NodeId(start as u32);
+                record.in1 = NodeId((extra.len() - start) as u32);
             } else {
-                record.in0 = inputs.first().copied().unwrap_or(NodeId::NONE);
-                record.in1 = inputs.get(1).copied().unwrap_or(NodeId::NONE);
+                let inputs = self.inputs(node);
+                record.in0 = inputs.first().map_or(NodeId::NONE, |input| remap(*input));
+                record.in1 = inputs.get(1).map_or(NodeId::NONE, |input| remap(*input));
             }
             records.push(record);
             control.push(remap(self.control[index]));

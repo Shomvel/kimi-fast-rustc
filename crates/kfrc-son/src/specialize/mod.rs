@@ -114,7 +114,7 @@ impl RustDefinition {
         // This is definition work, performed once before any concrete answers.
         let mut preparation = PreparationStats {
             optimization_enabled: optimize,
-            nodes_before: graph.ids().count(),
+            nodes_before: graph.live_count(),
             ..PreparationStats::default()
         };
         if optimize {
@@ -135,7 +135,7 @@ impl RustDefinition {
             prepare_control::run(&mut graph, &mut preparation)?;
             graph.compact();
         }
-        preparation.nodes_after = graph.ids().count();
+        preparation.nodes_after = graph.live_count();
         crate::verify::verify_pipeline_step(&mut graph).map_err(|error| error.to_string())?;
         let cfg = ControlFlow::new(&graph);
         let mut anchored: HashMap<NodeId, Vec<NodeId>> = HashMap::default();

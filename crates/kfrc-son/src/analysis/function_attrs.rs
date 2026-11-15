@@ -242,7 +242,7 @@ fn returns_without_loop(graph: &FunctionGraph, cfg: &ControlFlow) -> bool {
     if cfg.order.is_empty() {
         return false;
     }
-    let mut remaining: Vec<_> = cfg.predecessors.iter().map(Vec::len).collect();
+    let mut remaining: Vec<_> = cfg.predecessors.iter().map(<[usize]>::len).collect();
     let mut queue: VecDeque<_> = remaining
         .iter()
         .enumerate()

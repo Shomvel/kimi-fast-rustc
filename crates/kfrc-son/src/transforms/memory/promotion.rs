@@ -119,7 +119,7 @@ pub fn run(graph: &mut FunctionGraph, candidates: Option<&HashSet<u32>>) -> Prom
     }
     let uses = Uses::new(graph);
     let cfg = ControlFlow::new(graph);
-    stats.node_visits += 2 * graph.ids().count();
+    stats.node_visits += 2 * graph.live_count();
     stats.edge_visits += graph
         .ids()
         .map(|node| graph.inputs(node).len() + usize::from(!graph.control(node).is_none()))

@@ -53,7 +53,7 @@ pub fn run(graph: &mut FunctionGraph) -> Result<VariantThreadStats, CfgEditError
             let uses = Uses::new(graph);
             let cfg = ControlFlow::new(graph);
             let dominators = Dominators::new(&cfg);
-            stats.nodes_indexed += graph.ids().count() * 2;
+            stats.nodes_indexed += graph.live_count() * 2;
             analysis = Some((uses, cfg, dominators));
         }
         let (uses, cfg, dominators) = analysis.as_ref().unwrap();

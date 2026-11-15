@@ -33,31 +33,17 @@ impl Uses {
     }
 
     pub(crate) fn build(graph: &FunctionGraph) -> Self {
-        let mut edges: Vec<(NodeId, Use)> = Vec::with_capacity(graph.len() * 2);
+        // Two walks over the same edge sequence (users by id, operand slots,
+        // then control): count per used node, then place each use.
+        let mut starts = vec![0u32; graph.len() + 1];
         for user in graph.ids() {
-            for (slot, &input) in graph.inputs(user).iter().enumerate() {
-                edges.push((
-                    graph.resolve(input),
-                    Use {
-                        user,
-                        kind: UseKind::Operand(slot),
-                    },
-                ));
+            for &input in graph.inputs(user) {
+                starts[graph.resolve(input).index() + 1] += 1;
             }
             let control = graph.resolve(graph.control(user));
             if !control.is_none() {
-                edges.push((
-                    control,
-                    Use {
-                        user,
-                        kind: UseKind::Control,
-                    },
-                ));
+                starts[control.index() + 1] += 1;
             }
-        }
-        let mut starts = vec![0u32; graph.len() + 1];
-        for (used, _) in &edges {
-            starts[used.index() + 1] += 1;
         }
         for index in 1..starts.len() {
             starts[index] += starts[index - 1];
@@ -67,11 +53,25 @@ impl Uses {
             user: NodeId::NONE,
             kind: UseKind::Control,
         };
-        let mut entries = vec![placeholder; edges.len()];
-        for (used, entry) in edges {
-            let slot = &mut next[used.index()];
-            entries[*slot as usize] = entry;
-            *slot += 1;
+        let mut entries = vec![placeholder; starts[graph.len()] as usize];
+        for user in graph.ids() {
+            for (slot, &input) in graph.inputs(user).iter().enumerate() {
+                let position = &mut next[graph.resolve(input).index()];
+                entries[*position as usize] = Use {
+                    user,
+                    kind: UseKind::Operand(slot),
+                };
+                *position += 1;
+            }
+            let control = graph.resolve(graph.control(user));
+            if !control.is_none() {
+                let position = &mut next[control.index()];
+                entries[*position as usize] = Use {
+                    user,
+                    kind: UseKind::Control,
+                };
+                *position += 1;
+            }
         }
         Self {
             index: Arc::new(UseIndex { starts, entries }),
