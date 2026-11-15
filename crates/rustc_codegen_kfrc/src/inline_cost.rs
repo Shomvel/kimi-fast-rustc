@@ -95,6 +95,17 @@ pub(crate) fn policy() -> Result<InlineCostPolicy, String> {
     }
 }
 
+/// Experimental call-site thresholds; unset variables keep the accepted defaults.
+fn growth(name: &str, default: u64) -> Result<u64, String> {
+    match std::env::var(name) {
+        Err(std::env::VarError::NotPresent) => Ok(default),
+        Ok(text) => text
+            .parse::<u64>()
+            .map_err(|_| format!("invalid {name}={text:?}; expected a non-negative integer")),
+        Err(error) => Err(format!("invalid {name}: {error}")),
+    }
+}
+
 fn residual_policy(callsite: bool) -> Result<InlineCostPolicy, String> {
     // An explicit uniform threshold retains the original what-if contract.
     // Environment changes are read at process setup, never during analysis.
@@ -108,9 +119,9 @@ fn residual_policy(callsite: bool) -> Result<InlineCostPolicy, String> {
                 )
             }),
         Err(std::env::VarError::NotPresent) if callsite => Ok(InlineCostPolicy::CallSiteResidual {
-            max_growth: DEFAULT_RESIDUAL_GROWTH,
-            hot_growth: HOT_RESIDUAL_GROWTH,
-            total_hot_growth: TOTAL_HOT_RESIDUAL_GROWTH,
+            max_growth: growth("KFRC_INLINE_ORDINARY_GROWTH", DEFAULT_RESIDUAL_GROWTH)?,
+            hot_growth: growth("KFRC_INLINE_HOT_GROWTH", HOT_RESIDUAL_GROWTH)?,
+            total_hot_growth: growth("KFRC_INLINE_TOTAL_HOT_GROWTH", TOTAL_HOT_RESIDUAL_GROWTH)?,
         }),
         Err(std::env::VarError::NotPresent) => Ok(InlineCostPolicy::Residual {
             max_growth: DEFAULT_RESIDUAL_GROWTH,
