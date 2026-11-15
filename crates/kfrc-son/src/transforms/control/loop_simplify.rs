@@ -4,7 +4,7 @@
 //! and effect Phi slots together. Exits and backedges are not redirected.
 //! This is a bounded subset of LoopSimplify, not an LCSSA or rotation pass.
 
-use crate::analysis::{cfg::ControlFlow, dominators::Dominators, loops::LoopInfo};
+use crate::analysis::cfg::ControlFlow;
 use crate::transforms::utils::cfg::{CfgEditError, CfgEditor};
 use crate::{FunctionGraph, GraphLevel, NodeId, Opcode};
 use kfrc_body::fx_hash::HashMap;
@@ -78,8 +78,7 @@ fn run_with_limits(
         return Ok(stats);
     }
     let cfg = ControlFlow::new(graph);
-    let dominators = Dominators::new(&cfg);
-    let loops = LoopInfo::new(&cfg, &dominators);
+    let loops = cfg.loop_info();
     let loop_stats = loops.stats();
     if !charge(
         &mut stats,

@@ -10,7 +10,7 @@ mod plan;
 pub(crate) mod strength_reduce;
 mod values;
 
-use crate::analysis::{cfg::ControlFlow, dominators::Dominators, loops::LoopInfo, uses::Uses};
+use crate::analysis::{cfg::ControlFlow, dominators::Dominators, uses::Uses};
 use crate::transforms::{control::simplify, utils::cfg::CfgEditError};
 use crate::{FunctionGraph, GraphLevel, NodeId, Opcode};
 
@@ -110,7 +110,7 @@ fn run_with_limits(graph: &mut FunctionGraph, limits: Limits) -> Result<UnrollSt
     }
     let cfg = ControlFlow::new(graph);
     let dominators = Dominators::new(&cfg);
-    let loops = LoopInfo::new(&cfg, &dominators);
+    let loops = cfg.loop_info();
     let uses = Uses::new(graph);
     let facts = loops.stats();
     if work

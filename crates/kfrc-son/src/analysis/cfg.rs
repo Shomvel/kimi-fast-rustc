@@ -3,6 +3,7 @@ use crate::graph::{FunctionGraph, NodeId, Opcode, ValueType};
 use std::sync::{Arc, OnceLock};
 
 use super::dominators::Dominators;
+use super::loops::LoopInfo;
 
 pub fn is_anchored_arithmetic(op: Opcode) -> bool {
     matches!(
@@ -102,6 +103,7 @@ pub struct ControlFlowData {
     successor_list: Vec<NodeId>,
     start: NodeId,
     dominators: OnceLock<Dominators>,
+    loops: OnceLock<Arc<LoopInfo>>,
 }
 
 impl std::ops::Deref for ControlFlow {
@@ -217,6 +219,7 @@ impl ControlFlow {
                 successor_list,
                 start: graph.start,
                 dominators: OnceLock::new(),
+                loops: OnceLock::new(),
             }),
         }
     }
@@ -228,6 +231,13 @@ impl ControlFlow {
     pub(super) fn dominators(&self) -> Dominators {
         self.dominators
             .get_or_init(|| Dominators::build(self))
+            .clone()
+    }
+
+    /// Natural loops of this immutable snapshot, built once with its dominators.
+    pub fn loop_info(&self) -> Arc<LoopInfo> {
+        self.loops
+            .get_or_init(|| Arc::new(LoopInfo::new(self, &self.dominators())))
             .clone()
     }
 

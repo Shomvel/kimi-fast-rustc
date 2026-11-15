@@ -8,7 +8,7 @@ mod expression;
 mod plan;
 mod proof;
 
-use crate::analysis::{cfg::ControlFlow, dominators::Dominators, loops::LoopInfo, uses::Uses};
+use crate::analysis::{cfg::ControlFlow, dominators::Dominators, uses::Uses};
 use crate::{FunctionGraph, GraphLevel, NodeId};
 use kfrc_body::fx_hash::HashMap;
 
@@ -105,7 +105,7 @@ fn run_with_limits(graph: &mut FunctionGraph, limits: Limits) -> PreStats {
     }
     let cfg = ControlFlow::new(graph);
     let dominators = Dominators::new(&cfg);
-    let loops = LoopInfo::new(&cfg, &dominators);
+    let loops = cfg.loop_info();
     let loop_work = loops.stats();
     if work
         .charge(loop_work.member_edge_visits + loop_work.scc_edge_visits)

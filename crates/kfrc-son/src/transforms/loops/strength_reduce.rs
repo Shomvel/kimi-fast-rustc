@@ -3,9 +3,8 @@
 //! No control, effect, memory access, observation or pointer recurrence moves.
 use crate::analysis::{
     cfg::ControlFlow,
-    dominators::Dominators,
     induction::{Induction, constant},
-    loops::{LoopInfo, NaturalLoop},
+    loops::NaturalLoop,
     uses::{UseKind, Uses},
 };
 use crate::{FunctionGraph, GraphLevel, NodeId, Opcode, ValueType};
@@ -152,8 +151,7 @@ pub(super) fn run_with_budget(graph: &mut FunctionGraph, budget: usize) -> Stren
         && work.charge(graph.len().saturating_mul(3)).is_some()
     {
         let cfg = ControlFlow::new(graph);
-        let dominators = Dominators::new(&cfg);
-        let loops = LoopInfo::new(&cfg, &dominators);
+        let loops = cfg.loop_info();
         let uses = Uses::new(graph);
         let loop_stats = loops.stats();
         if work
