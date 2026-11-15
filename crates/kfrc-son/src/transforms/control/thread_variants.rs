@@ -40,6 +40,7 @@ pub fn run(graph: &mut FunctionGraph) -> Result<VariantThreadStats, CfgEditError
         .map(|n| (n, 0))
         .collect();
     let mut analysis = None;
+    let mut deferred_cleanup = false;
     // Only newly split regions can expose the next test in a SwitchInt chain.
     while let Some((region, depth)) = pending.pop_front() {
         if graph.is_dead(region) || depth >= 8 {
@@ -84,14 +85,28 @@ pub fn run(graph: &mut FunctionGraph) -> Result<VariantThreadStats, CfgEditError
             .dirty_nodes
             .extend((old_len..graph.len()).map(|i| NodeId(i as u32)));
         stats.dirty_nodes.extend(consumers);
-        super::simplify::run(graph)?;
+        if simplify_once() {
+            deferred_cleanup = true;
+        } else {
+            super::simplify::run(graph)?;
+        }
         analysis = None;
         pending.extend(regions.into_iter().map(|n| (n, depth + 1)));
+    }
+    if deferred_cleanup {
+        super::simplify::run(graph)?;
     }
     stats.dirty_nodes.retain(|node| !graph.is_dead(*node));
     stats.dirty_nodes.sort_unstable();
     stats.dirty_nodes.dedup();
     Ok(stats)
+}
+
+/// `KFRC_THREAD_SIMPLIFY=once` (experiment): one control cleanup after all
+/// threading edits instead of one after every edit.
+fn simplify_once() -> bool {
+    static ONCE: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+    *ONCE.get_or_init(|| std::env::var("KFRC_THREAD_SIMPLIFY").as_deref() == Ok("once"))
 }
 
 // Inlining leaves Jump -> single-entry Region wrappers between a merge and
