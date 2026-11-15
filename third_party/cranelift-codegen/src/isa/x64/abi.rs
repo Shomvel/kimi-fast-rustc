@@ -726,6 +726,28 @@ impl ABIMachineSpec for X64ABIMachineSpec {
         let stack_size = frame_layout.fixed_frame_storage_size
             + frame_layout.clobber_size
             + frame_layout.outgoing_args_size;
+
+        // kfrc: integer callee saves are pushed (1–2 bytes each instead of a
+        // 5–8 byte store). They occupy the top of the same clobber area, so
+        // every other slot keeps its RSP offset; `kfrc_clobber_restore` pops
+        // them in reverse order.
+        if kfrc_push_clobbers(flags, frame_layout) {
+            for reg in &frame_layout.clobbered_callee_saves {
+                let gpr = Gpr::unwrap_new(Reg::from(reg.to_reg()));
+                insts.push(Inst::External {
+                    inst: asm::inst::pushq_o::new(gpr).into(),
+                });
+            }
+            let rest = stack_size - 8 * frame_layout.clobbered_callee_saves.len() as u32;
+            if rest > 0 {
+                let rsp = Writable::from_reg(regs::rsp());
+                let rest = i32::try_from(rest)
+                    .expect("`stack_size` is too large to fit in a 32-bit immediate");
+                insts.push(Inst::subq_mi(rsp, rest));
+            }
+            return insts;
+        }
+
         if stack_size > 0 {
             let rsp = Writable::from_reg(regs::rsp());
             let stack_size = i32::try_from(stack_size)
@@ -772,10 +794,30 @@ impl ABIMachineSpec for X64ABIMachineSpec {
 
     fn gen_clobber_restore(
         _call_conv: isa::CallConv,
-        _flags: &settings::Flags,
+        flags: &settings::Flags,
         frame_layout: &FrameLayout,
     ) -> SmallVec<[Self::I; 16]> {
         let mut insts = SmallVec::new();
+
+        if kfrc_push_clobbers(flags, frame_layout) {
+            let stack_size = frame_layout.fixed_frame_storage_size
+                + frame_layout.clobber_size
+                + frame_layout.outgoing_args_size;
+            let rest = stack_size - 8 * frame_layout.clobbered_callee_saves.len() as u32;
+            if rest > 0 {
+                let rsp = Writable::from_reg(regs::rsp());
+                let rest = i32::try_from(rest)
+                    .expect("`stack_size` is too large to fit in a 32-bit immediate");
+                insts.push(Inst::addq_mi(rsp, rest));
+            }
+            for reg in frame_layout.clobbered_callee_saves.iter().rev() {
+                let gpr = Gpr::unwrap_new(Reg::from(reg.to_reg()));
+                insts.push(Inst::External {
+                    inst: asm::inst::popq_o::new(Writable::from_reg(gpr)).into(),
+                });
+            }
+            return insts;
+        }
 
         // Restore regs by loading from offsets of RSP. We compute the offset from
         // the same base as above in clobber_save, as RSP won't change between the
@@ -1195,6 +1237,17 @@ fn is_callee_save_fastcall(r: RealReg, enable_pinned_reg: bool) -> bool {
         },
         RegClass::Vector => unreachable!(),
     }
+}
+
+/// kfrc: callee saves use push/pop when every one is an integer register and
+/// no unwind records describe their store offsets.
+fn kfrc_push_clobbers(flags: &settings::Flags, frame_layout: &FrameLayout) -> bool {
+    !flags.unwind_info()
+        && !frame_layout.clobbered_callee_saves.is_empty()
+        && frame_layout
+            .clobbered_callee_saves
+            .iter()
+            .all(|reg| reg.to_reg().class() == RegClass::Int)
 }
 
 fn compute_clobber_size(clobbers: &[Writable<RealReg>]) -> u32 {
