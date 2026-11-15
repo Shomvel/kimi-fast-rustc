@@ -27,6 +27,11 @@ fn fold_redundant_phis(graph: &mut FunctionGraph) -> usize {
         .ids()
         .filter(|node| graph.op(*node) == Opcode::Phi)
         .collect();
+    // Every fold starts at a Phi that is redundant now; later folds only
+    // revisit users of folded Phis. Without one, the worklist changes nothing.
+    if !phis.iter().any(|&phi| redundant_value(graph, phi).is_some()) {
+        return 0;
+    }
     let mut phi_users: HashMap<NodeId, Vec<NodeId>> = HashMap::default();
     for &phi in &phis {
         for &input in &graph.inputs(phi)[1..] {
@@ -43,28 +48,9 @@ fn fold_redundant_phis(graph: &mut FunctionGraph) -> usize {
         if graph.is_dead(phi) {
             continue;
         }
-        let mut same = None;
-        let mut distinct = false;
-        for &input in &graph.inputs(phi)[1..] {
-            let input = graph.resolve(input);
-            if input == phi {
-                continue;
-            }
-            match same {
-                None => same = Some(input),
-                Some(value) if value == input => (),
-                Some(_) => {
-                    distinct = true;
-                    break;
-                }
-            }
-        }
-        let Some(value) = same.filter(|_| !distinct) else {
+        let Some(value) = redundant_value(graph, phi) else {
             continue;
         };
-        if value.is_none() || graph.value_type(value) != graph.value_type(phi) {
-            continue;
-        }
         graph.replace(phi, value);
         folded += 1;
         if let Some(users) = phi_users.remove(&phi) {
@@ -76,6 +62,23 @@ fn fold_redundant_phis(graph: &mut FunctionGraph) -> usize {
         }
     }
     folded
+}
+
+/// The one same-typed value all incoming edges carry, ignoring the Phi itself.
+fn redundant_value(graph: &FunctionGraph, phi: NodeId) -> Option<NodeId> {
+    let mut same = None;
+    for &input in &graph.inputs(phi)[1..] {
+        let input = graph.resolve(input);
+        if input == phi {
+            continue;
+        }
+        match same {
+            None => same = Some(input),
+            Some(value) if value == input => (),
+            Some(_) => return None,
+        }
+    }
+    same.filter(|value| !value.is_none() && graph.value_type(*value) == graph.value_type(phi))
 }
 
 pub fn run(graph: &mut FunctionGraph) -> Result<ControlStats, CfgEditError> {
@@ -95,25 +98,13 @@ fn run_impl(graph: &mut FunctionGraph, fold_diamonds: bool) -> Result<ControlSta
     if fold_diamonds {
         stats.branches_folded += super::diamonds::run(graph);
     }
-    // Branch folding only forwards/removes existing nodes, so one immutable
-    // projection index remains valid through this loop. Avoid rescanning the
-    // entire graph for every selected edge.
-    let mut projections: HashMap<(NodeId, u32), Vec<NodeId>> = HashMap::default();
-    for node in graph.ids() {
-        if graph.op(node) == Opcode::Projection
-            && matches!(graph.value_type(node), ValueType::Control)
-        {
-            projections
-                .entry((graph.input(node, 0), graph.payload(node)))
-                .or_default()
-                .push(node);
-        }
-    }
-    let branches: Vec<_> = graph
+    // Decisions depend only on condition values; folding rewrites control
+    // edges, so every decision can be taken before the first fold.
+    let mut folds = Vec::new();
+    for branch in graph
         .ids()
         .filter(|node| matches!(graph.op(*node), Opcode::If | Opcode::VariantSwitch))
-        .collect();
-    for branch in branches {
+    {
         let Some(&condition) = graph.inputs(branch).first() else {
             continue;
         };
@@ -141,6 +132,25 @@ fn run_impl(graph: &mut FunctionGraph, fold_diamonds: bool) -> Result<ControlSta
             }
             _ => continue,
         };
+        folds.push((branch, taken));
+    }
+    // Branch folding only forwards/removes existing nodes, so one immutable
+    // projection index remains valid through this loop. Avoid rescanning the
+    // entire graph for every selected edge.
+    let mut projections: HashMap<(NodeId, u32), Vec<NodeId>> = HashMap::default();
+    if !folds.is_empty() {
+        for node in graph.ids() {
+            if graph.op(node) == Opcode::Projection
+                && matches!(graph.value_type(node), ValueType::Control)
+            {
+                projections
+                    .entry((graph.input(node, 0), graph.payload(node)))
+                    .or_default()
+                    .push(node);
+            }
+        }
+    }
+    for (branch, taken) in folds {
         let predecessor = graph.resolve(graph.control(branch));
         for &projection in projections.get(&(branch, taken)).into_iter().flatten() {
             graph.replace(projection, predecessor);

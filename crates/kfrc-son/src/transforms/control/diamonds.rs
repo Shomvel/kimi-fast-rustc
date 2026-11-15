@@ -8,7 +8,9 @@ pub(crate) fn run(graph: &mut FunctionGraph) -> usize {
     if !matches!(graph.level, GraphLevel::Specialized | GraphLevel::Layout) {
         return 0;
     }
-    let uses = Uses::new(graph);
+    // Built at the first structural candidate, which precedes every edit, so
+    // this is the same snapshot as building it on entry.
+    let mut uses: Option<Uses> = None;
     let regions: Vec<_> = graph
         .ids()
         .filter(|&n| graph.op(n) == Opcode::Region)
@@ -33,6 +35,7 @@ pub(crate) fn run(graph: &mut FunctionGraph) -> usize {
         }
         // The only uses of the branch exits are their direct merge jumps.
         // This excludes witnesses, anchored arithmetic, effects and other arms.
+        let uses = uses.get_or_insert_with(|| Uses::new(graph));
         if uses.of(branch).len() != 2
             || exits.iter().zip(&edges).any(|(&exit, &edge)| {
                 uses.of(exit)
