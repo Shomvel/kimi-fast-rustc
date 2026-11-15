@@ -436,11 +436,27 @@ impl<'a, F: Function> Env<'a, F> {
         // to a "minimal bundles and spill bundle" setup for this
         // bundle. See the doc-comment on
         // `split_into_minimal_bundles()` above for more.
+        let mut counted = counted;
         if counted {
             if self.ctx.spillsets[spillset].splits >= MAX_SPLITS_PER_SPILLSET {
-                self.split_into_minimal_bundles(bundle, hint);
-                return;
+                // kfrc: before falling back to one bundle per use, cut the
+                // bundle at the next loop-depth boundary. Each such cut
+                // leaves pieces of uniform loop depth, so a loop with many
+                // uses keeps one bundle (one reload at its entry) instead of
+                // a reload at every use.
+                match self.kfrc_loop_boundary(bundle) {
+                    Some(boundary) => {
+                        split_at = boundary;
+                        counted = false;
+                    }
+                    None => {
+                        self.split_into_minimal_bundles(bundle, hint);
+                        return;
+                    }
+                }
             }
+        }
+        if counted {
             self.ctx.spillsets[spillset].splits += 1;
         }
 
@@ -975,6 +991,31 @@ impl<'a, F: Function> Env<'a, F> {
                     .insert(bundle, prio as usize, hint);
             }
         }
+    }
+
+    /// kfrc: the entry of the first block after the bundle's start whose loop
+    /// depth differs from the start block's, if it lies strictly inside the
+    /// bundle and the bundle has uses on both sides of it.
+    fn kfrc_loop_boundary(&self, bundle: LiveBundleIndex) -> Option<ProgPoint> {
+        let ranges = &self.ctx.bundles[bundle].ranges;
+        let start = ranges.first()?.range.from;
+        let end = ranges.last()?.range.to;
+        let cfg = &self.ctx.cfginfo;
+        let first = cfg.insn_block[start.inst().index()].index();
+        let last = cfg.insn_block[end.prev().inst().index()].index();
+        let depth = cfg.approx_loop_depth[first];
+        let boundary = (first + 1..=last)
+            .find(|&block| cfg.approx_loop_depth[block] != depth)
+            .map(|block| cfg.block_entry[block])?;
+        if boundary <= start || boundary >= end {
+            return None;
+        }
+        let mut uses = ranges
+            .iter()
+            .flat_map(|entry| self.ctx.ranges[entry.index].uses.iter());
+        let before = uses.clone().any(|u| u.pos < boundary);
+        let after = uses.any(|u| u.pos >= boundary);
+        (before && after).then_some(boundary)
     }
 
     /// Returns the point just after the bundle's first use when that use is a
