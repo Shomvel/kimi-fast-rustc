@@ -360,6 +360,8 @@ pub struct MachBuffer<I: VCodeInst> {
     /// containing a function body, this allows interpretation of
     /// runtime state given a view of an active stack frame.
     frame_layout: Option<MachBufferFrameLayout>,
+    /// kfrc: whether an island was emitted, which applies fixups early.
+    kfrc_island_emitted: bool,
 }
 
 impl MachBufferFinalized<Stencil> {
@@ -530,6 +532,7 @@ impl<I: VCodeInst> MachBuffer<I> {
             used_constants: Default::default(),
             open_patchable: false,
             frame_layout: None,
+            kfrc_island_emitted: false,
         }
     }
 
@@ -1371,6 +1374,7 @@ impl<I: VCodeInst> MachBuffer<I> {
             "emitting island at {}, distance = {distance}",
             self.cur_offset()
         );
+        self.kfrc_island_emitted = true;
 
         // We're going to purge fixups, so no latest-branch editing can happen
         // anymore.
@@ -1623,6 +1627,170 @@ impl<I: VCodeInst> MachBuffer<I> {
         assert!(self.pending_fixup_records.is_empty());
     }
 
+    /// kfrc: replace long branches to bound labels by their two-byte form
+    /// wherever the final displacement fits in eight bits.
+    ///
+    /// Runs at the start of `finish`, before the final island: every branch
+    /// fixup is still pending, no constant or trap has been placed after the
+    /// code, and every block label is bound. Shrinking only shortens distances,
+    /// so a branch accepted in one round stays in range in every later round.
+    /// The removed bytes shift every recorded code offset; labels still unbound
+    /// (constants, traps) are placed after the code later and keep long forms.
+    fn kfrc_relax_branches(&mut self) {
+        if self.kfrc_island_emitted
+            || self.open_patchable
+            || !self.fixup_records.is_empty()
+            || !self.used_constants.is_empty()
+        {
+            return;
+        }
+        struct Candidate {
+            fixup: usize,
+            branch: crate::machinst::ShortBranch,
+            target: CodeOffset,
+            shrunk: bool,
+        }
+        let mut candidates: Vec<Candidate> = Vec::new();
+        for (fixup, record) in self.pending_fixup_records.iter().enumerate() {
+            let target = self.resolve_label_offset(record.label);
+            if target == UNKNOWN_LABEL_OFFSET {
+                continue;
+            }
+            if let Some(branch) = record.kind.short_branch(&self.data, record.offset) {
+                candidates.push(Candidate {
+                    fixup,
+                    branch,
+                    target,
+                    shrunk: false,
+                });
+            }
+        }
+        if candidates.is_empty() {
+            return;
+        }
+        candidates.sort_by_key(|candidate| candidate.branch.start);
+        let starts: Vec<CodeOffset> = candidates.iter().map(|c| c.branch.start).collect();
+        // `removed[i]`: bytes removed by shrunk candidates `0..=i`.
+        let mut removed: Vec<CodeOffset> = vec![0; candidates.len()];
+        let new_offset = |removed: &[CodeOffset], offset: CodeOffset| -> CodeOffset {
+            let before = starts.partition_point(|&start| start < offset);
+            offset - if before == 0 { 0 } else { removed[before - 1] }
+        };
+        loop {
+            let mut total = 0;
+            for (index, candidate) in candidates.iter().enumerate() {
+                if candidate.shrunk {
+                    total += candidate.branch.long_len - 2;
+                }
+                removed[index] = total;
+            }
+            let mut accepted = Vec::new();
+            for (index, candidate) in candidates.iter().enumerate() {
+                if candidate.shrunk {
+                    continue;
+                }
+                let start = new_offset(&removed, candidate.branch.start);
+                let mut target = new_offset(&removed, candidate.target);
+                if candidate.target > candidate.branch.start {
+                    // A forward target also moves by this branch's own saving.
+                    target -= candidate.branch.long_len - 2;
+                }
+                let displacement = i64::from(target) - (i64::from(start) + 2);
+                if (-128..=127).contains(&displacement) {
+                    accepted.push(index);
+                }
+            }
+            if accepted.is_empty() {
+                break;
+            }
+            for index in accepted {
+                candidates[index].shrunk = true;
+            }
+        }
+        let mut total = 0;
+        for (index, candidate) in candidates.iter().enumerate() {
+            if candidate.shrunk {
+                total += candidate.branch.long_len - 2;
+            }
+            removed[index] = total;
+        }
+        if total == 0 {
+            return;
+        }
+        let map = |offset: CodeOffset| new_offset(&removed, offset);
+
+        let mut data: SmallVec<[u8; 1024]> = SmallVec::with_capacity(self.data.len());
+        let mut cursor = 0usize;
+        for candidate in candidates.iter().filter(|c| c.shrunk) {
+            data.extend_from_slice(&self.data[cursor..candidate.branch.start as usize]);
+            let start = map(candidate.branch.start);
+            debug_assert_eq!(start as usize, data.len());
+            let displacement = i64::from(map(candidate.target)) - (i64::from(start) + 2);
+            assert!(
+                (-128..=127).contains(&displacement),
+                "kfrc: relaxed branch out of range"
+            );
+            data.push(candidate.branch.opcode);
+            data.push(displacement as i8 as u8);
+            cursor = (candidate.branch.start + candidate.branch.long_len) as usize;
+        }
+        data.extend_from_slice(&self.data[cursor..]);
+        debug_assert_eq!(data.len() as CodeOffset, map(self.data.len() as CodeOffset));
+        self.data = data;
+
+        let mut retired = vec![false; self.pending_fixup_records.len()];
+        for candidate in candidates.iter().filter(|c| c.shrunk) {
+            retired[candidate.fixup] = true;
+        }
+        let pending = mem::take(&mut self.pending_fixup_records);
+        self.pending_fixup_deadline = u32::MAX;
+        for (index, mut record) in pending.into_iter().enumerate() {
+            if retired[index] {
+                continue;
+            }
+            record.offset = map(record.offset);
+            self.pending_fixup_deadline = self
+                .pending_fixup_deadline
+                .min(record.offset.saturating_add(record.kind.max_pos_range()));
+            self.pending_fixup_records.push(record);
+        }
+        for offset in self.label_offsets.iter_mut() {
+            if *offset != UNKNOWN_LABEL_OFFSET {
+                *offset = map(*offset);
+            }
+        }
+        self.labels_at_tail_off = map(self.labels_at_tail_off);
+        self.latest_branches.clear();
+        for reloc in self.relocs.iter_mut() {
+            reloc.offset = map(reloc.offset);
+        }
+        for trap in self.traps.iter_mut() {
+            trap.offset = map(trap.offset);
+        }
+        for site in self.call_sites.iter_mut() {
+            site.ret_addr = map(site.ret_addr);
+        }
+        for site in self.patchable_call_sites.iter_mut() {
+            site.ret_addr = map(site.ret_addr);
+        }
+        for srcloc in self.srclocs.iter_mut() {
+            srcloc.start = map(srcloc.start);
+            srcloc.end = map(srcloc.end);
+        }
+        for tags in self.debug_tags.iter_mut() {
+            tags.offset = map(tags.offset);
+        }
+        for entry in self.user_stack_maps.iter_mut() {
+            entry.0 = map(entry.0);
+        }
+        for entry in self.unwind_info.iter_mut() {
+            entry.0 = map(entry.0);
+        }
+        if let Some((start, _)) = self.cur_srcloc.as_mut() {
+            *start = map(*start);
+        }
+    }
+
     /// Finish any deferred emissions and/or fixups.
     pub fn finish(
         mut self,
@@ -1631,6 +1799,7 @@ impl<I: VCodeInst> MachBuffer<I> {
     ) -> MachBufferFinalized<Stencil> {
         let _tt = timing::vcode_emit_finish();
 
+        self.kfrc_relax_branches();
         self.finish_emission_maybe_forcing_veneers(ForceVeneers::No, ctrl_plane);
 
         let alignment = self.finish_constants(constants);

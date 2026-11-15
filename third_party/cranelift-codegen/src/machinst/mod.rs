@@ -472,6 +472,25 @@ pub trait MachInstLabelUse: Clone + Copy + Debug + Eq {
     /// This returns `None` if the relocation doesn't have a corresponding
     /// representation for the target architecture.
     fn from_reloc(reloc: Reloc, addend: Addend) -> Option<Self>;
+
+    /// kfrc: the two-byte form (`opcode rel8`) of the branch whose long
+    /// displacement this label use patches at `use_offset`, if the ISA has one
+    /// and the displacement field still holds a zero addend.
+    fn short_branch(self, _buffer: &[u8], _use_offset: CodeOffset) -> Option<ShortBranch> {
+        None
+    }
+}
+
+/// kfrc: a branch whose long form ends with the displacement of its label use
+/// and can be replaced by `opcode rel8` (two bytes).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct ShortBranch {
+    /// Offset of the first byte of the long instruction.
+    pub start: CodeOffset,
+    /// Length of the long instruction.
+    pub long_len: CodeOffset,
+    /// Opcode byte of the short form.
+    pub opcode: u8,
 }
 
 /// Classification of call instruction types for granular analysis.

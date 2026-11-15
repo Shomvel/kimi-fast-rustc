@@ -1692,4 +1692,28 @@ impl MachInstLabelUse for LabelUse {
             _ => None,
         }
     }
+
+    // kfrc: `jmp rel32` (E9) → `jmp rel8` (EB); `jcc rel32` (0F 8x) → `jcc rel8` (7x).
+    fn short_branch(self, buffer: &[u8], use_offset: CodeOffset) -> Option<ShortBranch> {
+        if self != LabelUse::JmpRel32 {
+            return None;
+        }
+        let disp = use_offset as usize;
+        if buffer.get(disp..disp + 4)? != [0, 0, 0, 0] {
+            return None;
+        }
+        match buffer.get(disp.checked_sub(1)?)? {
+            0xE9 => Some(ShortBranch {
+                start: use_offset - 1,
+                long_len: 5,
+                opcode: 0xEB,
+            }),
+            &op @ 0x80..=0x8F if disp >= 2 && buffer[disp - 2] == 0x0F => Some(ShortBranch {
+                start: use_offset - 2,
+                long_len: 6,
+                opcode: 0x70 | (op & 0x0F),
+            }),
+            _ => None,
+        }
+    }
 }
