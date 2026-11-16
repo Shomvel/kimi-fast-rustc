@@ -1396,6 +1396,15 @@ impl FunctionGraph {
             let op = self.op(node);
             let mut head = op.name().to_owned();
             match op {
+                op if self.payload(node) != 0 && crate::ArithmeticFlags::allowed(op).is_some() => {
+                    let flags = crate::ArithmeticFlags(self.payload(node));
+                    let mut name = op.name().trim_end_matches(".wrap");
+                    if flags.contains(crate::ArithmeticFlags::AMOUNT_IN_RANGE) {
+                        name = name.trim_end_matches(".mask");
+                    }
+                    let invalid = if flags.valid_for(op) { "" } else { "invalid:" };
+                    head = format!("{name}[{invalid}{flags}]");
+                }
                 Opcode::BitCount | Opcode::FunnelShift => {
                     head = format!("{}[{}]", op.name(), self.payload(node))
                 }

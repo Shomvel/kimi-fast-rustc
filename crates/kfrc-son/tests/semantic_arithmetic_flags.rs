@@ -112,6 +112,58 @@ fn outcome(g: &FunctionGraph, a: u64, b: u64) -> Result<u64, &'static str> {
 }
 
 #[test]
+fn graph_dump_reports_source_integer_contracts() {
+    for (op, flags, head) in [
+        (Opcode::Add, 0, "Add.wrap"),
+        (Opcode::Add, F::NUW, "Add[nuw]"),
+        (Opcode::Add, F::NSW, "Add[nsw]"),
+        (Opcode::Add, F::NUW | F::NSW, "Add[nuw,nsw]"),
+        (Opcode::Sub, F::NUW, "Sub[nuw]"),
+        (Opcode::Mul, F::NSW, "Mul[nsw]"),
+        (Opcode::BitOr, F::DISJOINT, "BitOr[disjoint]"),
+        (Opcode::ShiftLeft, 0, "Shl.mask"),
+        (Opcode::ShiftLeft, F::NUW, "Shl.mask[nuw]"),
+        (
+            Opcode::ShiftLeft,
+            F::AMOUNT_IN_RANGE,
+            "Shl[amount_in_range]",
+        ),
+        (
+            Opcode::ShiftLeft,
+            F::NUW | F::NSW | F::AMOUNT_IN_RANGE,
+            "Shl[nuw,nsw,amount_in_range]",
+        ),
+        (
+            Opcode::ShiftRightArithmetic,
+            F::EXACT,
+            "Shr.arithmetic.mask[exact]",
+        ),
+        (
+            Opcode::ShiftRightLogical,
+            F::EXACT | F::AMOUNT_IN_RANGE,
+            "Shr.logical[exact,amount_in_range]",
+        ),
+        (Opcode::DivSigned, F::EXACT, "Div.signed[exact]"),
+        (Opcode::DivUnsigned, F::EXACT, "Div.unsigned[exact]"),
+        (Opcode::Add, F::EXACT, "Add[invalid:exact]"),
+        (
+            Opcode::Add,
+            F::NUW | (1 << 31),
+            "Add[invalid:nuw,unknown:0x80000000]",
+        ),
+    ] {
+        let g = graph(op, flags, false);
+        let node = g.ids().find(|&node| g.op(node) == op).unwrap();
+        let text = g.dump();
+        let prefix = format!("  {node} = {head}");
+        assert!(text.lines().any(|line| line.starts_with(&prefix)), "{text}");
+        // Projection payloads are result indices, not arithmetic flags.
+        assert!(text.contains("Projection[2]"), "{text}");
+    }
+    assert_eq!(F(0).to_string(), "none");
+}
+
+#[test]
 fn eight_bit_contracts_match_independent_integer_arithmetic() {
     for (op, flags, signed) in [
         (Opcode::Add, F::NUW, false),
