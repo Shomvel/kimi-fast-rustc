@@ -1712,6 +1712,13 @@ impl<I: VCodeInst> VRegAllocator<I> {
         }
     }
 
+    /// kfrc: the register component's type, including split multi-register values.
+    pub(super) fn type_for_reg(&self, reg: Reg) -> Option<Type> {
+        let reg = reg.to_virtual_reg()?;
+        let ty = *self.vreg_types.get(reg.index())?;
+        (ty != types::INVALID).then_some(ty)
+    }
+
     /// Allocate a fresh ValueRegs.
     pub fn alloc(&mut self, ty: Type) -> CodegenResult<ValueRegs<Reg>> {
         if self.deferred_error.is_some() {

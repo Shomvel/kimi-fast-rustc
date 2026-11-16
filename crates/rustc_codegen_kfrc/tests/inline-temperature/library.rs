@@ -52,3 +52,38 @@ pub fn guarded_loop(mut value: u64, key: u64, count: usize) -> u64 {
     }
     value
 }
+
+unsafe extern "C" {
+    fn observe_cold_arguments(
+        a: i8,
+        b: u16,
+        c: u64,
+        d: u64,
+        e: u64,
+        f: u64,
+        stack: u64,
+        x_bits: u32,
+        y_bits: u64,
+    ) -> u64;
+}
+
+#[inline(never)]
+pub fn guarded_abi(a: i8, b: u16, seed: u64, x_bits: u32, y_bits: u64, fail: bool) -> u64 {
+    if fail {
+        let observed = unsafe {
+            observe_cold_arguments(
+                a,
+                b,
+                seed,
+                seed ^ 3,
+                seed ^ 5,
+                seed ^ 7,
+                seed ^ 11,
+                x_bits,
+                y_bits,
+            )
+        };
+        panic!("cold ABI {observed:016x}");
+    }
+    seed
+}

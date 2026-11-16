@@ -150,6 +150,31 @@ pub trait LowerBackend {
     }
 }
 
+// kfrc: keep cold call argument constraints off hot, long-lived values. The
+// opt-out and all-call experiment are retained for differential measurement.
+#[derive(Clone, Copy)]
+enum CallArgCopies {
+    Off,
+    Cold,
+    All,
+}
+
+fn call_arg_copies() -> CallArgCopies {
+    #[cfg(feature = "std")]
+    {
+        static MODE: std::sync::OnceLock<CallArgCopies> = std::sync::OnceLock::new();
+        *MODE.get_or_init(|| match std::env::var("KFRC_CALL_ARG_COPIES").as_deref() {
+            Ok("off") => CallArgCopies::Off,
+            Ok("all") => CallArgCopies::All,
+            _ => CallArgCopies::Cold,
+        })
+    }
+    #[cfg(not(feature = "std"))]
+    {
+        CallArgCopies::Cold
+    }
+}
+
 /// Machine-independent lowering driver / machine-instruction container. Maintains a correspondence
 /// from original Inst to MachInsts.
 pub struct Lower<'func, I: VCodeInst> {
@@ -637,7 +662,7 @@ impl<'func, I: VCodeInst> Lower<'func, I> {
 
     /// Set up arguments values `args` for a call with signature `sig`.
     pub fn gen_call_args(&mut self, sig: Sig, args: &[ValueRegs<Reg>]) -> CallArgList {
-        let (uses, insts) = self.vcode.abi().gen_call_args(
+        let (mut uses, insts) = self.vcode.abi().gen_call_args(
             self.vcode.sigs(),
             sig,
             args,
@@ -647,6 +672,29 @@ impl<'func, I: VCodeInst> Lower<'func, I> {
         );
         for insn in insts {
             self.emit(insn);
+        }
+        let isolate = match call_arg_copies() {
+            CallArgCopies::Off => false,
+            CallArgCopies::All => true,
+            CallArgCopies::Cold => self.cur_inst.is_some_and(|inst| {
+                self.f
+                    .layout
+                    .inst_block(inst)
+                    .is_some_and(|block| self.f.layout.is_cold(block))
+            }),
+        };
+        if isolate {
+            // ABI extension and stack stores above keep their original order.
+            // Only register uses move to fresh, correctly typed temporaries;
+            // their fixed-use constraints no longer split hot live ranges.
+            for pair in &mut uses {
+                let Some(ty) = self.vregs.type_for_reg(pair.vreg) else {
+                    continue;
+                };
+                let tmp = self.alloc_tmp(ty).only_reg().unwrap();
+                self.emit(I::gen_move(tmp, pair.vreg, ty));
+                pair.vreg = tmp.to_reg();
+            }
         }
         uses
     }

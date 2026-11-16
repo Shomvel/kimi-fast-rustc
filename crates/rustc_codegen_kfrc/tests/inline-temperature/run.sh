@@ -63,5 +63,12 @@ for arm in "${arms[@]}"; do
     grep -q "^thread 'main' panicked at .*library.rs:[0-9][0-9]*:[0-9][0-9]*:$" \
         "$work/$arm-cold.normalized"
     cmp "$work/llvm-cold.normalized" "$work/$arm-cold.normalized"
+    status=0
+    run "$arm-cold-abi" "$work/$arm/driver" cold-abi || status=$?
+    test "$status" -eq 134
+    grep -q '^cold ABI [0-9a-f]\{16\}$' "$work/$arm-cold-abi.stderr"
+    sed -E "s/^(thread 'main') \([0-9]+\) panicked at /\1 panicked at /" \
+        "$work/$arm-cold-abi.stderr" > "$work/$arm-cold-abi.normalized"
+    cmp "$work/llvm-cold-abi.normalized" "$work/$arm-cold-abi.normalized"
 done
 printf 'All inline-temperature arms agree.\n'

@@ -8,6 +8,9 @@ use cranelift_codegen::settings::{self, Configurable};
 #[cfg(test)]
 mod narrow_load_tests;
 
+#[cfg(test)]
+mod cold_call_tests;
+
 /// How much of Cranelift's mid-end runs before instruction selection.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum Optimization {
