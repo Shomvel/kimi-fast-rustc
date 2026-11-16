@@ -17,6 +17,10 @@ fn calls(graph: &FunctionGraph) -> usize {
 
 pub(super) struct Row {
     symbol: String,
+    detailed: bool,
+    emit_logs: bool,
+    /// Scheduling needs call presence even when full diagnostics are disabled.
+    pub has_source_calls: bool,
     pub outcome: &'static str,
     pub source_nodes: usize,
     pub final_nodes: usize,
@@ -35,11 +39,23 @@ pub(super) struct Row {
 }
 
 impl Row {
-    pub fn new(graph: &FunctionGraph) -> Self {
-        let source_nodes = graph.live_count();
-        let source_calls = calls(graph);
+    fn new(graph: &FunctionGraph, detailed: bool, emit_logs: bool) -> Self {
+        let source_nodes = if detailed { graph.live_count() } else { 0 };
+        let source_calls = if detailed { calls(graph) } else { 0 };
+        let has_source_calls = if detailed {
+            source_calls != 0
+        } else {
+            graph.ids().any(|node| graph.op(node) == Opcode::Call)
+        };
         Self {
-            symbol: graph.symbol.clone(),
+            symbol: if emit_logs {
+                graph.symbol.clone()
+            } else {
+                String::new()
+            },
+            detailed,
+            emit_logs,
+            has_source_calls,
             outcome: "unchanged",
             source_nodes,
             final_nodes: source_nodes,
@@ -59,11 +75,17 @@ impl Row {
     }
 
     pub fn candidate(&mut self, graph: &FunctionGraph) {
+        if !self.detailed {
+            return;
+        }
         self.candidate_nodes = graph.live_count();
         self.candidate_calls = calls(graph);
     }
 
     pub fn record_skips(&mut self, stats: &InlineStats) {
+        if !self.detailed {
+            return;
+        }
         for (_, reason) in &stats.skipped {
             let name = match reason {
                 InlineSkip::Missing => "missing",
@@ -83,7 +105,7 @@ impl Row {
     }
 
     fn emit(&self) {
-        if !enabled() {
+        if !self.emit_logs {
             return;
         }
         let skips = self
@@ -114,6 +136,8 @@ impl Row {
 }
 
 pub(super) struct Summary {
+    detailed: bool,
+    emit_logs: bool,
     pub source_functions: usize,
     pub reachable_functions: usize,
     pub components: usize,
@@ -144,7 +168,12 @@ impl Summary {
         components: usize,
         work_limit: usize,
     ) -> Self {
+        let emit_logs = enabled();
         Self {
+            // Outside tests the caller discards this summary after emit().
+            // Keep exact accounting for tests and every existing report mode.
+            detailed: emit_logs || cfg!(test),
+            emit_logs,
             source_functions,
             reachable_functions,
             components,
@@ -169,7 +198,14 @@ impl Summary {
         }
     }
 
+    pub fn row(&self, graph: &FunctionGraph) -> Row {
+        Row::new(graph, self.detailed, self.emit_logs)
+    }
+
     pub fn record(&mut self, row: Row) {
+        if !self.detailed {
+            return;
+        }
         match row.outcome {
             "published" => self.published += 1,
             "recursive" => self.recursive += 1,
@@ -194,7 +230,7 @@ impl Summary {
     }
 
     pub fn emit(&self) {
-        if enabled() {
+        if self.emit_logs {
             eprintln!(
                 "kfrc-cgscc-summary {{\"schema\":1,\"source_functions\":{},\"reachable_functions\":{},\"components\":{},\"published\":{},\"unchanged\":{},\"recursive\":{},\"private_reference\":{},\"profitability_growth\":{},\"work_budget\":{},\"source_nodes\":{},\"final_nodes\":{},\"source_calls\":{},\"final_calls\":{},\"calls_inlined\":{},\"identity_calls_folded\":{},\"work_limit\":{},\"work_used\":{},\"emission_candidates\":{},\"emission_candidate_nodes\":{},\"emission_stored_nodes\":{},\"emission_node_limit\":{},\"emission_cache_budget\":{}}}",
                 self.source_functions,

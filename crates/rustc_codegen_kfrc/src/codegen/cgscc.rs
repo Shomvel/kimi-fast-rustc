@@ -263,13 +263,13 @@ fn run_with_configuration(
     for component in order {
         for symbol in component.members {
             let source = &graphs.bodies[&symbol];
-            let mut row = report::Row::new(source);
+            let mut row = summary.row(source);
             if component.recursive {
                 row.outcome = "recursive";
                 summary.record(row);
                 continue;
             }
-            if row.source_calls == 0 {
+            if !row.has_source_calls {
                 ready.insert(symbol.clone());
                 graphs.inlining_complete.insert(symbol);
                 row.emission_inline_complete = true;
