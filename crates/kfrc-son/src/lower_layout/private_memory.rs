@@ -104,7 +104,7 @@ fn collect_with_copy(
         }
         for u in uses.of(address) {
             let node = u.user;
-            match (graph.op(node), u.kind) {
+            match (graph.op(node), u.kind()) {
                 (Opcode::PtrOffset, UseKind::Operand(0)) => {
                     let displacement = graph.input(node, 1);
                     if graph.op(displacement) != Opcode::Const {

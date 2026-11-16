@@ -215,7 +215,7 @@ pub(super) fn run(graph: &mut FunctionGraph) -> usize {
         // Verification guarantees tuple results are consumed by projections.
         // Check the complete use shape before bypassing the original effect.
         if uses.of(load).iter().any(|usage| {
-            usage.kind != UseKind::Operand(0)
+            usage.kind() != UseKind::Operand(0)
                 || graph.op(usage.user) != Opcode::Projection
                 || graph.payload(usage.user) > 2
         }) {

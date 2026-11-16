@@ -9,10 +9,37 @@ pub enum UseKind {
     Operand(usize),
     Control,
 }
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub struct Use {
     pub user: NodeId,
-    pub kind: UseKind,
+    // Pooled input counts are u32, so every operand slot is strictly below
+    // u32::MAX. Reserve that otherwise unreachable index for the control edge.
+    // Keeping the tag in this word makes the cached entry eight bytes without
+    // narrowing the usize operand indices exposed to analyses.
+    slot: u32,
+}
+
+const CONTROL: u32 = u32::MAX;
+const _: () = assert!(std::mem::size_of::<Use>() == 8);
+
+impl Use {
+    #[inline]
+    pub fn kind(self) -> UseKind {
+        if self.slot == CONTROL {
+            UseKind::Control
+        } else {
+            UseKind::Operand(self.slot as usize)
+        }
+    }
+}
+
+impl std::fmt::Debug for Use {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Use")
+            .field("user", &self.user)
+            .field("kind", &self.kind())
+            .finish()
+    }
 }
 /// Uses grouped by used node in one flat array (a counting sort of the
 /// graph's edges), in the order of the per-node lists it replaces: users by
@@ -36,7 +63,6 @@ impl Uses {
         // One walk records each edge as (used, user, slot) in the order of the
         // per-node lists (users by id, operand slots, then control); a counting
         // sort by used node then places the uses.
-        const CONTROL: u32 = u32::MAX;
         let mut starts = vec![0u32; graph.len() + 1];
         let mut edges: Vec<[u32; 3]> = Vec::with_capacity(graph.len() * 2);
         for user in graph.ids() {
@@ -57,18 +83,14 @@ impl Uses {
         let mut next = starts.clone();
         let placeholder = Use {
             user: NodeId::NONE,
-            kind: UseKind::Control,
+            slot: CONTROL,
         };
         let mut entries = vec![placeholder; edges.len()];
         for [used, user, slot] in edges {
             let position = &mut next[used as usize];
             entries[*position as usize] = Use {
                 user: NodeId(user),
-                kind: if slot == CONTROL {
-                    UseKind::Control
-                } else {
-                    UseKind::Operand(slot as usize)
-                },
+                slot,
             };
             *position += 1;
         }

@@ -110,7 +110,7 @@ pub(super) fn plan(
             return None;
         };
         let effect_phi = usage.user;
-        if usage.kind != UseKind::Operand(slot)
+        if usage.kind() != UseKind::Operand(slot)
             || graph.op(effect_phi) != Opcode::Phi
             || graph.inputs(effect_phi).len() != 3
             || graph.value_type(effect_phi) != &ValueType::Effect

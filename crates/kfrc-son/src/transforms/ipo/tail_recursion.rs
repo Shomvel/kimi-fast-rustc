@@ -169,7 +169,7 @@ fn candidate(graph: &FunctionGraph, uses: &Uses, call: NodeId) -> Option<Tail> {
     let mut projections = Vec::new();
     for usage in uses.of(call) {
         let projection = usage.user;
-        if usage.kind != UseKind::Operand(0) || graph.op(projection) != Opcode::Projection {
+        if usage.kind() != UseKind::Operand(0) || graph.op(projection) != Opcode::Projection {
             return None;
         }
         projections.push(projection);
@@ -180,7 +180,7 @@ fn candidate(graph: &FunctionGraph, uses: &Uses, call: NodeId) -> Option<Tail> {
                 2 => UseKind::Operand(1),
                 _ => return None,
             };
-            if usage.kind != expected
+            if usage.kind() != expected
                 || graph.op(usage.user) != Opcode::Return
                 || ret.is_some_and(|ret| ret != usage.user)
             {

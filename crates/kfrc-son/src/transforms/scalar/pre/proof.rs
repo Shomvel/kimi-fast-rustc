@@ -152,7 +152,7 @@ impl<'a> Proof<'a> {
                         continue;
                     }
                     if self.graph.op(user) == Opcode::Phi {
-                        if let UseKind::Operand(slot) = usage.kind
+                        if let UseKind::Operand(slot) = usage.kind()
                             && slot > 0
                         {
                             sites.push(self.graph.input(self.graph.input(user, 0), slot - 1));

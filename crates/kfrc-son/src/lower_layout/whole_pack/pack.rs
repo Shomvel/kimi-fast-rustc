@@ -134,7 +134,7 @@ pub(super) fn plan(
         }
         for usage in uses.of(node) {
             fuel.take(1)?;
-            if usage.kind == UseKind::Control || !owned.contains(&usage.user) {
+            if usage.kind() == UseKind::Control || !owned.contains(&usage.user) {
                 return None;
             }
         }

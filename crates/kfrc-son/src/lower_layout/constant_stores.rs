@@ -40,8 +40,8 @@ pub(super) fn run(graph: &mut FunctionGraph) -> usize {
                 break;
             };
             let next = control_user.user;
-            if control_user.kind != UseKind::Control
-                || effect_user.kind != UseKind::Operand(0)
+            if control_user.kind() != UseKind::Control
+                || effect_user.kind() != UseKind::Operand(0)
                 || effect_user.user != next
                 || graph.is_dead(next)
                 || graph.op(next) != Opcode::Store
@@ -131,7 +131,7 @@ fn projections(graph: &FunctionGraph, uses: &Uses, store: NodeId) -> Option<[Nod
     }
     for usage in uses.of(store) {
         let node = usage.user;
-        if usage.kind != UseKind::Operand(0)
+        if usage.kind() != UseKind::Operand(0)
             || graph.op(node) != Opcode::Projection
             || graph.is_dead(node)
             || graph.payload(node) > 1

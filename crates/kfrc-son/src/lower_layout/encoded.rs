@@ -41,7 +41,7 @@ pub(super) fn encoded_demands(graph: &FunctionGraph) -> HashSet<NodeId> {
         let consumers = uses.of(node);
         !consumers.is_empty()
             && consumers.iter().all(|use_| {
-                if use_.kind != UseKind::Operand(0) {
+                if use_.kind() != UseKind::Operand(0) {
                     return false;
                 }
                 match graph.op(use_.user) {

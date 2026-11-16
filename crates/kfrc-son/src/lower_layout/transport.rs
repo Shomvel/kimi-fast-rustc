@@ -31,7 +31,7 @@ pub(super) fn select(graph: &FunctionGraph) -> HashSet<NodeId> {
             !uses.of(node).is_empty()
                 && uses.of(node).iter().all(|use_| {
                     matches!(
-                        (graph.op(use_.user), use_.kind),
+                        (graph.op(use_.user), use_.kind()),
                         (Opcode::Return, UseKind::Operand(1))
                             | (Opcode::StoreValue, UseKind::Operand(2))
                             | (Opcode::Call, UseKind::Operand(1..))

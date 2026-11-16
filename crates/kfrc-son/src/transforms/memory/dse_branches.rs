@@ -59,7 +59,7 @@ pub(super) fn complete_overwrite(
         let [successor] = uses.of(control) else {
             return None;
         };
-        if successor.kind != UseKind::Control {
+        if successor.kind() != UseKind::Control {
             return None;
         }
         let next = successor.user;
@@ -125,7 +125,7 @@ pub(super) fn complete_overwrite(
                     return None;
                 };
                 let region = usage.user;
-                if usage.kind != UseKind::Operand(0)
+                if usage.kind() != UseKind::Operand(0)
                     || graph.op(region) != Opcode::Region
                     || graph.inputs(region) != [next]
                 {
@@ -146,7 +146,7 @@ pub(super) fn complete_overwrite(
         }
         for usage in uses.of(effect) {
             if !charge(fuel, stats)
-                || usage.kind != UseKind::Operand(0)
+                || usage.kind() != UseKind::Operand(0)
                 || !covered.contains(&(effect, usage.user))
             {
                 return None;
@@ -237,7 +237,7 @@ fn projection(
     ty: &ValueType,
 ) -> Option<NodeId> {
     let mut projections = uses.of(source).iter().filter(|usage| {
-        usage.kind == UseKind::Operand(0)
+        usage.kind() == UseKind::Operand(0)
             && graph.op(usage.user) == Opcode::Projection
             && graph.payload(usage.user) == index
             && graph.value_type(usage.user) == ty

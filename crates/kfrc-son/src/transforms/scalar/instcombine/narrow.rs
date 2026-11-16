@@ -138,7 +138,7 @@ pub(super) fn combine(graph: &mut FunctionGraph, node: NodeId, uses: &Uses) -> O
     let [usage] = uses.of(binop) else {
         return None;
     };
-    if usage.user != node || usage.kind != UseKind::Operand(0) {
+    if usage.user != node || usage.kind() != UseKind::Operand(0) {
         return None;
     }
     let left = materialize(graph, left, narrow);

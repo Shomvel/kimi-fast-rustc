@@ -188,7 +188,7 @@ impl Arm {
                 return None;
             }
             let [usage] = uses.of(jump) else { return None };
-            if usage.user != target || !matches!(usage.kind, UseKind::Operand(_)) {
+            if usage.user != target || !matches!(usage.kind(), UseKind::Operand(_)) {
                 return None;
             }
             controls.push(jump);
@@ -199,7 +199,7 @@ impl Arm {
             let [usage] = uses.of(source) else {
                 return None;
             };
-            if usage.user != jump || usage.kind != UseKind::Control {
+            if usage.user != jump || usage.kind() != UseKind::Control {
                 return None;
             }
             if graph.op(source) == Opcode::Projection {

@@ -176,7 +176,7 @@ impl TransparentSpine {
                 return None;
             };
             let region = usage.user;
-            if usage.kind != UseKind::Operand(0)
+            if usage.kind() != UseKind::Operand(0)
                 || graph.op(region) != Opcode::Region
                 || graph.inputs(region) != [exit]
             {
@@ -221,7 +221,7 @@ fn region_exit(
     let mut phis = Vec::new();
     let mut exit = None;
     for usage in uses.of(region) {
-        match usage.kind {
+        match usage.kind() {
             UseKind::Operand(0) if graph.op(usage.user) == Opcode::Phi => {
                 if graph.inputs(usage.user).len() != count + 1 {
                     return None;
@@ -296,7 +296,7 @@ impl Plan {
         for usage in uses.of(branch) {
             let node = usage.user;
             let side = graph.payload(node) as usize;
-            if usage.kind != UseKind::Operand(0)
+            if usage.kind() != UseKind::Operand(0)
                 || graph.op(node) != Opcode::Projection
                 || graph.value_type(node) != &ValueType::Control
                 || side >= sides
@@ -342,7 +342,8 @@ impl Plan {
         for (side, &leaf) in leaves.iter().enumerate() {
             for usage in uses.of(leaf) {
                 let witness = usage.user;
-                if graph.op(witness) != Opcode::VariantWitness || usage.kind != UseKind::Operand(1)
+                if graph.op(witness) != Opcode::VariantWitness
+                    || usage.kind() != UseKind::Operand(1)
                 {
                     continue;
                 }
@@ -392,7 +393,7 @@ impl Plan {
         }
         for &witness in &witnesses {
             if uses.of(witness).iter().any(|usage| {
-                usage.kind != UseKind::Operand(1)
+                usage.kind() != UseKind::Operand(1)
                     || graph.op(usage.user) != Opcode::VariantField
                     || !dependent.contains(&usage.user)
             }) {
@@ -436,7 +437,7 @@ impl Plan {
                 {
                     continue;
                 }
-                let UseKind::Operand(slot) = usage.kind else {
+                let UseKind::Operand(slot) = usage.kind() else {
                     return None;
                 };
                 let control = if graph.op(usage.user) == Opcode::Phi {

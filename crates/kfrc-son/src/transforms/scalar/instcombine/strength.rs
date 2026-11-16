@@ -27,14 +27,14 @@ fn one_use(uses: &Uses, node: NodeId, user: NodeId, slot: usize) -> bool {
     if !uses.contains(node) {
         return false;
     }
-    matches!(uses.of(node), [usage] if usage.user == user && usage.kind == UseKind::Operand(slot))
+    matches!(uses.of(node), [usage] if usage.user == user && usage.kind() == UseKind::Operand(slot))
 }
 
 fn current_use(graph: &FunctionGraph, value: NodeId, usage: &crate::analysis::uses::Use) -> bool {
     if graph.is_dead(usage.user) {
         return false;
     }
-    match usage.kind {
+    match usage.kind() {
         UseKind::Operand(slot) => graph
             .inputs(usage.user)
             .get(slot)
@@ -105,7 +105,7 @@ fn shares_checked_product(
                 return true;
             }
             let overflow = usage.user;
-            if !matches!(usage.kind, UseKind::Operand(0 | 1))
+            if !matches!(usage.kind(), UseKind::Operand(0 | 1))
                 || !current_use(graph, value, usage)
                 || graph.op(overflow) != Opcode::MulOverflow
                 || graph.payload(overflow) != 0

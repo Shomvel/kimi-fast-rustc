@@ -90,7 +90,7 @@ fn affected_branches(
         }
         for usage in uses.of(node) {
             stats.control_changed_use_edges += 1;
-            if !matches!(usage.kind, UseKind::Operand(_)) {
+            if !matches!(usage.kind(), UseKind::Operand(_)) {
                 continue;
             }
             let user = usage.user;

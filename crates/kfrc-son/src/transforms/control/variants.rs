@@ -274,7 +274,7 @@ fn execution_uses(
         }
         for usage in uses.of(node) {
             *visits += 1;
-            match usage.kind {
+            match usage.kind() {
                 UseKind::Control => return None,
                 UseKind::Operand(slot) if graph.op(usage.user) == Opcode::Phi => {
                     if slot == 0 {

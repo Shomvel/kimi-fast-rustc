@@ -176,7 +176,7 @@ fn projections(graph: &FunctionGraph, uses: &Uses, branch: NodeId) -> Option<[No
     }
     for usage in uses.of(branch) {
         let node = usage.user;
-        if usage.kind != UseKind::Operand(0)
+        if usage.kind() != UseKind::Operand(0)
             || graph.op(node) != Opcode::Projection
             || graph.value_type(node) != &ValueType::Control
             || graph.payload(node) > 1
@@ -193,7 +193,7 @@ fn control_user(graph: &FunctionGraph, uses: &Uses, control: NodeId) -> Option<N
     let [usage] = uses.of(control) else {
         return None;
     };
-    (usage.kind == UseKind::Control && graph.control(usage.user) == control).then_some(usage.user)
+    (usage.kind() == UseKind::Control && graph.control(usage.user) == control).then_some(usage.user)
 }
 
 fn jump_target(graph: &FunctionGraph, uses: &Uses, control: NodeId) -> Option<(NodeId, usize)> {
@@ -202,7 +202,7 @@ fn jump_target(graph: &FunctionGraph, uses: &Uses, control: NodeId) -> Option<(N
         return None;
     }
     let [usage] = uses.of(jump) else { return None };
-    let UseKind::Operand(slot) = usage.kind else {
+    let UseKind::Operand(slot) = usage.kind() else {
         return None;
     };
     (graph.op(usage.user) == Opcode::Region).then_some((usage.user, slot))
@@ -242,11 +242,11 @@ fn same_merge_values(
     b: usize,
 ) -> bool {
     uses.of(region).iter().all(|usage| {
-        if usage.kind == UseKind::Control {
+        if usage.kind() == UseKind::Control {
             return true;
         }
         let phi = usage.user;
-        usage.kind == UseKind::Operand(0)
+        usage.kind() == UseKind::Operand(0)
             && graph.op(phi) == Opcode::Phi
             && graph.inputs(phi).len() == graph.inputs(region).len() + 1
             && graph.resolve(graph.input(phi, a + 1)) == graph.resolve(graph.input(phi, b + 1))

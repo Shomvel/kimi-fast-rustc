@@ -79,7 +79,7 @@ pub fn run(graph: &mut FunctionGraph) -> ForwardStats {
         // Do not partially rewrite an unexpected tuple consumer.
         let consumers = uses.of(load);
         if consumers.iter().any(|usage| {
-            usage.kind != UseKind::Operand(0)
+            usage.kind() != UseKind::Operand(0)
                 || graph.op(usage.user) != Opcode::Projection
                 || graph.payload(usage.user) > 2
         }) {
@@ -188,7 +188,7 @@ fn available_snapshot(
             .of(access)
             .iter()
             .find(|usage| {
-                usage.kind == UseKind::Operand(0)
+                usage.kind() == UseKind::Operand(0)
                     && graph.op(usage.user) == Opcode::Projection
                     && graph.payload(usage.user) == 2
             })?

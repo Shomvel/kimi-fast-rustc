@@ -25,7 +25,7 @@ pub(crate) fn run(graph: &mut FunctionGraph) -> usize {
             .iter()
             .filter_map(|usage| {
                 let node = usage.user;
-                (usage.kind == UseKind::Operand(0)
+                (usage.kind() == UseKind::Operand(0)
                     && graph.op(node) == Opcode::Projection
                     && graph.payload(node) == 0)
                     .then_some(node)
@@ -35,7 +35,7 @@ pub(crate) fn run(graph: &mut FunctionGraph) -> usize {
             && controls.iter().all(|&node| {
                 !uses.of(node).is_empty()
                     && uses.of(node).iter().all(|usage| {
-                        usage.kind == UseKind::Control
+                        usage.kind() == UseKind::Control
                             && graph.op(usage.user) == Opcode::Unreachable
                     })
             })

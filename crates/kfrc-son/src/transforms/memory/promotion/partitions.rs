@@ -242,7 +242,7 @@ impl Partitions {
                             }
                             let maximum = u32::from(graph.op(node) == Opcode::LoadValue) + 1;
                             if uses.of(node).iter().any(|usage| {
-                                usage.kind != UseKind::Operand(0)
+                                usage.kind() != UseKind::Operand(0)
                                     || graph.op(usage.user) != Opcode::Projection
                                     || graph.payload(usage.user) > maximum
                             }) {

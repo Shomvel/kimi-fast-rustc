@@ -92,7 +92,7 @@ fn descriptor(graph: &FunctionGraph, node: NodeId, uses: &Uses) -> Option<Copy> 
         || results[..2] != [ValueType::Control, ValueType::Effect]
         || results[2] != *graph.value_type(destination)
         || uses.of(node).iter().any(|u| {
-            u.kind != UseKind::Operand(0)
+            u.kind() != UseKind::Operand(0)
                 || graph.op(u.user) != Opcode::Projection
                 || graph.payload(u.user) > 2
         })

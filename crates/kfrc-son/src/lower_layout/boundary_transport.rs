@@ -87,11 +87,11 @@ fn constructor_transports(
     !uses.of(constructor).is_empty()
         && uses.of(constructor).iter().all(|use_| {
             matches!(
-                (graph.op(use_.user), use_.kind),
+                (graph.op(use_.user), use_.kind()),
                 (Opcode::Return, UseKind::Operand(1))
                     | (Opcode::StoreValue, UseKind::Operand(2))
                     | (Opcode::Call, UseKind::Operand(1..))
-            ) || (matches!(use_.kind, UseKind::Operand(index) if index > 0)
+            ) || (matches!(use_.kind(), UseKind::Operand(index) if index > 0)
                 && owned.contains(&use_.user))
         })
 }
@@ -122,14 +122,14 @@ fn extractor_transports(
             // materialize_before copies the immutable owned snapshot to fresh
             // argument storage, so a callee cannot mutate the saved value.
             if matches!(
-                (graph.op(use_.user), use_.kind),
+                (graph.op(use_.user), use_.kind()),
                 (Opcode::Call, UseKind::Operand(1..))
                     | (Opcode::Return, UseKind::Operand(1))
                     | (Opcode::StoreValue, UseKind::Operand(2))
             ) {
                 return true;
             }
-            let UseKind::Operand(field) = use_.kind else {
+            let UseKind::Operand(field) = use_.kind() else {
                 return false;
             };
             let constructor = use_.user;
@@ -193,7 +193,7 @@ pub(super) fn select(
             continue;
         }
         if uses.of(root).iter().any(|use_| {
-            use_.kind != UseKind::Operand(0)
+            use_.kind() != UseKind::Operand(0)
                 || !matches!(
                     graph.op(use_.user),
                     Opcode::VariantSwitch

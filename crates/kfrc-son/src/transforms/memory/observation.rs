@@ -54,7 +54,7 @@ pub fn run(graph: &mut FunctionGraph) -> ObservationStats {
             continue;
         }
         let Some(continuation) = uses.of(source).iter().find_map(|usage| {
-            (usage.kind == UseKind::Operand(0)
+            (usage.kind() == UseKind::Operand(0)
                 && graph.op(usage.user) == Opcode::Projection
                 && graph.payload(usage.user) == 0)
                 .then_some(usage.user)
@@ -66,7 +66,7 @@ pub fn run(graph: &mut FunctionGraph) -> ObservationStats {
         }
         for usage in uses.of(source) {
             if op != Opcode::RequireDefined
-                && usage.kind == UseKind::Operand(0)
+                && usage.kind() == UseKind::Operand(0)
                 && graph.op(usage.user) == Opcode::Projection
                 && graph.payload(usage.user) >= 2
                 && matches!(graph.value_type(usage.user), ValueType::Rust(_))
@@ -92,7 +92,7 @@ pub fn run(graph: &mut FunctionGraph) -> ObservationStats {
         .filter(|&n| graph.op(n) == Opcode::RequireDefined)
     {
         if uses.of(node).iter().any(|usage| {
-            usage.kind != UseKind::Operand(0)
+            usage.kind() != UseKind::Operand(0)
                 || graph.op(usage.user) != Opcode::Projection
                 || graph.payload(usage.user) > 1
         }) {

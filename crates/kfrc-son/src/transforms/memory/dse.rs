@@ -75,7 +75,7 @@ pub fn run(graph: &mut FunctionGraph) -> DseStats {
     for (store, branched, byte_coverage) in dead {
         let consumers = uses.of(store);
         if consumers.iter().any(|usage| {
-            usage.kind != UseKind::Operand(0)
+            usage.kind() != UseKind::Operand(0)
                 || graph.op(usage.user) != Opcode::Projection
                 || graph.payload(usage.user) > 1
         }) {

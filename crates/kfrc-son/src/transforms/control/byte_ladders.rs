@@ -89,7 +89,7 @@ impl Context<'_> {
         let users: Vec<_> = self
             .users(control)?
             .into_iter()
-            .filter(|usage| usage.kind == UseKind::Control)
+            .filter(|usage| usage.kind() == UseKind::Control)
             .map(|usage| usage.user)
             .collect();
         match users.as_slice() {
@@ -103,7 +103,7 @@ impl Context<'_> {
         for usage in self.users(source)? {
             let node = usage.user;
             let slot = self.graph.payload(node) as usize;
-            if usage.kind != UseKind::Operand(0)
+            if usage.kind() != UseKind::Operand(0)
                 || self.graph.op(node) != Opcode::Projection
                 || self.graph.inputs(node).len() != 1
                 || !self.graph.control(node).is_none()

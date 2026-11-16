@@ -28,7 +28,7 @@ pub(super) fn argument_facts(
         .iter()
         .filter_map(|usage| {
             let node = usage.user;
-            (usage.kind == UseKind::Operand(0)
+            (usage.kind() == UseKind::Operand(0)
                 && graph.op(node) == Opcode::Projection
                 && graph.payload(node) as usize == parameter + 2)
                 .then_some(node)
@@ -41,7 +41,7 @@ pub(super) fn argument_facts(
         }
         for usage in uses.of(value) {
             let node = usage.user;
-            let UseKind::Operand(index) = usage.kind else {
+            let UseKind::Operand(index) = usage.kind() else {
                 result.attrs = ArgumentAttrs::UNKNOWN;
                 continue;
             };

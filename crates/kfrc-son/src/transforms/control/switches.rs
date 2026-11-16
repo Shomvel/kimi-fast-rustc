@@ -76,7 +76,7 @@ fn equality(graph: &FunctionGraph, branch: NodeId, uses: &Uses) -> Option<Test> 
     for usage in uses.of(branch) {
         let node = usage.user;
         let slot = graph.payload(node) as usize;
-        if usage.kind != UseKind::Operand(0)
+        if usage.kind() != UseKind::Operand(0)
             || graph.op(node) != Opcode::Projection
             || graph.value_type(node) != &ValueType::Control
             || slot > 1
@@ -113,7 +113,7 @@ fn continuation(
             return None;
         };
         let next = usage.user;
-        if usage.kind != UseKind::Control {
+        if usage.kind() != UseKind::Control {
             return None;
         }
         if graph.op(next) == Opcode::If {
@@ -126,7 +126,7 @@ fn continuation(
             return None;
         };
         let region = usage.user;
-        if usage.kind != UseKind::Operand(0)
+        if usage.kind() != UseKind::Operand(0)
             || graph.op(region) != Opcode::Region
             || graph.inputs(region) != [next]
         {

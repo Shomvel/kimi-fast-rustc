@@ -353,7 +353,7 @@ fn unreachable_switch_edges(graph: &FunctionGraph) -> HashMap<NodeId, NodeId> {
             let source = graph.resolve(graph.input(edge, 0));
             let only_successor = matches!(
                 uses.of(edge),
-                [only] if only.user == unreachable && only.kind == UseKind::Control
+                [only] if only.user == unreachable && only.kind() == UseKind::Control
             );
             (graph.op(source) == Opcode::VariantSwitch && only_successor)
                 .then_some((edge, unreachable))
@@ -384,7 +384,7 @@ fn tag_only_loads(
             graph.oracle.semantic().is_enum(ty)
                 && !consumers.is_empty()
                 && consumers.iter().all(|use_| {
-                    use_.kind == UseKind::Operand(0)
+                    use_.kind() == UseKind::Operand(0)
                         && matches!(
                             graph.op(use_.user),
                             Opcode::VariantOf | Opcode::Discriminant

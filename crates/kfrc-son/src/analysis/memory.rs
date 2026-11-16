@@ -62,7 +62,7 @@ impl MemoryFacts {
                 facts.edge_visits += 1;
                 let user = usage.user;
                 let mut derived = false;
-                let safe = match usage.kind {
+                let safe = match usage.kind() {
                     UseKind::Control => false,
                     UseKind::Operand(index) => {
                         if index == 0 && address_projection(graph, user) {

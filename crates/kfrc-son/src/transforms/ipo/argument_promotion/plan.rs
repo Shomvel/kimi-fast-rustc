@@ -131,7 +131,7 @@ fn argument(
                 return None;
             }
             let user = usage.user;
-            match (graph.op(user), usage.kind) {
+            match (graph.op(user), usage.kind()) {
                 (Opcode::PointerCast, UseKind::Operand(0)) if graph.control(user).is_none() => {
                     let from = graph.rust_type(address)?;
                     let to = graph.rust_type(user)?;
@@ -160,7 +160,7 @@ fn argument(
                         return None;
                     }
                     if uses.of(user).iter().any(|u| {
-                        u.kind != UseKind::Operand(0) || graph.op(u.user) != Opcode::Projection
+                        u.kind() != UseKind::Operand(0) || graph.op(u.user) != Opcode::Projection
                     }) {
                         return None;
                     }

@@ -284,7 +284,7 @@ fn collect_slot(
         for usage in uses.of(address) {
             stats.edge_visits += 1;
             let user = usage.user;
-            match (graph.op(user), usage.kind) {
+            match (graph.op(user), usage.kind()) {
                 (Opcode::FieldAddr, UseKind::Operand(0)) => {
                     let container = pointee(graph, address)?;
                     if graph.oracle.semantic().is_enum(container)
@@ -372,7 +372,7 @@ fn collect_slot(
                         1
                     };
                     if uses.of(user).iter().any(|usage| {
-                        usage.kind != UseKind::Operand(0)
+                        usage.kind() != UseKind::Operand(0)
                             || graph.op(usage.user) != Opcode::Projection
                             || graph.payload(usage.user) > max_projection
                     }) {

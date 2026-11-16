@@ -72,11 +72,11 @@ fn plan(graph: &FunctionGraph, uses: &Uses, call: NodeId) -> Option<Split> {
         return None;
     };
     let jump = edge.user;
-    if edge.kind != UseKind::Control || graph.op(jump) != Opcode::Jump {
+    if edge.kind() != UseKind::Control || graph.op(jump) != Opcode::Jump {
         return None;
     }
     let [edge] = uses.of(jump) else { return None };
-    let UseKind::Operand(slot) = edge.kind else {
+    let UseKind::Operand(slot) = edge.kind() else {
         return None;
     };
     let region = edge.user;
@@ -84,12 +84,12 @@ fn plan(graph: &FunctionGraph, uses: &Uses, call: NodeId) -> Option<Split> {
         return None;
     }
     let ret = uses.of(region).iter().find_map(|usage| {
-        (usage.kind == UseKind::Control && graph.op(usage.user) == Opcode::Return)
+        (usage.kind() == UseKind::Control && graph.op(usage.user) == Opcode::Return)
             .then_some(usage.user)
     })?;
     for usage in uses.of(region) {
-        if !(usage.kind == UseKind::Control && usage.user == ret
-            || usage.kind == UseKind::Operand(0) && graph.op(usage.user) == Opcode::Phi)
+        if !(usage.kind() == UseKind::Control && usage.user == ret
+            || usage.kind() == UseKind::Operand(0) && graph.op(usage.user) == Opcode::Phi)
         {
             return None;
         }
@@ -107,14 +107,14 @@ fn plan(graph: &FunctionGraph, uses: &Uses, call: NodeId) -> Option<Split> {
     }
     for usage in uses.of(call) {
         let projection = usage.user;
-        if usage.kind != UseKind::Operand(0) || graph.op(projection) != Opcode::Projection {
+        if usage.kind() != UseKind::Operand(0) || graph.op(projection) != Opcode::Projection {
             return None;
         }
         for usage in uses.of(projection) {
             match graph.payload(projection) {
-                0 if usage.kind == UseKind::Control && usage.user == jump => {}
+                0 if usage.kind() == UseKind::Control && usage.user == jump => {}
                 index @ (1 | 2)
-                    if usage.kind == UseKind::Operand(slot + 1)
+                    if usage.kind() == UseKind::Operand(slot + 1)
                         && usage.user == graph.input(ret, index as usize - 1)
                         && graph.op(usage.user) == Opcode::Phi
                         && graph.input(usage.user, 0) == region => {}

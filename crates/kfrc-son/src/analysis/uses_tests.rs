@@ -37,21 +37,20 @@ fn check(graph: &FunctionGraph) -> Uses {
     let mut expected = vec![Vec::new(); graph.len()];
     for user in graph.ids() {
         for (slot, &input) in graph.inputs(user).iter().enumerate() {
-            expected[graph.resolve(input).index()].push(Use {
-                user,
-                kind: UseKind::Operand(slot),
-            });
+            expected[graph.resolve(input).index()].push((user, UseKind::Operand(slot)));
         }
         let control = graph.resolve(graph.control(user));
         if !control.is_none() {
-            expected[control.index()].push(Use {
-                user,
-                kind: UseKind::Control,
-            });
+            expected[control.index()].push((user, UseKind::Control));
         }
     }
     for (node, uses) in expected.iter().enumerate() {
-        assert_eq!(actual.of(NodeId(node as u32)), uses, "node {node}");
+        let entries: Vec<_> = actual
+            .of(NodeId(node as u32))
+            .iter()
+            .map(|usage| (usage.user, usage.kind()))
+            .collect();
+        assert_eq!(&entries, uses, "node {node}");
     }
     assert!(!actual.contains(NodeId::NONE));
     assert!(!actual.contains(NodeId(graph.len() as u32)));
@@ -158,4 +157,18 @@ fn resolving_forwarded_edges_keeps_the_already_resolved_snapshot() {
     graph.resolve_edges();
     assert!(Arc::ptr_eq(&forwarded.index, &check(&graph).index));
     assert_eq!(graph.inputs(sum), &[b, b]);
+}
+
+#[test]
+fn pooled_operand_slots_above_u16_stay_distinct_from_control() {
+    let (mut graph, word) = graph();
+    let value = graph.add_constant(7, word);
+    let inputs = vec![value; 65_538];
+    let user = graph.add_node(Opcode::Aggregate, value, &inputs, 0, ValueType::Rust(word));
+    let uses = check(&graph);
+    let entries = uses.of(value);
+    assert_eq!(entries.len(), inputs.len() + 1);
+    assert_eq!(entries[65_536].user, user);
+    assert_eq!(entries[65_536].kind(), UseKind::Operand(65_536));
+    assert_eq!(entries.last().unwrap().kind(), UseKind::Control);
 }

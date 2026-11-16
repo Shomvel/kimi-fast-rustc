@@ -49,7 +49,7 @@ fn boundary(context: &mut Context<'_>, cells: &[&Cell]) -> Option<HashSet<NodeId
             if owned.contains(&usage.user) {
                 continue;
             }
-            let edge = (node, usage.user, slot(usage.kind));
+            let edge = (node, usage.user, slot(usage.kind()));
             if !allowed.contains(&edge) {
                 return None;
             }
@@ -63,7 +63,7 @@ fn completion(context: &mut Context<'_>, source: NodeId) -> Option<NodeId> {
     let mut result = None;
     for usage in context.users(source)? {
         let node = usage.user;
-        if usage.kind == UseKind::Operand(0)
+        if usage.kind() == UseKind::Operand(0)
             && context.graph.op(node) == Opcode::Projection
             && context.graph.payload(node) == 0
             && context.graph.value_type(node) == &ValueType::Control

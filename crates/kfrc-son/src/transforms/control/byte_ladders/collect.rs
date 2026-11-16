@@ -88,7 +88,7 @@ impl Context<'_> {
             return None;
         };
         let jump = usage.user;
-        if usage.kind != UseKind::Control
+        if usage.kind() != UseKind::Control
             || self.graph.op(jump) != Opcode::Jump
             || !self.graph.inputs(jump).is_empty()
         {
@@ -98,7 +98,7 @@ impl Context<'_> {
         let [usage] = jump_uses.as_slice() else {
             return None;
         };
-        let UseKind::Operand(slot) = usage.kind else {
+        let UseKind::Operand(slot) = usage.kind() else {
             return None;
         };
         let region = usage.user;
@@ -115,11 +115,11 @@ impl Context<'_> {
     fn effect_phi(&mut self, region: NodeId, values: Merges) -> Option<NodeId> {
         let mut phi = None;
         for usage in self.users(region)? {
-            if usage.kind == UseKind::Control {
+            if usage.kind() == UseKind::Control {
                 continue;
             }
             let node = usage.user;
-            if usage.kind != UseKind::Operand(0)
+            if usage.kind() != UseKind::Operand(0)
                 || self.graph.op(node) != Opcode::Phi
                 || !self.graph.control(node).is_none()
                 || self.graph.payload(node) != 0
@@ -157,11 +157,11 @@ impl Context<'_> {
             owned.extend([jump, region]);
             regions.push(region);
             for usage in self.users(region)? {
-                if usage.kind == UseKind::Control {
+                if usage.kind() == UseKind::Control {
                     continue;
                 }
                 let phi = usage.user;
-                if usage.kind != UseKind::Operand(0)
+                if usage.kind() != UseKind::Operand(0)
                     || self.graph.op(phi) != Opcode::Phi
                     || self.graph.payload(phi) != 0
                     || !self.graph.control(phi).is_none()

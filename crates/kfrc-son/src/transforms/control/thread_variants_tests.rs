@@ -813,7 +813,7 @@ struct SpineFixture {
 
 fn forward_uses(graph: &mut FunctionGraph, uses: &[crate::analysis::uses::Use], value: NodeId) {
     for usage in uses {
-        let UseKind::Operand(slot) = usage.kind else {
+        let UseKind::Operand(slot) = usage.kind() else {
             panic!("fixture expected operand uses");
         };
         graph.set_input(usage.user, slot, value);

@@ -103,7 +103,7 @@ fn repeated_use(
             work.charge(1)?;
             let user = usage.user;
             if graph.op(user) == Opcode::Phi {
-                if let UseKind::Operand(slot) = usage.kind
+                if let UseKind::Operand(slot) = usage.kind()
                     && slot != 0
                     && loop_.contains(graph.input(graph.input(user, 0), slot - 1))
                 {

@@ -461,7 +461,7 @@ fn execution_sites(
                 continue;
             }
             if graph.op(user) == Opcode::Phi {
-                if let UseKind::Operand(index) = usage.kind
+                if let UseKind::Operand(index) = usage.kind()
                     && index > 0
                 {
                     sites.push(graph.input(graph.input(user, 0), index - 1));
@@ -530,7 +530,7 @@ pub fn check(
         }
         for usage in uses.of(node) {
             let field = usage.user;
-            if usage.kind != UseKind::Operand(1) || graph.op(field) != Opcode::VariantField {
+            if usage.kind() != UseKind::Operand(1) || graph.op(field) != Opcode::VariantField {
                 return Err((node, "witness used outside a variant field proof"));
             }
             for at in execution_sites(graph, &uses, field, &mut facts.stats) {

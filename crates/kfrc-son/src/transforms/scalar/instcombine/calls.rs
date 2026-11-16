@@ -60,7 +60,7 @@ fn equality_uses(graph: &FunctionGraph, call: NodeId, ty: TyId, uses: &Uses) -> 
     let mut roots = Vec::new();
     for usage in uses.of(call) {
         let user = usage.user;
-        if usage.kind != UseKind::Operand(0)
+        if usage.kind() != UseKind::Operand(0)
             || graph.op(user) != Opcode::Projection
             || graph.inputs(user).len() != 1
             || !graph.control(user).is_none()
@@ -103,7 +103,7 @@ fn equality_uses(graph: &FunctionGraph, call: NodeId, ty: TyId, uses: &Uses) -> 
                 return false;
             }
             let user = usage.user;
-            let UseKind::Operand(slot) = usage.kind else {
+            let UseKind::Operand(slot) = usage.kind() else {
                 return false;
             };
             match graph.op(user) {

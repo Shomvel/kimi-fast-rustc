@@ -12,7 +12,7 @@ pub(super) fn uses(graph: &FunctionGraph, fuel: &mut Fuel) -> Option<Uses> {
 }
 
 pub(super) fn only(uses: &Uses, node: NodeId, user: NodeId, kind: UseKind) -> bool {
-    matches!(uses.of(node), [u] if u.user == user && u.kind == kind)
+    matches!(uses.of(node), [u] if u.user == user && u.kind() == kind)
 }
 
 pub(super) fn projection(
@@ -25,7 +25,7 @@ pub(super) fn projection(
     let mut found = None;
     for usage in uses.of(node) {
         fuel.take(1)?;
-        if usage.kind != UseKind::Operand(0)
+        if usage.kind() != UseKind::Operand(0)
             || graph.op(usage.user) != Opcode::Projection
             || graph.payload(usage.user) != slot
         {
@@ -69,10 +69,10 @@ pub(super) fn forward_join(
             if !is_control_flow(graph, user) {
                 continue;
             }
-            let edge = usage.kind == UseKind::Control
+            let edge = usage.kind() == UseKind::Control
                 || graph.op(user) == Opcode::Region
                 || (graph.op(user) == Opcode::Projection
-                    && usage.kind == UseKind::Operand(0)
+                    && usage.kind() == UseKind::Operand(0)
                     && graph.value_type(user) == &ValueType::Control);
             if edge && !seen[user.index()] {
                 queue.push(user);

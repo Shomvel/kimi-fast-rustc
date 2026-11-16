@@ -1165,7 +1165,7 @@ fn typed(graph: &FunctionGraph) -> Result<(), VerifyError> {
                 for usage in uses.of(node) {
                     let projection = usage.user;
                     let slot = graph.payload(projection) as usize;
-                    if usage.kind != crate::analysis::uses::UseKind::Operand(0)
+                    if usage.kind() != crate::analysis::uses::UseKind::Operand(0)
                         || graph.op(projection) != Opcode::Projection
                         || graph.value_type(projection) != &ValueType::Control
                         || projections.get(slot) != Some(&false)

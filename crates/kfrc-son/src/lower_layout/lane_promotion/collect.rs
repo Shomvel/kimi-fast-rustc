@@ -39,7 +39,7 @@ pub(super) fn slot(
         for usage in uses.of(address) {
             *fuel = fuel.checked_sub(1)?;
             let node = usage.user;
-            match (graph.op(node), usage.kind) {
+            match (graph.op(node), usage.kind()) {
                 (Opcode::PtrOffset, UseKind::Operand(0)) if graph.control(node).is_none() => {
                     let step = graph.input(node, 1);
                     if graph.op(step) != Opcode::Const
@@ -63,7 +63,7 @@ pub(super) fn slot(
                     }
                     let max = if op == Opcode::Load { 2 } else { 1 };
                     if uses.of(node).iter().any(|usage| {
-                        usage.kind != UseKind::Operand(0)
+                        usage.kind() != UseKind::Operand(0)
                             || graph.op(usage.user) != Opcode::Projection
                             || graph.payload(usage.user) > max
                     }) {

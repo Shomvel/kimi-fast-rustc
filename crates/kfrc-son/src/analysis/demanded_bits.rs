@@ -113,7 +113,7 @@ fn query(
             break;
         }
         *remaining -= 1;
-        let from_use = match usage.kind {
+        let from_use = match usage.kind() {
             UseKind::Control => full,
             UseKind::Operand(slot) => {
                 // Probe the transfer before recursing. Opaque uses must not
