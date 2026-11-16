@@ -83,6 +83,9 @@ ABI drivers, original crate tests and generated programs preserve observable
 outputs and object provenance. Formal measurements use the same source, std,
 toolchain and sandbox, following the frozen [metrics](docs/plan/poc/metrics.md).
 Current evidence is in `evidence/poc-semantic-only-20261109/`.
+The [2026-11-16 acceptance record](docs/validation/parallel-semantics-20261116.md)
+documents the Cranelift delivery, parallel scheduling, scalar ABI regressions,
+latest measurements and remaining LLVM gaps.
 
 The root wrapper's explicit LLVM benchmark, tuning and cache administration tools
 remain for baseline experiments. Their results are not semantic-backend results.

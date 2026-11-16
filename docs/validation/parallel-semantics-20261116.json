@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "accepted_commit": "8d482bb",
+  "accepted_tree": "2b5a09228fb59f3f5cc48cde4355c3803b6201b4",
+  "environment": {
+    "target": "x86_64-unknown-linux-gnu",
+    "rustc": "1.94.1",
+    "llvm": "21.1.8",
+    "vcpus": 8,
+    "memory_gib_approx": 16,
+    "comparison": "same-source O3, MIR optimization disabled",
+    "test_threads": 1
+  },
+  "correctness": {
+    "full_gate_commit": "8559b55",
+    "workspace_passed": 1427,
+    "workspace_failed": 0,
+    "workspace_ignored": 1,
+    "son_passed": 928,
+    "cranelift_passed": 21,
+    "shell_passed": 30,
+    "scalar_matrix_arms": 6,
+    "scalar_record_assertions_per_arm": 2333464,
+    "scalar_checksum": "655e976d671ceeed",
+    "strict_wrapper_positive_arms": 4,
+    "strict_wrapper_assertions_per_arm": 256,
+    "strict_wrapper_checksum": "0408102040810202",
+    "library_corpora": 4,
+    "workload_checksums": 13,
+    "drop_cases": 514,
+    "slice_lengths": 257,
+    "zst_length": "usize::MAX",
+    "scc_report_commit": "8d482bb",
+    "scc_tests_passed": 16,
+    "scc_default_driver_identities": 10,
+    "stats_ordered_rows_equal": 1517,
+    "stats_summaries_equal": 4,
+    "complete_stats_stderr_equal": true,
+    "unchanged_full_gate_repeated_for_scc_report": false
+  },
+  "accepted_backends_sha256": {
+    "scalar_abi": "ceb4f370712d695feec91849023a5466a09f466a2aea04e675a60cd1fb53d1f1",
+    "narrow_returns": "21cb7a5770b6689752ad40003e8a23d0df20646ce874c3d1f10b4c707822a6c7",
+    "scc_report": "8cc7fcbd5797358f16a4af6f42f13d28698cdcbddd1fb21cdf6f52ea935056ef"
+  },
+  "final_compile_batch": {
+    "comparison": "SCC report versus narrow-return predecessor",
+    "discarded_warmups": 1,
+    "formal_repeats": 3,
+    "order": "serial interleaved",
+    "object_checks": 80,
+    "strict_perf_audits": 80,
+    "aggregation": "sum of per-crate medians; RSS never summed",
+    "arms": [
+      {"name": "narrow1", "instructions_billions": 9.044628, "wall_ms": 1503.126, "task_clock_ms": 1455.02},
+      {"name": "narrow8", "instructions_billions": 9.073664, "wall_ms": 1280.362, "task_clock_ms": 1652.53},
+      {"name": "report1", "instructions_billions": 9.040058, "wall_ms": 1481.538, "task_clock_ms": 1433.03},
+      {"name": "report8", "instructions_billions": 9.068043, "wall_ms": 1282.630, "task_clock_ms": 1689.47},
+      {"name": "LLVM", "instructions_billions": 7.131171, "wall_ms": 1084.068, "task_clock_ms": 1888.34}
+    ],
+    "candidate_delta_percent": {
+      "instructions_1": -0.0505335,
+      "instructions_8": -0.0619507,
+      "wall_1": -1.43619,
+      "wall_8": 0.177131
+    },
+    "peak_rss_kib": [
+      {"crate": "semver", "narrow1": 163804, "report1": 163984, "narrow8": 176880, "report8": 176896},
+      {"crate": "base64", "narrow1": 154836, "report1": 154972, "narrow8": 159480, "report8": 159368},
+      {"crate": "unicode-segmentation", "narrow1": 151960, "report1": 151664, "narrow8": 156604, "report8": 156000},
+      {"crate": "humantime", "narrow1": 153420, "report1": 153224, "narrow8": 158636, "report8": 158648}
+    ],
+    "stable_wall_speedup_claim": false,
+    "memory_saving_claim": false,
+    "runtime_repeated_for_identical_executables": false
+  },
+  "narrow_return_microbenchmark": {
+    "common_llvm_caller_compilations": 1,
+    "frozen_library_arms": 3,
+    "workloads": 9,
+    "calls_per_workload": 100000000,
+    "preparation_checks": 81,
+    "strict_three_event_audits": 108,
+    "candidate_vs_abi_geomean_delta_percent": {
+      "instructions": 0.000002820,
+      "cycles": 0.0338205,
+      "task_clock": 0.0388377,
+      "wall": -0.0829450
+    },
+    "pooled_with_real_workloads": false,
+    "runtime_speedup_claim": false
+  },
+  "archives": [
+    {"name": "narrow-returns-v1-evidence.tar.gz", "bytes": 167785987, "sha256": "1dad4ac12aea676851cdd36d61d61fdbc4be57e004eb4db97d4abf826a4b9369"},
+    {"name": "narrow-returns-v1-compile-only-evidence.tar.gz", "bytes": 49050, "sha256": "524659bc589c51e03941eb468fb386836979b9840a32fc64b8e7311966b5ad4e"},
+    {"name": "narrow-returns-v1-micro-prepare-evidence.tar.gz", "bytes": 48991, "sha256": "c306c6573da9b4c6280f01160c3bf9e9050fd3a43216b327f565e8f8696e5a04"},
+    {"name": "narrow-returns-v1-micro-evidence.tar.gz", "bytes": 66022, "sha256": "af7dfc28562b88577098ac5085f066391d3a6295bcea6b43493e29174372e428"},
+    {"name": "scc-report-v1-evidence.tar.gz", "bytes": 12898830, "sha256": "ac5bfba8c0b26c73980beb7eedd6a62af64dc70ff26970216c23010f892fef25"},
+    {"name": "scc-report-v1-compile-only-evidence.tar.gz", "bytes": 49086, "sha256": "8166654265a971c6a2e4e08fad1cbdad70a93288d6a8d8b0e1d05ed4ebd1c22e"}
+  ],
+  "archive_availability": "Hash-verified archives retained outside Git; no public download is claimed.",
+  "diagnostics_excluded_from_implementation": ["scc-trace-v1"],
+  "withdrawn_candidates": ["graph-buffer reuse", "Uses cursors", "CGSCC seam cleanup"],
+  "parallel_scc_preparation_implemented": false,
+  "llvm_parity_claim": false
+}
