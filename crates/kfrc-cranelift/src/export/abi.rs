@@ -1,6 +1,7 @@
 //! Calling-convention transport: signatures, parameters, calls and returns.
 //!
-//! The graph records rustc's `PassMode` per argument and result. A scalar
+//! The graph records rustc's `PassMode` and narrow scalar attributes per
+//! argument and result. A scalar
 //! travels as a typed Cranelift value; an aggregate at Layout level is the
 //! address of its storage, read into register lanes on the way out and
 //! written to fresh frame storage on the way in. Cranelift's System V
@@ -11,7 +12,7 @@
 use cranelift_codegen::ir::{self, AbiParam, InstBuilder, Value, types};
 use cranelift_codegen::isa::CallConv;
 use kfrc_body::{
-    CastAbi, CastExtension, CastLane, FunctionAbi, PassMode, TyId, TypeOracle, TypeShape,
+    CastAbi, CastExtension, CastLane, FunctionAbi, PassMode, ScalarAbi, TyId, TypeOracle, TypeShape,
 };
 use kfrc_son::{NodeId, Opcode, ValueType};
 
@@ -41,8 +42,9 @@ fn cast_lanes(cast: CastAbi) -> Result<Vec<CastLane>, LowerError> {
     Ok(lanes)
 }
 
-/// A scalar lane. The caller extends values narrower than 32 bits to the
-/// whole register, so a callee compiled by any backend may read either width.
+/// Historical type-inferred transport for synthetic Direct/Pair declarations.
+/// Producer-attributed lanes instead use their own source width/extension and
+/// the separate argument/result policies below.
 fn scalar_lane(scalar: Scalar) -> Option<AbiParam> {
     let lane = AbiParam::new(scalar.ty()?);
     Some(if scalar.bits >= 32 {
@@ -52,6 +54,32 @@ fn scalar_lane(scalar: Scalar) -> Option<AbiParam> {
     } else {
         lane.uext()
     })
+}
+
+#[derive(Clone, Copy)]
+enum Boundary {
+    Argument,
+    Result,
+}
+
+/// LLVM's x86-64 System V integer argument locations promote to i32. Narrow
+/// Linux results instead occupy AL/AX (an i1 bool is zero-extended to AL).
+/// With no extension attribute the extra argument bits are unspecified, so
+/// a narrow Cranelift lane suffices; only the promised bits are transported.
+fn physical_scalar(scalar: ScalarAbi, boundary: Boundary) -> Result<ir::Type, LowerError> {
+    if !scalar.is_supported() {
+        return Err(LowerError::Malformed(format!(
+            "unsupported scalar ABI {scalar:?}"
+        )));
+    }
+    let bits = if matches!(boundary, Boundary::Argument) && scalar.extension != CastExtension::None
+    {
+        scalar.storage_bits().max(32)
+    } else {
+        scalar.storage_bits()
+    };
+    super::integer_type(bits)
+        .ok_or_else(|| LowerError::Malformed("unsupported physical scalar width".to_owned()))
 }
 
 fn tuple_element(ty: &ValueType, index: usize) -> Option<TyId> {
@@ -136,16 +164,42 @@ impl Exporter<'_, '_> {
             })
     }
 
+    fn check_scalar_storage(&self, scalar: ScalarAbi, ty: TyId) -> Result<(), LowerError> {
+        let bits = match self.scalar_of_type(ty) {
+            Ok(value) => u64::from(value.bits),
+            Err(_) => self.layout_of(ty)?.size * 8,
+        };
+        if bits != u64::from(scalar.storage_bits()) {
+            return Err(LowerError::Malformed(format!(
+                "scalar ABI {scalar:?} differs from {bits}-bit storage"
+            )));
+        }
+        Ok(())
+    }
+
     fn push_lanes(
         &self,
         lanes: &mut Vec<AbiParam>,
         mode: &PassMode,
         ty: Option<TyId>,
+        boundary: Boundary,
     ) -> Result<(), LowerError> {
         let known =
             || ty.ok_or_else(|| LowerError::Malformed("ABI value has no Rust type".to_owned()));
         match mode {
             PassMode::Ignore => {}
+            PassMode::DirectScalar(scalar) => {
+                if let Some(ty) = ty {
+                    self.check_scalar_storage(*scalar, ty)?;
+                }
+                lanes.push(AbiParam::new(physical_scalar(*scalar, boundary)?));
+            }
+            PassMode::ScalarPair(scalars) => {
+                for (scalar, field) in scalars.iter().zip(self.pair_fields(known()?)?) {
+                    self.check_scalar_storage(*scalar, field.ty)?;
+                    lanes.push(AbiParam::new(physical_scalar(*scalar, boundary)?));
+                }
+            }
             PassMode::Direct => {
                 let scalar = match ty {
                     // An unread parameter still occupies its register.
@@ -201,7 +255,12 @@ impl Exporter<'_, '_> {
             signature.params.push(AbiParam::new(types::I64));
             signature.returns.push(AbiParam::new(types::I64));
         } else {
-            self.push_lanes(&mut signature.returns, &abi.ret, result_type)?;
+            self.push_lanes(
+                &mut signature.returns,
+                &abi.ret,
+                result_type,
+                Boundary::Result,
+            )?;
             if signature.returns.len() > 2 {
                 return Err(LowerError::Unsupported(
                     "return value in more than two registers".to_owned(),
@@ -214,7 +273,7 @@ impl Exporter<'_, '_> {
             ));
         }
         for (mode, ty) in abi.args.iter().zip(argument_types) {
-            self.push_lanes(&mut signature.params, mode, *ty)?;
+            self.push_lanes(&mut signature.params, mode, *ty, Boundary::Argument)?;
         }
         Ok(signature)
     }
@@ -405,6 +464,29 @@ impl Exporter<'_, '_> {
         };
         match mode {
             PassMode::Ignore => {}
+            PassMode::DirectScalar(scalar) => {
+                let value = next()?;
+                if let (Some(result), Some(ty)) = (result, ty) {
+                    let value = self.receive_scalar(value, *scalar)?;
+                    if self.scalar_of_type(ty).is_ok() {
+                        self.define(result, value);
+                    } else {
+                        self.arrive(result, ty, &[(0, value)])?;
+                    }
+                }
+            }
+            PassMode::ScalarPair(scalars) => {
+                let first = self.receive_scalar(next()?, scalars[0])?;
+                let second = self.receive_scalar(next()?, scalars[1])?;
+                if let (Some(result), Some(ty)) = (result, ty) {
+                    let fields = self.pair_fields(ty)?;
+                    self.arrive(
+                        result,
+                        ty,
+                        &[(fields[0].offset, first), (fields[1].offset, second)],
+                    )?;
+                }
+            }
             PassMode::Direct => {
                 let scalar = match ty {
                     None => Some(Scalar::ADDRESS),
@@ -481,6 +563,7 @@ impl Exporter<'_, '_> {
         lanes: &mut Vec<Value>,
         node: NodeId,
         mode: &PassMode,
+        boundary: Boundary,
     ) -> Result<(), LowerError> {
         let ty = self
             .graph
@@ -488,6 +571,26 @@ impl Exporter<'_, '_> {
             .ok_or_else(|| LowerError::Malformed("ABI value has no Rust type".to_owned()))?;
         match mode {
             PassMode::Ignore => {}
+            PassMode::DirectScalar(scalar) => {
+                let lane = super::integer_type(scalar.storage_bits()).ok_or_else(|| {
+                    LowerError::Malformed("invalid scalar storage width".to_owned())
+                })?;
+                let value = if self.scalar_of_type(ty).is_ok() {
+                    self.operand(node, scalar.storage_bits())?
+                } else {
+                    self.read_place(node, 0, lane)?
+                };
+                lanes.push(self.pass_scalar(value, *scalar, boundary)?);
+            }
+            PassMode::ScalarPair(scalars) => {
+                for (field, scalar) in self.pair_fields(ty)?.into_iter().zip(scalars) {
+                    let lane = super::integer_type(scalar.storage_bits()).ok_or_else(|| {
+                        LowerError::Malformed("invalid pair scalar storage width".to_owned())
+                    })?;
+                    let value = self.read_place(node, field.offset, lane)?;
+                    lanes.push(self.pass_scalar(value, *scalar, boundary)?);
+                }
+            }
             PassMode::Direct => match self.scalar_of_type(ty) {
                 Ok(scalar) => {
                     if scalar.bits != 0 {
@@ -532,6 +635,27 @@ impl Exporter<'_, '_> {
             }
         }
         Ok(())
+    }
+
+    fn receive_scalar(&mut self, value: Value, scalar: ScalarAbi) -> Result<Value, LowerError> {
+        // Validate the source width without treating unspecified high bits as
+        // Rust value bits. This also gives aggregate fields exact byte stores.
+        physical_scalar(scalar, Boundary::Result)?;
+        Ok(self.coerce(value, Scalar::ADDRESS, scalar.storage_bits()))
+    }
+
+    fn pass_scalar(
+        &mut self,
+        value: Value,
+        scalar: ScalarAbi,
+        boundary: Boundary,
+    ) -> Result<Value, LowerError> {
+        let target = physical_scalar(scalar, boundary)?;
+        let from = Scalar {
+            bits: scalar.storage_bits(),
+            signed: scalar.extension == CastExtension::Sign,
+        };
+        Ok(self.coerce(value, from, target.bits() as u8))
     }
 
     pub(super) fn receive_parameters(&mut self) -> Result<(), LowerError> {
@@ -595,7 +719,7 @@ impl Exporter<'_, '_> {
             None
         };
         for (argument, mode) in arguments.iter().zip(&abi.args) {
-            self.pass(&mut lanes, *argument, mode)?;
+            self.pass(&mut lanes, *argument, mode, Boundary::Argument)?;
         }
         let call = if graph.op(node) == Opcode::Call {
             let symbol = &graph.callees[graph.payload(node) as usize].symbol;
@@ -675,7 +799,7 @@ impl Exporter<'_, '_> {
                 let _ = ty;
                 lanes.push(destination);
             } else {
-                self.pass(&mut lanes, value, &graph.abi.ret)?;
+                self.pass(&mut lanes, value, &graph.abi.ret, Boundary::Result)?;
             }
         } else if graph.abi.ret == PassMode::Indirect {
             lanes.push(self.return_pointer.ok_or_else(|| {

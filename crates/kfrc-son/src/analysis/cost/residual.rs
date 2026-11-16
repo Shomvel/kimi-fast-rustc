@@ -106,8 +106,11 @@ fn lanes(graph: &FunctionGraph, ty: &ValueType) -> Option<u64> {
 fn registers(mode: PassMode) -> Option<u64> {
     match mode {
         PassMode::Ignore => Some(0),
-        PassMode::Direct | PassMode::Vector { .. } | PassMode::Indirect => Some(1),
-        PassMode::Pair => Some(2),
+        PassMode::Direct
+        | PassMode::DirectScalar(_)
+        | PassMode::Vector { .. }
+        | PassMode::Indirect => Some(1),
+        PassMode::Pair | PassMode::ScalarPair(_) => Some(2),
         PassMode::Cast(cast) => {
             Some(cast.lanes.iter().flatten().count() as u64 + u64::from(cast.pad_i32))
         }

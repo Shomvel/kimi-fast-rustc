@@ -174,7 +174,7 @@ fn transfer_lanes(
         return None;
     }
     match mode {
-        PassMode::Pair => {
+        PassMode::Pair | PassMode::ScalarPair(_) => {
             let fields = graph.oracle.abi_pairs.get(&ty)?;
             fields
                 .iter()
@@ -184,7 +184,7 @@ fn transfer_lanes(
                 })
                 .collect()
         }
-        PassMode::Direct => {
+        PassMode::Direct | PassMode::DirectScalar(_) => {
             let size = graph.oracle.size_align(ty)?.size;
             matches!(size, 1 | 2 | 4 | 8).then(|| vec![(0, size as u8)])
         }
@@ -376,7 +376,9 @@ impl Analysis<'_, '_, '_> {
                                     ("memcmp" | "bcmp", _) => "comparison routine",
                                     ("memset", _) => "fill routine",
                                     (_, PassMode::Indirect) => "argument passed by address",
-                                    (_, PassMode::Direct) => "pointer argument",
+                                    (_, PassMode::Direct | PassMode::DirectScalar(_)) => {
+                                        "pointer argument"
+                                    }
                                     _ => "argument lanes",
                                 }
                             })?;
@@ -388,7 +390,7 @@ impl Analysis<'_, '_, '_> {
                         let transfer =
                             transfer_lanes(self.exporter, mode, address).ok_or(match mode {
                                 PassMode::Indirect => "argument passed by address",
-                                PassMode::Direct => "pointer argument",
+                                PassMode::Direct | PassMode::DirectScalar(_) => "pointer argument",
                                 _ => "argument lanes",
                             })?;
                         lanes.extend(transfer.into_iter().map(|(at, bytes)| (offset + at, bytes)));

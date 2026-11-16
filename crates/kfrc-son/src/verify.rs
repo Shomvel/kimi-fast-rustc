@@ -253,6 +253,16 @@ fn structural(graph: &FunctionGraph) -> Result<(), VerifyError> {
                 detail: "unsupported SIMD ABI width".to_owned(),
             });
         }
+        if mode
+            .scalar_abis()
+            .iter()
+            .any(|scalar| !scalar.is_supported())
+        {
+            return Err(VerifyError::BadPayload {
+                node: graph.start,
+                detail: "unsupported scalar ABI width or extension".to_owned(),
+            });
+        }
     }
     let count = graph.len();
     for node in graph.ids() {

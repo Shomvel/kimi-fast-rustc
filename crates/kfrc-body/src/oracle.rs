@@ -14,10 +14,17 @@ use crate::{ScalarValidRange, ScalarValidity};
 pub enum PassMode {
     /// Zero-sized: not passed at all.
     Ignore,
-    /// One integer register.
+    /// One type-inferred integer lane. Synthetic declarations retain the
+    /// historical signedness-based extension; producers with narrow scalar
+    /// ABI information use `DirectScalar` instead.
     Direct,
-    /// Two registers (`&[T]`, `(i64, bool)`).
+    /// One producer-specified integer scalar. Its ABI width can differ from
+    /// the Rust storage width (in particular, a bool is an i1 in the ABI).
+    DirectScalar(ScalarAbi),
+    /// Two type-inferred lanes (`&[T]`, synthetic `(i64, bool)` declarations).
     Pair,
+    /// Two producer-specified scalars, in the oracle's ScalarPair field order.
+    ScalarPair([ScalarAbi; 2]),
     /// One SIMD register selected by the producer's actual function ABI.
     Vector { bytes: u8 },
     /// Bit-cast into at most two eightbytes.
@@ -50,6 +57,49 @@ pub enum CastExtension {
     None,
     Zero,
     Sign,
+}
+
+/// Source integer width and extension obligation at a call boundary. These
+/// are ABI facts, not Rust signedness or a promise about a whole machine word.
+/// The supported x86-64 System V target extends narrow arguments and results
+/// to different extents; each machine backend selects that transport.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub struct ScalarAbi {
+    pub bits: u8,
+    pub extension: CastExtension,
+}
+
+impl ScalarAbi {
+    pub fn is_supported(self) -> bool {
+        matches!(self.bits, 1 | 8 | 16 | 32 | 64)
+            && (self.bits != 1 || self.extension == CastExtension::Zero)
+    }
+
+    /// Integer storage still occupies complete bytes, independently of the
+    /// source ABI type. A Boolean's one defined bit has zero extension.
+    pub fn storage_bits(self) -> u8 {
+        self.bits.max(8)
+    }
+}
+
+impl PassMode {
+    /// Transport shape only. ABI equality must still compare the full mode,
+    /// including producer attributes.
+    pub fn is_direct(self) -> bool {
+        matches!(self, Self::Direct | Self::DirectScalar(_))
+    }
+
+    pub fn is_pair(self) -> bool {
+        matches!(self, Self::Pair | Self::ScalarPair(_))
+    }
+
+    pub fn scalar_abis(&self) -> &[ScalarAbi] {
+        match self {
+            Self::DirectScalar(scalar) => std::slice::from_ref(scalar),
+            Self::ScalarPair(scalars) => scalars,
+            _ => &[],
+        }
+    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]

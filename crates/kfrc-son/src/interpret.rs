@@ -270,7 +270,9 @@ impl<'a> Interpreter<'a> {
             let Some(parameter) = graph.find_projection(graph.start, 2 + index as u32) else {
                 argument_index += match mode {
                     kfrc_body::PassMode::Ignore => 0,
-                    kfrc_body::PassMode::Pair | kfrc_body::PassMode::Vector { bytes: 16 } => 2,
+                    kfrc_body::PassMode::Pair
+                    | kfrc_body::PassMode::ScalarPair(_)
+                    | kfrc_body::PassMode::Vector { bytes: 16 } => 2,
                     kfrc_body::PassMode::Cast(abi) => cast_argument_count(*abi),
                     _ => 1,
                 };
@@ -337,7 +339,7 @@ impl<'a> Interpreter<'a> {
                     }
                 }
                 frame.fixed_values.insert(parameter, Scalar::new(address));
-            } else if *mode == kfrc_body::PassMode::Pair {
+            } else if mode.is_pair() {
                 let ty = graph.rust_type(parameter).ok_or_else(|| {
                     InterpretError::Malformed("pair parameter lacks type".to_owned())
                 })?;
@@ -370,7 +372,7 @@ impl<'a> Interpreter<'a> {
                     }
                 }
                 frame.fixed_values.insert(parameter, Scalar::new(address));
-            } else if *mode == kfrc_body::PassMode::Direct
+            } else if mode.is_direct()
                 && graph
                     .rust_type(parameter)
                     .is_some_and(|ty| value_is_address(graph, ty))
@@ -454,7 +456,10 @@ impl<'a> Interpreter<'a> {
                     })?;
                     let bits = u128::from(self.normalize(ty, discriminant.bits));
                     let cases = &graph.integer_switches[graph.payload(next) as usize];
-                    let index = cases.iter().position(|case| *case == bits).unwrap_or(cases.len());
+                    let index = cases
+                        .iter()
+                        .position(|case| *case == bits)
+                        .unwrap_or(cases.len());
                     control = graph.find_projection(next, index as u32).ok_or_else(|| {
                         InterpretError::Malformed(format!("{next} lacks projection {index}"))
                     })?;
@@ -539,7 +544,7 @@ impl<'a> Interpreter<'a> {
                         }
                         return Ok(Outcome::ReturnPair(first.bits, second.bits));
                     }
-                    if graph.abi.ret == kfrc_body::PassMode::Pair {
+                    if graph.abi.ret.is_pair() {
                         let ty = graph.rust_type(inputs[1]).ok_or_else(|| {
                             InterpretError::Malformed("pair return lacks type".to_owned())
                         })?;
@@ -565,7 +570,7 @@ impl<'a> Interpreter<'a> {
                         }
                         return Ok(Outcome::ReturnPair(result[0], result[1]));
                     }
-                    if graph.abi.ret == kfrc_body::PassMode::Direct {
+                    if graph.abi.ret.is_direct() {
                         let ty = graph.rust_type(inputs[1]).ok_or_else(|| {
                             InterpretError::Malformed("return lacks type".to_owned())
                         })?;
@@ -783,7 +788,7 @@ impl<'a> Interpreter<'a> {
                                 }
                                 arguments.push(word.bits);
                             }
-                        } else if *mode == kfrc_body::PassMode::Pair {
+                        } else if mode.is_pair() {
                             let ty = graph.rust_type(*input).ok_or_else(|| {
                                 InterpretError::Malformed(
                                     "pair call argument lacks type".to_owned(),
@@ -810,7 +815,7 @@ impl<'a> Interpreter<'a> {
                                 }
                                 arguments.push(self.normalize(lane.ty, scalar.bits));
                             }
-                        } else if *mode == kfrc_body::PassMode::Direct
+                        } else if mode.is_direct()
                             && graph
                                 .rust_type(*input)
                                 .is_some_and(|ty| value_is_address(graph, ty))
@@ -959,7 +964,7 @@ impl<'a> Interpreter<'a> {
                         } else {
                             0
                         }
-                    } else if abi.ret == kfrc_body::PassMode::Pair {
+                    } else if abi.ret.is_pair() {
                         let (first, second) = calls.call_pair(&symbol, &arguments)?;
                         if let Some(value) = graph.find_projection(next, 2) {
                             let ty = graph.rust_type(value).ok_or_else(|| {
@@ -1002,15 +1007,13 @@ impl<'a> Interpreter<'a> {
                     };
                     if let Some(value) = graph.find_projection(next, 2) {
                         let ty = graph.rust_type(value).expect("call value is a Rust type");
-                        let bits = if abi.ret == kfrc_body::PassMode::Pair
+                        let bits = if abi.ret.is_pair()
                             || matches!(
                                 abi.ret,
                                 kfrc_body::PassMode::Cast(_) | kfrc_body::PassMode::Vector { .. }
                             ) {
                             result
-                        } else if abi.ret == kfrc_body::PassMode::Direct
-                            && value_is_address(graph, ty)
-                        {
+                        } else if abi.ret.is_direct() && value_is_address(graph, ty) {
                             let layout = graph.oracle.size_align(ty).ok_or_else(|| {
                                 InterpretError::Malformed(
                                     "aggregate result lacks layout".to_owned(),
@@ -1122,7 +1125,9 @@ impl<'a> Interpreter<'a> {
                     .iter()
                     .map(|mode| match mode {
                         kfrc_body::PassMode::Ignore => 0,
-                        kfrc_body::PassMode::Pair | kfrc_body::PassMode::Vector { bytes: 16 } => 2,
+                        kfrc_body::PassMode::Pair
+                        | kfrc_body::PassMode::ScalarPair(_)
+                        | kfrc_body::PassMode::Vector { bytes: 16 } => 2,
                         kfrc_body::PassMode::Cast(abi) => cast_argument_count(*abi),
                         _ => 1,
                     })

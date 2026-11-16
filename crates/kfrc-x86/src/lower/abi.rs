@@ -313,7 +313,7 @@ impl Lowering<'_> {
                     dst: register(parameter),
                     src: VirtualValue::Imm(0),
                 }),
-                PassMode::Direct if self.scalar_kind(ty).is_ok() => {
+                PassMode::Direct | PassMode::DirectScalar(_) if self.scalar_kind(ty).is_ok() => {
                     let raw = self.temporary();
                     self.push(VirtualInstr::LoadArg {
                         dst: raw,
@@ -322,7 +322,7 @@ impl Lowering<'_> {
                     let kind = self.node_kind(parameter)?;
                     self.canonicalize(register(parameter), VirtualValue::Reg(raw), kind);
                 }
-                PassMode::Direct => {
+                PassMode::Direct | PassMode::DirectScalar(_) => {
                     self.allocate_slot(register(parameter), ty)?;
                     let raw = self.temporary();
                     self.push(VirtualInstr::LoadArg {
@@ -355,7 +355,7 @@ impl Lowering<'_> {
                     }
                     self.receive_cast(parameter, *cast, &values)?;
                 }
-                PassMode::Pair => {
+                PassMode::Pair | PassMode::ScalarPair(_) => {
                     let fields = *graph.oracle.abi_pairs.get(&ty).ok_or_else(|| {
                         LowerError::Unsupported(format!(
                             "missing ScalarPair layout for `{}`",

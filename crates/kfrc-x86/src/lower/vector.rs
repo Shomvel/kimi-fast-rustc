@@ -67,7 +67,7 @@ pub(super) fn argument_plan(abi: &FunctionAbi) -> Result<ArgumentPlan, LowerErro
         };
         integers.push(match mode {
             PassMode::Ignore => Vec::new(),
-            PassMode::Pair => allocate(2, false),
+            PassMode::Pair | PassMode::ScalarPair(_) => allocate(2, false),
             PassMode::Cast(cast) => {
                 let mut locations = if cast.pad_i32 {
                     allocate(1, false)

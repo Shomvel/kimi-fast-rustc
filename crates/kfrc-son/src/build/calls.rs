@@ -57,8 +57,10 @@ impl Builder<'_> {
                 !matches!(
                     mode,
                     PassMode::Direct
+                        | PassMode::DirectScalar(_)
                         | PassMode::Ignore
                         | PassMode::Pair
+                        | PassMode::ScalarPair(_)
                         | PassMode::Vector { bytes: 16 }
                         | PassMode::Indirect
                         | PassMode::Cast(_)

@@ -104,13 +104,9 @@ impl<'tcx> UnitEntryPlan<'tcx> {
         }
         let abi = crate::abi::instance_abi(tcx, internal)
             .unwrap_or_else(|error| tcx.dcx().fatal(format!("kfrc: unit runtime ABI: {error}")));
-        if abi.args
-            != [
-                PassMode::Pair,
-                PassMode::Direct,
-                PassMode::Direct,
-                PassMode::Direct,
-            ]
+        if abi.args.len() != 4
+            || !abi.args[0].is_pair()
+            || !abi.args[1..].iter().all(|mode| mode.is_direct())
             || abi.ret != PassMode::Direct
         {
             tcx.dcx().fatal(format!(

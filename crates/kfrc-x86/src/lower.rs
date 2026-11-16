@@ -28,8 +28,7 @@ use crate::machine::x86::{
 use kfrc_body::{PassMode, SizeAlign, TyId, TypeOracle, TypeShape};
 use kfrc_son::lower_layout::LayoutOptions;
 use kfrc_son::{
-    ArithmeticFlags, ComparePredicate, FunctionGraph, GraphLevel, NodeId, Opcode,
-    ValueType,
+    ArithmeticFlags, ComparePredicate, FunctionGraph, GraphLevel, NodeId, Opcode, ValueType,
 };
 
 #[derive(Debug)]
@@ -117,7 +116,10 @@ fn lower_function_inner(
     if std::env::var("KFRC_MASKED_TEST").as_deref() == Ok("1") {
         let combined = masked_tests::run(&mut lowering.instructions);
         if combined != 0 && std::env::var("KFRC_REGALLOC_STATS").as_deref() == Ok("1") {
-            eprintln!("kfrc-masked-test symbol={} combined={combined}", graph.symbol);
+            eprintln!(
+                "kfrc-masked-test symbol={} combined={combined}",
+                graph.symbol
+            );
         }
     }
     let instructions = lowering.instructions;
@@ -937,7 +939,15 @@ impl Lowering<'_> {
                     .args
                     .iter()
                     .chain(std::iter::once(&abi.ret))
-                    .any(|mode| matches!(mode, PassMode::Cast(_) | PassMode::Vector { .. }))
+                    .any(|mode| {
+                        matches!(
+                            mode,
+                            PassMode::Cast(_)
+                                | PassMode::Vector { .. }
+                                | PassMode::DirectScalar(_)
+                                | PassMode::ScalarPair(_)
+                        )
+                    })
                 {
                     return self.emit_cast_call(node, abi, target, first_arg);
                 }
@@ -972,10 +982,12 @@ impl Lowering<'_> {
                     })?;
                     match mode {
                         PassMode::Ignore => {}
-                        PassMode::Direct if self.scalar_kind(ty).is_ok() => {
+                        PassMode::Direct | PassMode::DirectScalar(_)
+                            if self.scalar_kind(ty).is_ok() =>
+                        {
                             args.push(self.value(*input)?)
                         }
-                        PassMode::Direct => {
+                        PassMode::Direct | PassMode::DirectScalar(_) => {
                             let address = self.value(*input)?;
                             let dst = self.temporary();
                             let bytes = self.direct_bits(ty)?;
@@ -992,7 +1004,7 @@ impl Lowering<'_> {
                             // entering the call; this value is that private address.
                             args.push(self.value(*input)?);
                         }
-                        PassMode::Pair => {
+                        PassMode::Pair | PassMode::ScalarPair(_) => {
                             let address = self.value(*input)?;
                             let fields = *graph.oracle.abi_pairs.get(&ty).ok_or_else(|| {
                                 LowerError::Unsupported(format!(
@@ -1012,7 +1024,7 @@ impl Lowering<'_> {
                     }
                 }
                 let raw = self.temporary();
-                if abi.ret == PassMode::Pair {
+                if abi.ret.is_pair() {
                     let second = self.temporary();
                     self.instructions.push(LowerInstr::CallPair {
                         first: raw,
@@ -1193,24 +1205,34 @@ impl Lowering<'_> {
                             self.copy_bytes(VirtualValue::Reg(destination), source, layout.size);
                             self.push(VirtualInstr::Return(VirtualValue::Reg(destination)));
                         }
-                        PassMode::Pair => {
+                        PassMode::Pair | PassMode::ScalarPair(_) => {
                             let address = self.value(*value)?;
                             let fields = *graph.oracle.abi_pairs.get(&ty).ok_or_else(|| {
                                 LowerError::Unsupported(
                                     "missing ScalarPair return layout".to_owned(),
                                 )
                             })?;
-                            let first = self.load_field(address, fields[0].offset, fields[0].ty)?;
-                            let second =
+                            let mut first =
+                                self.load_field(address, fields[0].offset, fields[0].ty)?;
+                            let mut second =
                                 self.load_field(address, fields[1].offset, fields[1].ty)?;
+                            if let PassMode::ScalarPair(scalars) = graph.abi.ret {
+                                first = self.pass_scalar_abi(first, scalars[0])?;
+                                second = self.pass_scalar_abi(second, scalars[1])?;
+                            }
                             self.instructions
                                 .push(LowerInstr::ReturnPair { first, second });
                         }
-                        PassMode::Direct if self.scalar_kind(ty).is_ok() => {
-                            let value = self.value(*value)?;
+                        PassMode::Direct | PassMode::DirectScalar(_)
+                            if self.scalar_kind(ty).is_ok() =>
+                        {
+                            let mut value = self.value(*value)?;
+                            if let PassMode::DirectScalar(scalar) = graph.abi.ret {
+                                value = self.pass_scalar_abi(value, scalar)?;
+                            }
                             self.push(VirtualInstr::Return(value));
                         }
-                        PassMode::Direct => {
+                        PassMode::Direct | PassMode::DirectScalar(_) => {
                             let address = self.value(*value)?;
                             let dst = self.temporary();
                             let bytes = self.direct_bits(ty)?;
@@ -1220,7 +1242,11 @@ impl Lowering<'_> {
                                 offset: 0,
                                 bytes,
                             });
-                            self.push(VirtualInstr::Return(VirtualValue::Reg(dst)));
+                            let mut value = VirtualValue::Reg(dst);
+                            if let PassMode::DirectScalar(scalar) = graph.abi.ret {
+                                value = self.pass_scalar_abi(value, scalar)?;
+                            }
+                            self.push(VirtualInstr::Return(value));
                         }
                         PassMode::Ignore => self.push(VirtualInstr::Return(VirtualValue::Imm(0))),
                         other => {
