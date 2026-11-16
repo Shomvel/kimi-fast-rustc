@@ -1247,7 +1247,7 @@
       (let ((_ Unit (gen_return vals)))
         (output_none)))
 
-(decl gen_return (ValueRegsVec) Unit)
+(decl gen_return (ValueSlice) Unit)
 (extern constructor gen_return gen_return)
 
 (decl gen_call_output (SigRef) ValueRegsVec)

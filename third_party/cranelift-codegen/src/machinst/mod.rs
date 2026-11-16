@@ -341,7 +341,8 @@ pub trait MachInst: Clone + Debug {
     fn gen_jump(target: MachLabel) -> Self;
 
     /// Generate a store of an immediate 64-bit integer to a register. Used by
-    /// the control plane to generate random instructions.
+    /// the control plane to generate random instructions and for constant
+    /// return values whose ABI extension has already been applied.
     fn gen_imm_u64(_value: u64, _dst: Writable<Reg>) -> Option<Self> {
         None
     }

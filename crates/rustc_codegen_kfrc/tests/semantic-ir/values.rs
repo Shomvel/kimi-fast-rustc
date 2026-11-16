@@ -167,6 +167,9 @@ pub mod constant_stores_probe;
 #[path = "support_diamond_values.rs"]
 pub mod diamond_values_probe;
 
+#[path = "support_constant_returns.rs"]
+pub mod constant_returns_probe;
+
 #[path = "support_rs1_intrinsics.rs"]
 pub mod rs1_intrinsics_probe;
 

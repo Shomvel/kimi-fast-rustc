@@ -604,8 +604,14 @@ macro_rules! isle_lower_prelude_methods {
         }
 
         /// Generate the return instruction.
-        fn gen_return(&mut self, rets: &ValueRegsVec) {
-            self.lower_ctx.gen_return(rets);
+        fn gen_return(&mut self, (list, off): ValueSlice) {
+            // Retain values until ABI lowering can fold a narrow constant's
+            // extension, without requesting an unused source register.
+            let values: smallvec::SmallVec<[Value; 2]> = (off..list
+                .len(&self.lower_ctx.dfg().value_lists))
+                .map(|index| list.get(index, &self.lower_ctx.dfg().value_lists).unwrap())
+                .collect();
+            self.lower_ctx.gen_return(&values);
         }
 
         fn gen_call_output(&mut self, sig_ref: SigRef) -> ValueRegsVec {

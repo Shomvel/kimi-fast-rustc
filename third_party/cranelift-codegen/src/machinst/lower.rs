@@ -175,6 +175,18 @@ fn call_arg_copies() -> CallArgCopies {
     }
 }
 
+fn constant_returns() -> bool {
+    #[cfg(feature = "std")]
+    {
+        static ENABLED: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+        *ENABLED.get_or_init(|| std::env::var("KFRC_CONSTANT_RETURNS").as_deref() != Ok("0"))
+    }
+    #[cfg(not(feature = "std"))]
+    {
+        true
+    }
+}
+
 /// Machine-independent lowering driver / machine-instruction container. Maintains a correspondence
 /// from original Inst to MachInsts.
 pub struct Lower<'func, I: VCodeInst> {
@@ -599,7 +611,7 @@ impl<'func, I: VCodeInst> Lower<'func, I> {
     }
 
     /// Generate the return instruction.
-    pub fn gen_return(&mut self, rets: &[ValueRegs<Reg>]) {
+    pub fn gen_return(&mut self, rets: &[Value]) {
         let mut out_rets = vec![];
 
         let mut rets = rets.into_iter();
@@ -614,7 +626,28 @@ impl<'func, I: VCodeInst> Lower<'func, I> {
             let regs = if ret.purpose == ArgumentPurpose::StructReturn {
                 self.sret_reg.unwrap()
             } else {
-                *rets.next().unwrap()
+                let value = *rets.next().unwrap();
+                let constant = if ret.value_type.is_int()
+                    && ret.extension != crate::ir::ArgumentExtension::None
+                    && constant_returns()
+                {
+                    self.get_value_as_source_or_const(value).constant
+                } else {
+                    None
+                };
+                if let Some((pair, inst)) = constant.and_then(|constant| {
+                    self.vcode.abi().gen_const_retval(
+                        self.vcode.sigs(),
+                        i,
+                        constant,
+                        &mut self.vregs,
+                    )
+                }) {
+                    out_rets.push(pair);
+                    self.emit(inst);
+                    continue;
+                }
+                self.put_value_in_regs(value)
             };
 
             let (regs, insns) = self.vcode.abi().gen_copy_regs_to_retval(

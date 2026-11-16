@@ -1645,6 +1645,50 @@ impl<M: ABIMachineSpec> Callee<M> {
         insts
     }
 
+    /// Materialize a narrow integer constant with its ABI extension already
+    /// applied. Other machines or return layouts retain ordinary lowering.
+    pub fn gen_const_retval(
+        &self,
+        sigs: &SigSet,
+        idx: usize,
+        constant: u64,
+        vregs: &mut VRegAllocator<M::I>,
+    ) -> Option<(RetPair, M::I)> {
+        let ABIArg::Slots { slots, .. } = &sigs.rets(self.sig)[idx] else {
+            return None;
+        };
+        let [
+            ABIArgSlot::Reg {
+                reg, ty, extension, ..
+            },
+        ] = slots.as_slice()
+        else {
+            return None;
+        };
+        let bits = ty.bits();
+        if !ty.is_int() || bits == 0 || bits >= M::word_bits() {
+            return None;
+        }
+        let mask = u64::MAX >> (64 - bits);
+        let constant = constant & mask;
+        let extended = match M::get_ext_mode(sigs[self.sig].call_conv, *extension) {
+            ir::ArgumentExtension::Uext => constant,
+            ir::ArgumentExtension::Sext => ((constant << (64 - bits)) as i64 >> (64 - bits)) as u64,
+            ir::ArgumentExtension::None => return None,
+        };
+        let dst = writable_value_regs(vregs.alloc_with_deferred_error(M::word_type()))
+            .only_reg()
+            .unwrap();
+        let inst = M::I::gen_imm_u64(extended, dst)?;
+        Some((
+            RetPair {
+                vreg: dst.to_reg(),
+                preg: Reg::from(*reg),
+            },
+            inst,
+        ))
+    }
+
     /// Generate an instruction which copies a source register to a return value slot.
     pub fn gen_copy_regs_to_retval(
         &self,
