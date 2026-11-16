@@ -161,6 +161,9 @@ pub mod rs3_ranges_probe;
 #[path = "support_range_fusion.rs"]
 pub mod range_fusion_probe;
 
+#[path = "support_constant_stores.rs"]
+pub mod constant_stores_probe;
+
 #[path = "support_rs1_intrinsics.rs"]
 pub mod rs1_intrinsics_probe;
 

@@ -18,6 +18,9 @@ mod rs3_ranges;
 #[path = "driver_range_fusion.rs"]
 mod range_fusion;
 
+#[path = "driver_constant_stores.rs"]
+mod constant_stores;
+
 #[path = "driver_rs1_intrinsics.rs"]
 mod rs1_intrinsics;
 
@@ -62,6 +65,7 @@ fn main() {
     rs3_loops::check();
     rs3_ranges::check();
     range_fusion::check();
+    constant_stores::check();
     rs1_intrinsics::check();
     rs3_validity::check();
     rs5_permissions::check();

@@ -20,6 +20,9 @@ mod static_loads;
 #[path = "range_tests.rs"]
 mod range_tests;
 
+#[path = "constant_stores.rs"]
+mod constant_stores;
+
 #[cfg(test)]
 #[path = "cleanup_tests.rs"]
 mod tests;
@@ -118,6 +121,7 @@ pub(super) fn run(graph: &mut FunctionGraph) -> Result<(), LayoutError> {
     instcombine::run(graph);
     graph.resolve_edges();
     address_cse::run(graph);
+    constant_stores::run(graph);
     graph.compact();
     Ok(())
 }
