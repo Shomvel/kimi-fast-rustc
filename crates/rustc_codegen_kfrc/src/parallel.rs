@@ -2,6 +2,19 @@
 //! jobserver token; each additional worker owns a borrowed token until joined.
 use std::sync::{Mutex, mpsc};
 
+enum Admission<Token> {
+    Token(Token),
+    Finished,
+}
+
+struct FinishAdmission<Token>(mpsc::Sender<Admission<Token>>);
+
+impl<Token> Drop for FinishAdmission<Token> {
+    fn drop(&mut self) {
+        let _ = self.0.send(Admission::Finished);
+    }
+}
+
 pub(crate) fn thread_limit() -> Result<usize, String> {
     let limit = std::thread::available_parallelism().map_or(1, usize::from);
     match std::env::var("KFRC_CODEGEN_THREADS") {
@@ -36,20 +49,21 @@ fn map_with_client<T: Send, U: Send>(
         return jobs.into_iter().map(run).collect();
     }
     let (send, tokens) = mpsc::channel();
+    let finish = send.clone();
     // The helper supports inherited anonymous pipes as well as FIFO jobservers.
     // Acquiring on the caller could deadlock Cargo -j1: the caller must keep
     // processing jobs while no extra tokens are available.
     let helper = client
         .into_helper_thread(move |token| {
             if let Ok(token) = token {
-                let _ = send.send(token);
+                let _ = send.send(Admission::Token(token));
             }
         })
         .expect("spawn kfrc jobserver helper");
     for _ in 0..workers {
         helper.request_token();
     }
-    let results = map_with_tokens(jobs, &tokens, run);
+    let results = map_with_tokens(jobs, tokens, finish, run);
     // Drop cancels outstanding requests and joins the helper, including when
     // all work finished on the caller without obtaining a token.
     drop(helper);
@@ -58,7 +72,8 @@ fn map_with_client<T: Send, U: Send>(
 
 fn map_with_tokens<T: Send, U: Send, Token: Send>(
     jobs: Vec<T>,
-    tokens: &mpsc::Receiver<Token>,
+    tokens: mpsc::Receiver<Admission<Token>>,
+    finish: mpsc::Sender<Admission<Token>>,
     run: impl Fn(T) -> U + Sync,
 ) -> Vec<U> {
     let jobs = Mutex::new(jobs.into_iter().enumerate());
@@ -72,33 +87,42 @@ fn map_with_tokens<T: Send, U: Send, Token: Send>(
         results
     };
     let mut results = std::thread::scope(|scope| {
-        let mut workers = Vec::new();
-        let mut results = Vec::new();
-        loop {
-            // Only the caller admits workers. A token lives on its worker
-            // until completion; waiting for tokens never stalls useful work.
-            for token in tokens.try_iter() {
-                let work = &work;
-                workers.push(
-                    std::thread::Builder::new()
-                        .name("kfrc-codegen".into())
-                        .stack_size(8 * 1024 * 1024)
-                        .spawn_scoped(scope, move || {
-                            let _token = token;
-                            work()
-                        })
-                        .expect("spawn kfrc codegen worker"),
-                );
-            }
-            let job = jobs.lock().unwrap().next();
-            let Some((index, job)) = job else { break };
-            results.push((index, run(job)));
-        }
-        // Join every worker before reporting errors or dropping input graphs.
-        // scope also joins on panic; tokens are released by RAII.
-        for worker in workers {
-            results.extend(worker.join().unwrap());
-        }
+        let work = &work;
+        let jobs = &jobs;
+        // Admission must progress while the implicit-token caller compiles a
+        // long function. This thread waits for tokens, never processes a job.
+        let admission = std::thread::Builder::new()
+            .name("kfrc-admission".into())
+            .spawn_scoped(scope, move || {
+                let mut workers = Vec::new();
+                while let Ok(Admission::Token(token)) = tokens.recv() {
+                    if jobs.lock().unwrap().len() == 0 {
+                        break;
+                    }
+                    workers.push(
+                        std::thread::Builder::new()
+                            .name("kfrc-codegen".into())
+                            .stack_size(8 * 1024 * 1024)
+                            .spawn_scoped(scope, move || {
+                                let _token = token;
+                                work()
+                            })
+                            .expect("spawn kfrc codegen worker"),
+                    );
+                }
+                let mut results = Vec::new();
+                for worker in workers {
+                    results.extend(worker.join().unwrap());
+                }
+                results
+            })
+            .expect("spawn kfrc token admission");
+        // Send completion even when the caller panics, so scope can join an
+        // admission thread still waiting on an exhausted Cargo -j1 jobserver.
+        let finish = FinishAdmission(finish);
+        let mut results = work();
+        drop(finish);
+        results.extend(admission.join().unwrap());
         results
     });
     results.sort_unstable_by_key(|(index, _)| *index);
@@ -146,9 +170,9 @@ mod tests {
             let visits: Vec<_> = (0..100).map(|_| AtomicUsize::new(0)).collect();
             let (send, tokens) = mpsc::channel();
             for _ in 0..workers {
-                send.send(()).unwrap();
+                send.send(Admission::Token(())).unwrap();
             }
-            let results = map_with_tokens((0..100).collect(), &tokens, |job| {
+            let results = map_with_tokens((0..100).collect(), tokens, send, |job| {
                 visits[job].fetch_add(1, Ordering::Relaxed);
                 if job % 3 == 0 {
                     std::thread::yield_now();
@@ -171,15 +195,56 @@ mod tests {
         let released = Arc::new(AtomicUsize::new(0));
         let (send, tokens) = mpsc::channel();
         for _ in 0..3 {
-            send.send(Token(released.clone())).unwrap();
+            send.send(Admission::Token(Token(released.clone())))
+                .unwrap();
         }
         let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-            map_with_tokens(vec![0, 1, 2, 3], &tokens, |job| {
+            map_with_tokens(vec![0, 1, 2, 3], tokens, send, |job| {
                 assert_ne!(job, 1);
             })
         }));
-        drop(tokens);
         assert!(result.is_err());
         assert_eq!(released.load(Ordering::Relaxed), 3);
+    }
+
+    #[test]
+    fn caller_panic_cancels_admission_without_an_available_token() {
+        let client = rustc_data_structures::jobserver::Client::new(0).unwrap();
+        let result = std::panic::catch_unwind(|| {
+            map_with_client(vec![0, 1], 8, client.clone(), |_| panic!("caller failed"));
+        });
+        assert!(result.is_err());
+        assert_eq!(client.available().unwrap(), 0);
+    }
+
+    #[test]
+    fn a_late_token_starts_a_worker_before_the_caller_finishes_its_job() {
+        let (send, tokens) = mpsc::channel();
+        let finish = send.clone();
+        let (started, first_job) = mpsc::channel();
+        let (second, second_job) = mpsc::channel();
+        let second_job = Mutex::new(second_job);
+        std::thread::scope(|scope| {
+            scope.spawn(move || {
+                first_job
+                    .recv_timeout(std::time::Duration::from_secs(2))
+                    .unwrap();
+                send.send(Admission::Token(())).unwrap();
+            });
+            let results = map_with_tokens(vec![0, 1], tokens, finish, |job| {
+                if job == 0 {
+                    started.send(()).unwrap();
+                    second_job
+                        .lock()
+                        .unwrap()
+                        .recv_timeout(std::time::Duration::from_secs(2))
+                        .unwrap();
+                } else {
+                    second.send(()).unwrap();
+                }
+                job
+            });
+            assert_eq!(results, [0, 1]);
+        });
     }
 }
