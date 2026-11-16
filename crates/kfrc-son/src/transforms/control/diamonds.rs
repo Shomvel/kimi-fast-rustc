@@ -1,8 +1,12 @@
-//! Collapse effect-free boolean diamonds, retaining the branch's poison
-//! observation as RequireDefined. Never speculate operations from either arm.
+//! Collapse effect-free diamonds. S retains the branch's poison observation;
+//! L can also select a proved total integer expression. Fixed operations keep
+//! their original control paths.
 use crate::analysis::uses::{UseKind, Uses};
 use crate::{FunctionGraph, GraphLevel, NodeId, Opcode, ValueType};
 use kfrc_body::{TypeOracle, TypeShape};
+
+#[path = "diamond_values.rs"]
+mod values;
 
 pub(crate) fn run(graph: &mut FunctionGraph) -> usize {
     if !matches!(graph.level, GraphLevel::Specialized | GraphLevel::Layout) {
@@ -70,7 +74,7 @@ pub(crate) fn run(graph: &mut FunctionGraph) -> usize {
                 if graph.value_type(phi) == &ValueType::Effect {
                     effect = Some(a);
                 }
-                phis.push((phi, Some(a), false));
+                phis.push((phi, Some(values::Replacement::Existing(a)), false));
             } else if graph.value_type(phi) == graph.value_type(condition)
                 && graph
                     .rust_type(phi)
@@ -82,6 +86,10 @@ pub(crate) fn run(graph: &mut FunctionGraph) -> usize {
             {
                 let invert = graph.constant_value(a) == u128::from(graph.payload(exits[0]));
                 phis.push((phi, None, invert));
+            } else if let Some(value) =
+                values::replacement(graph, condition, graph.payload(exits[0]) == 0, a, b)
+            {
+                phis.push((phi, Some(value), false));
             } else {
                 valid = false;
                 break;
@@ -126,7 +134,7 @@ pub(crate) fn run(graph: &mut FunctionGraph) -> usize {
             let replacement = if graph.value_type(phi) == &ValueType::Effect {
                 observed_effect.expect("an effect Phi supplied the incoming effect")
             } else if let Some(same) = same {
-                same
+                same.materialize(graph)
             } else if invert {
                 graph.add_node(
                     Opcode::BitNot,
@@ -219,7 +227,7 @@ mod tests {
     use crate::{ComparePredicate, Interpreter, Outcome, verify_graph};
     use kfrc_body::{FunctionAbi, IntegerWidth, PassMode, RecordedTypes, SizeAlign};
 
-    fn empty_diamond(wrappers: usize, anchored: bool) -> FunctionGraph {
+    pub(super) fn empty_diamond(wrappers: usize, anchored: bool) -> FunctionGraph {
         let mut types = RecordedTypes::new();
         let word = types.intern(
             TypeShape::Int {

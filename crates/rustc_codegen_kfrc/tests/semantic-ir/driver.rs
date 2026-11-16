@@ -21,6 +21,9 @@ mod range_fusion;
 #[path = "driver_constant_stores.rs"]
 mod constant_stores;
 
+#[path = "driver_diamond_values.rs"]
+mod diamond_values;
+
 #[path = "driver_rs1_intrinsics.rs"]
 mod rs1_intrinsics;
 
@@ -66,6 +69,7 @@ fn main() {
     rs3_ranges::check();
     range_fusion::check();
     constant_stores::check();
+    diamond_values::check();
     rs1_intrinsics::check();
     rs3_validity::check();
     rs5_permissions::check();
