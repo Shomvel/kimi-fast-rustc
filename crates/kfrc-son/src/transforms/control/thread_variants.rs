@@ -32,6 +32,16 @@ pub struct VariantThreadStats {
 }
 
 pub fn run(graph: &mut FunctionGraph) -> Result<VariantThreadStats, CfgEditError> {
+    static EAGER: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+    let eager =
+        *EAGER.get_or_init(|| std::env::var("KFRC_THREAD_ANALYSIS").as_deref() == Ok("eager"));
+    run_with_analysis_policy(graph, eager)
+}
+
+fn run_with_analysis_policy(
+    graph: &mut FunctionGraph,
+    eager: bool,
+) -> Result<VariantThreadStats, CfgEditError> {
     let mut stats = VariantThreadStats::default();
     graph.resolve_edges();
     let mut pending: VecDeque<_> = graph
@@ -51,19 +61,15 @@ pub fn run(graph: &mut FunctionGraph) -> Result<VariantThreadStats, CfgEditError
             continue;
         }
         if analysis.is_none() {
-            let uses = Uses::new(graph);
-            let cfg = ControlFlow::new(graph);
-            let dominators = Dominators::new(&cfg);
-            stats.nodes_indexed += graph.live_count() * 2;
-            analysis = Some((uses, cfg, dominators));
+            analysis = Some(Analysis::new(graph, eager, &mut stats.nodes_indexed));
         }
-        let (uses, cfg, dominators) = analysis.as_ref().unwrap();
-        if let Some(spine) = TransparentSpine::new(graph, region, uses) {
+        let index = analysis.as_mut().unwrap();
+        if let Some(spine) = TransparentSpine::new(graph, region, &index.uses) {
             stats.dirty_nodes.extend(
                 spine
                     .phis
                     .iter()
-                    .flat_map(|phi| uses.of(*phi).iter().map(|usage| usage.user)),
+                    .flat_map(|phi| index.uses.of(*phi).iter().map(|usage| usage.user)),
             );
             spine.apply(graph, region);
             stats.control_spines_collapsed += 1;
@@ -71,8 +77,7 @@ pub fn run(graph: &mut FunctionGraph) -> Result<VariantThreadStats, CfgEditError
             pending.push_front((region, depth));
             continue;
         }
-        let Some(plan) = Plan::new(graph, region, uses, cfg, dominators, &mut stats.node_visits)
-        else {
+        let Some(plan) = Plan::new(graph, region, index, &mut stats) else {
             continue;
         };
         stats.predecessors_threaded += plan.slots.iter().map(Vec::len).sum::<usize>();
@@ -100,6 +105,38 @@ pub fn run(graph: &mut FunctionGraph) -> Result<VariantThreadStats, CfgEditError
     stats.dirty_nodes.sort_unstable();
     stats.dirty_nodes.dedup();
     Ok(stats)
+}
+
+/// Transparent spines and dynamic decisions need only reverse edges. Delay
+/// reachability and dominance until a known predecessor could actually be
+/// threaded. Every edit still discards the complete immutable snapshot.
+struct Analysis {
+    uses: Uses,
+    dominance: Option<(ControlFlow, Dominators)>,
+}
+
+impl Analysis {
+    fn new(graph: &FunctionGraph, eager: bool, nodes_indexed: &mut usize) -> Self {
+        *nodes_indexed += graph.live_count();
+        let mut index = Self {
+            uses: Uses::new(graph),
+            dominance: None,
+        };
+        if eager {
+            index.dominance = Some(Self::build_dominance(graph, nodes_indexed));
+        }
+        index
+    }
+
+    fn build_dominance(
+        graph: &FunctionGraph,
+        nodes_indexed: &mut usize,
+    ) -> (ControlFlow, Dominators) {
+        *nodes_indexed += graph.live_count();
+        let cfg = ControlFlow::new(graph);
+        let dominators = Dominators::new(&cfg);
+        (cfg, dominators)
+    }
 }
 
 /// Clean control once after the threading worklist drains. Planning always
@@ -233,11 +270,10 @@ impl Plan {
     fn new(
         graph: &FunctionGraph,
         region: NodeId,
-        uses: &Uses,
-        cfg: &ControlFlow,
-        dominators: &Dominators,
-        visits: &mut usize,
+        analysis: &mut Analysis,
+        stats: &mut VariantThreadStats,
     ) -> Option<Self> {
+        let Analysis { uses, dominance } = analysis;
         let count = graph.inputs(region).len();
         if !(2..=64).contains(&count) {
             return None;
@@ -323,6 +359,8 @@ impl Plan {
                 witnesses.insert(witness);
             }
         }
+        let (cfg, dominators) = dominance
+            .get_or_insert_with(|| Analysis::build_dominance(graph, &mut stats.nodes_indexed));
         if !cfg.contains(region) {
             return None;
         }
@@ -339,7 +377,7 @@ impl Plan {
         let mut pending: Vec<_> = dependent.iter().copied().collect();
         pending.sort_unstable();
         while let Some(node) = pending.pop() {
-            *visits += 1;
+            stats.node_visits += 1;
             for usage in uses.of(node) {
                 if usage.user == branch || phis.contains(&usage.user) {
                     continue;
@@ -412,7 +450,7 @@ impl Plan {
                 };
                 let before = repair.visits;
                 let placement = repair.at(value, control);
-                *visits += repair.visits - before;
+                stats.node_visits += repair.visits - before;
                 let placement = placement?;
                 rewrites.push(Rewrite {
                     user: usage.user,

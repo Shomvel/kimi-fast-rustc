@@ -300,8 +300,15 @@ fn wholly_dynamic_predecessors_do_not_change_the_graph() {
     graph.set_input(tag, 2, dynamic);
     crate::verify_graph(&mut graph).unwrap();
     let before = graph.dump();
-    let stats = super::run(&mut graph).unwrap();
+    let mut eager = graph.clone();
+    let eager_stats = super::run_with_analysis_policy(&mut eager, true).unwrap();
+    let stats = super::run_with_analysis_policy(&mut graph, false).unwrap();
     assert_eq!(stats.predecessors_threaded, 0);
     assert_eq!(stats.branches_removed, 0);
     assert_eq!(graph.dump(), before);
+    assert_eq!(eager.dump(), before);
+    // Rejecting an entirely dynamic decision must not pay for reachability
+    // and dominance. The eager policy remains the old measurement control.
+    assert_eq!(stats.nodes_indexed, graph.live_count());
+    assert_eq!(eager_stats.nodes_indexed, 2 * stats.nodes_indexed);
 }

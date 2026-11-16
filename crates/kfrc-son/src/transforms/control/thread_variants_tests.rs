@@ -873,9 +873,14 @@ fn transparent_spine_preserves_all_exits_payloads_and_effects() {
         crate::verify_graph(&mut f.graph).unwrap();
         let expected = [0, 1, 17, u64::MAX].map(|input| execute(&f.graph, input));
         assert!(expected.iter().all(|(outcome, _)| outcome.is_ok()));
-        let stats = super::run(&mut f.graph).unwrap();
+        let mut eager = f.graph.clone();
+        let eager_stats = super::run_with_analysis_policy(&mut eager, true).unwrap();
+        let stats = super::run_with_analysis_policy(&mut f.graph, false).unwrap();
         assert_eq!(stats.control_spines_collapsed, 1);
         assert_eq!(stats.regions_threaded, 1);
+        assert_eq!(eager.dump(), f.graph.dump());
+        assert_eq!(eager_stats.regions_threaded, stats.regions_threaded);
+        assert!(stats.nodes_indexed < eager_stats.nodes_indexed);
         assert!(f.graph.is_dead(spine.switch));
         assert!(spine.regions.iter().all(|&region| f.graph.is_dead(region)));
         crate::verify_graph(&mut f.graph).unwrap();
