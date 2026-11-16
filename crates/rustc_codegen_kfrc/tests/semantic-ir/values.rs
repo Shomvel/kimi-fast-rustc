@@ -158,6 +158,9 @@ pub mod rs3_loops_probe;
 #[path = "support_rs3_ranges.rs"]
 pub mod rs3_ranges_probe;
 
+#[path = "support_range_fusion.rs"]
+pub mod range_fusion_probe;
+
 #[path = "support_rs1_intrinsics.rs"]
 pub mod rs1_intrinsics_probe;
 

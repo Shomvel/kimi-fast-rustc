@@ -17,6 +17,9 @@ mod call_constants;
 #[path = "static_loads.rs"]
 mod static_loads;
 
+#[path = "range_tests.rs"]
+mod range_tests;
+
 #[cfg(test)]
 #[path = "cleanup_tests.rs"]
 mod tests;
@@ -103,6 +106,7 @@ pub(super) fn run(graph: &mut FunctionGraph) -> Result<(), LayoutError> {
         graph.resolve_edges();
         bit_conditions(graph);
         conditions::run(graph).map_err(|e| LayoutError::Malformed(e.to_string()))?;
+        range_tests::run(graph);
         let stats = simplify::run(graph).map_err(|e| LayoutError::Malformed(e.to_string()))?;
         graph.compact();
         if stats.branches_folded == 0 && stats.predecessor_edges_removed == 0 {
