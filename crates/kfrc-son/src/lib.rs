@@ -30,7 +30,8 @@ pub use interpret::{
     SemanticOutcome, Value,
 };
 pub use lower_layout::{
-    LayoutError, LayoutOptions, LayoutStats, lower_layout, lower_layout_with_options,
+    LayoutError, LayoutOptions, LayoutStats, lower_layout, lower_layout_owned,
+    lower_layout_with_options,
 };
 pub use optimize::{OptimizeStats, optimize_graph};
 pub use pipeline::{

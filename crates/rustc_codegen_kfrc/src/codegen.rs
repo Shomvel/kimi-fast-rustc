@@ -413,8 +413,18 @@ pub(crate) fn compile_function(
         let outcome = kfrc_son::Interpreter::new(&graph).run_values(&values, &mut no_calls);
         eprintln!("kfrc semantic interpret {symbol}{arguments:?} = {outcome:?}");
     }
-    let layout_stats = profile::measure("layout", &symbol, || kfrc_son::lower_layout(&mut graph))
-        .map_err(|error| fail("layout lowering", error.to_string()))?;
+    let (lowered, layout_stats) = profile::measure("layout", &symbol, || {
+        static CLONE: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+        if *CLONE.get_or_init(|| std::env::var("KFRC_LAYOUT_CLONE").as_deref() == Ok("1")) {
+            let stats = kfrc_son::lower_layout(&mut graph)?;
+            Ok((graph, stats))
+        } else {
+            // Emission already owns this graph and returns on failure.
+            kfrc_son::lower_layout_owned(graph, kfrc_son::LayoutOptions::default())
+        }
+    })
+    .map_err(|error: kfrc_son::LayoutError| fail("layout lowering", error.to_string()))?;
+    graph = lowered;
     if std::env::var_os("KFRC_DUMP_GRAPH").is_some()
         || std::env::var_os("KFRC_SPECIALIZATION_STATS").is_some()
         || std::env::var_os("KFRC_LAYOUT_BYTE_LADDERS_STATS").is_some()
@@ -424,7 +434,7 @@ pub(crate) fn compile_function(
     profile::measure("verify_l", &symbol, || {
         kfrc_son::verify::prepare_pipeline_output(&mut graph)
     })
-        .map_err(|error| fail("layout verification", format!("{error}\n{}", graph.dump())))?;
+    .map_err(|error| fail("layout verification", format!("{error}\n{}", graph.dump())))?;
     if std::env::var_os("KFRC_DUMP_GRAPH").is_some() {
         eprintln!("kfrc layout output {symbol}:\n{}", graph.dump());
     }

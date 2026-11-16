@@ -138,13 +138,37 @@ pub fn lower_layout_with_options(
     graph: &mut FunctionGraph,
     options: LayoutOptions,
 ) -> Result<LayoutStats, LayoutError> {
+    check_input(graph)?;
+    let (candidate, stats) = lower_validated(graph.clone(), options)?;
+    *graph = candidate;
+    Ok(stats)
+}
+
+/// Consume an S graph when the caller no longer needs its source after an
+/// error. Uses the same lowering as the transactional entry without cloning
+/// the graph; the result still needs Layout pipeline publication/verification.
+pub fn lower_layout_owned(
+    graph: FunctionGraph,
+    options: LayoutOptions,
+) -> Result<(FunctionGraph, LayoutStats), LayoutError> {
+    check_input(&graph)?;
+    lower_validated(graph, options)
+}
+
+fn check_input(graph: &FunctionGraph) -> Result<(), LayoutError> {
     if graph.level != GraphLevel::Specialized {
         return Err(LayoutError::NotSpecialized);
     }
     if !graph.state.is_ready_for_lowering() {
         return Err(LayoutError::NotVerified);
     }
-    let mut candidate = graph.clone();
+    Ok(())
+}
+
+fn lower_validated(
+    mut candidate: FunctionGraph,
+    options: LayoutOptions,
+) -> Result<(FunctionGraph, LayoutStats), LayoutError> {
     observation::erase_requirements(&mut candidate);
     ignored_abi::erase_ignored_transport(&mut candidate)?;
     let mut projections = projections::ProjectionIndex::new(&candidate);
@@ -227,8 +251,7 @@ pub fn lower_layout_with_options(
     let facts = crate::analysis::memory::MemoryFacts::new(&candidate);
     crate::transforms::memory::partition::run(&mut candidate, &facts);
     candidate.state = GraphState::Sealed;
-    *graph = candidate;
-    Ok(stats)
+    Ok((candidate, stats))
 }
 
 #[derive(Clone, Debug)]
