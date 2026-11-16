@@ -17,33 +17,37 @@ pub(crate) fn run(graph: &mut FunctionGraph) -> usize {
         .collect();
     let mut changed = 0;
     for region in regions {
+        if graph.is_dead(region) {
+            continue;
+        }
         let edges = graph.inputs(region).to_vec();
-        if edges.len() != 2 || edges.iter().any(|&n| graph.op(n) != Opcode::Jump) {
+        if edges.len() != 2
+            || edges
+                .iter()
+                .any(|&n| graph.op(n) != Opcode::Jump || graph.is_dead(n))
+        {
             continue;
         }
-        let exits: Vec<_> = edges.iter().map(|&n| graph.control(n)).collect();
-        if exits.iter().any(|&n| graph.op(n) != Opcode::Projection) {
+        // Inlining often leaves empty Jump/Region wrappers on one arm.
+        // Trace both arms using the same exact-use proof as a direct diamond.
+        let uses = uses.get_or_insert_with(|| Uses::new(graph));
+        let Some(left) = Arm::new(graph, uses, edges[0], region) else {
             continue;
-        }
+        };
+        let Some(right) = Arm::new(graph, uses, edges[1], region) else {
+            continue;
+        };
+        let exits = [left.exit, right.exit];
         let branch = graph.input(exits[0], 0);
         if graph.op(branch) != Opcode::If
+            || graph.is_dead(branch)
             || graph.input(exits[1], 0) != branch
             || graph.payload(exits[0]) > 1
             || graph.payload(exits[1]) != 1 - graph.payload(exits[0])
         {
             continue;
         }
-        // The only uses of the branch exits are their direct merge jumps.
-        // This excludes witnesses, anchored arithmetic, effects and other arms.
-        let uses = uses.get_or_insert_with(|| Uses::new(graph));
-        if uses.of(branch).len() != 2
-            || exits.iter().zip(&edges).any(|(&exit, &edge)| {
-                uses.of(exit)
-                    .iter()
-                    .any(|u| u.user != edge || u.kind != UseKind::Control)
-                    || uses.of(edge).iter().any(|u| u.user != region)
-            })
-        {
+        if uses.of(branch).len() != 2 {
             continue;
         }
         let condition = graph.resolve(graph.input(branch, 0));
@@ -137,7 +141,13 @@ pub(crate) fn run(graph: &mut FunctionGraph) -> usize {
             graph.replace(phi, replacement);
         }
         graph.replace(region, control);
-        for node in edges.into_iter().chain(exits).chain([branch]) {
+        for node in left
+            .controls
+            .into_iter()
+            .chain(right.controls)
+            .chain(exits)
+            .chain([branch])
+        {
             graph.remove_node(node);
         }
         changed += 1;
@@ -146,14 +156,70 @@ pub(crate) fn run(graph: &mut FunctionGraph) -> usize {
     changed
 }
 
+struct Arm {
+    exit: NodeId,
+    controls: Vec<NodeId>,
+}
+
+impl Arm {
+    fn new(
+        graph: &FunctionGraph,
+        uses: &Uses,
+        mut jump: NodeId,
+        mut target: NodeId,
+    ) -> Option<Self> {
+        let mut controls = Vec::new();
+        static WRAPPERS: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+        let wrappers =
+            *WRAPPERS.get_or_init(|| std::env::var("KFRC_DIAMOND_WRAPPERS").as_deref() != Ok("0"));
+        for _ in 0..if wrappers { 8 } else { 1 } {
+            if graph.is_dead(jump)
+                || graph.op(jump) != Opcode::Jump
+                || !graph.inputs(jump).is_empty()
+            {
+                return None;
+            }
+            let [usage] = uses.of(jump) else { return None };
+            if usage.user != target || !matches!(usage.kind, UseKind::Operand(_)) {
+                return None;
+            }
+            controls.push(jump);
+            let source = graph.control(jump);
+            if source.is_none() || graph.is_dead(source) {
+                return None;
+            }
+            let [usage] = uses.of(source) else {
+                return None;
+            };
+            if usage.user != jump || usage.kind != UseKind::Control {
+                return None;
+            }
+            if graph.op(source) == Opcode::Projection {
+                return Some(Self {
+                    exit: source,
+                    controls,
+                });
+            }
+            // Identity Phis and fixed or anchored users are excluded. The
+            // wrapper contributes only one incoming edge and one outgoing jump.
+            if graph.op(source) != Opcode::Region || graph.inputs(source).len() != 1 {
+                return None;
+            }
+            controls.push(source);
+            target = source;
+            jump = graph.input(source, 0);
+        }
+        None
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{ComparePredicate, Interpreter, Outcome};
+    use crate::{ComparePredicate, Interpreter, Outcome, verify_graph};
     use kfrc_body::{FunctionAbi, IntegerWidth, PassMode, RecordedTypes, SizeAlign};
 
-    #[test]
-    fn layout_empty_diamond_needs_no_redundant_effect_phi() {
+    fn empty_diamond(wrappers: usize, anchored: bool) -> FunctionGraph {
         let mut types = RecordedTypes::new();
         let word = types.intern(
             TypeShape::Int {
@@ -223,13 +289,26 @@ mod tests {
         );
         let jumps: Vec<_> = (0..2)
             .map(|side| {
-                let exit = graph.add_node(
+                let mut exit = graph.add_node(
                     Opcode::Projection,
                     NodeId::NONE,
                     &[branch],
                     side,
                     ValueType::Control,
                 );
+                for _ in 0..wrappers * (side as usize + 1) {
+                    let jump = graph.add_node(Opcode::Jump, exit, &[], 0, ValueType::Control);
+                    exit = graph.add_node(
+                        Opcode::Region,
+                        NodeId::NONE,
+                        &[jump],
+                        0,
+                        ValueType::Control,
+                    );
+                }
+                if anchored && side == 0 {
+                    graph.add_node(Opcode::Add, exit, &[value, zero], 0, ValueType::Rust(word));
+                }
                 graph.add_node(Opcode::Jump, exit, &[], 0, ValueType::Control)
             })
             .collect();
@@ -241,17 +320,27 @@ mod tests {
             0,
             ValueType::Control,
         );
-        crate::verify_graph(&mut graph).unwrap();
-        let original = graph.clone();
-        assert_eq!(super::run(&mut graph), 1);
-        crate::verify_graph(&mut graph).unwrap();
-        for input in [0, 1, 7, u64::MAX] {
-            let before =
-                Interpreter::new(&original).run(&[input], &mut |_: &str, _: &[u64]| unreachable!());
-            let after =
-                Interpreter::new(&graph).run(&[input], &mut |_: &str, _: &[u64]| unreachable!());
-            assert_eq!(before, Ok(Outcome::Return(input)));
-            assert_eq!(after, before);
+        graph
+    }
+
+    #[test]
+    fn layout_empty_diamonds_need_no_effect_phi_and_reject_anchored_uses() {
+        for wrappers in [0, 1, 3] {
+            for anchored in [false, true] {
+                let mut graph = empty_diamond(wrappers, anchored);
+                verify_graph(&mut graph).unwrap();
+                let original = graph.clone();
+                assert_eq!(super::run(&mut graph), usize::from(!anchored));
+                verify_graph(&mut graph).unwrap();
+                for input in [0, 1, 7, u64::MAX] {
+                    let before = Interpreter::new(&original)
+                        .run(&[input], &mut |_: &str, _: &[u64]| unreachable!());
+                    let after = Interpreter::new(&graph)
+                        .run(&[input], &mut |_: &str, _: &[u64]| unreachable!());
+                    assert_eq!(before, Ok(Outcome::Return(input)));
+                    assert_eq!(after, before);
+                }
+            }
         }
     }
 }

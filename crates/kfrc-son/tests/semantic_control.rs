@@ -99,6 +99,18 @@ impl TestGraph {
         );
     }
 
+    fn wrap_control(&mut self, mut control: NodeId, count: usize) -> NodeId {
+        for _ in 0..count {
+            let jump = self
+                .graph
+                .add_node(Opcode::Jump, control, &[], 0, ValueType::Control);
+            control =
+                self.graph
+                    .add_node(Opcode::Region, NodeId::NONE, &[jump], 0, ValueType::Control);
+        }
+        control
+    }
+
     fn call(&mut self, control: NodeId, symbol: &str) -> (NodeId, NodeId, NodeId) {
         let target = self.graph.add_callee(CallTarget {
             symbol: symbol.into(),
@@ -417,6 +429,8 @@ fn boolean_diamond_collapses_without_losing_poison_or_arm_effects() {
                 if side_effect {
                     (yes, yes_effect, _) = t.call(yes, "side_effect");
                 }
+                let yes = t.wrap_control(yes, 3);
+                let no = t.wrap_control(no, 2);
                 let a = t
                     .graph
                     .add_node(Opcode::Jump, yes, &[], 0, ValueType::Control);
@@ -716,7 +730,9 @@ fn redundant_merges_of_one_value_fold_to_that_value() {
     );
     let (yes, no) = test.branch(condition);
     // One arm passes through a single-predecessor wrapper with its own Phi.
-    let wrapper_jump = test.graph.add_node(Opcode::Jump, yes, &[], 0, ValueType::Control);
+    let wrapper_jump = test
+        .graph
+        .add_node(Opcode::Jump, yes, &[], 0, ValueType::Control);
     let wrapper = test.graph.add_node(
         Opcode::Region,
         NodeId::NONE,
@@ -731,8 +747,12 @@ fn redundant_merges_of_one_value_fold_to_that_value() {
         0,
         ValueType::Rust(test.integer),
     );
-    let yes_jump = test.graph.add_node(Opcode::Jump, wrapper, &[], 0, ValueType::Control);
-    let no_jump = test.graph.add_node(Opcode::Jump, no, &[], 0, ValueType::Control);
+    let yes_jump = test
+        .graph
+        .add_node(Opcode::Jump, wrapper, &[], 0, ValueType::Control);
+    let no_jump = test
+        .graph
+        .add_node(Opcode::Jump, no, &[], 0, ValueType::Control);
     let region = test.graph.add_node(
         Opcode::Region,
         NodeId::NONE,
