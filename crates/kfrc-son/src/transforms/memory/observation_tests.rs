@@ -6,6 +6,9 @@ use kfrc_body::{
     FunctionAbi, IntegerWidth, PassMode, RecordedTypes, SemanticAggregate, SizeAlign, TyId,
 };
 
+#[path = "observation_tests/scalar.rs"]
+mod scalar;
+
 struct Fixture {
     graph: FunctionGraph,
     word: TyId,
@@ -595,4 +598,111 @@ fn full_and_seam_pipelines_remove_duplicate_observations_and_preserve_call_trace
             );
         }
     }
+}
+
+fn symbol(f: &mut Fixture, local: bool, addend: i64) -> NodeId {
+    let pointer = f.graph.oracle.intern(
+        TypeShape::RawPointer {
+            mutability: kfrc_body::Mutability::Not,
+            pointee: f.word,
+        },
+        Some(SizeAlign { size: 8, align: 8 }),
+    );
+    let name = if local {
+        "local_identity"
+    } else {
+        "opaque_external"
+    };
+    let index = f.graph.symbols.len() as u32;
+    f.graph.symbols.push((name.into(), addend));
+    if local {
+        f.graph.data_objects.push(kfrc_body::DataObject {
+            symbol: name.into(),
+            bytes: vec![0; 8],
+            align: 8,
+            writable: true,
+            ..Default::default()
+        });
+    }
+    f.graph.add_node(
+        Opcode::SymbolAddress,
+        NodeId::NONE,
+        &[],
+        index,
+        ValueType::Rust(pointer),
+    )
+}
+
+#[test]
+fn symbol_address_observation_checks_poison_without_requiring_nonzero_or_bytes() {
+    for local in [false, true] {
+        for addend in [0, 37, -0x10000] {
+            let mut f = Fixture::new(false);
+            let address = symbol(&mut f, local, addend);
+            f.observe(address);
+            f.ret(address);
+            let original = f.graph.clone();
+            assert_eq!(f.optimize().observations_removed, 1);
+            let result = execute(&f.graph, Value::Scalar(42), false);
+            assert_eq!(result, execute(&original, Value::Scalar(42), false));
+            if addend == -0x10000 {
+                assert_eq!(result.0, Ok(SemanticOutcome::Return(Value::Scalar(0))));
+            }
+            // The address remains a value and its identity-bearing object is
+            // retained. Observation removal neither duplicates nor erases it.
+            assert_eq!(f.graph.data_objects, original.data_objects);
+            assert!(!f.graph.is_dead(address));
+        }
+    }
+}
+
+#[test]
+fn a_defined_symbol_address_does_not_prove_an_adjacent_poison_value() {
+    let mut f = Fixture::new(false);
+    let address = symbol(&mut f, false, 0);
+    f.observe(address);
+    let poison = f.poison(f.word);
+    f.observe(poison);
+    f.call(false, false);
+    f.ret(f.arg);
+    let original = f.graph.clone();
+    assert_eq!(f.optimize().observations_removed, 1);
+    assert_eq!(f.count(), 1);
+    let result = execute(&f.graph, Value::Scalar(42), false);
+    assert_eq!(result, execute(&original, Value::Scalar(42), false));
+    assert!(matches!(result.0, Err(InterpretError::PoisonObserved(_))));
+    assert!(result.1.is_empty());
+}
+
+#[test]
+fn a_defined_symbol_address_does_not_grant_memory_access() {
+    let mut f = Fixture::new(false);
+    let address = symbol(&mut f, false, 0);
+    f.observe(address);
+    let loaded = f.fixed(Opcode::LoadValue, &[address], 0, f.word);
+    f.ret(loaded);
+    let original = f.graph.clone();
+    assert_eq!(f.optimize().observations_removed, 1);
+    let result = execute(&f.graph, Value::Scalar(42), false);
+    assert_eq!(result, execute(&original, Value::Scalar(42), false));
+    assert!(matches!(
+        result.0,
+        Err(InterpretError::UndefinedBehaviour(_))
+    ));
+}
+
+#[test]
+fn data_registration_errors_still_precede_removed_symbol_observations() {
+    let mut f = Fixture::new(false);
+    let address = symbol(&mut f, true, 0);
+    f.observe(address);
+    f.ret(f.arg);
+    let mut conflicting = f.graph.data_objects[0].clone();
+    conflicting.bytes[0] = 1;
+    f.graph.data_objects.push(conflicting);
+    let original = f.graph.clone();
+    assert_eq!(f.optimize().observations_removed, 1);
+    let result = execute(&f.graph, Value::Scalar(42), false);
+    assert_eq!(result, execute(&original, Value::Scalar(42), false));
+    assert!(matches!(result.0, Err(InterpretError::Malformed(_))));
 }

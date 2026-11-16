@@ -1,3 +1,4 @@
+use super::instance_walk::InstanceWalk;
 use super::*;
 use crate::{ValueType, verify_graph};
 use kfrc_body::{FunctionAbi, PassMode, RecordedTypes, TypeShape};
@@ -97,6 +98,75 @@ impl Fixture {
             0,
             ValueType::Control,
         )
+    }
+}
+
+#[test]
+fn canonical_condition_handles_long_boolean_chains_and_cycles() {
+    for length in [0, 1, 2, 7, 32, 128] {
+        let mut f = Fixture::new();
+        let ty = f.graph.rust_type(f.predicate).unwrap();
+        let mut value = f.predicate;
+        let mut outputs = [false, true];
+        let mut chain = vec![value];
+        assert_eq!(
+            canonical_condition(&f.graph, value),
+            Some((f.predicate, false))
+        );
+        for index in 0..length {
+            if index % 3 == 0 {
+                value = f.graph.add_node(
+                    Opcode::BitNot,
+                    NodeId::NONE,
+                    &[value],
+                    0,
+                    ValueType::Rust(ty),
+                );
+                outputs = outputs.map(|output| !output);
+            } else {
+                let constant = index % 4 < 2;
+                let equal = index % 5 < 3;
+                let c = f.graph.add_constant(u128::from(constant), ty);
+                let operands = if index % 2 == 0 {
+                    [value, c]
+                } else {
+                    [c, value]
+                };
+                value = f.graph.add_node(
+                    Opcode::Compare,
+                    NodeId::NONE,
+                    &operands,
+                    if equal {
+                        ComparePredicate::Equal
+                    } else {
+                        ComparePredicate::NotEqual
+                    } as u32,
+                    ValueType::Rust(ty),
+                );
+                // A truth-table oracle independent of the normalizer's
+                // inversion formula and of which operand held the constant.
+                outputs = outputs.map(|output| {
+                    if equal {
+                        output == constant
+                    } else {
+                        output != constant
+                    }
+                });
+            }
+            assert_ne!(outputs[0], outputs[1]);
+            assert_eq!(
+                canonical_condition(&f.graph, value),
+                Some((f.predicate, outputs[0]))
+            );
+            chain.push(value);
+        }
+        // Closing the chain covers a self-loop, a two-node cycle and mixed
+        // comparison/negation cycles. No query may return a proof from a cycle.
+        f.graph.set_opcode(f.predicate, Opcode::BitNot);
+        f.graph.set_inputs(f.predicate, &[value]);
+        for value in chain {
+            assert_eq!(canonical_condition(&f.graph, value), None);
+        }
     }
 }
 
@@ -211,24 +281,11 @@ fn loop_scan_rejects_changed_instances_and_accepts_proof_refresh() {
     verify_graph(&mut f.graph).unwrap();
     let cfg = ControlFlow::new(&f.graph);
     let mut stats = WitnessStats::default();
+    let mut walk = InstanceWalk::new(f.graph.len());
     // Re-entering an inner dynamic definition without passing proof again is stale.
-    assert!(!unchanged_until(
-        &cfg,
-        true,
-        proof,
-        back,
-        &[inner],
-        &mut stats
-    ));
+    assert!(!walk.unchanged_until(&cfg, true, proof, back, &[inner], &mut stats));
     // Re-entering the outer definition always traverses proof again before use.
-    assert!(unchanged_until(
-        &cfg,
-        true,
-        proof,
-        back,
-        &[header],
-        &mut stats
-    ));
+    assert!(walk.unchanged_until(&cfg, true, proof, back, &[header], &mut stats));
     assert!(stats.node_visits > 0);
     let dom = Dominators::new(&cfg);
     let mut facts = PredicateFacts::new(&f.graph, &cfg, &dom);
@@ -239,6 +296,168 @@ fn loop_scan_rejects_changed_instances_and_accepts_proof_refresh() {
     assert!(
         facts.stats().node_visits < 200,
         "bounded CFG, not path enumeration"
+    );
+}
+
+// These oracles deliberately use reachability rather than the production
+// immediate-dominator tree or the old generation-stamped DFS implementation.
+fn reachable_avoiding(cfg: &ControlFlow, start: NodeId, at: NodeId, cut: NodeId) -> bool {
+    if start == cut {
+        return false;
+    }
+    let mut seen = std::collections::BTreeSet::from([start]);
+    let mut queue = std::collections::VecDeque::from([start]);
+    while let Some(node) = queue.pop_front() {
+        if node == at {
+            return true;
+        }
+        for &next in cfg.successors(node) {
+            if next != cut && seen.insert(next) {
+                queue.push_back(next);
+            }
+        }
+    }
+    false
+}
+
+fn old_instance_oracle(
+    cfg: &ControlFlow,
+    start: NodeId,
+    proof: NodeId,
+    at: NodeId,
+    anchors: &[NodeId],
+) -> bool {
+    let dominates =
+        |a, b| cfg.contains(a) && cfg.contains(b) && !reachable_avoiding(cfg, start, b, a);
+    if !dominates(proof, at) || !anchors.iter().all(|&anchor| dominates(anchor, proof)) {
+        return false;
+    }
+    // Product-state BFS searches for a dirty use without a proof refresh.
+    let mut seen = std::collections::BTreeSet::new();
+    let mut queue = std::collections::VecDeque::from([(proof, false)]);
+    while let Some((node, dirty)) = queue.pop_front() {
+        for &next in cfg.successors(node) {
+            if next == proof {
+                continue;
+            }
+            let dirty = dirty || anchors.contains(&next);
+            if next == at && dirty {
+                return false;
+            }
+            if seen.insert((next, dirty)) {
+                queue.push_back((next, dirty));
+            }
+        }
+    }
+    true
+}
+
+#[test]
+fn dynamic_scope_matches_product_oracle_on_generated_cfgs() {
+    let mut random = 0x1294_d425_bf45_d113u64;
+    for sample in 0..64 {
+        let mut f = Fixture::new();
+        let nodes: Vec<_> = (0..12)
+            .map(|_| {
+                // Sparse node ids and unreachable controls exercise the
+                // distinction between graph storage and the reachable CFG.
+                f.graph
+                    .add_node(Opcode::Undefined, NodeId::NONE, &[], 0, ValueType::Effect);
+                f.graph
+                    .add_node(Opcode::Region, NodeId::NONE, &[], 0, ValueType::Control)
+            })
+            .collect();
+        let mut incoming = vec![Vec::new(); nodes.len()];
+        incoming[0].push(f.control);
+        for index in 1..nodes.len() - 1 {
+            incoming[index].push(nodes[index - 1]);
+        }
+        // Preserve the last node as unreachable. Vary the remaining cycles
+        // and entries, including irreducible cycles and a return to entry.
+        for _ in 0..sample % 16 {
+            random = random.wrapping_mul(6364136223846793005).wrapping_add(1);
+            let source = random as usize % (nodes.len() - 1);
+            let target = (random >> 32) as usize % (nodes.len() - 1);
+            incoming[target].push(nodes[source]);
+        }
+        for (index, &node) in nodes.iter().enumerate() {
+            f.graph.set_inputs(node, &incoming[index]);
+        }
+        let boolean = f.graph.rust_type(f.predicate).unwrap();
+        let values: Vec<_> = nodes
+            .iter()
+            .enumerate()
+            .map(|(index, &anchor)| {
+                let mut inputs = vec![anchor];
+                inputs.extend(std::iter::repeat_n(f.predicate, incoming[index].len()));
+                f.graph.add_node(
+                    Opcode::Phi,
+                    NodeId::NONE,
+                    &inputs,
+                    0,
+                    ValueType::Rust(boolean),
+                )
+            })
+            .collect();
+        let cfg = ControlFlow::new(&f.graph);
+        let dom = Dominators::new(&cfg);
+        let mut facts = PredicateFacts::new(&f.graph, &cfg, &dom);
+        for (index, &anchor) in nodes.iter().enumerate() {
+            for &proof in &nodes {
+                for &at in &nodes {
+                    assert_eq!(
+                        facts.same_instance(values[index], proof, at),
+                        old_instance_oracle(&cfg, f.graph.start, proof, at, &[anchor]),
+                        "sample {sample}, anchor {anchor}, proof {proof}, at {at}"
+                    );
+                }
+            }
+        }
+        assert!(!facts.same_instance(values[0], NodeId::NONE, nodes[0]));
+        assert!(!facts.same_instance(values[0], nodes[0], NodeId::NONE));
+    }
+}
+
+#[test]
+fn matched_predicates_still_require_current_dominating_definitions() {
+    let mut f = Fixture::new();
+    let (proof, exit) = f.branch(f.control, f.predicate);
+    let entry = f.jump(proof);
+    let inner = f.graph.add_node(
+        Opcode::Region,
+        NodeId::NONE,
+        &[entry],
+        0,
+        ValueType::Control,
+    );
+    let boolean = f.graph.rust_type(f.predicate).unwrap();
+    let current = f.graph.add_node(
+        Opcode::Phi,
+        NodeId::NONE,
+        &[inner, f.predicate, f.predicate],
+        0,
+        ValueType::Rust(boolean),
+    );
+    let back = f.jump(inner);
+    f.graph.set_inputs(inner, &[entry, back]);
+    f.ret(exit);
+    let cfg = ControlFlow::new(&f.graph);
+    let dom = Dominators::new(&cfg);
+    let mut facts = PredicateFacts::new(&f.graph, &cfg, &dom);
+    assert!(
+        !facts.same_instance(current, proof, back),
+        "inner redefinition precedes no refresh"
+    );
+    assert_eq!(facts.condition_at(f.predicate, proof, back), Some(true));
+    assert_eq!(
+        facts.condition_at(f.predicate, proof, exit),
+        None,
+        "a sibling is outside proof scope"
+    );
+    assert_eq!(
+        facts.condition_at(current, proof, back),
+        None,
+        "an unrelated Phi has no implication"
     );
 }
 

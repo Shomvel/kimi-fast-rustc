@@ -2,7 +2,12 @@
 //!
 //! Projections observe only the selected field. In particular, a poison field
 //! does not poison its siblings, and extracting an inactive variant produces
-//! poison rather than observing its payload. No rule reads layout information.
+//! poison rather than observing its payload. The representation-specific
+//! metadata rule separately certifies the producer's recorded field layouts.
+
+mod metadata;
+
+pub(crate) use metadata::wideptr_metadata_source;
 
 use std::collections::VecDeque;
 
@@ -126,6 +131,9 @@ fn reconstructed_pointer(graph: &FunctionGraph, node: NodeId) -> Option<NodeId> 
 }
 
 fn field(graph: &mut FunctionGraph, node: NodeId, mut source: NodeId) -> Option<NodeId> {
+    if let Some(metadata) = metadata::through_transmute(graph, node, source) {
+        return Some(metadata);
+    }
     let original = source;
     let field = graph.payload(node);
     // A valid graph can have cycles through Phi, but not an InsertField-only

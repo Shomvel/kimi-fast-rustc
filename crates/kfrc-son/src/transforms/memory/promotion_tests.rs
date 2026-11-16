@@ -5,6 +5,11 @@ use kfrc_body::{
     SizeAlign, TypeShape,
 };
 
+#[path = "promotion_index_tests.rs"]
+mod indices;
+#[path = "promotion_partition_tests.rs"]
+mod partitions;
+
 struct Fixture {
     graph: FunctionGraph,
     word: TyId,

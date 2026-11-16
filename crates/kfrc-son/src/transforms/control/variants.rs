@@ -112,7 +112,7 @@ pub fn normalize(graph: &mut FunctionGraph) -> VariantNormalizeStats {
     let dominators = Dominators::new(&cfg);
     let uses = Uses::new(graph);
     let proofs = variant_proofs(graph);
-    stats.nodes_indexed += graph.ids().count() * 3;
+    stats.nodes_indexed += graph.live_count() * 3;
     let mut candidates = Vec::new();
     for field in nodes
         .into_iter()
@@ -274,7 +274,7 @@ fn execution_uses(
         }
         for usage in uses.of(node) {
             *visits += 1;
-            match usage.kind {
+            match usage.kind() {
                 UseKind::Control => return None,
                 UseKind::Operand(slot) if graph.op(usage.user) == Opcode::Phi => {
                     if slot == 0 {

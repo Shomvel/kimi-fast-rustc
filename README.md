@@ -43,16 +43,25 @@ entry to a second compiler IR. Its historical benchmark results remain in eviden
 rustc definition MIR → semantic R graph → demand-driven specialization → S
 rustc concrete MIR → Typed Body → semantic S graph
   → aggregate/variant/scalar rules, memory promotion, semantic inlining
-  → explicit layout L graph → machine instructions → register allocation → ELF
+  → explicit layout L graph → byte storage / ABI lanes → Cranelift → ELF
 ```
 
 `crates/kfrc-body` owns frontend-neutral typed input and type facts;
 `crates/kfrc-son` owns the semantic graph, verifier, interpreter and transforms;
-`crates/kfrc-x86` owns machine lowering, encoding and object output.
+`crates/kfrc-cranelift` owns the default machine layer: storage and ABI lanes,
+then Cranelift optimization, instruction selection, register allocation and
+encoding. `crates/kfrc-object` writes ELF. `KFRC_MACHINE=x86` selects the
+original machine layer for differential validation.
 The rustc shell links rustc-private APIs. The separate LLVM profiling wrapper
 also links them to measure the unchanged reference backend; it is not a kfrc
 code-generation fallback.
 R/S/L are stages of the same IR design, not alternative compiler pipelines.
+The [representation contract](docs/design/ir/representation.md) keeps whole
+ABI values as bytes and gives indirect results their final destination.
+Crate-wide [program data](docs/design/ir/program-data.md) separates optimizer
+visibility from CGU placement. A single prepared body supplies inlining and
+emission; [residual pricing](docs/design/ir/inline-residual-cost.md) replaces
+semantic node-count profitability in the default backend.
 
 The implementation work follows the concrete programs and findings in
 [W01–W10](docs/research/walkthroughs/README.md). The goal is to avoid creating
@@ -74,6 +83,9 @@ ABI drivers, original crate tests and generated programs preserve observable
 outputs and object provenance. Formal measurements use the same source, std,
 toolchain and sandbox, following the frozen [metrics](docs/plan/poc/metrics.md).
 Current evidence is in `evidence/poc-semantic-only-20261109/`.
+The [2026-11-16 acceptance record](docs/validation/parallel-semantics-20261116.md)
+documents the Cranelift delivery, parallel scheduling, scalar ABI regressions,
+latest measurements and remaining LLVM gaps.
 
 The root wrapper's explicit LLVM benchmark, tuning and cache administration tools
 remain for baseline experiments. Their results are not semantic-backend results.

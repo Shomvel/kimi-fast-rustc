@@ -119,7 +119,8 @@ impl Interpreter<'_> {
             slots: HashMap::default(),
             symbols: HashMap::default(),
         };
-        frame.memory.register_data(&graph.data_objects)?;
+        let data: Vec<_> = graph.data_definitions().cloned().collect();
+        frame.memory.register_data(&data)?;
         for (symbol, _) in &graph.symbols {
             let address = frame.memory.symbol_address(symbol)?;
             frame.symbols.insert(symbol.clone(), address);

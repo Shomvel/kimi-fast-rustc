@@ -17,6 +17,13 @@ n20 = Call(Vec<u8>::push) ctl=n18 mem=[P0:n3, P1:n19] (n16, n17) : (Control, Con
 `ctl=` 是控制输入，`mem=` 是效果输入（按分区），括号里是值输入，冒号后是结果类型。多结果用 `n20.0`、`n20.1` 投影。
 `proof=w1` 引用编译期凭据，不是机器值操作数；`w1` 可存在事实旁表中。
 
+当前实现把整数契约存放在 arithmetic payload，dump 必须显示这些位：
+`Add.wrap` 与 `Add[nuw]` / `Add[nsw]` 不同，后者溢出会产生 poison。
+移位的 `amount_in_range` 表示越界计数产生 poison，因此不再标作 `.mask`；
+仅带 `nuw` / `exact` 而未带计数契约的移位仍保留 `.mask`。
+`[invalid:...]` 显示不适用于该 opcode 或未知的标志位，供未验证图诊断；
+实际合法性仍由 verifier 检查。此输出不会为节点增加或移除契约。
+
 ## 控制
 
 | 节点 | 级别 | 说明 |

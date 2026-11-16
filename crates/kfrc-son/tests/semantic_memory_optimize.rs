@@ -531,15 +531,20 @@ fn layout_copy_libcalls_recompute_local_partitions_without_weakening_escape_rule
 }
 
 #[test]
-fn layout_partition_recomputation_retains_provable_local_and_const_loads() {
-    for constant in [false, true] {
+fn layout_folds_private_and_immutable_reads_but_keeps_preemptible_const_partition() {
+    for case in 0..3 {
         let mut f = Fixture::new();
-        let address = if constant {
+        let address = if case != 0 {
             f.graph.symbols.push(("constant_word".into(), 0));
             f.graph.data_objects.push(kfrc_body::DataObject {
                 symbol: "constant_word".into(),
                 bytes: 37u64.to_le_bytes().to_vec(),
                 align: 8,
+                binding: if case == 2 {
+                    kfrc_body::DataBinding::Global { hidden: false }
+                } else {
+                    kfrc_body::DataBinding::Local
+                },
                 ..Default::default()
             });
             f.graph.add_node(
@@ -560,20 +565,20 @@ fn layout_partition_recomputation_retains_provable_local_and_const_loads() {
         verify_graph(&mut f.graph).unwrap();
         kfrc_son::lower_layout(&mut f.graph).unwrap();
         verify_graph(&mut f.graph).unwrap();
-        let load = f
-            .graph
-            .ids()
-            .find(|&n| f.graph.op(n) == Opcode::Load)
-            .unwrap();
-        let expected = if constant {
-            kfrc_son::MemoryPartition::Const { symbol: 0 }
+        let load = f.graph.ids().find(|&n| f.graph.op(n) == Opcode::Load);
+        if case == 2 {
+            assert_eq!(
+                f.graph.memory_partitions[f.graph.payload(load.unwrap()) as usize],
+                kfrc_son::MemoryPartition::Const { symbol: 0 }
+            );
         } else {
-            kfrc_son::MemoryPartition::Local { local: 19 }
-        };
-        assert_eq!(
-            f.graph.memory_partitions[f.graph.payload(load) as usize],
-            expected
-        );
+            assert!(load.is_none());
+            assert!(
+                !f.graph
+                    .ids()
+                    .any(|n| matches!(f.graph.op(n), Opcode::Store | Opcode::StackSlot))
+            );
+        }
         assert_eq!(
             Interpreter::new(&f.graph).run(&[], &mut |_: &str, _: &[u64]| unreachable!()),
             Ok(kfrc_son::Outcome::Return(37))
@@ -839,7 +844,11 @@ fn branch_snapshot_stops_at_writes_calls_lifetimes_and_requirements() {
         verify_graph(&mut f.graph).unwrap();
         let before = branch_outcomes(&f.graph);
         let stats = kfrc_son::optimize_graph(&mut f.graph);
-        assert_eq!(stats.loads_forwarded, 0, "{barrier:?}");
+        assert_eq!(
+            stats.loads_forwarded,
+            usize::from(barrier == Opcode::StoreValue),
+            "{barrier:?}"
+        );
         verify_graph(&mut f.graph).unwrap();
         assert_eq!(branch_outcomes(&f.graph), before, "{barrier:?}");
     }
@@ -882,7 +891,10 @@ fn branch_snapshot_does_not_reinterpret_a_different_address_or_type() {
         f.ret(loaded);
         verify_graph(&mut f.graph).unwrap();
         let before = branch_outcomes(&f.graph);
-        assert_eq!(kfrc_son::optimize_graph(&mut f.graph).loads_forwarded, 0);
+        assert_eq!(
+            kfrc_son::optimize_graph(&mut f.graph).loads_forwarded,
+            usize::from(!retype)
+        );
         verify_graph(&mut f.graph).unwrap();
         assert_eq!(branch_outcomes(&f.graph), before);
     }
@@ -972,7 +984,8 @@ fn a_store_in_one_loop_iteration_never_forwards_to_the_next() {
         .graph
         .add_node(Opcode::Jump, again, &[], 0, ValueType::Control);
     f.graph.set_inputs(region, &[entry, jump]);
-    f.graph.set_inputs(effect, &[region, entry_effect, f.effect]);
+    f.graph
+        .set_inputs(effect, &[region, entry_effect, f.effect]);
     f.control = exit;
     f.ret(header);
     verify_graph(&mut f.graph).unwrap();
@@ -1094,4 +1107,66 @@ fn equal_pointer_casts_of_one_address_share_a_snapshot() {
     assert_eq!(kfrc_son::optimize_graph(&mut f.graph).loads_forwarded, 1);
     verify_graph(&mut f.graph).unwrap();
     assert_eq!(run(&f.graph), before);
+}
+
+#[test]
+fn call_snapshot_precedes_users_of_a_forwarded_load_continuation() {
+    use kfrc_son::{GraphLevel, Outcome, lower_layout};
+    let mut f = Fixture::new();
+    f.graph.oracle.record_abi_pair(
+        f.pair,
+        [
+            FieldLayout {
+                ty: f.word,
+                offset: 0,
+            },
+            FieldLayout {
+                ty: f.word,
+                offset: 8,
+            },
+        ],
+    );
+    f.graph.level = GraphLevel::Specialized;
+    let slot = f.slot(0, f.word);
+    let seven = f.graph.add_constant(7, f.word);
+    f.store(slot, seven);
+    let target = f.graph.add_callee(CallTarget {
+        symbol: "pair".into(),
+        abi: FunctionAbi {
+            args: vec![],
+            ret: PassMode::Pair,
+            c_variadic: false,
+        },
+    });
+    let pair = f.fixed(Opcode::Call, &[], target, Some(f.pair)).unwrap();
+    // The unused read's continuation is forwarded before the call result is
+    // decoded. Its consumer must still be redirected past the snapshot loads.
+    f.load(slot, f.word);
+    let field = f.graph.add_node(
+        Opcode::Field,
+        NodeId::NONE,
+        &[pair],
+        0,
+        ValueType::Rust(f.word),
+    );
+    f.store(slot, field);
+    let result = f.load(slot, f.word);
+    f.ret(result);
+    verify_graph(&mut f.graph).unwrap();
+    lower_layout(&mut f.graph).unwrap();
+    verify_graph(&mut f.graph).unwrap();
+    struct Calls;
+    impl kfrc_son::interpret::CallHandler for Calls {
+        fn call(&mut self, _: &str, _: &[u64]) -> Result<u64, InterpretError> {
+            unreachable!()
+        }
+        fn call_pair(&mut self, symbol: &str, _: &[u64]) -> Result<(u64, u64), InterpretError> {
+            assert_eq!(symbol, "pair");
+            Ok((42, 73))
+        }
+    }
+    assert_eq!(
+        Interpreter::new(&f.graph).run(&[], &mut Calls).unwrap(),
+        Outcome::Return(42)
+    );
 }

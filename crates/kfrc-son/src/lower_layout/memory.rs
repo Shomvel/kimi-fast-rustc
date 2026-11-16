@@ -183,7 +183,9 @@ impl LayoutLowering<'_> {
         // Insert this snapshot immediately after the source, before those reads.
         let mut control = old_control;
         let mut effect = old_effect;
-        let value = if self.encoded_values.contains(&node) {
+        let value = if self.whole_transport.contains(&node) {
+            self.transport_boundary(node, ty, &mut control, &mut effect)?
+        } else if self.encoded_values.contains(&node) {
             self.decode_encoded(node, ty, &mut control, &mut effect)?
         } else if let Some(fields) = self.boundary_transport.get(&node).cloned() {
             self.decode_variant_with_transport(
@@ -198,12 +200,14 @@ impl LayoutLowering<'_> {
             self.decode_fields_demand(node, ty, &mut control, &mut effect, &self.demand(node))?
         };
         for user in before {
-            if self.graph.control(user) == old_control {
+            // Earlier lowering may have forwarded a dead typed read's
+            // continuation without resolving its consumers' edges yet.
+            if self.graph.resolve(self.graph.control(user)) == old_control {
                 self.graph.set_control(user, control);
             }
             let inputs = self.graph.inputs(user).to_vec();
             for (index, input) in inputs.into_iter().enumerate() {
-                if input == old_effect {
+                if self.graph.resolve(input) == old_effect {
                     self.graph.set_input(user, index, effect);
                 }
             }

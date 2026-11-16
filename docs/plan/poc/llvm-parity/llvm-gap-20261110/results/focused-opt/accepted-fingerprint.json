@@ -1,0 +1,51 @@
+{
+  "source_overlay_sha256": "ea9ed9e00a5caa56555810585fb9e6faed5b473a4134d34a83193c275d690562",
+  "source_hashes": {
+    "crates/kfrc-son/src/lower_layout/boundary_transport.rs": "c33ed8d8de49e2e5d99144138d891e73929e51c65c6953ebf7ad0f248d8be793",
+    "crates/kfrc-son/tests/semantic_boundary_transport.rs": "d24d7f893fff5faaf1e1a84d66c9836db72b0d1a2cc64673e04d1954b85a403a",
+    "scripts/poc-validation/fixtures/enum-boundary-snapshot.rs": "7d28c1e87970cd196ce5cceee71f922839a8136ebb48264603002a880fafa653",
+    "scripts/poc-validation/fixtures/enum-boundary-snapshot-driver.rs": "52d358236dc286622f13db658849c18e00a2aee8de7dedb2e21b2ce2edc69b43",
+    "crates/kfrc-son/src/lower_layout/cleanup.rs": "143adf28b7e64c349717bc0f9549f2f0171e8679a1d8e06e972af96fdb78882f",
+    "crates/kfrc-son/src/lower_layout/address_cse.rs": "a6a7c14ee04118d6e92091a2b57ed49e3b2f37352f4b87334d19a01cfc4ac76e",
+    "crates/kfrc-son/src/lower_layout/cleanup_tests.rs": "4014147d5d56c22de4381cc177cc91fbed10ecdeff43d8e281407fad4da0a3a6",
+    "crates/kfrc-x86/src/lower.rs": "33cff3b179e67bab7f2d20f07d7440e3e282c846deec27fc6fe7fff2038b42b7",
+    "crates/kfrc-x86/src/lower/checked.rs": "c784696449c2cafb0f7dadaac77041732f239ddea6d0fc1719d61cc357a8de29",
+    "crates/kfrc-x86/src/lower/schedule.rs": "4d170f50dbeaeefbf5a734cbd0768db012866073f33a2c16c140c514ef4e9dc1",
+    "crates/kfrc-x86/src/lower/private_slots.rs": "b2d81de523e58e88c2fff94f3987958c1a3e0b1d25adff244a97a4cfb8c26021",
+    "crates/kfrc-x86/src/lower/allocated/constraints.rs": "36a3ef06304555ed17b9fb73845a5aa8044e2b7bb65cba7e53be6b2358bae429",
+    "crates/kfrc-x86/tests/checked_arithmetic.rs": "331eb35f7a59c6f8b71d87322d07b4db0aa52e9f88635d2cff01f6c4dcac75f4",
+    "crates/kfrc-x86/src/machine/x86_encode.rs": "53d7def71f7cecd278ac9874c21ffbe8a61961855e1ddcc65af630fbb4e33df9",
+    "crates/kfrc-x86/src/machine/x86_encode/layout.rs": "980e5c87faf8d41b84f6e0b0394123a5042f208920c1b2d20b56635d0b076186",
+    "crates/kfrc-x86/src/object_file.rs": "9dc5f39aa2730d0f64e3f46764581b7305f18f283385496bcdecf442be296a00",
+    "crates/kfrc-x86/tests/loop_alignment.rs": "2bb1907c1ed6c42a23effac96d4b0c8c4edbd2e15959ad617c83e42998a9eaa0",
+    "crates/kfrc-x86/src/machine/x86.rs": "d1ca21982c105c066400c9408ec3595d94ece82abaf7c7fe31692d135413c3a0",
+    "crates/kfrc-x86/src/machine/eval.rs": "b8a88e5ca277ed490ecd439e16eaafd0396bad78d6e3a7e153877e1aa52ee988"
+  },
+  "backend_sha256": "f91aea279fe60f02e5aa456958d348f9323e4c7b943ce10d363e5b9214894d1e",
+  "comparison": {
+    "semver": {
+      "objects_identical": true,
+      "driver_identical": true,
+      "driver_objects_identical": true,
+      "natural_driver_sha256": "e37ca06e6e4c3b8ff2c45eeb0ed39b83fba0d533e17d61ac837ac3abe533f382"
+    },
+    "base64": {
+      "objects_identical": true,
+      "driver_identical": true,
+      "driver_objects_identical": true,
+      "natural_driver_sha256": "fe53cd18ed472da706bd728c7b591abc98630e7ed41a8b628d375d6db5ea49aa"
+    },
+    "unicode-segmentation": {
+      "objects_identical": true,
+      "driver_identical": true,
+      "driver_objects_identical": true,
+      "natural_driver_sha256": "a812d794dca13ef0696803b320cda6883f81d15dd9adc74bdcecf2bd408f96c1"
+    },
+    "humantime": {
+      "objects_identical": true,
+      "driver_identical": true,
+      "driver_objects_identical": true,
+      "natural_driver_sha256": "9f70bd789055c91191821c155308c87bb8e8764c6194bf6582462914113adebc"
+    }
+  }
+}

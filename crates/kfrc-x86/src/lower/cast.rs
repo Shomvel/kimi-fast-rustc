@@ -243,15 +243,17 @@ impl Lowering<'_> {
                 }
                 continue;
             }
-            let values = match mode {
+            let mut values = match mode {
                 PassMode::Ignore => Vec::new(),
-                PassMode::Direct if self.scalar_kind(ty).is_ok() => vec![self.value(*input)?],
-                PassMode::Direct => {
+                PassMode::Direct | PassMode::DirectScalar(_) if self.scalar_kind(ty).is_ok() => {
+                    vec![self.value(*input)?]
+                }
+                PassMode::Direct | PassMode::DirectScalar(_) => {
                     let address = self.value(*input)?;
                     vec![self.load_raw_bytes(address, 0, self.direct_bits(ty)?)]
                 }
                 PassMode::Indirect => vec![self.value(*input)?],
-                PassMode::Pair => {
+                PassMode::Pair | PassMode::ScalarPair(_) => {
                     let address = self.value(*input)?;
                     let fields = *graph.oracle.abi_pairs.get(&ty).ok_or_else(|| {
                         LowerError::Unsupported("missing pair call layout".to_owned())
@@ -276,6 +278,9 @@ impl Lowering<'_> {
                     )));
                 }
             };
+            for (value, scalar) in values.iter_mut().zip(mode.scalar_abis()) {
+                *value = self.pass_scalar_abi(*value, *scalar)?;
+            }
             if locations.len() != values.len() {
                 return Err(LowerError::Malformed(
                     "argument plan length mismatch".to_owned(),
@@ -285,7 +290,7 @@ impl Lowering<'_> {
         }
         let count = match abi.ret {
             PassMode::Ignore | PassMode::Indirect | PassMode::Vector { .. } => 0,
-            PassMode::Pair => 2,
+            PassMode::Pair | PassMode::ScalarPair(_) => 2,
             PassMode::Cast(cast) => Self::cast_lanes(cast)?.len(),
             _ => 1,
         };
@@ -330,7 +335,7 @@ impl Lowering<'_> {
                     .map(VirtualValue::Reg)
                     .collect::<Vec<_>>(),
             )?,
-            PassMode::Pair => {
+            PassMode::Pair | PassMode::ScalarPair(_) => {
                 let fields = *graph.oracle.abi_pairs.get(&ty).ok_or_else(|| {
                     LowerError::Unsupported("missing pair result layout".to_owned())
                 })?;
@@ -344,12 +349,13 @@ impl Lowering<'_> {
                     )?;
                 }
             }
-            PassMode::Direct if self.scalar_kind(ty).is_ok() => self.canonicalize(
-                register(result),
-                VirtualValue::Reg(values[0]),
-                self.scalar_kind(ty)?,
-            ),
-            PassMode::Direct => {
+            PassMode::Direct | PassMode::DirectScalar(_) if self.scalar_kind(ty).is_ok() => self
+                .canonicalize(
+                    register(result),
+                    VirtualValue::Reg(values[0]),
+                    self.scalar_kind(ty)?,
+                ),
+            PassMode::Direct | PassMode::DirectScalar(_) => {
                 self.allocate_slot(register(result), ty)?;
                 self.store_raw_bytes(
                     VirtualValue::Reg(register(result)),
@@ -367,5 +373,33 @@ impl Lowering<'_> {
         self.emitted.insert(result);
         self.emitted.insert(node);
         Ok(())
+    }
+
+    /// This backend deliberately uses full-word temporaries. Extending beyond
+    /// the target's required bits is permitted, but the extension kind comes
+    /// from the producer, including for directly passed transparent wrappers.
+    pub(super) fn pass_scalar_abi(
+        &mut self,
+        value: VirtualValue,
+        scalar: kfrc_body::ScalarAbi,
+    ) -> Result<VirtualValue, LowerError> {
+        if !scalar.is_supported() {
+            return Err(LowerError::Malformed(format!(
+                "unsupported scalar ABI {scalar:?}"
+            )));
+        }
+        if scalar.extension == CastExtension::None {
+            return Ok(value);
+        }
+        let extended = self.temporary();
+        self.canonicalize(
+            extended,
+            value,
+            ScalarKind {
+                bits: u32::from(scalar.storage_bits()),
+                signed: scalar.extension == CastExtension::Sign,
+            },
+        );
+        Ok(VirtualValue::Reg(extended))
     }
 }

@@ -1,6 +1,9 @@
 //! Calling-convention value materialization and frame storage helpers.
 use super::*;
 
+#[path = "small_equality.rs"]
+mod small_equality;
+
 impl Lowering<'_> {
     pub(super) fn allocate_slot(
         &mut self,
@@ -141,8 +144,8 @@ impl Lowering<'_> {
         Ok(true)
     }
 
-    /// `bcmp` of a small constant size becomes loads, XORs and one compare.
-    /// Its result is 0 for equal bytes and 1 otherwise, a valid `bcmp` value.
+    /// An authenticated byte equality of a small constant size becomes loads,
+    /// XORs and one compare. A same-named user call carries no read contract.
     pub(super) fn emit_small_equality(&mut self, node: NodeId) -> Result<bool, LowerError> {
         const MAX_BYTES: u64 = 32;
         let graph = self.graph;
@@ -150,7 +153,7 @@ impl Lowering<'_> {
             return Ok(false);
         }
         let count = graph.input(node, 3);
-        if graph.callees[graph.payload(node) as usize].symbol != "bcmp"
+        if graph.runtime_comparison(graph.payload(node)) != Some(kfrc_body::RuntimeComparison::Bcmp)
             || graph.op(count) != Opcode::Const
             || graph.constant_value(count) > u128::from(MAX_BYTES)
         {
@@ -160,14 +163,12 @@ impl Lowering<'_> {
         let left = self.value(graph.input(node, 1))?;
         let right = self.value(graph.input(node, 2))?;
         let mut difference = VirtualValue::Imm(0);
-        let mut offset = 0u64;
-        while offset < size {
-            let bytes = match size - offset {
-                8.. => 8,
-                4..=7 => 4,
-                2..=3 => 2,
-                _ => 1,
-            };
+        // The authenticated call already requires both complete byte ranges
+        // to be initialized/readable. Keep its scheduled fixed position and
+        // use overlapping chunks only when they remove a load pair.
+        for small_equality::Chunk { offset, bytes } in
+            small_equality::plan(size, small_equality::overlap_enabled())
+        {
             let mut load = |address: VirtualValue| {
                 let (address, displacement) = self.displaced(address, offset);
                 let value = self.temporary();
@@ -197,7 +198,6 @@ impl Lowering<'_> {
                 });
                 VirtualValue::Reg(merged)
             };
-            offset += u64::from(bytes);
         }
         if let Some(result) = self.schedule.projections.get(&(node, 2)).copied() {
             self.push(VirtualInstr::Compare {
@@ -313,7 +313,7 @@ impl Lowering<'_> {
                     dst: register(parameter),
                     src: VirtualValue::Imm(0),
                 }),
-                PassMode::Direct if self.scalar_kind(ty).is_ok() => {
+                PassMode::Direct | PassMode::DirectScalar(_) if self.scalar_kind(ty).is_ok() => {
                     let raw = self.temporary();
                     self.push(VirtualInstr::LoadArg {
                         dst: raw,
@@ -322,7 +322,7 @@ impl Lowering<'_> {
                     let kind = self.node_kind(parameter)?;
                     self.canonicalize(register(parameter), VirtualValue::Reg(raw), kind);
                 }
-                PassMode::Direct => {
+                PassMode::Direct | PassMode::DirectScalar(_) => {
                     self.allocate_slot(register(parameter), ty)?;
                     let raw = self.temporary();
                     self.push(VirtualInstr::LoadArg {
@@ -355,7 +355,7 @@ impl Lowering<'_> {
                     }
                     self.receive_cast(parameter, *cast, &values)?;
                 }
-                PassMode::Pair => {
+                PassMode::Pair | PassMode::ScalarPair(_) => {
                     let fields = *graph.oracle.abi_pairs.get(&ty).ok_or_else(|| {
                         LowerError::Unsupported(format!(
                             "missing ScalarPair layout for `{}`",

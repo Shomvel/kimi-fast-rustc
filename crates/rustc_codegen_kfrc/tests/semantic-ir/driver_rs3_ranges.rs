@@ -2,6 +2,31 @@ use core::{num::NonZeroU32, ptr::NonNull};
 use semantic_values::rs3_ranges_probe::*;
 
 pub fn check() {
+    let mut bytes = [0u8; 256];
+    let words = [0u32; 256];
+    for length in 0..=bytes.len() {
+        assert!(byte_slice_bounded(&bytes[..length]));
+        assert!(mutable_byte_slice_bounded(&mut bytes[..length]));
+        assert!(word_slice_bounded(&words[..length]));
+    }
+    let text = "slice 长度";
+    for length in 0..=text.len() {
+        if text.is_char_boundary(length) {
+            assert!(string_bounded(&text[..length]));
+        }
+    }
+    // This ZST reference is valid even at usize::MAX length. A raw slice
+    // pointer can also carry arbitrary metadata without being dereferenced.
+    let zst =
+        unsafe { core::slice::from_raw_parts(NonNull::<()>::dangling().as_ptr(), usize::MAX) };
+    assert!(!zst_slice_bounded(zst));
+    let raw = core::ptr::slice_from_raw_parts(core::ptr::null::<u8>(), usize::MAX);
+    assert!(!raw_byte_slice_bounded(raw));
+    assert!(raw_byte_slice_bounded(core::ptr::slice_from_raw_parts(
+        core::ptr::null::<u8>(),
+        0
+    )));
+    println!("rs3-range-slices lengths=257 zst=usize::MAX raw=usize::MAX");
     for bits in [1u32, 2, 17, u32::MAX] {
         assert!(nonzero(NonZeroU32::new(bits).unwrap()));
     }

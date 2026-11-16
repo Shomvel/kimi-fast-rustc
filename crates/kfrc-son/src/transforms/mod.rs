@@ -2,6 +2,7 @@
 
 pub(crate) mod control;
 pub(crate) mod ipo;
+pub(crate) mod loops;
 pub(crate) mod memory;
 pub(crate) mod scalar;
 pub(crate) mod utils;

@@ -84,7 +84,11 @@ impl Widths<'_> {
                 let bits = width.bits();
                 Some(self.reg(*value).map_or(bits, |known| known.min(bits)))
             }
-            LowerInstr::Load { bytes, .. } if *bytes < 8 => Some(u32::from(*bytes) * 8),
+            LowerInstr::Load { bytes, .. } | LowerInstr::LoadAddress { bytes, .. }
+                if *bytes < 8 =>
+            {
+                Some(u32::from(*bytes) * 8)
+            }
             _ => None,
         };
         self.memo.insert(reg, width);

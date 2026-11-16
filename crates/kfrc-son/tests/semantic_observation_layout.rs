@@ -292,8 +292,15 @@ fn equal_variant_tags_across_phi_need_no_additional_observation_branches() {
     let value = merged_variants(&mut f, [left, right]);
     f.observe(value);
     f.finish();
+    for value in [0, 1, 99] {
+        assert_eq!(
+            semantic(&f.graph, value),
+            Ok(SemanticOutcome::Return(Value::Scalar(value)))
+        );
+    }
     f.lower();
-    assert_eq!(f.count(Opcode::If), 1);
+    // Both tag and payload are identical, so the source choice is empty too.
+    assert_eq!(f.count(Opcode::If), 0);
     for value in [0, 1, 99] {
         assert_eq!(physical(&f.graph, value), Ok(Outcome::Return(value)));
     }
@@ -543,7 +550,9 @@ fn witnessed_dynamic_field_reuses_payload_without_leaf_pins() {
         );
     }
     f.lower();
-    assert_eq!(f.count(Opcode::If), 2);
+    // The original choice remains; its known incoming tags bypass the
+    // redundant dispatch introduced when the enum is published as L.
+    assert_eq!(f.count(Opcode::If), 1);
     assert_eq!(f.count(Opcode::VariantWitness), 0);
     assert_eq!(f.count(Opcode::Load), 0);
     assert_eq!(f.count(Opcode::Store), 0);

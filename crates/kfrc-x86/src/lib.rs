@@ -34,7 +34,8 @@ mod object_file;
 
 pub use lower::{LowerError, lower_function, lower_function_with_options};
 pub use object_file::{
-    FunctionCode, ObjectError, SymbolBinding, write_object, write_object_with_data,
+    FunctionCode, ObjectError, SymbolBinding, encode_function, write_object,
+    write_object_with_data,
 };
 
 pub use crate::machine::x86::{MachineFunction, MachineInstr, Reg, StackSlot};

@@ -29,9 +29,9 @@ pub enum LoweredConstant {
     },
 }
 
-/// Per-body state. Names include the body's linker symbol, so independent
-/// codegen units can emit their own local copies of anonymous allocations.
-/// References to statics and functions always keep their real linker symbols.
+/// Per-body collection state. Temporary allocation names include the body's
+/// linker symbol; the crate pool interns them before interprocedural work.
+/// References to statics and functions keep their real linker symbols.
 pub struct ConstantCx<'tcx> {
     tcx: TyCtxt<'tcx>,
     namespace: String,

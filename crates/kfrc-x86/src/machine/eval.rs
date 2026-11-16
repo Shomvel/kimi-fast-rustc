@@ -8,7 +8,7 @@ use std::collections::BTreeMap;
 use std::error::Error;
 use std::fmt;
 
-use crate::machine::x86::{Condition, MachineFunction, MachineInstr, Operand, Reg, StackSlot};
+use crate::machine::x86::{BitWidth, Condition, MachineFunction, MachineInstr, Operand, Reg, StackSlot};
 
 const REGISTER_COUNT: usize = 16;
 const CALLEE_SAVED_INITIAL: [i64; Reg::CALLEE_SAVED.len()] = [
@@ -174,6 +174,16 @@ fn execute(function: &MachineFunction, arguments: &[i64]) -> Result<Execution, M
             }
             MachineInstr::OffsetAddress { dst, base, offset } => {
                 let value = machine.reg(base).wrapping_add(i64::from(offset));
+                machine.set_reg(dst, value);
+            }
+            MachineInstr::EffectiveAddress { dst, address } => {
+                let index = address.index.map_or(0, |(index, scale)| {
+                    machine.reg(index).wrapping_mul(i64::from(scale.factor()))
+                });
+                let value = machine
+                    .reg(address.base)
+                    .wrapping_add(index)
+                    .wrapping_add(i64::from(address.offset));
                 machine.set_reg(dst, value);
             }
             MachineInstr::Neg { dst } => {
@@ -367,6 +377,13 @@ fn execute(function: &MachineFunction, arguments: &[i64]) -> Result<Execution, M
                 machine.set_reg(Reg::Rdx, (lhs % rhs) as i64);
                 machine.comparison = None;
             }
+            MachineInstr::MulHigh { src } => {
+                let product =
+                    u128::from(machine.reg(Reg::Rax) as u64) * u128::from(machine.reg(src) as u64);
+                machine.set_reg(Reg::Rax, product as i64);
+                machine.set_reg(Reg::Rdx, (product >> 64) as i64);
+                machine.comparison = None;
+            }
             MachineInstr::Cmp { lhs, rhs } => {
                 machine.comparison = Some((
                     machine.reg(lhs),
@@ -378,6 +395,16 @@ fn execute(function: &MachineFunction, arguments: &[i64]) -> Result<Execution, M
             }
             MachineInstr::TestByte { reg } => {
                 machine.comparison = Some((machine.reg(reg) & 0xff, 0));
+            }
+            MachineInstr::TestMasked { reg, mask, width } => {
+                let mask = if width == BitWidth::W64 {
+                    (mask as i32 as i64) as u64
+                } else {
+                    u64::from(mask)
+                };
+                let shift = 64 - width.bits();
+                let result = (((machine.reg(reg) as u64 & mask) << shift) as i64) >> shift;
+                machine.comparison = Some((result, 0));
             }
             MachineInstr::SetCc { condition, dst } => {
                 let (lhs, rhs) = machine
@@ -397,6 +424,9 @@ fn execute(function: &MachineFunction, arguments: &[i64]) -> Result<Execution, M
             | MachineInstr::LoadIndirect { .. }
             | MachineInstr::StoreIndirect { .. }
             | MachineInstr::StoreImmediate { .. }
+            | MachineInstr::LoadAddress { .. }
+            | MachineInstr::StoreAddress { .. }
+            | MachineInstr::StoreAddressImmediate { .. }
             | MachineInstr::SymbolAddress { .. }
             | MachineInstr::ThreadLocalAddress { .. }
             | MachineInstr::LoadVector { .. }
@@ -559,6 +589,11 @@ fn validate_instruction(
             validate_reg(dst)?;
             validate_reg(src)
         }
+        EffectiveAddress { dst, address } => {
+            validate_reg(dst)?;
+            address.try_map(validate_reg)?;
+            Ok(())
+        }
         BitScanZero { dst, src, zero, .. } => {
             validate_reg(dst)?;
             validate_reg(src)?;
@@ -594,11 +629,19 @@ fn validate_instruction(
                 Ok(())
             }
         }
+        MulHigh { src } => {
+            validate_reg(src)?;
+            if matches!(src, Reg::Rax | Reg::Rdx) {
+                Err(MachineEvalError::InvalidDivisor(src))
+            } else {
+                Ok(())
+            }
+        }
         Cmp { lhs, rhs } => {
             validate_reg(lhs)?;
             validate_operand(rhs)
         }
-        Test { reg } | TestByte { reg } => validate_reg(reg),
+        Test { reg } | TestByte { reg } | TestMasked { reg, .. } => validate_reg(reg),
         Load { dst, slot } => {
             validate_reg(dst)?;
             validate_slot(slot, stack_slots)
@@ -611,6 +654,9 @@ fn validate_instruction(
         | LoadIndirect { .. }
         | StoreIndirect { .. }
         | StoreImmediate { .. }
+        | LoadAddress { .. }
+        | StoreAddress { .. }
+        | StoreAddressImmediate { .. }
         | SymbolAddress { .. }
         | ThreadLocalAddress { .. }
         | LoadVector { .. }
@@ -667,6 +713,7 @@ mod tests {
             stack_slots: 0,
             callee_saved: Vec::new(),
             symbols: Vec::new(),
+            loop_headers: Vec::new(),
         }
     }
 

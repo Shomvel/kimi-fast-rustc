@@ -1,8 +1,10 @@
 //! Validate a call boundary and import its type facts before mutating the caller.
 
-use super::{InlineSkip, types::TypeImport};
+use super::{GraphProvider, InlineSkip, types::TypeImport};
 use crate::{FunctionGraph, NodeId, Opcode, ValueType};
 use kfrc_body::fx_hash::HashMap;
+
+mod data;
 
 /// Callee node types in the caller's type table.
 pub(super) type ImportedTypes = std::rc::Rc<HashMap<NodeId, ValueType>>;
@@ -15,6 +17,8 @@ pub(super) struct Plan {
     pub(super) oracle: Option<kfrc_body::RecordedTypes>,
     pub(super) expected_result: Option<ValueType>,
     pub(super) locals: HashMap<u32, u32>,
+    pub(super) data: Vec<usize>,
+    pub(super) constant_bytes_imported: usize,
 }
 pub(super) fn plan(
     graph: &FunctionGraph,
@@ -22,15 +26,29 @@ pub(super) fn plan(
     source: &FunctionGraph,
     remaining: usize,
     copy_anonymous_constants: bool,
+    loop_constant_bytes: Option<usize>,
     previous_import: Option<&ImportedTypes>,
+    provider: &(impl GraphProvider + ?Sized),
 ) -> Result<Plan, InlineSkip> {
+    if !source.program_data.is_empty()
+        && !std::sync::Arc::ptr_eq(&graph.program_data, &source.program_data)
+        && graph.program_data != source.program_data
+    {
+        return Err(InlineSkip::DataConflict);
+    }
     let ids: Vec<_> = source.ids().collect();
-    for data in &source.data_objects {
+    let data = data::referenced(source, &ids);
+    if !data::references_available(source, &ids, &data, |symbol| provider.can_reference(symbol)) {
+        return Err(InlineSkip::PrivateReference);
+    }
+    let mut constant_bytes_imported = 0usize;
+    for &index in &data {
+        let data = &source.data_objects[index];
         // A provider can expose another CGU's graph. Duplicating an object
         // with local linkage changes identity and potentially mutable state.
         // A symbol-owner contract must export a shared definition first.
         // Read-only anonymous constants have no identity and copy freely.
-        let duplicable = copy_anonymous_constants
+        let duplicable = (copy_anonymous_constants || loop_constant_bytes.is_some())
             && data.unnamed_address
             && !data.writable
             && !data.thread_local;
@@ -40,6 +58,23 @@ pub(super) fn plan(
         if let Some(old) = graph.data_objects.iter().find(|d| d.symbol == data.symbol) {
             if old != data {
                 return Err(InlineSkip::DataConflict);
+            }
+        } else if data.binding == kfrc_body::DataBinding::Local {
+            let padding =
+                usize::try_from(data.align.saturating_sub(1)).map_err(|_| InlineSkip::Budget)?;
+            let bytes = data
+                .bytes
+                .len()
+                .max(1)
+                .checked_add(padding)
+                .ok_or(InlineSkip::Budget)?;
+            constant_bytes_imported = constant_bytes_imported
+                .checked_add(bytes)
+                .ok_or(InlineSkip::Budget)?;
+            if !copy_anonymous_constants
+                && loop_constant_bytes.is_some_and(|left| constant_bytes_imported > left)
+            {
+                return Err(InlineSkip::Budget);
             }
         }
     }
@@ -152,5 +187,7 @@ pub(super) fn plan(
         oracle,
         expected_result,
         locals,
+        data,
+        constant_bytes_imported,
     })
 }

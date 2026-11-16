@@ -24,7 +24,7 @@ flowchart TD
     G --> I[可达实例：回答孔位、按答案键去重]
     I --> SS["S 级 SoN：特化、种子化简、内联"]
     SS --> O["L 级 SoN：布局降低、机器级优化、placement"]
-    O --> M[Machine IR → 线性扫描 → 编码]
+    O --> M[排程 → Cranelift：指令选择、寄存器分配、编码]
     M --> L[对象片段与链接]
 ```
 
@@ -35,7 +35,7 @@ flowchart TD
 | Typed Body | 语义：类型、初始化、借用、drop 显式化 | 不复制 rustc 的 MIR 优化 pass |
 | R/S 级 SoN | 全部与 Rust 语义有关的优化 | 不出现布局常量（R 级）；类型事实只经答案表读取（S 级起） |
 | L 级 SoN | 布局降低与机器级优化 | 不在 Rust 类型上推理 |
-| Machine IR | 寄存器、调用约定、栈帧 | 不做 ILP 调度 |
+| 机器层（Cranelift） | 存储 lane、ABI lane、指令选择、寄存器分配、栈帧 | 不在 Rust 类型上推理 |
 
 ## 核心决定
 
@@ -57,7 +57,7 @@ flowchart TD
 | [ids.md](ids.md) | 共享 ID、阶段接口、错误分类 |
 | [frontend/](frontend/overview.md) | 前端产物与交接（[overview](frontend/overview.md)）、类型表示（[types](frontend/types.md)）、Typed Body（[body](frontend/body.md)） |
 | [ir/](ir/levels.md) | 三级 SoN：[levels](ir/levels.md)、[graph](ir/graph.md)、[nodes](ir/nodes.md)、[values-and-types](ir/values-and-types.md)、[requirements-and-facts](ir/requirements-and-facts.md)、[constraints-and-effects](ir/constraints-and-effects.md)、[memory-partitions](ir/memory-partitions.md)、[ownership-drop-unwind](ir/ownership-drop-unwind.md)、[generics-specialization](ir/generics-specialization.md)、[optimization-pipeline](ir/optimization-pipeline.md)、[verifier](ir/verifier.md)、[semantics](ir/semantics.md) |
-| [backend.md](backend.md) | Machine IR、FnAbi、CallLayout、对象片段 |
+| [backend.md](backend.md)、[machine/](machine/layer.md) | 调用边界契约；机器层：[位置与契约](machine/layer.md)、[导出映射](machine/export.md)、[存储 lane](machine/storage-lanes.md)、[Cranelift 版本与补丁](machine/cranelift.md)、[目标文件](machine/object.md) |
 | [build/](build/pipeline.md) | 任务与产物发布（[pipeline](build/pipeline.md)）、缓存（[cache](build/cache.md)）、Cargo/sysroot（[cargo-sysroot](build/cargo-sysroot.md)） |
 | [goals/](goals/compile-time.md) | 四个目标怎么保证：[编译时间](goals/compile-time.md)、[体积](goals/size.md)、[运行速度](goals/runtime.md)；缓存见 [build/cache](build/cache.md) |
 

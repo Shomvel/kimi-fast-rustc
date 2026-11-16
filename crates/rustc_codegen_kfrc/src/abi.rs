@@ -6,7 +6,7 @@
 //! exactly the same ordering at call sites. An implicit caller location comes
 //! after all spread arguments.
 
-use kfrc_body::{FunctionAbi, PassMode};
+use kfrc_body::{CastExtension, FunctionAbi, PassMode, ScalarAbi};
 use rustc_abi::ExternAbi;
 use rustc_middle::mir;
 use rustc_middle::ty::{self, Instance, PolyFnSig, Ty, TyCtxt, TypingEnv};
@@ -145,13 +145,16 @@ fn record_abi<'tcx>(
     if abi.c_variadic {
         return Err("C-variadic functions are not implemented".to_owned());
     }
+    static LEGACY: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+    let legacy = *LEGACY
+        .get_or_init(|| std::env::var_os("KFRC_SCALAR_ABI").is_some_and(|value| value == "legacy"));
     Ok(FunctionAbi {
         args: abi
             .args
             .iter()
-            .map(|arg| pass_mode(tcx, arg))
+            .map(|arg| pass_mode(tcx, arg, legacy))
             .collect::<Result<_, _>>()?,
-        ret: pass_mode(tcx, &abi.ret)?,
+        ret: pass_mode(tcx, &abi.ret, legacy)?,
         c_variadic: false,
     })
 }
@@ -159,6 +162,7 @@ fn record_abi<'tcx>(
 fn pass_mode<'tcx>(
     tcx: TyCtxt<'tcx>,
     argument: &callconv::ArgAbi<'tcx, Ty<'tcx>>,
+    legacy: bool,
 ) -> Result<PassMode, String> {
     Ok(match &argument.mode {
         callconv::PassMode::Ignore => PassMode::Ignore,
@@ -169,6 +173,33 @@ fn pass_mode<'tcx>(
             ) =>
         {
             vector::direct(argument.layout.size.bytes())?
+        }
+        callconv::PassMode::Direct(attributes) if !legacy => match argument.layout.backend_repr {
+            rustc_abi::BackendRepr::Scalar(scalar) => {
+                let scalar = scalar_abi(tcx, scalar, attributes)?;
+                if scalar.bits < 32 {
+                    PassMode::DirectScalar(scalar)
+                } else {
+                    PassMode::Direct
+                }
+            }
+            _ if attributes.arg_ext == callconv::ArgExtension::None
+                && !attributes.contains(callconv::ArgAttribute::InReg) =>
+            {
+                PassMode::Direct
+            }
+            _ => return Err("non-scalar direct ABI attributes are not implemented".to_owned()),
+        },
+        callconv::PassMode::Pair(first, second) if !legacy => {
+            let rustc_abi::BackendRepr::ScalarPair(a, b) = argument.layout.backend_repr else {
+                return Err("ScalarPair ABI without two scalar layouts".to_owned());
+            };
+            let scalars = [scalar_abi(tcx, a, first)?, scalar_abi(tcx, b, second)?];
+            if scalars.iter().any(|scalar| scalar.bits < 32) {
+                PassMode::ScalarPair(scalars)
+            } else {
+                PassMode::Pair
+            }
         }
         callconv::PassMode::Direct(_) => PassMode::Direct,
         callconv::PassMode::Pair(..) => PassMode::Pair,
@@ -198,4 +229,33 @@ fn pass_mode<'tcx>(
         } => PassMode::Indirect,
         callconv::PassMode::Indirect { on_stack: true, .. } => PassMode::IndirectOnStack,
     })
+}
+
+fn scalar_abi(
+    tcx: TyCtxt<'_>,
+    scalar: rustc_abi::Scalar,
+    attributes: &callconv::ArgAttributes,
+) -> Result<ScalarAbi, String> {
+    if attributes.contains(callconv::ArgAttribute::InReg) {
+        return Err("scalar ABI with an `inreg` attribute is not implemented".to_owned());
+    }
+    if matches!(scalar.primitive(), rustc_abi::Primitive::Float(_)) {
+        return Err("floating-point scalar ABI is not implemented".to_owned());
+    }
+    let bits = if scalar.is_bool() {
+        1
+    } else {
+        scalar.size(&tcx).bits()
+    };
+    let bits = u8::try_from(bits).map_err(|_| "scalar ABI wider than 64 bits")?;
+    let extension = match attributes.arg_ext {
+        callconv::ArgExtension::None => CastExtension::None,
+        callconv::ArgExtension::Zext => CastExtension::Zero,
+        callconv::ArgExtension::Sext => CastExtension::Sign,
+    };
+    let scalar = ScalarAbi { bits, extension };
+    if !scalar.is_supported() {
+        return Err(format!("unsupported scalar ABI {scalar:?}"));
+    }
+    Ok(scalar)
 }

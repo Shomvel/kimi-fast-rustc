@@ -1,4 +1,11 @@
+pub(crate) mod byte_ladders;
 pub(crate) mod conditions;
+pub(crate) mod diamonds;
+pub(crate) mod loop_simplify;
+pub(crate) mod noreturn;
+pub(crate) mod sccp;
 pub(crate) mod simplify;
+pub(crate) mod switches;
 pub(crate) mod thread_variants;
+mod thread_values;
 pub(crate) mod variants;

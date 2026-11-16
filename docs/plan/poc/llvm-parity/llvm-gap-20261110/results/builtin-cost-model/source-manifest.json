@@ -1,0 +1,16 @@
+{
+  "base": "b254941179c6f052bc2b732814c61ed299e39a3b",
+  "files": {
+    "crates/kfrc-son/src/analysis/cost.rs": "f3400c4d9b6b4acf3822bb9707ae7b2a52893ce3b3e4f249b9dc0aa9ca90984a",
+    "crates/kfrc-son/src/analysis/mod.rs": "c8877df4dc7488c8dccdcee589e9090e9e23fb4d744b498bcd8d357999f3088b",
+    "crates/kfrc-son/src/lib.rs": "4c70eea155fbd51afd41a661c9efdac708e5762eccf116a04c36f59f92f12bbe",
+    "crates/kfrc-son/src/transforms/ipo/cost.rs": "0f610506fcca59d284c84dc143bb75c5c374b980210503356b504ac6b06d4963",
+    "crates/kfrc-son/src/transforms/ipo/mod.rs": "53a4da3997739f5cf51a4dbe65dcee6c6b4fd99f1bd6147cfa8b8b874aa306f7",
+    "crates/kfrc-son/tests/semantic_inline.rs": "cb85616e1315e3ef011abf51bf5bbc272781bf6a7ab05961606be2b034f6dc16",
+    "crates/rustc_codegen_kfrc/src/inline_cost.rs": "08f0e687a0b91d1f79edf95f0bf329b59c6f12c06d9984cc3c31085baa123d51",
+    "crates/rustc_codegen_kfrc/src/lib.rs": "8ae8be6549b4b74d2efe5748edc607b34398f2d31c268520067b48c292aaa55a",
+    "crates/rustc_codegen_kfrc/src/profile.rs": "a9fd8d4e4d1f242e299c02fe2a72fc027b0742cac0e4ccd72133c680f22f45f9",
+    "crates/kfrc-son/src/lower_layout/memory.rs": "aeaabd2935d7e0ee22bc8893a5d008f2e252692f06e07a5218067820aaadcfa3",
+    "crates/kfrc-son/tests/semantic_memory_optimize.rs": "1e38db6f7493be3179a448374434c0e10824196749a345d0c8b199c9140ca4a9"
+  }
+}

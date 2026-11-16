@@ -1,0 +1,220 @@
+{
+  "label": "decode-private-copy-v1-r1",
+  "status": "all_source_backend_and_raw_evidence_local_sealed_verified_sandbox_released",
+  "created_at_utc": "2026-11-11T10:14:40.095279+00:00",
+  "source": {
+    "status": "verified_all_frozen_source_bytes",
+    "archive": "/Users/shom/Downloads/kfrc-callsite-opt-20261110/generic-parity-20261110/decode-private-copy-v1-r1-source.tar.gz",
+    "archive_sha256": "7137c7ed103cd17c36047ea67fe815244db3df9216f27c936baee91b267fff84",
+    "archive_bytes": 4767708,
+    "manifest_members_verified": 1847,
+    "source_files": 1846,
+    "source_manifest_sha256": "2647a5018e70021128ad0c646f936cdd48613d66a61fb307c10da03eb72b917a",
+    "source_tree_sha256": "9235520b2dd380f635c5c51d76baa2c890b9c84b61d2de9f10841dafeef495a3",
+    "source_worktree": "/Users/shom/.codex/worktrees/decode-throughput/kfrc-skeleton-20261108",
+    "verified_at_utc": "2026-11-11T10:12:30.307667+00:00"
+  },
+  "backend": {
+    "source_files": 1846,
+    "source_tree_sha256": "9235520b2dd380f635c5c51d76baa2c890b9c84b61d2de9f10841dafeef495a3",
+    "source_manifest_sha256": "2647a5018e70021128ad0c646f936cdd48613d66a61fb307c10da03eb72b917a",
+    "backend_sha256": "6c25173e5b00a7056f891748beaf80294fba00e71fd3a4de15e9d81a0616521c",
+    "backend_bytes": 6897288,
+    "source_unchanged_after_all_validation": true,
+    "remote_path": "/workspace/callsite/generic-parity-20261110/decode-private-copy-v1-r1.so",
+    "local_backend": "/Users/shom/Downloads/kfrc-callsite-opt-20261110/generic-parity-20261110/decode-private-copy-v1-r1.so",
+    "downloaded_at_utc": "2026-11-11T10:04:48.405646+00:00",
+    "sandbox_left_running": true
+  },
+  "archives": [
+    {
+      "scope": "decode-private-copy-v1-r1",
+      "path": "/Users/shom/Downloads/kfrc-callsite-opt-20261110/generic-parity-20261110/decode-private-copy-v1-r1-evidence.tar.gz",
+      "sha256": "dd8c75e2694fe7ebdd878b3a262c4026bbeeb8bc7191e29b9cfb33d759ac4dae",
+      "bytes": 1396195,
+      "members": 95,
+      "verification": "/Users/shom/Downloads/kfrc-callsite-opt-20261110/generic-parity-20261110/decode-private-copy-v1-r1-archive-verification.json",
+      "archive_and_every_manifest_member_verified": true
+    },
+    {
+      "scope": "decode-private-copy-v1-r1-runtime-screen-v1",
+      "path": "/Users/shom/Downloads/kfrc-callsite-opt-20261110/generic-parity-20261110/decode-private-copy-v1-r1-runtime-screen-v1-evidence.tar.gz",
+      "sha256": "3157eb70e2e9cabc13be532e8e6c2054658afde8b9b889009fc26843d1f666ac",
+      "bytes": 9902522,
+      "members": 593,
+      "verification": "/Users/shom/Downloads/kfrc-callsite-opt-20261110/generic-parity-20261110/decode-private-copy-v1-r1-runtime-screen-v1-archive-verification.json",
+      "archive_and_every_manifest_member_verified": true
+    },
+    {
+      "scope": "decode-private-copy-v1-r1-final-workspace",
+      "path": "/Users/shom/Downloads/kfrc-callsite-opt-20261110/generic-parity-20261110/decode-private-copy-v1-r1-final-workspace-evidence.tar.gz",
+      "sha256": "1246e70aa58a53f6141275c884924e3070b985450945c545bfa17aa10ba051ff",
+      "bytes": 122945,
+      "members": 50,
+      "verification": "/Users/shom/Downloads/kfrc-callsite-opt-20261110/generic-parity-20261110/decode-private-copy-v1-r1-final-workspace-archive-verification.json",
+      "archive_and_every_manifest_member_verified": true
+    },
+    {
+      "scope": "decode-private-copy-v1-r1-final-correctness",
+      "path": "/Users/shom/Downloads/kfrc-callsite-opt-20261110/generic-parity-20261110/decode-private-copy-v1-r1-final-correctness-evidence.tar.gz",
+      "sha256": "d1b596f6709ff27842a01c9f96645deab958c67b8fb659afd6b0bfc33f2ee603",
+      "bytes": 9654866,
+      "members": 459,
+      "verification": "/Users/shom/Downloads/kfrc-callsite-opt-20261110/generic-parity-20261110/decode-private-copy-v1-r1-final-correctness-archive-verification.json",
+      "archive_and_every_manifest_member_verified": true
+    },
+    {
+      "scope": "decode-private-copy-v1-r1-global-screen-v1",
+      "path": "/Users/shom/Downloads/kfrc-callsite-opt-20261110/generic-parity-20261110/decode-private-copy-v1-r1-global-screen-v1.tar.gz",
+      "sha256": "4c30df7968c16e3e4aeff1c444800b32422e845fae978a92a4fd9dcf0e7aa1fa",
+      "bytes": 8688083,
+      "members": 2989,
+      "verification": "/Users/shom/Downloads/kfrc-callsite-opt-20261110/generic-parity-20261110/decode-private-copy-v1-r1-global-screen-v1-verification.json",
+      "archive_and_every_manifest_member_verified": true
+    },
+    {
+      "scope": "exact_frozen_source",
+      "path": "/Users/shom/Downloads/kfrc-callsite-opt-20261110/generic-parity-20261110/decode-private-copy-v1-r1-source.tar.gz",
+      "sha256": "7137c7ed103cd17c36047ea67fe815244db3df9216f27c936baee91b267fff84",
+      "bytes": 4767708,
+      "members": 1847,
+      "verification": "/Users/shom/Downloads/kfrc-callsite-opt-20261110/generic-parity-20261110/decode-private-copy-v1-r1-source-verification.json",
+      "archive_and_every_manifest_member_verified": true
+    },
+    {
+      "scope": "original_cache_failure_preserved",
+      "path": "/Users/shom/Downloads/kfrc-callsite-opt-20261110/generic-parity-20261110/decode-private-copy-v1-first-error-evidence.tar.gz",
+      "sha256": "16a6f7cfc69af3a0b7d713283dca103741dd3c5f92cacd6d06f7273827428cc3",
+      "bytes": 541461,
+      "members": 20,
+      "verification": "/Users/shom/Downloads/kfrc-callsite-opt-20261110/generic-parity-20261110/decode-private-copy-v1-first-error-verification.json",
+      "archive_and_every_manifest_member_verified": true
+    },
+    {
+      "scope": "local_controls_and_receipts",
+      "path": "/Users/shom/Downloads/kfrc-callsite-opt-20261110/generic-parity-20261110/decode-private-copy-v1-r1-control-evidence.tar.gz",
+      "sha256": "91bfbe835f97269960333669be21981eef6803cadc1112787c7bce41873f8d22",
+      "bytes": 804794,
+      "members": 118,
+      "archive_and_every_manifest_member_verified": true
+    }
+  ],
+  "receipts": [
+    {
+      "path": "/Users/shom/Downloads/kfrc-callsite-opt-20261110/generic-parity-20261110/decode-private-copy-v1-r1-final-semantic-verification.json",
+      "sha256": "81f50642801ccbfbb4e48793288a4772bedd64c2c46ed77f690bbbc4f932eafd",
+      "bytes": 9227
+    },
+    {
+      "path": "/Users/shom/Downloads/kfrc-callsite-opt-20261110/generic-parity-20261110/decode-private-copy-v1-r1-backend-verification.json",
+      "sha256": "d55cc9d5cd465653d2f9f1430ed59d68860d06734a0210204d8cc5796b1734c7",
+      "bytes": 688
+    },
+    {
+      "path": "/Users/shom/Downloads/kfrc-callsite-opt-20261110/generic-parity-20261110/decode-private-copy-v1-r1-source-verification.json",
+      "sha256": "0a97959b4c678b872c4413d2c73b34edf87dfb3f1a2ae88b3baf1a3c4d846c81",
+      "bytes": 696
+    },
+    {
+      "path": "/Users/shom/Downloads/kfrc-callsite-opt-20261110/generic-parity-20261110/decode-private-copy-v1-r1-global-screen-v1-verification.json",
+      "sha256": "587d7ea6494f8dd3e61559873a858bd56a9a7da787cac6ae7f29fbd4bb0d53ef",
+      "bytes": 1266
+    },
+    {
+      "path": "/Users/shom/Downloads/kfrc-callsite-opt-20261110/generic-parity-20261110/decode-private-copy-v1-r1-global-screen-v1-analysis.json",
+      "sha256": "bd02f062cde677779fd00481628374c87f67e6675c14f124d1e3b303616593a5",
+      "bytes": 143944
+    },
+    {
+      "path": "/Users/shom/Downloads/kfrc-callsite-opt-20261110/generic-parity-20261110/decode-private-copy-v1-r1-global-screen-v1-compile-summary.md",
+      "sha256": "1ea6a27199715e06ded1f61a6e20398b73fdd1134019e7c449efc7afc0aeafff",
+      "bytes": 2195
+    },
+    {
+      "path": "/Users/shom/Downloads/kfrc-callsite-opt-20261110/generic-parity-20261110/decode-private-copy-v1-r1-final-sandbox-receipt.json",
+      "sha256": "f71be6529a400e8ff5ca4ef408ea4d3ffc92295488e06121a29bd4168315e133",
+      "bytes": 751
+    }
+  ],
+  "checks": {
+    "targeted": {
+      "passed": 43,
+      "failed": 0,
+      "ignored": 0
+    },
+    "workspace": {
+      "passed": 1137,
+      "failed": 0,
+      "ignored": 1
+    },
+    "workspace_known_ignore": [
+      "large_live_spill_set_allocation_time"
+    ],
+    "normal_observe_complete_objects_equal": 14,
+    "native_checker_differential_fixtures": 7,
+    "buffer_cases": 7202,
+    "buffer_complete_bytes_to_llvm": true,
+    "original_library_corpus_count": 4,
+    "workload_checksums": 13,
+    "register_allocation_checker_normal_observe_native_and_four_library": true,
+    "runtime_rows": 390,
+    "compile_rows": 240,
+    "complete_object_pairs": 1500,
+    "all_source_and_backend_unchanged_after_validation": true
+  },
+  "outcome": {
+    "runtime_geomean_candidate_accepted": 0.9113216012347432,
+    "base64_decode_candidate_accepted": 0.36699135050963805,
+    "humantime_ts_parse_candidate_accepted": 1.0616610328191065,
+    "full_compile_serial_wall_candidate_accepted": 1.049420440180261,
+    "normal_text_total_bytes": {
+      "generic-v18r2": 122781,
+      "decode-private-copy-v1-r1": 121672,
+      "llvm": 45987
+    }
+  },
+  "limits": [
+    "Known upstream intrinsic blockers including fabsf64 remain; corpus and thirteen checksums are not complete upstream tests.",
+    "Timestamp parse has an observed 6.17% regression; full compilation costs increase; no global no-regression or LLVM parity claim."
+  ],
+  "sandbox": {
+    "space": {
+      "total_bytes": 64482156544,
+      "used_bytes": 62001868800,
+      "free_bytes": 2195075072
+    },
+    "global_provenance_status": "passed",
+    "global_window_status": "passed",
+    "no_cleanup_performed": true,
+    "sandbox_id": "imj3ukm7eqxdk2x0im3uh",
+    "template_id": "r6g8s7tmv7hjdgpouxk9",
+    "owner_thread": "01a1c558-efc3-71b3-a333-857da2c9d025",
+    "lease_end_utc": "2026-11-11 12:09:13.639932+00:00",
+    "checked_at_utc": "2026-11-11T10:08:52.437438+00:00",
+    "live_handles": [
+      {
+        "pid": 503,
+        "cmd": "/bin/bash",
+        "args": [
+          "-l",
+          "-c",
+          "bash -c 'while true; do sleep 3600; done'"
+        ]
+      }
+    ],
+    "validation_measurements_active": false,
+    "sandbox_left_running": true,
+    "killed": false
+  },
+  "release_receipt_path": "/Users/shom/Downloads/kfrc-callsite-opt-20261110/generic-parity-20261110/decode-private-copy-v1-r1-release-receipt.json",
+  "release": {
+    "receipt": "/Users/shom/Downloads/kfrc-callsite-opt-20261110/generic-parity-20261110/decode-private-copy-v1-r1-release-receipt.json",
+    "sha256": "30aec0e119d5549641f2b88bd501b0d75f38e2e945fc6265a0e3a58f31f5d40d",
+    "status": "released_and_confirmed_stopped",
+    "sandbox_id": "imj3ukm7eqxdk2x0im3uh",
+    "is_running_after_release": false,
+    "released_at_utc": "2026-11-11T10:17:36.639430+00:00",
+    "control_plane_sandbox_not_found": true,
+    "owner_filtered_list_empty": true
+  }
+}

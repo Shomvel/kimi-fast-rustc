@@ -155,8 +155,34 @@ pub struct DataObject {
 pub enum Callee {
     /// A concrete function instance, by its linker symbol.
     Function { symbol: String, abi: FunctionAbi },
+    /// A standard runtime comparison emitted by the intrinsic producer. Both
+    /// input ranges must be readable and initialized for the entire length.
+    RuntimeComparison(RuntimeComparison),
     /// A compiler intrinsic, by name (`wrapping_add`, `unreachable`, …).
     Intrinsic { name: String },
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub enum RuntimeComparison {
+    Memcmp,
+    Bcmp,
+}
+
+impl RuntimeComparison {
+    pub fn symbol(self) -> &'static str {
+        match self {
+            Self::Memcmp => "memcmp",
+            Self::Bcmp => "bcmp",
+        }
+    }
+
+    pub fn abi(self) -> FunctionAbi {
+        FunctionAbi {
+            args: vec![PassMode::Direct; 3],
+            ret: PassMode::Direct,
+            c_variadic: false,
+        }
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
@@ -666,6 +692,9 @@ impl Body {
                     }
                     ConstantKind::Function(Callee::Function { symbol, .. }) => {
                         format!("const fn {symbol}")
+                    }
+                    ConstantKind::Function(Callee::RuntimeComparison(comparison)) => {
+                        format!("const runtime {}", comparison.symbol())
                     }
                     ConstantKind::Function(Callee::Intrinsic { name }) => {
                         format!("const intrinsic {name}")

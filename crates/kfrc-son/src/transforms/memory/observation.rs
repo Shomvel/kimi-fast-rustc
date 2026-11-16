@@ -1,8 +1,9 @@
-//! Remove observations whose full Rust value is already known to be defined.
+//! Reuse proofs that a full Rust value is already known to be defined.
 //!
 //! Facts are tied to execution controls and exact SSA identities. Phi inputs
 //! are proved on their own predecessor edges; loop-carried Phis never prove
 //! themselves. Calls, assumptions, and the first poison observation stay fixed.
+//! Known scalar bounds may replace only a defined If condition's operand.
 use crate::analysis::cfg::ControlFlow;
 use crate::analysis::dominators::Dominators;
 use crate::analysis::uses::{UseKind, Uses};
@@ -10,9 +11,14 @@ use crate::{FunctionGraph, GraphLevel, NodeId, Opcode, ValueType};
 use kfrc_body::TypeShape;
 use kfrc_body::fx_hash::{HashMap, HashSet};
 
+mod conditions;
+mod scalar;
+
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct ObservationStats {
     pub observations_removed: usize,
+    /// If operands replaced using known bits and an existing definedness proof.
+    pub conditions_folded: usize,
     /// Node inventory, Uses and CFG each index N nodes; dominance indexes C controls.
     pub nodes_indexed: usize,
     /// Definition-proof queries and dynamic-scope dependency visits.
@@ -28,7 +34,10 @@ pub fn run(graph: &mut FunctionGraph) -> ObservationStats {
     }
     graph.resolve_edges();
     let nodes: Vec<_> = graph.ids().collect();
-    if !nodes.iter().any(|&n| graph.op(n) == Opcode::RequireDefined) {
+    if !nodes
+        .iter()
+        .any(|&n| matches!(graph.op(n), Opcode::RequireDefined | Opcode::If))
+    {
         stats.nodes_indexed = nodes.len();
         return stats;
     }
@@ -45,7 +54,7 @@ pub fn run(graph: &mut FunctionGraph) -> ObservationStats {
             continue;
         }
         let Some(continuation) = uses.of(source).iter().find_map(|usage| {
-            (usage.kind == UseKind::Operand(0)
+            (usage.kind() == UseKind::Operand(0)
                 && graph.op(usage.user) == Opcode::Projection
                 && graph.payload(usage.user) == 0)
                 .then_some(usage.user)
@@ -57,7 +66,7 @@ pub fn run(graph: &mut FunctionGraph) -> ObservationStats {
         }
         for usage in uses.of(source) {
             if op != Opcode::RequireDefined
-                && usage.kind == UseKind::Operand(0)
+                && usage.kind() == UseKind::Operand(0)
                 && graph.op(usage.user) == Opcode::Projection
                 && graph.payload(usage.user) >= 2
                 && matches!(graph.value_type(usage.user), ValueType::Rust(_))
@@ -78,11 +87,12 @@ pub fn run(graph: &mut FunctionGraph) -> ObservationStats {
     };
     let mut removed = Vec::new();
     for node in nodes
-        .into_iter()
+        .iter()
+        .copied()
         .filter(|&n| graph.op(n) == Opcode::RequireDefined)
     {
         if uses.of(node).iter().any(|usage| {
-            usage.kind != UseKind::Operand(0)
+            usage.kind() != UseKind::Operand(0)
                 || graph.op(usage.user) != Opcode::Projection
                 || graph.payload(usage.user) > 1
         }) {
@@ -92,9 +102,17 @@ pub fn run(graph: &mut FunctionGraph) -> ObservationStats {
             removed.push(node);
         }
     }
+    let conditions = conditions::collect(&mut proof, &nodes);
     stats.node_visits = proof.visits;
+    drop(proof);
     // Finish every proof against the unchanged snapshot. A removed fact is
     // justified by an earlier dominating fact, never by its own continuation.
+    for (branch, ty, answer) in conditions {
+        let constant = graph.add_constant(u128::from(answer), ty);
+        graph.set_input(branch, 0, constant);
+        stats.conditions_folded += 1;
+        stats.dirty_nodes.push(branch);
+    }
     for node in removed {
         let replacements = [graph.control(node), graph.input(node, 0)];
         for usage in uses.of(node) {
@@ -153,7 +171,15 @@ impl Proof<'_> {
         }
         let graph = self.graph;
         match graph.op(value) {
-            Opcode::Const => true,
+            // SymbolAddress is a scalar relocation value, not a dereference.
+            // Symbols are registered before semantic execution; even a wrapping
+            // addend yielding zero cannot make this value poison. This grants
+            // no alignment, accessibility, alias, TLS or linkage fact.
+            Opcode::Const | Opcode::SymbolAddress => true,
+            _ if scalar::propagates_defined_inputs(graph, value) => graph
+                .inputs(value)
+                .iter()
+                .all(|&input| self.known(input, at, budget)),
             Opcode::Aggregate | Opcode::MakeVariant | Opcode::WidePtr => graph
                 .inputs(value)
                 .iter()
@@ -242,3 +268,7 @@ impl Proof<'_> {
 #[cfg(test)]
 #[path = "observation_tests.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "observation_condition_tests.rs"]
+mod condition_tests;

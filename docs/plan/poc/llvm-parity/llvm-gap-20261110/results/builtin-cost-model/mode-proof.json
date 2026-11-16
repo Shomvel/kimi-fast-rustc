@@ -1,0 +1,168 @@
+{
+  "observe": {
+    "records": 5707,
+    "outcomes": {
+      "inlined": 4280,
+      "Size": 217,
+      "Missing": 554,
+      "DataConflict": 387,
+      "Budget": 222,
+      "Unsupported": 40,
+      "TypeConflict": 3,
+      "Recursive": 4
+    },
+    "per_crate": {
+      "semver": {
+        "records": 2186,
+        "outcomes": {
+          "inlined": 1635,
+          "Size": 85,
+          "Missing": 230,
+          "DataConflict": 158,
+          "Budget": 51,
+          "Unsupported": 20,
+          "TypeConflict": 3,
+          "Recursive": 4
+        }
+      },
+      "base64": {
+        "records": 1054,
+        "outcomes": {
+          "DataConflict": 74,
+          "Missing": 168,
+          "inlined": 764,
+          "Budget": 37,
+          "Size": 11
+        }
+      },
+      "unicode-segmentation": {
+        "records": 1113,
+        "outcomes": {
+          "inlined": 864,
+          "DataConflict": 99,
+          "Missing": 63,
+          "Budget": 14,
+          "Size": 57,
+          "Unsupported": 16
+        }
+      },
+      "humantime": {
+        "records": 1354,
+        "outcomes": {
+          "inlined": 1017,
+          "DataConflict": 56,
+          "Budget": 120,
+          "Size": 64,
+          "Missing": 93,
+          "Unsupported": 4
+        }
+      }
+    },
+    "all_schema1": true,
+    "all_budget_fields": true
+  },
+  "size": {
+    "records": 4319,
+    "outcomes": {
+      "UnknownCost": 3515,
+      "Missing": 502,
+      "inlined": 277,
+      "Unsupported": 20,
+      "Recursive": 5
+    },
+    "per_crate": {
+      "semver": {
+        "records": 1641,
+        "outcomes": {
+          "UnknownCost": 1353,
+          "Missing": 170,
+          "inlined": 102,
+          "Unsupported": 11,
+          "Recursive": 5
+        }
+      },
+      "base64": {
+        "records": 917,
+        "outcomes": {
+          "UnknownCost": 667,
+          "Missing": 169,
+          "inlined": 81
+        }
+      },
+      "unicode-segmentation": {
+        "records": 846,
+        "outcomes": {
+          "UnknownCost": 713,
+          "Missing": 66,
+          "Unsupported": 7,
+          "inlined": 60
+        }
+      },
+      "humantime": {
+        "records": 915,
+        "outcomes": {
+          "UnknownCost": 782,
+          "Missing": 97,
+          "inlined": 34,
+          "Unsupported": 2
+        }
+      }
+    },
+    "all_schema1": true,
+    "all_budget_fields": true
+  },
+  "semantic": {
+    "mode": "size",
+    "records": 1118,
+    "mode_proved_by_trace": true,
+    "logs": {
+      "semantic-size/semantic-on-library.stderr": {
+        "sha256": "6fbe3710c34f3825087b9931f3a80274f789c3cea6bc35b9e8df6fa314287ab0",
+        "records": 573
+      },
+      "semantic-size/permission-guard-library.stderr": {
+        "sha256": "43c619e073e242d8a51dbfbd84da0326aefeac520883d7e8dcfd52053b16f08a",
+        "records": 545
+      }
+    },
+    "log": "PASS: three arms, 824 lines each, cross-backend Pair/Indirect calls, explicit S->L, borrow/index/enum/niche behavior, three scope rejections, O1 permission guard 316/340 noalias\n"
+  },
+  "pressure": {
+    "mode": "size",
+    "records": 121,
+    "mode_proved_by_trace": true,
+    "logs": {
+      "pressure-size-explicit/on/build.stderr": {
+        "sha256": "a20d7781bdb962a542f373b3bd2bfacd0c291fd668cc0a9583210816c7d1b3cb",
+        "records": 121
+      }
+    },
+    "result": {
+      "records": [
+        {
+          "arm": "llvm",
+          "output_lines": 2048,
+          "stdout_sha256": "d93b7d80444943445da3860f97308020a150a85c746f5063b63e4f0c63e3f5d2",
+          "library_sha256": "870a241eb60bcf7452c6d3ccc6442c1eba3f0c28a956aa4715abc9d728866b0e"
+        },
+        {
+          "arm": "off",
+          "output_lines": 2048,
+          "stdout_sha256": "d93b7d80444943445da3860f97308020a150a85c746f5063b63e4f0c63e3f5d2",
+          "library_sha256": "819cb2a09248df78d4a16850840ad91a736f838ed0e9831039fe11e9d09a2fb9"
+        },
+        {
+          "arm": "on",
+          "output_lines": 2048,
+          "stdout_sha256": "d93b7d80444943445da3860f97308020a150a85c746f5063b63e4f0c63e3f5d2",
+          "library_sha256": "e5e72138d47e1af4311709dfb058939d0c871ed0f6affebf69fdaa461e233a66"
+        }
+      ],
+      "backend_sha256": "fcb4dc20d17e2ab3004a858c8b0e25ad98f73da311605bea26581fcb2fa341ad"
+    }
+  },
+  "invalid": {
+    "status": 1,
+    "diagnostic": "error: kfrc: cannot compile `Version::cmp_precedence` (_RNvMCslLN4iPamcnI_6semverNtB2_7Version14cmp_precedence): inline cost configuration: invalid KFRC_INLINE_COST_MODEL=\"bad\"; expected legacy, observe or size\n\nerror: aborting due to 1 previous error\n\n"
+  }
+}

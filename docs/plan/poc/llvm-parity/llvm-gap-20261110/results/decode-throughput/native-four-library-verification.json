@@ -1,0 +1,11 @@
+{
+  "label": "decode-private-copy-v1-r1-final-correctness",
+  "path": "/workspace/callsite/generic-parity-20261110/results/decode-private-copy-v1-r1-final-correctness-evidence.tar.gz",
+  "bytes": 9654866,
+  "sha256": "d1b596f6709ff27842a01c9f96645deab958c67b8fb659afd6b0bfc33f2ee603",
+  "members": 459,
+  "local_archive": "/Users/shom/Downloads/kfrc-callsite-opt-20261110/generic-parity-20261110/decode-private-copy-v1-r1-final-correctness-evidence.tar.gz",
+  "local_evidence": "/Users/shom/Downloads/kfrc-callsite-opt-20261110/generic-parity-20261110/decode-private-copy-v1-r1-final-correctness-evidence",
+  "status": "all_manifest_members_verified",
+  "verified_at_utc": "2026-11-11T10:00:06.080278+00:00"
+}

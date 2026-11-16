@@ -1,0 +1,24 @@
+{
+  "baseline_sha256": "71e7450b258ae8381fc1534a0b9ff5f7fcc0307b440b6b85d1234bffbf295975",
+  "selected_overlay_sha256": "d9e67d51da7b7b79bc2c01e96a952814eda4e0a113196c12416abe3af9b67929",
+  "files": {
+    "crates/kfrc-son/src/lower_layout/boundary_transport.rs": "c33ed8d8de49e2e5d99144138d891e73929e51c65c6953ebf7ad0f248d8be793",
+    "crates/kfrc-son/tests/semantic_boundary_transport.rs": "d24d7f893fff5faaf1e1a84d66c9836db72b0d1a2cc64673e04d1954b85a403a",
+    "scripts/poc-validation/fixtures/enum-boundary-snapshot.rs": "7d28c1e87970cd196ce5cceee71f922839a8136ebb48264603002a880fafa653",
+    "scripts/poc-validation/fixtures/enum-boundary-snapshot-driver.rs": "52d358236dc286622f13db658849c18e00a2aee8de7dedb2e21b2ce2edc69b43",
+    "crates/kfrc-son/src/lower_layout/cleanup.rs": "143adf28b7e64c349717bc0f9549f2f0171e8679a1d8e06e972af96fdb78882f",
+    "crates/kfrc-son/src/lower_layout/address_cse.rs": "a6a7c14ee04118d6e92091a2b57ed49e3b2f37352f4b87334d19a01cfc4ac76e",
+    "crates/kfrc-son/src/lower_layout/cleanup_tests.rs": "4014147d5d56c22de4381cc177cc91fbed10ecdeff43d8e281407fad4da0a3a6",
+    "crates/kfrc-x86/src/lower.rs": "2e449962087d0e2a778967bb9ef73b23b847949c6f50c6d6d97dd246c3103d6c",
+    "crates/kfrc-x86/src/lower/checked.rs": "c784696449c2cafb0f7dadaac77041732f239ddea6d0fc1719d61cc357a8de29",
+    "crates/kfrc-x86/src/lower/schedule.rs": "afd8c953012d8a93b89656089b0630b395f0d186685c55cf501b0b6f16cc13d5",
+    "crates/kfrc-x86/src/lower/private_slots.rs": "b2d81de523e58e88c2fff94f3987958c1a3e0b1d25adff244a97a4cfb8c26021",
+    "crates/kfrc-x86/src/lower/allocated/constraints.rs": "36a3ef06304555ed17b9fb73845a5aa8044e2b7bb65cba7e53be6b2358bae429",
+    "crates/kfrc-x86/tests/checked_arithmetic.rs": "73d7706e397905b11f6260a24efaf72b4fa15226a18e83b9e0f31082d2a4ebee",
+    "crates/kfrc-x86/src/machine/x86_encode.rs": "2d41cd6cb4c80761d6379dd8edc388fcadb8d3bf55e007d71e91dfa14b0816e1",
+    "crates/kfrc-x86/src/machine/x86_encode/layout.rs": "0ba3d55e104227c9a645b5c10a79b0f2754d384b6ba3f70330e95c7317104209",
+    "crates/kfrc-x86/src/object_file.rs": "9dc5f39aa2730d0f64e3f46764581b7305f18f283385496bcdecf442be296a00",
+    "crates/kfrc-x86/tests/loop_alignment.rs": "f82373de8a6150379e3df04835038a9010d8cb834af7fc37e93bf52870f711e1"
+  },
+  "selected_alignment": 16
+}

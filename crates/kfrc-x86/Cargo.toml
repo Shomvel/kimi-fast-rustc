@@ -8,8 +8,8 @@ license = "MIT OR Apache-2.0"
 
 [dependencies]
 kfrc-body = { path = "../kfrc-body" }
+kfrc-object = { path = "../kfrc-object" }
 kfrc-son = { path = "../kfrc-son" }
-object = { version = "0.36", default-features = false, features = ["write"] }
 
 [dev-dependencies]
 object = { version = "0.36", default-features = false, features = ["read"] }

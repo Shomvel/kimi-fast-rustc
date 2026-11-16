@@ -16,6 +16,7 @@ pub mod interpret;
 pub mod lower_layout;
 pub mod optimize;
 pub mod pipeline;
+pub mod schedule;
 pub mod semantic_value;
 pub mod specialize;
 mod transforms;
@@ -29,13 +30,19 @@ pub use interpret::{
     SemanticOutcome, Value,
 };
 pub use lower_layout::{
-    LayoutError, LayoutOptions, LayoutStats, lower_layout, lower_layout_with_options,
+    LayoutError, LayoutOptions, LayoutStats, lower_layout, lower_layout_owned,
+    lower_layout_with_options,
 };
 pub use optimize::{OptimizeStats, optimize_graph};
-pub use pipeline::{PipelineError, optimize_specialized_graph, optimize_specialized_seams};
+pub use pipeline::{
+    CallEffectsStats, PipelineError, optimize_call_effects, optimize_specialized_graph,
+    optimize_specialized_seams,
+};
 pub use transforms::ipo::{
-    GraphProvider, IdentityFoldStats, InlineBudget, InlineError, InlineSkip, InlineStats,
-    fold_identity_calls, inline_calls,
+    ArgumentPromotionError, ArgumentPromotionStats, ConditionalReturnStats, ConditionalReturns,
+    GraphProvider, IdentityFoldStats, InlineBudget, InlineCostPolicy, InlineDecision, InlineError,
+    InlineSkip, InlineStats, InlineTemperature, TailRecursionStats, eliminate_tail_recursion,
+    fold_identity_calls, inline_calls, inline_calls_with_cost, promote_arguments,
 };
 pub use transforms::scalar::ranges::{RangeFoldStats, run as fold_scalar_ranges};
 pub use verify::{VerifyError, verify_graph};

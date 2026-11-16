@@ -484,6 +484,10 @@ impl<'a> Emitter<'a> {
                     constraints::Binary::Xor => MachineInstr::Xor { dst, src },
                 });
             }
+            EffectiveAddress(address) => self.push(MachineInstr::EffectiveAddress {
+                dst: output[0],
+                address: address.map(|index| input[index]),
+            }),
             Shift(op, immediate) => {
                 let dst = output[0];
                 self.push(match (op, immediate) {
@@ -539,6 +543,7 @@ impl<'a> Emitter<'a> {
                     });
                 }
             }
+            MulHigh => self.push(MachineInstr::MulHigh { src: input[1] }),
             Compare(condition) => {
                 self.push(MachineInstr::Cmp {
                     lhs: input[0],
@@ -564,6 +569,9 @@ impl<'a> Emitter<'a> {
                 rhs: MachineOperand::Imm(*value),
             }),
             TestLowByte => self.push(MachineInstr::TestByte { reg: input[0] }),
+            TestMasked(mask, width) => self.push(MachineInstr::TestMasked {
+                reg: input[0], mask: *mask, width: *width,
+            }),
             Test(zero) => self.push(if *zero {
                 MachineInstr::Test { reg: input[0] }
             } else {
@@ -627,6 +635,31 @@ impl<'a> Emitter<'a> {
                 value: *value,
                 bytes: *bytes,
             }),
+            LoadAddress { address, bytes } => self.push(MachineInstr::LoadAddress {
+                dst: output[0],
+                address: address.map(|index| input[index]),
+                bytes: *bytes,
+            }),
+            StoreAddress {
+                address,
+                source,
+                bytes,
+            } => self.push(MachineInstr::StoreAddress {
+                address: address.map(|index| input[index]),
+                src: input[*source],
+                bytes: *bytes,
+            }),
+            StoreAddressImmediate {
+                address,
+                value,
+                bytes,
+            } => {
+                self.push(MachineInstr::StoreAddressImmediate {
+                    address: address.map(|index| input[index]),
+                    value: *value,
+                    bytes: *bytes,
+                });
+            }
             LoadSlot(slot) => self.push(MachineInstr::Load {
                 dst: output[0],
                 slot: *slot,

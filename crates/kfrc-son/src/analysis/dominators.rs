@@ -1,17 +1,22 @@
 //! Immediate dominance over a reachable control-flow snapshot.
 use super::cfg::ControlFlow;
 use crate::graph::NodeId;
+use std::sync::Arc;
 
 #[derive(Clone, Debug)]
 pub struct Dominators {
-    idom: Vec<usize>,
+    idom: Arc<[usize]>,
 }
 
 impl Dominators {
     pub fn new(cfg: &ControlFlow) -> Self {
+        cfg.dominators()
+    }
+
+    pub(super) fn build(cfg: &ControlFlow) -> Self {
         let mut idom = vec![usize::MAX; cfg.order.len()];
         if idom.is_empty() {
-            return Self { idom };
+            return Self { idom: idom.into() };
         }
         idom[0] = 0;
         let mut changed = true;
@@ -35,7 +40,7 @@ impl Dominators {
                 }
             }
         }
-        Self { idom }
+        Self { idom: idom.into() }
     }
 
     pub fn dominates_position(&self, a: usize, mut b: usize) -> bool {

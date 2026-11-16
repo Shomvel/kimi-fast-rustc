@@ -28,16 +28,21 @@ impl Builder<'_> {
     ) -> Result<(), BuildError> {
         let index = block.index();
         let source = EdgeSource::Block(block);
-        let (symbol, abi) = if let Some(abi) = indirect_abi {
-            ("<indirect>".to_owned(), abi.clone())
+        let (symbol, abi, runtime) = if let Some(abi) = indirect_abi {
+            ("<indirect>".to_owned(), abi.clone(), None)
         } else {
             let Operand::Constant(constant) = function else {
                 return self.unsupported("direct call through a non-function operand");
             };
             match &self.body.constant(constant).kind {
                 ConstantKind::Function(Callee::Function { symbol, abi }) => {
-                    (symbol.clone(), abi.clone())
+                    (symbol.clone(), abi.clone(), None)
                 }
+                ConstantKind::Function(Callee::RuntimeComparison(comparison)) => (
+                    comparison.symbol().to_owned(),
+                    comparison.abi(),
+                    Some(*comparison),
+                ),
                 ConstantKind::Function(Callee::Intrinsic { name }) => {
                     return self.unsupported(format!("call to intrinsic `{name}`"));
                 }
@@ -52,8 +57,10 @@ impl Builder<'_> {
                 !matches!(
                     mode,
                     PassMode::Direct
+                        | PassMode::DirectScalar(_)
                         | PassMode::Ignore
                         | PassMode::Pair
+                        | PassMode::ScalarPair(_)
                         | PassMode::Vector { bytes: 16 }
                         | PassMode::Indirect
                         | PassMode::Cast(_)
@@ -85,7 +92,10 @@ impl Builder<'_> {
         } else {
             (
                 Opcode::Call,
-                self.graph.add_callee(CallTarget { symbol, abi }),
+                match runtime {
+                    Some(comparison) => self.graph.add_runtime_comparison(comparison),
+                    None => self.graph.add_callee(CallTarget { symbol, abi }),
+                },
             )
         };
         let call = self.graph.add_node(

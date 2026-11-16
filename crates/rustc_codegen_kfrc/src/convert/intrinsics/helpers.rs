@@ -97,16 +97,20 @@ impl<'tcx> Converter<'tcx> {
         let fn_ty = self.ty(self.tcx.types.unit);
         let callee = self.builder.add_constant(Constant {
             ty: fn_ty,
-            kind: ConstantKind::Function(Callee::Function {
-                symbol: symbol.to_owned(),
-                abi: FunctionAbi {
-                    args: vec![PassMode::Direct; args.len()],
-                    ret: if result.is_unit() {
-                        PassMode::Ignore
-                    } else {
-                        PassMode::Direct
+            kind: ConstantKind::Function(match symbol {
+                "memcmp" => Callee::RuntimeComparison(kfrc_body::RuntimeComparison::Memcmp),
+                "bcmp" => Callee::RuntimeComparison(kfrc_body::RuntimeComparison::Bcmp),
+                _ => Callee::Function {
+                    symbol: symbol.to_owned(),
+                    abi: FunctionAbi {
+                        args: vec![PassMode::Direct; args.len()],
+                        ret: if result.is_unit() {
+                            PassMode::Ignore
+                        } else {
+                            PassMode::Direct
+                        },
+                        c_variadic: false,
                     },
-                    c_variadic: false,
                 },
             }),
         });

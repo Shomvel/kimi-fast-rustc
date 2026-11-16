@@ -1,0 +1,633 @@
+{
+  "protocol": "31 alternating rounds after warmup, paired median ratios and percentile bootstrap 10000 draws, seed1110",
+  "workloads": [
+    {
+      "crate": "semver",
+      "workload": "parse",
+      "paired_ratio": {
+        "shared": 0.9621581301327683,
+        "data": 0.9205328845413498,
+        "llvm": 0.22657307326125506
+      },
+      "bootstrap95": {
+        "shared": [
+          0.9230934923625459,
+          0.9717650419101346
+        ],
+        "data": [
+          0.8892917960177864,
+          0.9238864424416678
+        ],
+        "llvm": [
+          0.2171948151810923,
+          0.22889080724825506
+        ]
+      },
+      "candidate_over_llvm": 4.054714124805885,
+      "median_ns": {
+        "llvm": 46252857,
+        "baseline": 203607764,
+        "shared": 195364816,
+        "data": 187517159
+      },
+      "instructions": {
+        "llvm": 691726006,
+        "baseline": 2820264133,
+        "shared": 2819730818,
+        "data": 2817597908
+      }
+    },
+    {
+      "crate": "semver",
+      "workload": "req",
+      "paired_ratio": {
+        "shared": 0.9576355740395942,
+        "data": 0.9794453079980403,
+        "llvm": 0.1316132821000343
+      },
+      "bootstrap95": {
+        "shared": [
+          0.9526081744897226,
+          0.9662671591881286
+        ],
+        "data": [
+          0.9758981312673835,
+          0.984635614362956
+        ],
+        "llvm": [
+          0.13100379237202325,
+          0.13231172411291015
+        ]
+      },
+      "candidate_over_llvm": 7.437748098561464,
+      "median_ns": {
+        "llvm": 69380899,
+        "baseline": 525861280,
+        "shared": 504697081,
+        "data": 515915519
+      },
+      "instructions": {
+        "llvm": 1048258442,
+        "baseline": 6634129058,
+        "shared": 6633595731,
+        "data": 6626929289
+      }
+    },
+    {
+      "crate": "semver",
+      "workload": "identifier",
+      "paired_ratio": {
+        "shared": 0.9985423257979346,
+        "data": 0.8646236534218101,
+        "llvm": 0.5097718445786099
+      },
+      "bootstrap95": {
+        "shared": [
+          0.9943883124714653,
+          1.0040192637459642
+        ],
+        "data": [
+          0.8613719492993438,
+          0.8691499957817523
+        ],
+        "llvm": [
+          0.5073172372466914,
+          0.5141914567536902
+        ]
+      },
+      "candidate_over_llvm": 1.6991988039237869,
+      "median_ns": {
+        "llvm": 129758003,
+        "baseline": 254089285,
+        "shared": 254088493,
+        "data": 219613832
+      },
+      "instructions": {
+        "llvm": 2219659044,
+        "baseline": 3673703572,
+        "shared": 3675503201,
+        "data": 3672143664
+      }
+    },
+    {
+      "crate": "base64",
+      "workload": "encode",
+      "paired_ratio": {
+        "shared": 0.982307159842921,
+        "data": 0.9845663488696246,
+        "llvm": 0.1015720514072726
+      },
+      "bootstrap95": {
+        "shared": [
+          0.9804711317053113,
+          0.9860551511580185
+        ],
+        "data": [
+          0.9806839666373484,
+          0.9901794742414668
+        ],
+        "llvm": [
+          0.10099078806414133,
+          0.10187843535476171
+        ]
+      },
+      "candidate_over_llvm": 9.710032102367375,
+      "median_ns": {
+        "llvm": 70033502,
+        "baseline": 691242950,
+        "shared": 680668773,
+        "data": 679982057
+      },
+      "instructions": {
+        "llvm": 1170111128,
+        "baseline": 7455516880,
+        "shared": 6920036056,
+        "data": 6920036245
+      }
+    },
+    {
+      "crate": "base64",
+      "workload": "decode",
+      "paired_ratio": {
+        "shared": 0.9743678546703607,
+        "data": 0.979373288428045,
+        "llvm": 0.12063952803370909
+      },
+      "bootstrap95": {
+        "shared": [
+          0.9648190760186699,
+          0.9887834902602702
+        ],
+        "data": [
+          0.9680484558040726,
+          0.9893092469918522
+        ],
+        "llvm": [
+          0.11959638515549609,
+          0.12131613201933115
+        ]
+      },
+      "candidate_over_llvm": 8.134972896562138,
+      "median_ns": {
+        "llvm": 73971892,
+        "baseline": 615379995,
+        "shared": 602437511,
+        "data": 604970943
+      },
+      "instructions": {
+        "llvm": 1541543052,
+        "baseline": 9715025752,
+        "shared": 9222972479,
+        "data": 9222732466
+      }
+    },
+    {
+      "crate": "base64",
+      "workload": "short",
+      "paired_ratio": {
+        "shared": 0.9709658130537724,
+        "data": 0.9803270066559934,
+        "llvm": 0.22070605804453453
+      },
+      "bootstrap95": {
+        "shared": [
+          0.9680498232971102,
+          0.9780820490979297
+        ],
+        "data": [
+          0.9777604916036803,
+          0.9826396750102931
+        ],
+        "llvm": [
+          0.2196910450669991,
+          0.22163847395436426
+        ]
+      },
+      "candidate_over_llvm": 4.435517381703163,
+      "median_ns": {
+        "llvm": 68300776,
+        "baseline": 309397542,
+        "shared": 301056989,
+        "data": 303222642
+      },
+      "instructions": {
+        "llvm": 1342182953,
+        "baseline": 4685324712,
+        "shared": 4465500709,
+        "data": 4460699880
+      }
+    },
+    {
+      "crate": "unicode-segmentation",
+      "workload": "graphemes-mixed",
+      "paired_ratio": {
+        "shared": 0.9871999066126763,
+        "data": 0.9928956503357537,
+        "llvm": 0.7430392193269703
+      },
+      "bootstrap95": {
+        "shared": [
+          0.9849810412368488,
+          0.9907844097324325
+        ],
+        "data": [
+          0.9895228293653806,
+          1.0056443022104633
+        ],
+        "llvm": [
+          0.7399575057938027,
+          0.7469125320603363
+        ]
+      },
+      "candidate_over_llvm": 1.3404156022236628,
+      "median_ns": {
+        "llvm": 71702115,
+        "baseline": 96174732,
+        "shared": 95053147,
+        "data": 96265468
+      },
+      "instructions": {
+        "llvm": 1079513960,
+        "baseline": 1444581515,
+        "shared": 1435194458,
+        "data": 1435194827
+      }
+    },
+    {
+      "crate": "unicode-segmentation",
+      "workload": "graphemes-ascii",
+      "paired_ratio": {
+        "shared": 0.9996971522503906,
+        "data": 0.9963559011418908,
+        "llvm": 0.9151217004258365
+      },
+      "bootstrap95": {
+        "shared": [
+          0.9926221273994926,
+          1.0157483479049483
+        ],
+        "data": [
+          0.9845551607993311,
+          1.0032112488400504
+        ],
+        "llvm": [
+          0.9022391335146381,
+          0.9211747314949155
+        ]
+      },
+      "candidate_over_llvm": 1.0905304590854876,
+      "median_ns": {
+        "llvm": 111254787,
+        "baseline": 122292147,
+        "shared": 122505546,
+        "data": 121705881
+      },
+      "instructions": {
+        "llvm": 1877568223,
+        "baseline": 1962773864,
+        "shared": 1962773765,
+        "data": 1962774344
+      }
+    },
+    {
+      "crate": "unicode-segmentation",
+      "workload": "graphemes-rev",
+      "paired_ratio": {
+        "shared": 0.9793392015586513,
+        "data": 0.976765382247003,
+        "llvm": 0.2589514687676638
+      },
+      "bootstrap95": {
+        "shared": [
+          0.9749145005229652,
+          0.9829517622090344
+        ],
+        "data": [
+          0.9657198468082261,
+          0.978553770664218
+        ],
+        "llvm": [
+          0.2578138067225013,
+          0.26074503532929966
+        ]
+      },
+      "candidate_over_llvm": 3.760156798206897,
+      "median_ns": {
+        "llvm": 84114276,
+        "baseline": 322841863,
+        "shared": 316843357,
+        "data": 315108949
+      },
+      "instructions": {
+        "llvm": 1457346809,
+        "baseline": 5220110065,
+        "shared": 5184585076,
+        "data": 5184585401
+      }
+    },
+    {
+      "crate": "humantime",
+      "workload": "dur-parse",
+      "paired_ratio": {
+        "shared": 0.9741483393051842,
+        "data": 0.9843152396214944,
+        "llvm": 0.09608606478061078
+      },
+      "bootstrap95": {
+        "shared": [
+          0.9660811365970663,
+          0.9772872782095073
+        ],
+        "data": [
+          0.9780215136653666,
+          0.987207242060904
+        ],
+        "llvm": [
+          0.0954852004503495,
+          0.09687662600404487
+        ]
+      },
+      "candidate_over_llvm": 10.24467632272679,
+      "median_ns": {
+        "llvm": 87187303,
+        "baseline": 907343085,
+        "shared": 882910316,
+        "data": 892292624
+      },
+      "instructions": {
+        "llvm": 1317659647,
+        "baseline": 9978263522,
+        "shared": 9978264015,
+        "data": 9974864104
+      }
+    },
+    {
+      "crate": "humantime",
+      "workload": "dur-format",
+      "paired_ratio": {
+        "shared": 0.9546969076197311,
+        "data": 1.0059279966456631,
+        "llvm": 0.8474220539563685
+      },
+      "bootstrap95": {
+        "shared": [
+          0.9463972472130596,
+          0.9631684049545269
+        ],
+        "data": [
+          0.991610888333892,
+          1.0090581194615336
+        ],
+        "llvm": [
+          0.8339039199143398,
+          0.8833805782862367
+        ]
+      },
+      "candidate_over_llvm": 1.1641153989856632,
+      "median_ns": {
+        "llvm": 92947043,
+        "baseline": 108585332,
+        "shared": 104636256,
+        "data": 108698181
+      },
+      "instructions": {
+        "llvm": 1521252961,
+        "baseline": 1744572681,
+        "shared": 1749773040,
+        "data": 1749773067
+      }
+    },
+    {
+      "crate": "humantime",
+      "workload": "ts-parse",
+      "paired_ratio": {
+        "shared": 1.0053437175408673,
+        "data": 0.9871560706092294,
+        "llvm": 0.31425627572172343
+      },
+      "bootstrap95": {
+        "shared": [
+          0.9950511879814959,
+          1.0065630962007581
+        ],
+        "data": [
+          0.978452627166097,
+          0.9972449390861482
+        ],
+        "llvm": [
+          0.30866790740707156,
+          0.315146814635761
+        ]
+      },
+      "candidate_over_llvm": 3.145415704529889,
+      "median_ns": {
+        "llvm": 85886382,
+        "baseline": 274323234,
+        "shared": 274653608,
+        "data": 270547837
+      },
+      "instructions": {
+        "llvm": 1182260014,
+        "baseline": 4956262694,
+        "shared": 4986262608,
+        "data": 4959262657
+      }
+    },
+    {
+      "crate": "humantime",
+      "workload": "ts-format",
+      "paired_ratio": {
+        "shared": 0.7516487079450382,
+        "data": 0.7524322867297942,
+        "llvm": 0.45463764400816525
+      },
+      "bootstrap95": {
+        "shared": [
+          0.7504561704635033,
+          0.7526055610174353
+        ],
+        "data": [
+          0.7516979560116617,
+          0.7539894574540045
+        ],
+        "llvm": [
+          0.45391818261457006,
+          0.4556607204917485
+        ]
+      },
+      "candidate_over_llvm": 1.654758685539534,
+      "median_ns": {
+        "llvm": 92561799,
+        "baseline": 203355917,
+        "shared": 152943400,
+        "data": 153375075
+      },
+      "instructions": {
+        "llvm": 1056249620,
+        "baseline": 1790937115,
+        "shared": 2059737018,
+        "data": 2059736853
+      }
+    }
+  ],
+  "sizes": {
+    "semver": {
+      "llvm": {
+        "text_bytes": 18515,
+        "func_symbol_bytes": 19015,
+        "func_symbols": 81,
+        "rodata_bytes": 2008,
+        "object_count": 14,
+        "object_bytes": 85240,
+        "rlib_bytes": 238558
+      },
+      "baseline": {
+        "text_bytes": 34148,
+        "func_symbol_bytes": 32786,
+        "func_symbols": 196,
+        "rodata_bytes": 12009,
+        "object_count": 14,
+        "object_bytes": 151088,
+        "rlib_bytes": 303766
+      },
+      "shared": {
+        "text_bytes": 33955,
+        "func_symbol_bytes": 32584,
+        "func_symbols": 196,
+        "rodata_bytes": 12009,
+        "object_count": 14,
+        "object_bytes": 150904,
+        "rlib_bytes": 303566
+      },
+      "data": {
+        "text_bytes": 34052,
+        "func_symbol_bytes": 32705,
+        "func_symbols": 194,
+        "rodata_bytes": 11795,
+        "object_count": 14,
+        "object_bytes": 149960,
+        "rlib_bytes": 302606
+      }
+    },
+    "base64": {
+      "llvm": {
+        "text_bytes": 8648,
+        "func_symbol_bytes": 8648,
+        "func_symbols": 35,
+        "rodata_bytes": 1926,
+        "object_count": 14,
+        "object_bytes": 53632,
+        "rlib_bytes": 411664
+      },
+      "baseline": {
+        "text_bytes": 29635,
+        "func_symbol_bytes": 29009,
+        "func_symbols": 92,
+        "rodata_bytes": 11143,
+        "object_count": 14,
+        "object_bytes": 130656,
+        "rlib_bytes": 488506
+      },
+      "shared": {
+        "text_bytes": 28938,
+        "func_symbol_bytes": 28328,
+        "func_symbols": 92,
+        "rodata_bytes": 11143,
+        "object_count": 14,
+        "object_bytes": 129960,
+        "rlib_bytes": 487778
+      },
+      "data": {
+        "text_bytes": 28778,
+        "func_symbol_bytes": 28175,
+        "func_symbols": 90,
+        "rodata_bytes": 10890,
+        "object_count": 14,
+        "object_bytes": 128416,
+        "rlib_bytes": 486202
+      }
+    },
+    "unicode-segmentation": {
+      "llvm": {
+        "text_bytes": 8398,
+        "func_symbol_bytes": 8398,
+        "func_symbols": 24,
+        "rodata_bytes": 75874,
+        "object_count": 9,
+        "object_bytes": 112552,
+        "rlib_bytes": 1268720
+      },
+      "baseline": {
+        "text_bytes": 18602,
+        "func_symbol_bytes": 18082,
+        "func_symbols": 78,
+        "rodata_bytes": 90444,
+        "object_count": 9,
+        "object_bytes": 179976,
+        "rlib_bytes": 1335324
+      },
+      "shared": {
+        "text_bytes": 18490,
+        "func_symbol_bytes": 17878,
+        "func_symbols": 78,
+        "rodata_bytes": 90444,
+        "object_count": 9,
+        "object_bytes": 179864,
+        "rlib_bytes": 1335204
+      },
+      "data": {
+        "text_bytes": 18490,
+        "func_symbol_bytes": 17878,
+        "func_symbols": 78,
+        "rodata_bytes": 90444,
+        "object_count": 9,
+        "object_bytes": 179864,
+        "rlib_bytes": 1335196
+      }
+    },
+    "humantime": {
+      "llvm": {
+        "text_bytes": 10426,
+        "func_symbol_bytes": 10426,
+        "func_symbols": 32,
+        "rodata_bytes": 1656,
+        "object_count": 13,
+        "object_bytes": 53768,
+        "rlib_bytes": 148680
+      },
+      "baseline": {
+        "text_bytes": 57461,
+        "func_symbol_bytes": 56798,
+        "func_symbols": 100,
+        "rodata_bytes": 11406,
+        "object_count": 13,
+        "object_bytes": 165880,
+        "rlib_bytes": 261036
+      },
+      "shared": {
+        "text_bytes": 58805,
+        "func_symbol_bytes": 58118,
+        "func_symbols": 100,
+        "rodata_bytes": 11406,
+        "object_count": 13,
+        "object_bytes": 167224,
+        "rlib_bytes": 262372
+      },
+      "data": {
+        "text_bytes": 58709,
+        "func_symbol_bytes": 58034,
+        "func_symbols": 98,
+        "rodata_bytes": 11149,
+        "object_count": 13,
+        "object_bytes": 165960,
+        "rlib_bytes": 261100
+      }
+    }
+  },
+  "geomean": {
+    "llvm": 0.28562649911371907,
+    "shared": 0.9590632408756895,
+    "data": 0.9514594232891542
+  },
+  "candidate_over_llvm_geomean": 3.3272774321307086
+}

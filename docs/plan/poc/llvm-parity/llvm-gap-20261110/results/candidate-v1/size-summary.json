@@ -1,0 +1,130 @@
+[
+  {
+    "crate": "semver",
+    "arms": {
+      "llvm": {
+        "text_bytes": 18515,
+        "func_symbol_bytes": 19015,
+        "func_symbols": 81,
+        "rodata_bytes": 2029,
+        "object_count": 14,
+        "object_bytes": 85256,
+        "rlib_bytes": 238670
+      },
+      "baseline": {
+        "text_bytes": 34148,
+        "func_symbol_bytes": 32795,
+        "func_symbols": 196,
+        "rodata_bytes": 12211,
+        "object_count": 14,
+        "object_bytes": 151304,
+        "rlib_bytes": 304078
+      },
+      "combined": {
+        "text_bytes": 34739,
+        "func_symbol_bytes": 33366,
+        "func_symbols": 196,
+        "rodata_bytes": 12211,
+        "object_count": 14,
+        "object_bytes": 152152,
+        "rlib_bytes": 304926
+      }
+    }
+  },
+  {
+    "crate": "base64",
+    "arms": {
+      "llvm": {
+        "text_bytes": 8648,
+        "func_symbol_bytes": 8648,
+        "func_symbols": 35,
+        "rodata_bytes": 1982,
+        "object_count": 14,
+        "object_bytes": 53704,
+        "rlib_bytes": 411962
+      },
+      "baseline": {
+        "text_bytes": 29651,
+        "func_symbol_bytes": 29025,
+        "func_symbols": 92,
+        "rodata_bytes": 11262,
+        "object_count": 14,
+        "object_bytes": 130784,
+        "rlib_bytes": 488858
+      },
+      "combined": {
+        "text_bytes": 27427,
+        "func_symbol_bytes": 26808,
+        "func_symbols": 92,
+        "rodata_bytes": 11262,
+        "object_count": 14,
+        "object_bytes": 128536,
+        "rlib_bytes": 486610
+      }
+    }
+  },
+  {
+    "crate": "unicode-segmentation",
+    "arms": {
+      "llvm": {
+        "text_bytes": 8398,
+        "func_symbol_bytes": 8398,
+        "func_symbols": 24,
+        "rodata_bytes": 75916,
+        "object_count": 9,
+        "object_bytes": 112600,
+        "rlib_bytes": 1268848
+      },
+      "baseline": {
+        "text_bytes": 18618,
+        "func_symbol_bytes": 18087,
+        "func_symbols": 78,
+        "rodata_bytes": 90617,
+        "object_count": 9,
+        "object_bytes": 180168,
+        "rlib_bytes": 1335588
+      },
+      "combined": {
+        "text_bytes": 18586,
+        "func_symbol_bytes": 17985,
+        "func_symbols": 78,
+        "rodata_bytes": 90617,
+        "object_count": 9,
+        "object_bytes": 180136,
+        "rlib_bytes": 1335556
+      }
+    }
+  },
+  {
+    "crate": "humantime",
+    "arms": {
+      "llvm": {
+        "text_bytes": 10426,
+        "func_symbol_bytes": 10426,
+        "func_symbols": 32,
+        "rodata_bytes": 1670,
+        "object_count": 13,
+        "object_bytes": 53784,
+        "rlib_bytes": 148752
+      },
+      "baseline": {
+        "text_bytes": 57477,
+        "func_symbol_bytes": 56816,
+        "func_symbols": 100,
+        "rodata_bytes": 11494,
+        "object_count": 13,
+        "object_bytes": 165984,
+        "rlib_bytes": 261196
+      },
+      "combined": {
+        "text_bytes": 57429,
+        "func_symbol_bytes": 56742,
+        "func_symbols": 100,
+        "rodata_bytes": 11494,
+        "object_count": 13,
+        "object_bytes": 165936,
+        "rlib_bytes": 261148
+      }
+    }
+  }
+]

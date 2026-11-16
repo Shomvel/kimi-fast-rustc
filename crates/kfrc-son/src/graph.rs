@@ -45,6 +45,9 @@ pub enum Opcode {
     Jump,
     /// Two-way branch on a `bool`; projection 0 is true, 1 is false.
     If,
+    /// L-only integer dispatch; payload indexes raw-bit cases in
+    /// `integer_switches`. Projections follow case order, then otherwise.
+    Switch,
     /// Semantic enum branch; payload indexes logical cases in `variant_switches`.
     /// Projections follow case order, then an otherwise edge.
     VariantSwitch,
@@ -255,6 +258,7 @@ impl Opcode {
                 | Self::Region
                 | Self::Jump
                 | Self::If
+                | Self::Switch
                 | Self::VariantSwitch
                 | Self::Assume
                 | Self::TraitCall
@@ -288,6 +292,7 @@ impl Opcode {
             Self::Region => "Region",
             Self::Jump => "Jump",
             Self::If => "If",
+            Self::Switch => "Switch",
             Self::VariantSwitch => "VariantSwitch",
             Self::VariantWitness => "VariantWitness",
             Self::Assume => "Assume",
@@ -465,7 +470,16 @@ pub enum MemoryPartition {
 pub enum GraphState {
     Building,
     Sealed,
+    /// A successful internal pipeline result, accepted by construction without
+    /// claiming that the optional whole-graph verifier ran.
+    Trusted,
     Verified,
+}
+
+impl GraphState {
+    pub fn is_ready_for_lowering(self) -> bool {
+        matches!(self, Self::Trusted | Self::Verified)
+    }
 }
 
 /// Rust borrow permission of one direct parameter (RS5.1, RF20/RF21).
@@ -542,6 +556,9 @@ pub struct FunctionGraph {
     pub holes: Vec<Hole>,
     pub trait_calls: Vec<TraitCall>,
     pub variant_switches: Vec<Vec<u32>>,
+    /// L integer cases, normalized to the discriminant's width. Case order
+    /// determines Control projection order; the final projection is default.
+    pub integer_switches: Vec<Vec<u128>>,
     records: Vec<NodeRecord>,
     control: Vec<NodeId>,
     types: Vec<ValueTypeId>,
@@ -554,9 +571,21 @@ pub struct FunctionGraph {
     unresolved_edges: bool,
     /// Number of records flagged dead, so `ids().count()` needs no scan.
     dead_nodes: u32,
+    /// The previous compaction already covered these exact records and edges.
+    /// Type/payload metadata and verification do not change their liveness.
+    compacted: bool,
+    /// An immutable reverse-edge snapshot. All node/edge edits invalidate it;
+    /// outstanding snapshots and an unchanged clone may keep sharing its data.
+    cached_uses: std::sync::OnceLock<crate::analysis::uses::Uses>,
+    /// Only control-skeleton edits invalidate the CFG and lazy dominators.
+    /// A direct public `start` edit is checked again when reading the cache.
+    cached_control_flow: std::sync::OnceLock<crate::analysis::cfg::ControlFlow>,
     value_types: Vec<ValueType>,
     pub constants: Vec<u128>,
     pub callees: Vec<CallTarget>,
+    /// Producer-authenticated runtime identities, kept distinct from an
+    /// ordinary function with the same symbol/ABI during callee interning.
+    runtime_comparisons: std::collections::BTreeMap<u32, kfrc_body::RuntimeComparison>,
     /// Permissions of S parameters in `Start` order. Empty means all `None`;
     /// R graphs and Layout graphs keep it empty. Kept apart from `abi` so
     /// function-pointer ABI equality is unchanged.
@@ -565,6 +594,10 @@ pub struct FunctionGraph {
     /// argument index. A symbol names one instance, so this table survives
     /// callee interning, splicing and lowering-added callees unchanged.
     pub callee_permissions: std::collections::BTreeMap<String, Vec<ArgPermission>>,
+    /// Same-crate proofs for direct callees. Each entry carries its source ABI;
+    /// consumers must use `callee_attrs` to reject stale signature metadata.
+    pub callee_attrs:
+        std::collections::BTreeMap<String, crate::analysis::function_attrs::FunctionAttrs>,
     pub call_abis: Vec<kfrc_body::FunctionAbi>,
     pub stack_slots: Vec<kfrc_body::SizeAlign>,
     /// L-level physical slot index -> source LocalSlot identity. ABI temporary
@@ -572,6 +605,9 @@ pub struct FunctionGraph {
     pub stack_slot_locals: kfrc_body::fx_hash::HashMap<u32, u32>,
     pub symbols: Vec<(String, i64)>,
     pub data_objects: Vec<kfrc_body::DataObject>,
+    /// Crate-owned definitions shared by all bodies. `data_objects` contains
+    /// only standalone input data or constants introduced by local lowering.
+    pub program_data: std::sync::Arc<std::collections::BTreeMap<String, kfrc_body::DataObject>>,
     /// Full-width logical (variant,field) indices for VariantField nodes.
     pub variant_fields: Vec<(u32, u32)>,
     /// Entry zero is always Unknown. Memory operation payloads index this table.
@@ -585,6 +621,18 @@ pub struct FunctionGraph {
 }
 
 impl FunctionGraph {
+    pub fn data_object(&self, symbol: &str) -> Option<&kfrc_body::DataObject> {
+        self.program_data.get(symbol).or_else(|| {
+            self.data_objects
+                .iter()
+                .find(|object| object.symbol == symbol)
+        })
+    }
+
+    pub fn data_definitions(&self) -> impl Iterator<Item = &kfrc_body::DataObject> {
+        self.data_objects.iter().chain(self.program_data.values())
+    }
+
     pub fn new(
         symbol: impl Into<String>,
         abi: kfrc_body::FunctionAbi,
@@ -597,6 +645,7 @@ impl FunctionGraph {
             holes: Vec::new(),
             trait_calls: Vec::new(),
             variant_switches: Vec::new(),
+            integer_switches: Vec::new(),
             records: Vec::new(),
             control: Vec::new(),
             types: Vec::new(),
@@ -604,16 +653,22 @@ impl FunctionGraph {
             forward: Vec::new(),
             unresolved_edges: false,
             dead_nodes: 0,
+            compacted: false,
+            cached_uses: std::sync::OnceLock::new(),
+            cached_control_flow: std::sync::OnceLock::new(),
             value_types: Vec::new(),
             constants: Vec::new(),
             callees: Vec::new(),
+            runtime_comparisons: std::collections::BTreeMap::new(),
             arg_permissions: Vec::new(),
             callee_permissions: std::collections::BTreeMap::new(),
+            callee_attrs: std::collections::BTreeMap::new(),
             call_abis: Vec::new(),
             stack_slots: Vec::new(),
             stack_slot_locals: kfrc_body::fx_hash::HashMap::default(),
             symbols: Vec::new(),
             data_objects: Vec::new(),
+            program_data: std::sync::Arc::default(),
             variant_fields: Vec::new(),
             memory_partitions: vec![MemoryPartition::Unknown],
             start: NodeId::NONE,
@@ -647,7 +702,7 @@ impl FunctionGraph {
         if let Some(index) = self.holes.iter().position(|existing| existing == &hole) {
             return index as u32;
         }
-        self.invalidate();
+        self.invalidate_certificate();
         self.holes.push(hole);
         self.holes.len() as u32 - 1
     }
@@ -660,10 +715,61 @@ impl FunctionGraph {
         self.records.is_empty()
     }
 
-    /// Any semantic graph edit revokes a previous verification certificate.
+    /// Any semantic graph edit revokes verification and internal pipeline trust.
     pub fn invalidate(&mut self) {
-        if self.state == GraphState::Verified {
+        self.compacted = false;
+        self.cached_uses.take();
+        self.cached_control_flow.take();
+        self.invalidate_certificate();
+    }
+
+    /// Metadata and verification itself do not change the indexed graph edges.
+    pub(crate) fn invalidate_certificate(&mut self) {
+        if self.state.is_ready_for_lowering() {
             self.state = GraphState::Sealed;
+        }
+    }
+
+    /// Scalar operand edits change use lists, but not the control skeleton.
+    fn invalidate_values(&mut self) {
+        self.compacted = false;
+        self.cached_uses.take();
+        self.invalidate_certificate();
+    }
+
+    fn has_cfg_operands(&self, node: NodeId) -> bool {
+        self.op(node) == Opcode::Region
+            || (self.op(node) == Opcode::Projection
+                && matches!(self.value_type(node), ValueType::Control))
+    }
+
+    fn is_cfg_source(&self, node: NodeId) -> bool {
+        crate::analysis::cfg::is_control_flow(self, node)
+            // Replacing a forwarded id again can redirect raw control edges
+            // whose cached source is now the old replacement, not this id.
+            || !self.forward[node.index()].is_none()
+            || self.cached_control_flow.get().is_some_and(|cfg| {
+                cfg.starts_at(node) || !cfg.successors(node).is_empty()
+            })
+    }
+
+    pub(crate) fn uses(&self) -> crate::analysis::uses::Uses {
+        self.cached_uses
+            .get_or_init(|| crate::analysis::uses::Uses::build(self))
+            .clone()
+    }
+
+    pub(crate) fn control_flow(&self) -> crate::analysis::cfg::ControlFlow {
+        let cached = self
+            .cached_control_flow
+            .get_or_init(|| crate::analysis::cfg::ControlFlow::build(self));
+        // `start` is public and may change without an edge edit. Such a view
+        // needs its own reachability; restoring the original entry can reuse
+        // this cache only while no intervening graph edit invalidated it.
+        if cached.starts_at(self.start) {
+            cached.clone()
+        } else {
+            crate::analysis::cfg::ControlFlow::build(self)
         }
     }
 
@@ -671,7 +777,7 @@ impl FunctionGraph {
         if let Some(index) = self.value_types.iter().position(|existing| *existing == ty) {
             return ValueTypeId(index as u32);
         }
-        self.invalidate();
+        self.invalidate_certificate();
         self.value_types.push(ty);
         ValueTypeId(self.value_types.len() as u32 - 1)
     }
@@ -684,7 +790,7 @@ impl FunctionGraph {
         payload: u32,
         ty: ValueType,
     ) -> NodeId {
-        self.invalidate();
+        self.invalidate_values();
         for &input in inputs {
             self.note_edge(input);
         }
@@ -718,6 +824,9 @@ impl FunctionGraph {
         self.control.push(control);
         self.types.push(ty);
         self.forward.push(NodeId::NONE);
+        if crate::analysis::cfg::is_control_flow(self, id) {
+            self.cached_control_flow.take();
+        }
         id
     }
 
@@ -731,7 +840,7 @@ impl FunctionGraph {
         payload: u32,
         ty: ValueType,
     ) -> NodeId {
-        self.invalidate();
+        self.invalidate_values();
         self.note_edge(control);
         let id = NodeId(self.records.len() as u32);
         let start = self.extra.len() as u32;
@@ -747,6 +856,9 @@ impl FunctionGraph {
         self.control.push(control);
         self.types.push(ty);
         self.forward.push(NodeId::NONE);
+        if crate::analysis::cfg::is_control_flow(self, id) {
+            self.cached_control_flow.take();
+        }
         id
     }
 
@@ -767,24 +879,37 @@ impl FunctionGraph {
     }
 
     pub fn set_value_type(&mut self, node: NodeId, ty: ValueType) {
-        self.invalidate();
+        let was_control = crate::analysis::cfg::is_control_flow(self, node);
+        self.invalidate_certificate();
         let ty = self.intern_type(ty);
         self.types[node.index()] = ty;
+        if was_control != crate::analysis::cfg::is_control_flow(self, node) {
+            self.cached_control_flow.take();
+        }
     }
 
     pub fn set_opcode(&mut self, node: NodeId, op: Opcode) {
-        self.invalidate();
+        let old = self.op(node);
+        let was_control = crate::analysis::cfg::is_control_flow(self, node);
+        self.invalidate_certificate();
+        self.compacted = false;
         self.records[node.index()].op = op;
+        if old != op
+            && (matches!(old, Opcode::Region | Opcode::Projection)
+                || matches!(op, Opcode::Region | Opcode::Projection)
+                || was_control != crate::analysis::cfg::is_control_flow(self, node))
+        {
+            self.cached_control_flow.take();
+        }
     }
 
     pub fn set_payload(&mut self, node: NodeId, payload: u32) {
-        self.invalidate();
+        self.invalidate_certificate();
         self.records[node.index()].payload = payload;
     }
 
     pub fn set_opcode_payload(&mut self, node: NodeId, op: Opcode, payload: u32) {
-        self.invalidate();
-        self.records[node.index()].op = op;
+        self.set_opcode(node, op);
         self.records[node.index()].payload = payload;
     }
 
@@ -793,7 +918,7 @@ impl FunctionGraph {
         if let Some(index) = self.variant_fields.iter().position(|entry| *entry == key) {
             return index as u32;
         }
-        self.invalidate();
+        self.invalidate_certificate();
         self.variant_fields.push(key);
         self.variant_fields.len() as u32 - 1
     }
@@ -806,7 +931,7 @@ impl FunctionGraph {
         {
             return index as u32;
         }
-        self.invalidate();
+        self.invalidate_certificate();
         self.memory_partitions.push(partition);
         self.memory_partitions.len() as u32 - 1
     }
@@ -846,7 +971,11 @@ impl FunctionGraph {
     }
 
     pub fn set_input(&mut self, node: NodeId, index: usize, value: NodeId) {
-        self.invalidate();
+        if self.has_cfg_operands(node) {
+            self.invalidate();
+        } else {
+            self.invalidate_values();
+        }
         self.note_edge(value);
         let record = self.records[node.index()];
         if record.flags & FLAG_POOLED_INPUTS == 0 {
@@ -872,7 +1001,11 @@ impl FunctionGraph {
     /// Replaces an entire operand list, including Region/Phi arity changes.
     /// Structural editors must update related nodes together before verification.
     pub fn set_inputs(&mut self, node: NodeId, inputs: &[NodeId]) {
-        self.invalidate();
+        if self.has_cfg_operands(node) {
+            self.invalidate();
+        } else {
+            self.invalidate_values();
+        }
         for &input in inputs {
             self.note_edge(input);
         }
@@ -885,7 +1018,11 @@ impl FunctionGraph {
     }
 
     pub fn set_control(&mut self, node: NodeId, control: NodeId) {
-        self.invalidate();
+        if crate::analysis::cfg::is_control_flow(self, node) {
+            self.invalidate();
+        } else {
+            self.invalidate_values();
+        }
         self.note_edge(control);
         self.control[node.index()] = control;
     }
@@ -949,13 +1086,61 @@ impl FunctionGraph {
             .unwrap_or_default()
     }
 
+    pub fn callee_attrs(
+        &self,
+        callee: u32,
+    ) -> Option<&crate::analysis::function_attrs::FunctionAttrs> {
+        let target = self.callees.get(callee as usize)?;
+        self.callee_attrs
+            .get(&target.symbol)
+            .filter(|attrs| attrs.abi == target.abi)
+    }
+
     pub fn add_callee(&mut self, target: CallTarget) -> u32 {
-        if let Some(index) = self.callees.iter().position(|existing| *existing == target) {
+        if let Some(index) = self
+            .callees
+            .iter()
+            .enumerate()
+            .position(|(index, existing)| {
+                *existing == target && !self.runtime_comparisons.contains_key(&(index as u32))
+            })
+        {
             return index as u32;
         }
-        self.invalidate();
+        self.invalidate_certificate();
         self.callees.push(target);
         self.callees.len() as u32 - 1
+    }
+
+    /// Intern a comparison whose standard runtime identity and full-range
+    /// readable/initialized precondition were established by the producer.
+    pub fn add_runtime_comparison(&mut self, comparison: kfrc_body::RuntimeComparison) -> u32 {
+        if let Some(index) = self
+            .runtime_comparisons
+            .iter()
+            .find_map(|(&index, &existing)| {
+                (existing == comparison && self.runtime_comparison(index) == Some(comparison))
+                    .then_some(index)
+            })
+        {
+            return index;
+        }
+        self.invalidate_certificate();
+        let index = self.callees.len() as u32;
+        self.callees.push(CallTarget {
+            symbol: comparison.symbol().to_owned(),
+            abi: comparison.abi(),
+        });
+        self.runtime_comparisons.insert(index, comparison);
+        index
+    }
+
+    /// Reject stale authentication if a caller edited the public target table.
+    pub fn runtime_comparison(&self, callee: u32) -> Option<kfrc_body::RuntimeComparison> {
+        let comparison = *self.runtime_comparisons.get(&callee)?;
+        let target = self.callees.get(callee as usize)?;
+        (target.symbol == comparison.symbol() && target.abi == comparison.abi())
+            .then_some(comparison)
     }
 
     /// `node` is replaced by `replacement` everywhere (applied by `resolve`
@@ -963,7 +1148,11 @@ impl FunctionGraph {
     pub fn replace(&mut self, node: NodeId, replacement: NodeId) {
         let replacement = self.resolve(replacement);
         if node != replacement {
-            self.invalidate();
+            if self.is_cfg_source(node) {
+                self.invalidate();
+            } else {
+                self.invalidate_values();
+            }
             self.unresolved_edges = true;
             self.forward[node.index()] = replacement;
             self.mark_dead(node);
@@ -981,12 +1170,16 @@ impl FunctionGraph {
     /// Retires a node after its users have been rewritten or retired. This does
     /// not erase or renumber its storage; editors own the surrounding invariant.
     pub fn remove_node(&mut self, node: NodeId) {
-        self.invalidate();
+        if self.is_cfg_source(node) {
+            self.invalidate();
+        } else {
+            self.invalidate_values();
+        }
         self.mark_dead(node);
     }
 
-    /// Applies forwarding without renumbering NodeIds. Analyses still need to be
-    /// rebuilt after mutations; only pipeline finalization calls `compact`.
+    /// Applies forwarding without renumbering NodeIds. Cached analyses already
+    /// resolve these edges and remain valid; only finalization calls `compact`.
     /// Rewrites, in place, every live node's visible inputs and control; a
     /// graph with no forwarded edge since the last call is left untouched.
     pub fn resolve_edges(&mut self) {
@@ -1033,7 +1226,7 @@ impl FunctionGraph {
             }
         }
         if changed {
-            self.invalidate();
+            self.invalidate_certificate();
         }
         self.unresolved_edges = false;
     }
@@ -1077,8 +1270,12 @@ impl FunctionGraph {
     /// Rewrites every input through the forwarding table, removes nodes not
     /// reachable from the control skeleton, and renumbers in creation order.
     pub fn compact(&mut self) {
-        self.invalidate();
+        self.invalidate_certificate();
         self.resolve_edges();
+        if self.compacted {
+            return;
+        }
+        self.invalidate();
         let count = self.records.len();
         // All fixed operations are observable roots, including unused trapping
         // arithmetic. CFG transforms retire unreachable roots before compaction.
@@ -1122,19 +1319,16 @@ impl FunctionGraph {
                 continue;
             }
             let node = NodeId(index as u32);
-            let inputs: Vec<NodeId> = self
-                .inputs(node)
-                .iter()
-                .map(|input| remap(*input))
-                .collect();
             let mut record = self.records[index];
             if record.flags & FLAG_POOLED_INPUTS != 0 {
-                record.in0 = NodeId(extra.len() as u32);
-                record.in1 = NodeId(inputs.len() as u32);
-                extra.extend(inputs);
+                let start = extra.len();
+                extra.extend(self.inputs(node).iter().map(|input| remap(*input)));
+                record.in0 = NodeId(start as u32);
+                record.in1 = NodeId((extra.len() - start) as u32);
             } else {
-                record.in0 = inputs.first().copied().unwrap_or(NodeId::NONE);
-                record.in1 = inputs.get(1).copied().unwrap_or(NodeId::NONE);
+                let inputs = self.inputs(node);
+                record.in0 = inputs.first().map_or(NodeId::NONE, |input| remap(*input));
+                record.in1 = inputs.get(1).map_or(NodeId::NONE, |input| remap(*input));
             }
             records.push(record);
             control.push(remap(self.control[index]));
@@ -1148,6 +1342,7 @@ impl FunctionGraph {
         self.control = control;
         self.types = types;
         self.extra = extra;
+        self.compacted = true;
     }
 
     /// Projection `index` of `source`, if one exists.
@@ -1201,10 +1396,25 @@ impl FunctionGraph {
             let op = self.op(node);
             let mut head = op.name().to_owned();
             match op {
+                op if self.payload(node) != 0 && crate::ArithmeticFlags::allowed(op).is_some() => {
+                    let flags = crate::ArithmeticFlags(self.payload(node));
+                    let mut name = op.name().trim_end_matches(".wrap");
+                    if flags.contains(crate::ArithmeticFlags::AMOUNT_IN_RANGE) {
+                        name = name.trim_end_matches(".mask");
+                    }
+                    let invalid = if flags.valid_for(op) { "" } else { "invalid:" };
+                    head = format!("{name}[{invalid}{flags}]");
+                }
                 Opcode::BitCount | Opcode::FunnelShift => {
                     head = format!("{}[{}]", op.name(), self.payload(node))
                 }
                 Opcode::Projection => head = format!("Projection[{}]", self.payload(node)),
+                Opcode::Switch => {
+                    head = match self.integer_switches.get(self.payload(node) as usize) {
+                        Some(cases) => format!("Switch{cases:?}"),
+                        None => format!("Switch[invalid:{}]", self.payload(node)),
+                    };
+                }
                 Opcode::Field
                 | Opcode::InsertField
                 | Opcode::MakeVariant
@@ -1250,6 +1460,22 @@ impl FunctionGraph {
                 let _ = write!(out, " ({})", inputs.join(", "));
             }
             let _ = writeln!(out, " : {}", self.type_text(self.value_type(node)));
+            if op == Opcode::Call && self.level == GraphLevel::Specialized {
+                let callee = self.payload(node);
+                let _ = write!(
+                    out,
+                    "  call_permissions {node} callee={}",
+                    self.callees[callee as usize].symbol
+                );
+                for argument in 0..inputs.len().saturating_sub(1) {
+                    let _ = write!(
+                        out,
+                        " p{argument}:{}",
+                        self.callee_permission(callee, argument).text()
+                    );
+                }
+                out.push('\n');
+            }
         }
         out.push('}');
         out
@@ -1339,5 +1565,42 @@ mod tests {
         graph.set_input(hidden, 0, b);
         graph.resolve_edges();
         assert_eq!(graph.inputs(hidden), &[b, b]);
+    }
+
+    #[test]
+    fn repeated_compaction_reuses_storage_but_new_values_and_roots_are_revisited() {
+        let (mut graph, a, b, sum) = graph_with_values();
+        graph.set_input(sum, 1, b);
+        graph.start = graph.add_node(Opcode::Start, NodeId::NONE, &[], 0, ValueType::Control);
+        let ret = graph.add_node(Opcode::Return, graph.start, &[sum], 0, ValueType::Control);
+        graph.add_node(Opcode::Undefined, NodeId::NONE, &[], 0, ValueType::Effect);
+        graph.compact();
+        assert_eq!(graph.len(), 5); // Start, return and its three scalar records.
+        let records = graph.records.as_ptr();
+        let controls = graph.control.as_ptr();
+        let types = graph.types.as_ptr();
+        graph.state = GraphState::Trusted;
+        graph.compact();
+        assert_eq!(graph.records.as_ptr(), records);
+        assert_eq!(graph.control.as_ptr(), controls);
+        assert_eq!(graph.types.as_ptr(), types);
+        assert_eq!(graph.state, GraphState::Sealed);
+
+        graph.add_node(Opcode::Undefined, NodeId::NONE, &[], 0, ValueType::Effect);
+        graph.compact();
+        assert_eq!(graph.len(), 5, "a newly orphaned value is discarded");
+        // NodeIds above did not move: only the trailing orphan was removed.
+        assert_eq!(graph.inputs(sum), &[a, b]);
+        graph.set_input(ret, 0, b);
+        graph.compact();
+        assert_eq!(graph.len(), 3, "old return inputs cease to be roots");
+        let ret = graph
+            .ids()
+            .find(|&node| graph.op(node) == Opcode::Return)
+            .unwrap();
+        graph.set_opcode(ret, Opcode::Add);
+        graph.compact();
+        assert_eq!(graph.len(), 1, "changing a fixed opcode changes liveness");
+        assert_eq!(graph.op(graph.start), Opcode::Start);
     }
 }

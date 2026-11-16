@@ -1,0 +1,13 @@
+{
+  "archive_sha256": "69420198a6eaf347213f632598bf81582be97a112c3430d225692867f37f5ad7",
+  "archive_bytes": 83325308,
+  "verified_files": 6090,
+  "sandbox": {
+    "sandbox_id": "icnn5xkfphq8fb8podxfc",
+    "created_at_utc": "2026-11-10T07:32:16.201664+00:00",
+    "sandbox_timeout_seconds": 14400,
+    "killed": true,
+    "killed_at_utc": "2026-11-10T08:26:29.153664+00:00"
+  },
+  "archive_path": "/Users/shom/Downloads/kfrc-divshift-20261110/evidence.tar.gz"
+}

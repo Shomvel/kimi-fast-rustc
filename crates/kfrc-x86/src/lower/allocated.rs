@@ -4,6 +4,7 @@ mod checker;
 mod constraints;
 mod emit;
 mod moves;
+mod rematerialize;
 mod scan;
 
 use super::*;
@@ -92,6 +93,18 @@ pub(super) fn compile(
         emitter.edge_block(label, source, target, destination)?;
     }
     let mut function = emitter.finish();
+    let rematerialized = rematerialize::run(&mut function, allocation.spill_slots);
+    if std::env::var("KFRC_REGALLOC_STATS").as_deref() == Ok("1") {
+        eprintln!(
+            "kfrc-regalloc-rematerialize symbol={} slots={} loads={} stores={} visits={} budget_bailouts={}",
+            function.name,
+            rematerialized.slots,
+            rematerialized.loads_recreated,
+            rematerialized.stores_removed,
+            rematerialized.visits,
+            rematerialized.budget_bailouts,
+        );
+    }
     crate::machine::x86::optimize_zero_idioms(&mut function.instructions);
     Ok(function)
 }
@@ -122,3 +135,6 @@ mod tests;
 
 #[cfg(test)]
 mod intrinsic_tests;
+
+#[cfg(test)]
+mod multiply_tests;

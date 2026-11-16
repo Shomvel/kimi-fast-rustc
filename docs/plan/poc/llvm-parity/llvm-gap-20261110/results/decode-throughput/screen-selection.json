@@ -1,0 +1,42 @@
+{
+  "authorized": true,
+  "label": "decode-private-copy-v1-r1-global-screen-v1",
+  "sandbox_id": "imj3ukm7eqxdk2x0im3uh",
+  "arms": [
+    "generic-v18r2",
+    "decode-private-copy-v1-r1",
+    "llvm"
+  ],
+  "measured_rounds": 9,
+  "excluded_warmup_rounds": 1,
+  "runtime": true,
+  "compile_kinds": [
+    "full",
+    "metadata"
+  ],
+  "order": "rotate by round and reverse odd rounds;round -1 excluded",
+  "runtime_perf_or_profile": false,
+  "compile_perf": "instructions:u,cycles:u;separate from runtime",
+  "source_flags_and_original_workloads": "frozen original suite unchanged",
+  "prior_formal_modified": false,
+  "pins": {
+    "generic-v18r2": {
+      "source_manifest_sha256": "bdb84234da3e2cb361fa683cdb60ab1d1c6a1f72d6856b275155385c09261343",
+      "source_tree_sha256": "99032438e4f499480f41dbd25e87ff4ac3de39a4a07aa11a584a3c61c0ad0a08",
+      "backend_sha256": "47a06f80c001a20a6bb00dba6451d6410b93501d0626529c5e2b9047a6262f97",
+      "correctness_summary_sha256": "d6f2a4424552981e063f496ce31c4cece9befee75ab63b4cba593889c3630393",
+      "correctness_summary_path": "/workspace/callsite/generic-parity-20261110/results/generic-v18r2/summary.json",
+      "source_manifest_path": "/workspace/callsite/generic-parity-20261110/results/generic-v18r2/source-manifest.json",
+      "backend_path": "/workspace/callsite/generic-parity-20261110/generic-v18r2.so"
+    },
+    "decode-private-copy-v1-r1": {
+      "source_manifest_sha256": "2647a5018e70021128ad0c646f936cdd48613d66a61fb307c10da03eb72b917a",
+      "source_tree_sha256": "9235520b2dd380f635c5c51d76baa2c890b9c84b61d2de9f10841dafeef495a3",
+      "backend_sha256": "6c25173e5b00a7056f891748beaf80294fba00e71fd3a4de15e9d81a0616521c",
+      "correctness_summary_sha256": "4871b896779018a74c1068dc6df6cec696077cac1b6ceae1b6043f35cf6f754b",
+      "correctness_summary_path": "/workspace/callsite/generic-parity-20261110/results/decode-private-copy-v1-r1-final-correctness/summary.json",
+      "source_manifest_path": "/workspace/callsite/generic-parity-20261110/results/decode-private-copy-v1-r1-final-correctness/source-manifest.json",
+      "backend_path": "/workspace/callsite/generic-parity-20261110/decode-private-copy-v1-r1.so"
+    }
+  }
+}

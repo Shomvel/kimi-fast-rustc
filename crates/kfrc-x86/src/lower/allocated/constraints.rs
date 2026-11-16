@@ -52,6 +52,7 @@ pub(super) enum Operation {
     Binary(Binary),
     /// Binary operation whose right operand is a sign-extended imm32.
     BinaryImm(Binary, i32),
+    EffectiveAddress(MemoryAddress<usize>),
     Shift(Shift, Option<u8>),
     Rotate(BitWidth, bool, Option<u8>),
     ByteSwap(bool),
@@ -60,11 +61,13 @@ pub(super) enum Operation {
     Divide {
         signed: bool,
     },
+    MulHigh,
     Compare(Condition),
     CompareImm(Condition, i32),
     Test(bool),
     TestImm(i32),
     TestLowByte,
+    TestMasked(u32, BitWidth),
     StackAddress(usize),
     SymbolAddress(String, i64),
     ThreadLocalAddress(String),
@@ -80,6 +83,20 @@ pub(super) enum Operation {
         bytes: u8,
         offset: i32,
         value: i32,
+    },
+    LoadAddress {
+        address: MemoryAddress<usize>,
+        bytes: u8,
+    },
+    StoreAddress {
+        address: MemoryAddress<usize>,
+        source: usize,
+        bytes: u8,
+    },
+    StoreAddressImmediate {
+        address: MemoryAddress<usize>,
+        value: i32,
+        bytes: u8,
     },
     LoadSlot(StackSlot),
     StoreSlot(StackSlot),
@@ -192,6 +209,14 @@ pub(super) fn select(stream: Vec<LowerInstr>) -> Vec<Instruction> {
                     Rem { dst, lhs, rhs } => divide(true, true, dst, lhs, rhs),
                     UDiv { dst, lhs, rhs } => divide(false, false, dst, lhs, rhs),
                     URem { dst, lhs, rhs } => divide(false, true, dst, lhs, rhs),
+                    MulHigh { dst, lhs, rhs } => {
+                        let mut i = Instruction::new(Operation::MulHigh);
+                        i.input(lhs, Constraint::Fixed(Reg::Rax), Phase::Early);
+                        i.input(rhs, Constraint::Any, Phase::Late);
+                        i.output(dst, Constraint::Fixed(Reg::Rdx));
+                        i.clobbers = vec![Reg::Rax, Reg::Rdx];
+                        i
+                    }
                     Compare {
                         dst,
                         condition,
@@ -290,6 +315,12 @@ pub(super) fn select(stream: Vec<LowerInstr>) -> Vec<Instruction> {
                 inst.input(VirtualValue::Reg(value), Any, Early);
                 inst
             }
+            LowerInstr::TestMasked { value, mask, width } => {
+                mirror_branch = false;
+                let mut inst = Instruction::new(Operation::TestMasked(mask, width));
+                inst.input(VirtualValue::Reg(value), Any, Early);
+                inst
+            }
             LowerInstr::BitScanZero {
                 dst,
                 value,
@@ -346,11 +377,48 @@ pub(super) fn select(stream: Vec<LowerInstr>) -> Vec<Instruction> {
                 inst
             }
             LowerInstr::LoadVector { dst, address } => use_one(Operation::LoadVector(dst), address),
+            LowerInstr::LoadAddress {
+                dst,
+                address,
+                bytes,
+            } => {
+                let (address, inputs) = address_inputs(address);
+                let mut inst = Instruction::new(Operation::LoadAddress { address, bytes });
+                inst.inputs = inputs;
+                inst.output(dst, Any);
+                inst
+            }
+            LowerInstr::StoreAddress {
+                address,
+                src,
+                bytes,
+            } => {
+                let (address, inputs) = address_inputs(address);
+                if let Some(value) = store_immediate(src, bytes) {
+                    let mut inst = Instruction::new(Operation::StoreAddressImmediate {
+                        address,
+                        value,
+                        bytes,
+                    });
+                    inst.inputs = inputs;
+                    output.push(inst);
+                    continue;
+                }
+                let mut inst = Instruction::new(Operation::StoreAddress {
+                    address,
+                    source: inputs.len(),
+                    bytes,
+                });
+                inst.inputs = inputs;
+                inst.input(src, Any, Early);
+                inst
+            }
             LowerInstr::StoreVector { address, src } => {
                 use_one(Operation::StoreVector(src), address)
             }
             LowerInstr::MulOverflow {
                 dst,
+                product,
                 lhs,
                 rhs,
                 signed,
@@ -360,6 +428,9 @@ pub(super) fn select(stream: Vec<LowerInstr>) -> Vec<Instruction> {
                 inst.input(lhs, Any, Early);
                 inst.input(rhs, Any, Late);
                 inst.output(dst, Reuse(0));
+                if let Some(product) = product {
+                    inst.output(product, Fixed(Reg::Rax));
+                }
                 inst.clobbers = vec![Reg::Rax, Reg::Rdx];
                 inst
             }
@@ -418,6 +489,20 @@ pub(super) fn select(stream: Vec<LowerInstr>) -> Vec<Instruction> {
     }
     replace_undefined_uses(eliminate_copies(output))
 }
+fn address_inputs(address: MemoryAddress<VirtualValue>) -> (MemoryAddress<usize>, Vec<Input>) {
+    let mut inputs = Vec::with_capacity(2);
+    let address = address.map(|value| {
+        let index = inputs.len();
+        inputs.push(Input {
+            value,
+            constraint: Constraint::Any,
+            phase: Phase::Early,
+        });
+        index
+    });
+    (address, inputs)
+}
+
 fn def(op: Operation, dst: VirtualReg) -> Instruction {
     let mut i = Instruction::new(op);
     i.output(dst, Constraint::Any);
@@ -484,6 +569,25 @@ fn binary(op: Binary, dst: VirtualReg, lhs: VirtualValue, rhs: VirtualValue) -> 
         (lhs, rhs)
     };
     if let Some(value) = immediate(rhs) {
+        if matches!(op, Binary::Mul)
+            && let Some(scale) = match value {
+                3 => Some(Scale::Two),
+                5 => Some(Scale::Four),
+                9 => Some(Scale::Eight),
+                _ => None,
+            }
+        {
+            // A single LEA computes these wrapping products, accepts any
+            // output register and retains both uses when the source is live.
+            let (address, inputs) = address_inputs(MemoryAddress {
+                base: lhs,
+                index: Some((lhs, scale)),
+                offset: 0,
+            });
+            let mut i = def(Operation::EffectiveAddress(address), dst);
+            i.inputs = inputs;
+            return i;
+        }
         let mut i = unary(Operation::BinaryImm(op, value), dst, lhs);
         if offset_address(op, value).is_some() {
             // `lea` writes any register, so the source may stay live in place.

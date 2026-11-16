@@ -205,16 +205,22 @@ fn one_object_rejects_duplicate_definitions_including_conflicting_bindings() {
     data.push(conflicting);
     assert!(matches!(
         write_object_with_data(&[], &data),
-        Err(ObjectError::DuplicateSymbol(_))
+        Err(ObjectError::Object(
+            kfrc_object::ObjectError::DuplicateSymbol(_)
+        ))
     ));
     assert!(matches!(
         write_object_with_data(&[read("same", "target", 1), read("same", "target", 1)], &[]),
-        Err(ObjectError::DuplicateSymbol(_))
+        Err(ObjectError::Object(
+            kfrc_object::ObjectError::DuplicateSymbol(_)
+        ))
     ));
     let mut data = local_constants(17);
     data[0].symbol = "function".into();
     assert!(matches!(
         write_object_with_data(&[read("function", "target", 1)], &data),
-        Err(ObjectError::DuplicateSymbol(_))
+        Err(ObjectError::Object(
+            kfrc_object::ObjectError::DuplicateSymbol(_)
+        ))
     ));
 }

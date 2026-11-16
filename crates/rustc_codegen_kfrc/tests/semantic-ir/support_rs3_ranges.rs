@@ -32,6 +32,36 @@ pub fn raw_maybe_uninit(bits: u32) -> bool {
     }
 }
 
+#[inline(never)]
+pub fn byte_slice_bounded(value: &[u8]) -> bool {
+    value.len() <= isize::MAX as usize
+}
+
+#[inline(never)]
+pub fn word_slice_bounded(value: &[u32]) -> bool {
+    value.len() <= (isize::MAX as usize) / core::mem::size_of::<u32>()
+}
+
+#[inline(never)]
+pub fn mutable_byte_slice_bounded(value: &mut [u8]) -> bool {
+    value.len() <= isize::MAX as usize
+}
+
+#[inline(never)]
+pub fn string_bounded(value: &str) -> bool {
+    value.len() <= isize::MAX as usize
+}
+
+#[inline(never)]
+pub fn zst_slice_bounded(value: &[()]) -> bool {
+    value.len() <= isize::MAX as usize
+}
+
+#[inline(never)]
+pub fn raw_byte_slice_bounded(value: *const [u8]) -> bool {
+    value.len() <= isize::MAX as usize
+}
+
 // FnPtr currently shares an IR scalar identity with *const (). Both null raw
 // pointers and callable function pointers in these signatures are valid Rust.
 #[inline(never)]

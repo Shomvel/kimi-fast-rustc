@@ -1,0 +1,121 @@
+{
+  "function": "<base64::engine::general_purpose::GeneralPurpose as base64::engine::Engine>::internal_decoded_len_estimate",
+  "root": "_RNvXs_NtNtCs2gPXRUVJHRq_6base646engine15general_purposeNtB4_14GeneralPurposeNtB6_6Engine29internal_decoded_len_estimate",
+  "scope": "relocatable single-object section-GC probe; not an executable or runtime measurement",
+  "linker_version": "LLD 23.1.1 (https://github.com/rust-lang/llvm-project.git 1b9c0d5ff9bbe7634aead059efe6b11a7eeba145) (compatible with GNU linkers)",
+  "arms": {
+    "llvm": {
+      "command": [
+        "/Users/shom/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/bin/gcc-ld/ld.lld",
+        "-r",
+        "--gc-sections",
+        "-u",
+        "_RNvXs_NtNtCs2gPXRUVJHRq_6base646engine15general_purposeNtB4_14GeneralPurposeNtB6_6Engine29internal_decoded_len_estimate",
+        "/Users/shom/Downloads/kfrc-divshift-20261110/evidence/results/suite/llvm/base64/ref/objects/lib.base64.1a75627b77da3786-cgu.00.rcgu.o",
+        "-o",
+        "/Users/shom/Downloads/kfrc-divshift-20261110/artifact-review/gc-probe/llvm.o"
+      ],
+      "input_sha256": "9c266a1eb442e9a2cb877ec48c06762ea0defdfb46f208b1e1b56a54b4ce15a0",
+      "output_sha256": "16f8fd582b5261b07c7c2905b67f23ececa6b0ed4f6d6af925431a2e766e8a4e",
+      "object_bytes": 1040,
+      "root_function_bytes": 27,
+      "text_bytes": 27,
+      "sections": [
+        {
+          "name": ".text._RNvXs_NtNtCs2gPXRUVJHRq_6base646engine15general_purposeNtB4_14GeneralPurposeNtB6_6Engine29internal_decoded_len_estimate",
+          "bytes": 27,
+          "kind": "TEXT"
+        },
+        {
+          "name": ".comment",
+          "bytes": 45,
+          "kind": null
+        },
+        {
+          "name": ".note.GNU-stack",
+          "bytes": 0,
+          "kind": null
+        },
+        {
+          "name": ".symtab",
+          "bytes": 120,
+          "kind": null
+        },
+        {
+          "name": ".shstrtab",
+          "bytes": 179,
+          "kind": null
+        },
+        {
+          "name": ".strtab",
+          "bytes": 153,
+          "kind": null
+        }
+      ]
+    },
+    "data": {
+      "command": [
+        "/Users/shom/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/bin/gcc-ld/ld.lld",
+        "-r",
+        "--gc-sections",
+        "-u",
+        "_RNvXs_NtNtCs2gPXRUVJHRq_6base646engine15general_purposeNtB4_14GeneralPurposeNtB6_6Engine29internal_decoded_len_estimate",
+        "/Users/shom/Downloads/kfrc-divshift-20261110/evidence/results/suite/data/base64/ref/objects/lib.base64.1a75627b77da3786-cgu.00.rcgu.o",
+        "-o",
+        "/Users/shom/Downloads/kfrc-divshift-20261110/artifact-review/gc-probe/data.o"
+      ],
+      "input_sha256": "e46ba179023ab92a9afef84f92a850c09a2de088e2a2657fa1e37d3eef7e49de",
+      "output_sha256": "74c199db8e9c937142e95f36614594c3245f84cba839d05d531b1f29a379709e",
+      "object_bytes": 59512,
+      "root_function_bytes": 31,
+      "text_bytes": 13654,
+      "sections": [
+        {
+          "name": ".text",
+          "bytes": 13654,
+          "kind": "TEXT"
+        },
+        {
+          "name": ".rela.text",
+          "bytes": 6720,
+          "kind": null
+        },
+        {
+          "name": ".rodata",
+          "bytes": 771,
+          "kind": "DATA"
+        },
+        {
+          "name": ".data.rel.ro",
+          "bytes": 4288,
+          "kind": "DATA"
+        },
+        {
+          "name": ".rela.data.rel.ro",
+          "bytes": 4272,
+          "kind": null
+        },
+        {
+          "name": ".note.GNU-stack",
+          "bytes": 0,
+          "kind": null
+        },
+        {
+          "name": ".symtab",
+          "bytes": 5472,
+          "kind": null
+        },
+        {
+          "name": ".shstrtab",
+          "bytes": 99,
+          "kind": null
+        },
+        {
+          "name": ".strtab",
+          "bytes": 23524,
+          "kind": null
+        }
+      ]
+    }
+  }
+}

@@ -17,7 +17,8 @@ use crate::analysis::{
     memory::MemoryFacts,
 };
 use crate::graph::{
-    ArgPermission, FunctionGraph, GraphLevel, GraphState, Hole, MemoryPartition, NodeId, Opcode, ValueType,
+    ArgPermission, FunctionGraph, GraphLevel, GraphState, Hole, MemoryPartition, NodeId, Opcode,
+    ValueType,
 };
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -72,7 +73,9 @@ impl std::error::Error for VerifyError {}
 
 /// Runs all checks; on success marks the graph `Verified`.
 pub fn verify_graph(graph: &mut FunctionGraph) -> Result<(), VerifyError> {
-    graph.invalidate();
+    // Checking is read-only. Revoke any old certificate on failure, while
+    // retaining edge snapshots that still describe this exact graph.
+    graph.invalidate_certificate();
     check(graph)?;
     graph.state = GraphState::Verified;
     Ok(())
@@ -80,18 +83,35 @@ pub fn verify_graph(graph: &mut FunctionGraph) -> Result<(), VerifyError> {
 
 /// Whether pipeline-internal verification runs: always in debug builds (so
 /// the whole test suite verifies every step), and in release builds when
-/// `KFRC_VERIFY=full`. Driver boundaries call [`verify_graph`] regardless,
-/// following rustc's `-Zverify-llvm-ir`, HotSpot C2's `ASSERT`-only
-/// `verify_optimize` and Cranelift's `enable_verifier`.
+/// `KFRC_VERIFY=full`. The rustc input boundary still calls [`verify_graph`];
+/// internal pipeline outputs use [`prepare_pipeline_output`], following
+/// rustc's `-Zverify-llvm-ir` and Cranelift's `enable_verifier`.
 pub fn full_verification() -> bool {
     static FULL: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
     cfg!(debug_assertions)
         || *FULL.get_or_init(|| std::env::var("KFRC_VERIFY").as_deref() == Ok("full"))
 }
 
+/// Publish a successful internal pipeline result for the next lowering stage.
+/// The caller must own the valid result of that pipeline; arbitrary external
+/// graphs still require [`verify_graph`]. Release builds record this distinction
+/// as `Trusted`, rather than claiming a whole-graph verification certificate.
+pub fn prepare_pipeline_output(graph: &mut FunctionGraph) -> Result<(), VerifyError> {
+    finish_pipeline_output(graph, full_verification())
+}
+
+fn finish_pipeline_output(graph: &mut FunctionGraph, verify: bool) -> Result<(), VerifyError> {
+    if verify {
+        verify_graph(graph)
+    } else {
+        graph.state = GraphState::Trusted;
+        Ok(())
+    }
+}
+
 /// Verification between two steps of one pipeline. A step failure stops
-/// compilation, so the result never steers code generation; the driver's
-/// boundary [`verify_graph`] covers the pipeline's combined result.
+/// compilation, so verification never steers code generation. Debug builds
+/// and `KFRC_VERIFY=full` also verify the published combined result.
 pub fn verify_pipeline_step(graph: &mut FunctionGraph) -> Result<(), VerifyError> {
     if full_verification() {
         verify_graph(graph)
@@ -163,7 +183,9 @@ fn permissions(graph: &FunctionGraph) -> Result<(), VerifyError> {
         if reference != Some(required) {
             return Err(mismatch(
                 graph.start,
-                format!("parameter {parameter} permission {permission:?} needs a {required:?} reference"),
+                format!(
+                    "parameter {parameter} permission {permission:?} needs a {required:?} reference"
+                ),
             ));
         }
     }
@@ -231,6 +253,16 @@ fn structural(graph: &FunctionGraph) -> Result<(), VerifyError> {
                 detail: "unsupported SIMD ABI width".to_owned(),
             });
         }
+        if mode
+            .scalar_abis()
+            .iter()
+            .any(|scalar| !scalar.is_supported())
+        {
+            return Err(VerifyError::BadPayload {
+                node: graph.start,
+                detail: "unsupported scalar ABI width or extension".to_owned(),
+            });
+        }
     }
     let count = graph.len();
     for node in graph.ids() {
@@ -259,6 +291,7 @@ fn structural(graph: &FunctionGraph) -> Result<(), VerifyError> {
             }
             Opcode::Call => (graph.payload(node) as usize) < graph.callees.len(),
             Opcode::VariantSwitch => (graph.payload(node) as usize) < graph.variant_switches.len(),
+            Opcode::Switch => (graph.payload(node) as usize) < graph.integer_switches.len(),
             Opcode::Hole => (graph.payload(node) as usize) < graph.holes.len(),
             Opcode::TraitCall => (graph.payload(node) as usize) < graph.trait_calls.len(),
             Opcode::CallIndirect => (graph.payload(node) as usize) < graph.call_abis.len(),
@@ -306,6 +339,7 @@ fn structural(graph: &FunctionGraph) -> Result<(), VerifyError> {
             op,
             Opcode::Jump
                 | Opcode::If
+                | Opcode::Switch
                 | Opcode::VariantSwitch
                 | Opcode::VariantWitness
                 | Opcode::Assume
@@ -355,6 +389,10 @@ fn structural(graph: &FunctionGraph) -> Result<(), VerifyError> {
                         .variant_switches
                         .get(graph.payload(source) as usize)
                         .map_or(0, |cases| cases.len() as u32 + 1),
+                    Opcode::Switch => graph
+                        .integer_switches
+                        .get(graph.payload(source) as usize)
+                        .map_or(0, |cases| cases.len() as u32 + 1),
                     Opcode::Hole => 2,
                     Opcode::If => 2,
                     Opcode::Call
@@ -398,6 +436,7 @@ fn structural(graph: &FunctionGraph) -> Result<(), VerifyError> {
                 }
             }
             Opcode::VariantSwitch
+            | Opcode::Switch
             | Opcode::Repeat
             | Opcode::Field
             | Opcode::VariantOf
@@ -523,6 +562,16 @@ pub(crate) fn condition_receipts(
     receipts: &[crate::analysis::refinement::ConditionReceipt],
 ) -> Result<(), VerifyError> {
     crate::analysis::refinement::check_conditions(graph, receipts)
+        .map_err(|(node, detail)| mismatch(node, detail))
+}
+
+/// Call argument evidence is checked on the unchanged CFG and original uses.
+#[cfg(debug_assertions)]
+pub(crate) fn call_argument_receipts(
+    graph: &FunctionGraph,
+    receipts: &[crate::analysis::refinement::CallArgumentReceipt],
+) -> Result<(), VerifyError> {
+    crate::analysis::refinement::check_call_arguments(graph, receipts)
         .map_err(|(node, detail)| mismatch(node, detail))
 }
 
@@ -673,13 +722,12 @@ fn typed(graph: &FunctionGraph) -> Result<(), VerifyError> {
         .map(|node| graph.symbols[graph.payload(node) as usize].0.as_str())
         .chain(
             graph
-                .data_objects
-                .iter()
+                .data_definitions()
                 .filter(|object| object.thread_local)
                 .map(|object| object.symbol.as_str()),
         )
         .collect();
-    if let Some(object) = graph.data_objects.iter().find(|object| {
+    if let Some(object) = graph.data_definitions().find(|object| {
         object
             .relocations
             .iter()
@@ -1019,9 +1067,8 @@ fn typed(graph: &FunctionGraph) -> Result<(), VerifyError> {
             Opcode::ThreadLocalAddress => {
                 let symbol = &graph.symbols[graph.payload(node) as usize].0;
                 if graph
-                    .data_objects
-                    .iter()
-                    .any(|object| object.symbol == *symbol && !object.thread_local)
+                    .data_object(symbol)
+                    .is_some_and(|object| !object.thread_local)
                 {
                     return Err(mismatch(node, "TLS address names a global data object"));
                 }
@@ -1101,6 +1148,44 @@ fn typed(graph: &FunctionGraph) -> Result<(), VerifyError> {
                     .is_some_and(|ty| matches!(graph.oracle.shape(ty), TypeShape::Bool))
                 {
                     return Err(mismatch(node, "comparison result must be bool"));
+                }
+            }
+            Opcode::Switch => {
+                let width = rust_type(graph, inputs[0])
+                    .filter(|_| matches!(graph.value_type(inputs[0]), ValueType::Rust(_)))
+                    .and_then(|ty| match graph.oracle.shape(ty) {
+                        TypeShape::Int { width, .. } => Some(width.bits(64)),
+                        _ => None,
+                    })
+                    .filter(|width| matches!(*width, 8 | 16 | 32 | 64))
+                    .ok_or_else(|| mismatch(node, "Switch needs an 8/16/32/64-bit integer"))?;
+                let cases = &graph.integer_switches[graph.payload(node) as usize];
+                let limit = (1u128 << width) - 1;
+                let mut seen = HashSet::default();
+                if cases.iter().any(|case| *case > limit || !seen.insert(*case)) {
+                    return Err(mismatch(node, "Switch cases must be distinct input-width bits"));
+                }
+                if graph.value_type(node)
+                    != &ValueType::Tuple(vec![ValueType::Control; cases.len() + 1])
+                {
+                    return Err(mismatch(node, "Switch needs one control per case and otherwise"));
+                }
+                let uses = crate::analysis::uses::Uses::new(graph);
+                let mut projections = vec![false; cases.len() + 1];
+                for usage in uses.of(node) {
+                    let projection = usage.user;
+                    let slot = graph.payload(projection) as usize;
+                    if usage.kind() != crate::analysis::uses::UseKind::Operand(0)
+                        || graph.op(projection) != Opcode::Projection
+                        || graph.value_type(projection) != &ValueType::Control
+                        || projections.get(slot) != Some(&false)
+                    {
+                        return Err(mismatch(node, "Switch needs distinct Control projections"));
+                    }
+                    projections[slot] = true;
+                }
+                if projections.contains(&false) {
+                    return Err(mismatch(node, "Switch lacks a case or otherwise projection"));
                 }
             }
             Opcode::If => {
@@ -1364,6 +1449,9 @@ fn stage(graph: &FunctionGraph) -> Result<(), VerifyError> {
         if graph.level == GraphLevel::Layout && op == Opcode::VariantSwitch {
             return Err(mismatch(node, "VariantSwitch must be lowered before L"));
         }
+        if graph.level != GraphLevel::Layout && op == Opcode::Switch {
+            return Err(mismatch(node, "integer Switch is only legal in L"));
+        }
         if graph.level == GraphLevel::Layout
             && matches!(
                 op,
@@ -1591,9 +1679,8 @@ fn verify_partition(
                 return Err(mismatch(node, "Const partition symbol is absent"));
             };
             if !graph
-                .data_objects
-                .iter()
-                .any(|object| object.symbol == *symbol && !object.writable && !object.thread_local)
+                .data_object(symbol)
+                .is_some_and(|object| !object.writable && !object.thread_local)
             {
                 return Err(mismatch(
                     node,
@@ -1963,3 +2050,7 @@ fn place_node(
     placement.insert(node, at);
     Ok(at)
 }
+
+#[cfg(test)]
+#[path = "verify/pipeline_output_tests.rs"]
+mod pipeline_output_tests;

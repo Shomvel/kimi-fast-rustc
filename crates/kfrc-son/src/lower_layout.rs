@@ -9,23 +9,28 @@
 
 mod array_transport;
 mod boundary_transport;
+mod cleanup;
 mod demand;
 mod encoded;
 mod ignored_abi;
+mod lane_promotion;
 mod maybe_uninit;
 mod memory;
 mod observation;
 mod owned_transport;
+mod private_memory;
 mod projections;
 mod repeat;
 mod representation;
 mod semantic_memory;
+mod transport;
 mod values;
 mod variant_encoding;
 mod variant_lanes;
 mod variant_scalar;
 mod variant_switch;
 mod variants;
+mod whole_pack;
 
 use demand::{Demand, Key as DemandKey};
 use kfrc_body::fx_hash::{HashMap, HashSet};
@@ -59,6 +64,10 @@ impl std::error::Error for LayoutError {}
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct LayoutStats {
     pub scalar_phis: usize,
+    /// Exact private scalar allocations promoted before L control cleanup.
+    pub private_lane_allocations: usize,
+    /// Whole ABI values transported as representations without field decoding.
+    pub whole_value_transports: usize,
     /// Whole-value enum Phis represented by private owned snapshots.
     pub owned_transport_phis: usize,
     /// Dense whole arrays captured by a representation copy rather than leaves.
@@ -79,6 +88,29 @@ pub struct LayoutStats {
     pub niche_tag_conditions: usize,
     /// Last cases of exhaustive VariantSwitches selected without a compare.
     pub exhaustive_switch_compares_removed: usize,
+    /// Dense byte-array transmutes emitted as complete pure integer packs.
+    pub whole_array_transmutes: usize,
+    /// Complete packs recovered from synchronized byte Phi/load groups.
+    pub whole_packs_combined: usize,
+    pub whole_pack_byte_loads_removed: usize,
+    pub whole_pack_payload_phis_removed: usize,
+    /// The bounded whole-pack analysis abandoned all tentative plans.
+    pub whole_pack_budget_exhausted: bool,
+    pub layout_regions_threaded: usize,
+    pub layout_control_spines_collapsed: usize,
+    pub layout_values_cloned: usize,
+    pub layout_threading_nodes_indexed: usize,
+    pub layout_threading_node_visits: usize,
+    pub integer_switches_created: usize,
+    pub integer_switch_cases_merged: usize,
+    pub integer_switch_nodes_visited: usize,
+    pub byte_ladders_grouped: usize,
+    pub byte_ladder_cells_grouped: usize,
+    pub byte_ladder_length_buckets: usize,
+    pub byte_ladder_nodes_added: usize,
+    pub byte_ladder_nodes_retired: usize,
+    pub byte_ladder_node_visits: usize,
+    pub byte_ladder_budget_exhausted: bool,
 }
 
 /// Target-dependent code size policy; this does not change Rust value semantics.
@@ -95,8 +127,9 @@ impl Default for LayoutOptions {
     }
 }
 
-/// On failure the input remains unchanged. Success invalidates verification;
-/// the caller must verify the resulting Layout graph before machine lowering.
+/// On failure the input remains unchanged. Success revokes the input's trust
+/// or verification; the internal caller must publish the Layout pipeline result
+/// (or explicitly verify it) before machine lowering.
 pub fn lower_layout(graph: &mut FunctionGraph) -> Result<LayoutStats, LayoutError> {
     lower_layout_with_options(graph, LayoutOptions::default())
 }
@@ -105,13 +138,37 @@ pub fn lower_layout_with_options(
     graph: &mut FunctionGraph,
     options: LayoutOptions,
 ) -> Result<LayoutStats, LayoutError> {
+    check_input(graph)?;
+    let (candidate, stats) = lower_validated(graph.clone(), options)?;
+    *graph = candidate;
+    Ok(stats)
+}
+
+/// Consume an S graph when the caller no longer needs its source after an
+/// error. Uses the same lowering as the transactional entry without cloning
+/// the graph; the result still needs Layout pipeline publication/verification.
+pub fn lower_layout_owned(
+    graph: FunctionGraph,
+    options: LayoutOptions,
+) -> Result<(FunctionGraph, LayoutStats), LayoutError> {
+    check_input(&graph)?;
+    lower_validated(graph, options)
+}
+
+fn check_input(graph: &FunctionGraph) -> Result<(), LayoutError> {
     if graph.level != GraphLevel::Specialized {
         return Err(LayoutError::NotSpecialized);
     }
-    if graph.state != GraphState::Verified {
+    if !graph.state.is_ready_for_lowering() {
         return Err(LayoutError::NotVerified);
     }
-    let mut candidate = graph.clone();
+    Ok(())
+}
+
+fn lower_validated(
+    mut candidate: FunctionGraph,
+    options: LayoutOptions,
+) -> Result<(FunctionGraph, LayoutStats), LayoutError> {
     observation::erase_requirements(&mut candidate);
     ignored_abi::erase_ignored_transport(&mut candidate)?;
     let mut projections = projections::ProjectionIndex::new(&candidate);
@@ -123,6 +180,7 @@ pub fn lower_layout_with_options(
     let array_transport = array_transport::select(&candidate);
     let boundary_transport =
         boundary_transport::select(&candidate, &demands, &owned_transport, &encoded_values);
+    let whole_transport = transport::select(&candidate);
     let mut lowering = LayoutLowering {
         graph: &mut candidate,
         projections,
@@ -131,6 +189,7 @@ pub fn lower_layout_with_options(
         owned_transport,
         array_transport,
         boundary_transport,
+        whole_transport,
         owned_phis: Vec::new(),
         stats: LayoutStats::default(),
         retired: Vec::new(),
@@ -146,20 +205,53 @@ pub fn lower_layout_with_options(
     };
     lowering.run()?;
     lowering.projections.write_stats(&mut lowering.stats);
-    let stats = lowering.stats;
+    let mut stats = lowering.stats;
     candidate.level = GraphLevel::Layout;
+    stats.private_lane_allocations = lane_promotion::run(&mut candidate);
+    cleanup::run(&mut candidate)?;
+    let packs = whole_pack::run(&mut candidate, options.max_unrolled_memory_bytes);
+    stats.whole_packs_combined = packs.groups;
+    stats.whole_pack_byte_loads_removed = packs.byte_loads_removed;
+    stats.whole_pack_payload_phis_removed = packs.payload_phis_removed;
+    stats.whole_pack_budget_exhausted = packs.budget_exhausted;
+    // Publishing L erased source requirements and introduced scalar tag Phis.
+    // Thread their known incoming decisions only after complete word packs
+    // have retained their original guarded reads across the same joins.
+    let threaded = crate::transforms::control::thread_variants::run(&mut candidate)
+        .map_err(|error| LayoutError::Malformed(error.to_string()))?;
+    stats.layout_regions_threaded = threaded.regions_threaded;
+    stats.layout_control_spines_collapsed = threaded.control_spines_collapsed;
+    stats.layout_values_cloned = threaded.values_cloned;
+    stats.layout_threading_nodes_indexed = threaded.nodes_indexed;
+    stats.layout_threading_node_visits = threaded.node_visits;
+    if threaded.regions_threaded + threaded.control_spines_collapsed != 0 {
+        cleanup::run(&mut candidate)?;
+    }
+    let ladders = crate::transforms::control::byte_ladders::run(&mut candidate);
+    stats.byte_ladders_grouped = ladders.ladders_grouped;
+    stats.byte_ladder_cells_grouped = ladders.cells_grouped;
+    stats.byte_ladder_length_buckets = ladders.length_buckets;
+    stats.byte_ladder_nodes_added = ladders.nodes_added;
+    stats.byte_ladder_nodes_retired = ladders.nodes_retired;
+    stats.byte_ladder_node_visits = ladders.node_visits;
+    stats.byte_ladder_budget_exhausted = ladders.budget_exhausted;
+    // Form machine dispatch only after the final proof-driven If rewrites.
+    let switches = crate::transforms::control::switches::run(&mut candidate);
+    stats.integer_switches_created = switches.switches_created;
+    stats.integer_switch_cases_merged = switches.cases_merged;
+    stats.integer_switch_nodes_visited = switches.nodes_visited;
     // Permissions belong to S parameters and source calls (RS5.1 erasure
     // point). L parameters follow physical passing modes instead.
     candidate.arg_permissions.clear();
     candidate.callee_permissions.clear();
+    candidate.callee_attrs.clear();
     // Generated calls and address materialization change escape/provenance
     // facts. Recompute labels on the completed, compact L graph; S labels
     // cannot license Local accesses after an address has reached a call.
     let facts = crate::analysis::memory::MemoryFacts::new(&candidate);
     crate::transforms::memory::partition::run(&mut candidate, &facts);
     candidate.state = GraphState::Sealed;
-    *graph = candidate;
-    Ok(stats)
+    Ok((candidate, stats))
 }
 
 #[derive(Clone, Debug)]
@@ -228,6 +320,7 @@ struct LayoutLowering<'a> {
     owned_transport: HashSet<NodeId>,
     array_transport: HashSet<TyId>,
     boundary_transport: boundary_transport::Certificates,
+    whole_transport: HashSet<NodeId>,
     owned_phis: Vec<owned_transport::OwnedPhiInit>,
     stats: LayoutStats,
     retired: Vec<NodeId>,
@@ -260,7 +353,7 @@ fn unreachable_switch_edges(graph: &FunctionGraph) -> HashMap<NodeId, NodeId> {
             let source = graph.resolve(graph.input(edge, 0));
             let only_successor = matches!(
                 uses.of(edge),
-                [only] if only.user == unreachable && only.kind == UseKind::Control
+                [only] if only.user == unreachable && only.kind() == UseKind::Control
             );
             (graph.op(source) == Opcode::VariantSwitch && only_successor)
                 .then_some((edge, unreachable))
@@ -291,7 +384,7 @@ fn tag_only_loads(
             graph.oracle.semantic().is_enum(ty)
                 && !consumers.is_empty()
                 && consumers.iter().all(|use_| {
-                    use_.kind == UseKind::Operand(0)
+                    use_.kind() == UseKind::Operand(0)
                         && matches!(
                             graph.op(use_.user),
                             Opcode::VariantOf | Opcode::Discriminant

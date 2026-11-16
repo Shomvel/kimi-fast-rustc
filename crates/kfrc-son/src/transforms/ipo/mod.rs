@@ -4,23 +4,51 @@
 //! mentioned-item diagnostics before calling this pass and independently prove
 //! emission reachability. This pass does not replace that proof or definition-
 //! level R specialization. Missing or ineligible callees stay calls.
+mod argument_promotion;
+mod arguments;
+mod conditional_returns;
+mod cost;
+mod driver;
 mod identity;
+mod loop_constants;
 mod plan;
 mod splice;
+mod tail_recursion;
 mod types;
 
+pub use argument_promotion::{ArgumentPromotionError, ArgumentPromotionStats, promote_arguments};
+pub use tail_recursion::{TailRecursionStats, eliminate_tail_recursion};
+
+use crate::analysis::cost::{CostModel, GenericCostModel};
+use cost::Costs;
+pub use cost::{
+    InlineCostPolicy, InlineDecision, InlineTemperature, PreparationDecision, PreparationStats,
+};
+
+pub use conditional_returns::{ConditionalReturnStats, ConditionalReturns};
 pub use identity::{IdentityFoldStats, fold_identity_calls};
 
-use crate::verify::verify_pipeline_step;
-use crate::{FunctionGraph, GraphLevel, NodeId, Opcode, VerifyError};
-use plan::plan;
-use splice::splice;
-use std::cmp::Reverse;
-use kfrc_body::fx_hash::{HashMap, HashSet};
-use std::collections::{BTreeMap, BinaryHeap};
+use crate::{FunctionGraph, NodeId, VerifyError};
+use kfrc_body::fx_hash::HashMap;
+use std::collections::BTreeMap;
 
 pub trait GraphProvider {
     fn graph(&self, symbol: &str) -> Option<&FunctionGraph>;
+    /// Prefer this callee and waive ordinary size/cost profitability limits.
+    /// Hard budgets, source availability and every splice legality check remain.
+    fn always_inline(&self, _symbol: &str) -> bool {
+        false
+    }
+    /// Source visible to bounded call-site preparation. A body may initially
+    /// reference private symbols that constant control pruning can discard.
+    /// `can_reference` still guards every reference in the final splice.
+    fn preparation_graph(&self, symbol: &str) -> Option<&FunctionGraph> {
+        self.graph(symbol)
+    }
+    /// Whether the destination object can link a surviving reference.
+    fn can_reference(&self, _symbol: &str) -> bool {
+        true
+    }
     /// The callee is local to the output and this is its only reference, so
     /// inlining it removes the out-of-line body (LLVM's last-call-to-static).
     fn sole_call_site(&self, _symbol: &str) -> bool {
@@ -38,10 +66,10 @@ impl GraphProvider for HashMap<String, FunctionGraph> {
     }
 }
 
-/// Call sites are visited smallest callee first (LLVM's `SizePriority`).
+/// Strong inline intent precedes ordinary smallest-callee-first ordering.
 /// Callees of at most `free_nodes` replace little more than the call sequence
 /// and do not count against `max_calls`; callees above `max_callee_nodes`
-/// stay calls unless this is their sole call site.
+/// stay calls unless this is their sole call site or they have strong intent.
 #[derive(Clone, Copy, Debug)]
 pub struct InlineBudget {
     pub max_depth: usize,
@@ -49,10 +77,15 @@ pub struct InlineBudget {
     pub max_calls: usize,
     pub free_nodes: usize,
     pub max_callee_nodes: usize,
-    /// Copy read-only anonymous constants (`unnamed_address`) into the caller.
+    /// Copy read-only anonymous constants (`unnamed_address`) at every site.
     /// Off by default: the node-count cost model has no cold-path signal, and
     /// semver measured +11 KB text and a slower hot loop with it on.
     pub copy_anonymous_constants: bool,
+    /// Alignment-inclusive constant bytes imported at cyclic call sites and
+    /// their nested calls. Zero disables this bounded profitability policy.
+    /// Object identity, relocation visibility and ordinary node limits still
+    /// apply; the explicit copy option above retains its existing behavior.
+    pub max_loop_constant_bytes: usize,
 }
 impl Default for InlineBudget {
     fn default() -> Self {
@@ -63,6 +96,7 @@ impl Default for InlineBudget {
             free_nodes: 24,
             max_callee_nodes: 64,
             copy_anonymous_constants: false,
+            max_loop_constant_bytes: 1024,
         }
     }
 }
@@ -73,29 +107,70 @@ pub enum InlineSkip {
     Budget,
     /// Larger than `max_callee_nodes` and called from elsewhere too.
     Size,
+    /// Known code-size estimate exceeds the selected policy threshold.
+    Cost,
+    /// The model cannot price this callee within its analysis budget.
+    UnknownCost,
     Unsupported,
     TypeConflict,
     AbiMismatch,
     DataConflict,
+    /// A reference surviving call-site pruning is private to another object.
+    PrivateReference,
 }
 #[derive(Clone, Debug, Default)]
 pub struct InlineStats {
     pub calls_inlined: usize,
+    pub decisions: Vec<InlineDecision>,
+    /// Cost summaries are cached per callee and bounded per caller.
+    pub cost_nodes_visited: usize,
+    /// The persistent scalar seam index, including its initial build and
+    /// changed/new nodes. It is rebuilt only after arbitrary CFG edits.
+    pub seam_nodes_indexed: usize,
+    pub seam_node_visits: usize,
+    pub seam_control_cleanups: usize,
+    pub seam_allocation_bailouts: usize,
     pub nodes_added: usize,
     pub skipped: Vec<(String, InlineSkip)>,
     /// Nodes inspected by eligibility, recursion discovery and splice planning.
     pub nodes_visited: usize,
+    /// New local constant storage, including worst-case alignment padding.
+    pub constant_bytes_imported: usize,
+    /// Bounded original-CFG indexing and cycle-membership work.
+    pub loop_constant_work: usize,
+    /// Reserved weighted units for bounded S call-site classification.
+    pub temperature_work: usize,
+    pub temperature_budget_bailouts: usize,
+    /// Estimated growth above the ordinary threshold spent by hot splices.
+    /// This account is independent of actual allocated graph nodes/work.
+    pub hot_growth_spent: u64,
     /// Source graph nodes copied, excluding call-boundary and lifetime nodes.
     pub cloned_nodes: usize,
     /// Stable until the caller compacts: seam users, returns and lifetime nodes.
     pub dirty_nodes: Vec<NodeId>,
     /// Caller LocalSlot roots passed to an erased call (W06/F08).
     pub argument_slots: Vec<NodeId>,
+    /// Call-site candidates are bounded separately from emitted graph growth.
+    pub specializations_prepared: usize,
+    pub specialization_nodes_cloned: usize,
+    pub specialization_cache_hits: usize,
+    /// Work performed in disposable call-site candidates, separate from emission.
+    pub preparation: PreparationStats,
 }
+impl InlineStats {
+    fn reject(&mut self, symbol: String, reason: InlineSkip, decision: Option<usize>) {
+        if let Some(index) = decision {
+            self.decisions[index].rejection = Some(reason);
+        }
+        self.skipped.push((symbol, reason));
+    }
+}
+
 #[derive(Debug)]
 pub enum InlineError {
     NotSpecialized,
     Verification(VerifyError),
+    Specialization(crate::PipelineError),
 }
 impl std::fmt::Display for InlineError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -109,243 +184,35 @@ pub fn inline_calls(
     provider: &(impl GraphProvider + ?Sized),
     budget: InlineBudget,
 ) -> Result<InlineStats, InlineError> {
-    if caller.level != GraphLevel::Specialized {
-        return Err(InlineError::NotSpecialized);
-    }
-    verify_pipeline_step(caller).map_err(InlineError::Verification)?;
-    let mut stats = InlineStats::default();
-    // One transaction per function, not a complete caller copy per call site.
-    let original = caller;
-    let mut candidate = None;
-    let mut source_checks = HashMap::default();
-    let mut recursion = HashMap::default();
-    let mut callees = HashMap::default();
-    let mut imports: HashMap<String, plan::ImportedTypes> = HashMap::default();
-    let size_of = |graph: &FunctionGraph, call: NodeId| {
-        let symbol = &graph.callees[graph.payload(call) as usize].symbol;
-        provider.graph(symbol).map_or(0, FunctionGraph::live_count)
-    };
-    let mut sequence = 0usize;
-    let mut pending: BinaryHeap<Reverse<(usize, usize, NodeId, usize)>> = BinaryHeap::new();
-    for call in original.ids().filter(|&n| original.op(n) == Opcode::Call) {
-        pending.push(Reverse((size_of(original, call), sequence, call, 0)));
-        sequence += 1;
-    }
-    let mut costed_calls = 0usize;
-    while let Some(Reverse((size, _, call, depth))) = pending.pop() {
-        let caller = candidate.as_ref().unwrap_or(&*original);
-        if caller.is_dead(call) {
-            continue;
-        }
-        let target = caller.callees[caller.payload(call) as usize].clone();
-        let free = size <= budget.free_nodes;
-        if depth >= budget.max_depth || (!free && costed_calls >= budget.max_calls) {
-            stats.skipped.push((target.symbol, InlineSkip::Budget));
-            continue;
-        }
-        // A nested call site is a copy of the callee's own call, so only the
-        // caller's original call sites can be the sole one.
-        if size > budget.max_callee_nodes && !(depth == 0 && provider.sole_call_site(&target.symbol))
-        {
-            stats.skipped.push((target.symbol, InlineSkip::Size));
-            continue;
-        }
-        let Some(source) = provider.graph(&target.symbol) else {
-            stats.skipped.push((target.symbol, InlineSkip::Missing));
-            continue;
-        };
-        let source_eligible = if let Some(&eligible) = source_checks.get(&target.symbol) {
-            eligible
-        } else {
-            stats.nodes_visited += source.live_count();
-            let eligible = source.level == GraphLevel::Specialized && eligible(source);
-            if eligible {
-                crate::verify::check_pipeline_step(source).map_err(InlineError::Verification)?;
-            }
-            source_checks.insert(target.symbol.clone(), eligible);
-            eligible
-        };
-        if !source_eligible {
-            stats.skipped.push((target.symbol, InlineSkip::Unsupported));
-            continue;
-        }
-        if source.live_count() > budget.max_nodes.saturating_sub(stats.nodes_added) {
-            stats.skipped.push((target.symbol, InlineSkip::Budget));
-            continue;
-        }
-        if source.abi != target.abi {
-            stats.skipped.push((target.symbol, InlineSkip::AbiMismatch));
-            continue;
-        }
-        if *recursion.entry(target.symbol.clone()).or_insert_with(|| {
-            recursive(
-                provider,
-                &target.symbol,
-                &caller.symbol,
-                &mut callees,
-                &mut stats.nodes_visited,
-            )
-        }) {
-            stats.skipped.push((target.symbol, InlineSkip::Recursive));
-            continue;
-        }
-        let before = caller.len();
-        let plan = match plan(
-            caller,
-            call,
-            source,
-            budget.max_nodes.saturating_sub(stats.nodes_added),
-            budget.copy_anonymous_constants,
-            imports.get(&target.symbol),
-        ) {
-            Ok(plan) => plan,
-            Err(reason) => {
-                stats.skipped.push((target.symbol, reason));
-                continue;
-            }
-        };
-        stats.nodes_visited += plan.ids.len();
-        // Every successful plan is spliced, so its import is now in the oracle.
-        imports
-            .entry(target.symbol.clone())
-            .or_insert_with(|| plan.imported.clone());
-        let caller = candidate.get_or_insert_with(|| original.clone());
-        let spliced = splice(caller, call, source, plan);
-        stats.calls_inlined += 1;
-        costed_calls += usize::from(!free);
-        stats.nodes_added += caller.len() - before;
-        stats.cloned_nodes += spliced.cloned_nodes;
-        stats.dirty_nodes.extend(spliced.dirty);
-        stats.argument_slots.extend(spliced.argument_slots);
-        for node in spliced.nested {
-            pending.push(Reverse((size_of(caller, node), sequence, node, depth + 1)));
-            sequence += 1;
-        }
-    }
-    let Some(mut candidate) = candidate else {
-        return Ok(stats);
-    };
-    let caller = &mut candidate;
-    caller.resolve_edges();
-    verify_pipeline_step(caller).map_err(InlineError::Verification)?;
-    for nodes in [&mut stats.dirty_nodes, &mut stats.argument_slots] {
-        for node in nodes.iter_mut() {
-            *node = caller.resolve(*node);
-        }
-        nodes.retain(|node| !node.is_none() && !caller.is_dead(*node));
-        nodes.sort_unstable();
-        nodes.dedup();
-    }
-    *original = candidate;
-    Ok(stats)
+    inline_calls_with_cost(
+        caller,
+        provider,
+        budget,
+        InlineCostPolicy::Legacy,
+        &GenericCostModel,
+    )
 }
 
-fn recursive(
+/// Run with an explicit cost policy. Observe is decision-identical to Legacy;
+/// Explicit policies leave the default library helper on Legacy pricing.
+pub fn inline_calls_with_cost(
+    caller: &mut FunctionGraph,
     provider: &(impl GraphProvider + ?Sized),
-    target: &str,
-    caller: &str,
-    callees: &mut HashMap<String, Vec<String>>,
-    visited: &mut usize,
-) -> bool {
-    if target == caller {
-        return true;
-    }
-    let mut seen = HashSet::default();
-    let mut pending = vec![target.to_owned()];
-    while let Some(symbol) = pending.pop() {
-        if !seen.insert(symbol.clone()) {
-            continue;
-        }
-        let adjacent = callees.entry(symbol.clone()).or_insert_with(|| {
-            let Some(graph) = provider.graph(&symbol) else {
-                return Vec::new();
-            };
-            *visited += graph.live_count();
-            graph
-                .ids()
-                .filter(|&n| graph.op(n) == Opcode::Call)
-                .map(|n| graph.callees[graph.payload(n) as usize].symbol.clone())
-                .collect()
-        });
-        for callee in adjacent {
-            if callee == caller || callee == target {
-                return true;
-            }
-            pending.push(callee.clone());
-        }
-    }
-    false
-}
-
-fn eligible(source: &FunctionGraph) -> bool {
-    source.ids().any(|n| source.op(n) == Opcode::Return)
-        && source.ids().all(|n| {
-            matches!(
-                source.op(n),
-                Opcode::Start
-                    | Opcode::Projection
-                    | Opcode::Region
-                    | Opcode::Jump
-                    | Opcode::If
-                    | Opcode::VariantSwitch
-                    | Opcode::VariantWitness
-                    | Opcode::Assume
-                    | Opcode::Phi
-                    | Opcode::Return
-                    | Opcode::Unreachable
-                    | Opcode::Call
-                    | Opcode::CallIndirect
-                    | Opcode::Opaque
-                    | Opcode::RequireDefined
-                    | Opcode::Const
-                    | Opcode::Undefined
-                    | Opcode::Aggregate
-                    | Opcode::Repeat
-                    | Opcode::Field
-                    | Opcode::InsertField
-                    | Opcode::MakeVariant
-                    | Opcode::VariantOf
-                    | Opcode::VariantField
-                    | Opcode::WidePtr
-                    | Opcode::Discriminant
-                    | Opcode::Add
-                    | Opcode::Sub
-                    | Opcode::Mul
-                    | Opcode::DivSigned
-                    | Opcode::DivUnsigned
-                    | Opcode::RemSigned
-                    | Opcode::RemUnsigned
-                    | Opcode::BitAnd
-                    | Opcode::BitOr
-                    | Opcode::BitXor
-                    | Opcode::ShiftLeft
-                    | Opcode::ShiftRightArithmetic
-                    | Opcode::ShiftRightLogical
-                    | Opcode::Negate
-                    | Opcode::BitNot
-                    | Opcode::Compare
-                    | Opcode::IntCast
-                    | Opcode::MulOverflow
-                    | Opcode::BitCount
-                    | Opcode::ByteSwap
-                    | Opcode::BitReverse
-                    | Opcode::FunnelShift
-                    | Opcode::SaturatingAdd
-                    | Opcode::SaturatingSub
-                    | Opcode::SymbolAddress
-                    | Opcode::PointerCast
-                    | Opcode::LocalSlot
-                    | Opcode::FieldAddr
-                    | Opcode::VariantFieldAddr
-                    | Opcode::IndexAddr
-                    | Opcode::LoadValue
-                    | Opcode::StoreValue
-                    | Opcode::SetVariant
-                    | Opcode::SlotLive
-                    | Opcode::SlotDead
-                    | Opcode::CopyNonOverlapping
-                    | Opcode::ConstRepr
-                    | Opcode::TransmuteValue
-            )
-        })
+    budget: InlineBudget,
+    policy: InlineCostPolicy,
+    model: &dyn CostModel,
+) -> Result<InlineStats, InlineError> {
+    let mut arguments = arguments::Arguments::new(budget.max_nodes);
+    let mut costs = Costs::new(policy, model, budget.max_nodes);
+    let mut stats = driver::run(
+        caller,
+        provider,
+        budget,
+        &mut arguments,
+        &mut costs,
+        driver::Frame::Emission,
+    )?;
+    stats.cost_nodes_visited = costs.nodes_visited;
+    arguments.finish(&mut stats);
+    Ok(stats)
 }

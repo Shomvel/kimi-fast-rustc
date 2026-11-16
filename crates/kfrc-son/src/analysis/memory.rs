@@ -9,7 +9,11 @@ use std::collections::VecDeque;
 
 use crate::analysis::uses::{UseKind, Uses};
 use crate::{FunctionGraph, GraphLevel, NodeId, Opcode, ValueType};
-use kfrc_body::TypeShape;
+use kfrc_body::{TyId, TypeOracle, TypeShape};
+
+#[path = "memory_locations.rs"]
+mod locations;
+pub use locations::{MemoryLocation, MemoryLocations};
 
 pub struct MemoryFacts {
     roots: Vec<Option<NodeId>>,
@@ -58,7 +62,7 @@ impl MemoryFacts {
                 facts.edge_visits += 1;
                 let user = usage.user;
                 let mut derived = false;
-                let safe = match usage.kind {
+                let safe = match usage.kind() {
                     UseKind::Control => false,
                     UseKind::Operand(index) => {
                         if index == 0 && address_projection(graph, user) {
@@ -137,7 +141,11 @@ fn address_projection(graph: &FunctionGraph, node: NodeId) -> bool {
 /// permission. rustc-O marks such parameters `noalias readonly` (D1): no
 /// access during this execution writes memory reached through them.
 pub fn is_frozen_parameter_address(graph: &FunctionGraph, address: NodeId) -> bool {
-    if !graph.arg_permissions.iter().any(|permission| permission.is_frozen()) {
+    if !graph
+        .arg_permissions
+        .iter()
+        .any(|permission| permission.is_frozen())
+    {
         return false;
     }
     let mut on_stack = HashSet::default();

@@ -1,0 +1,2835 @@
+--- a/crates/kfrc-son/src/lower_layout/representation.rs
++++ b/crates/kfrc-son/src/lower_layout/representation.rs
+@@ -171,24 +171,31 @@
+         if source_layout.size != target_layout.size {
+             return Err(LayoutError::Malformed("transmute sizes differ".into()));
+         }
+-        let slot = self.graph.stack_slots.len() as u32;
+-        self.graph.stack_slots.push(SizeAlign {
+-            size: source_layout.size,
+-            align: source_layout.align.max(target_layout.align),
+-        });
+-        let pointer = self.pointer_type(source.ty);
+-        let address = self.graph.add_node(
+-            Opcode::StackSlot,
+-            NodeId::NONE,
+-            &[],
+-            slot,
+-            ValueType::Rust(pointer),
+-        );
+         let mut control = self.graph.resolve(self.graph.control(node));
+         let mut effect = self.graph.resolve(self.graph.input(node, 0));
+-        self.encode_fields(&source, address, &mut control, &mut effect)?;
+-        let target_address = self.field_address(address, 0, target_ty);
+-        let value = self.decode_fields(target_address, target_ty, &mut control, &mut effect)?;
++        let value = if let Some(value) = self.pack_array_transmute(&source, target_ty) {
++            // Every source byte is an immutable SSA snapshot. The complete
++            // pack propagates poison from every byte without moving its fixed
++            // read or creating a new pointer/provenance or alignment claim.
++            value
++        } else {
++            let slot = self.graph.stack_slots.len() as u32;
++            self.graph.stack_slots.push(SizeAlign {
++                size: source_layout.size,
++                align: source_layout.align.max(target_layout.align),
++            });
++            let pointer = self.pointer_type(source.ty);
++            let address = self.graph.add_node(
++                Opcode::StackSlot,
++                NodeId::NONE,
++                &[],
++                slot,
++                ValueType::Rust(pointer),
++            );
++            self.encode_fields(&source, address, &mut control, &mut effect)?;
++            let target_address = self.field_address(address, 0, target_ty);
++            self.decode_fields(target_address, target_ty, &mut control, &mut effect)?
++        };
+         // Source validity/definedness obligations are interpreted in S. The
+         // publishing seam retains actual representation reads, writes and raw
+         // MaybeUninit initialization masks, but emits no diagnostic scan.
+--- /dev/null
++++ b/crates/kfrc-son/src/lower_layout/whole_pack/index.rs
+@@ -0,0 +1,83 @@
++use super::*;
++use crate::analysis::cfg::is_control_flow;
++
++pub(super) fn uses(graph: &FunctionGraph, fuel: &mut Fuel) -> Option<Uses> {
++    // Pay for the dense index and both edge passes in Uses::new. Graph storage
++    // itself is charged, including retired records, before allocating an index.
++    fuel.take(graph.len())?;
++    for node in graph.ids() {
++        fuel.take(2 * (graph.inputs(node).len() + 2))?;
++    }
++    Some(Uses::new(graph))
++}
++
++pub(super) fn only(uses: &Uses, node: NodeId, user: NodeId, kind: UseKind) -> bool {
++    matches!(uses.of(node), [u] if u.user == user && u.kind == kind)
++}
++
++pub(super) fn projection(
++    graph: &FunctionGraph,
++    uses: &Uses,
++    node: NodeId,
++    slot: u32,
++    fuel: &mut Fuel,
++) -> Option<NodeId> {
++    let mut found = None;
++    for usage in uses.of(node) {
++        fuel.take(1)?;
++        if usage.kind != UseKind::Operand(0)
++            || graph.op(usage.user) != Opcode::Projection
++            || graph.payload(usage.user) != slot
++        {
++            continue;
++        }
++        if found.replace(usage.user).is_some() {
++            return None;
++        }
++    }
++    found
++}
++
++pub(super) fn forward_join(
++    graph: &FunctionGraph,
++    uses: &Uses,
++    region: NodeId,
++    fuel: &mut Fuel,
++) -> Option<()> {
++    let edges = graph.inputs(region);
++    if graph.op(region) != Opcode::Region || edges.len() != 2 || edges[0] == edges[1] {
++        return None;
++    }
++    // A header dominates its backedge. Both predecessors must instead be
++    // reachable from Start while avoiding this region. This admits a forward
++    // diamond inside an outer loop without accepting a loop-carried Phi.
++    fuel.take(graph.len())?;
++    let mut seen = vec![false; graph.len()];
++    let mut queue = vec![graph.start];
++    while let Some(node) = queue.pop() {
++        fuel.take(1)?;
++        if node == region || seen[node.index()] {
++            continue;
++        }
++        seen[node.index()] = true;
++        if edges.iter().all(|edge| seen[edge.index()]) {
++            return Some(());
++        }
++        for usage in uses.of(node) {
++            fuel.take(1)?;
++            let user = usage.user;
++            if !is_control_flow(graph, user) {
++                continue;
++            }
++            let edge = usage.kind == UseKind::Control
++                || graph.op(user) == Opcode::Region
++                || (graph.op(user) == Opcode::Projection
++                    && usage.kind == UseKind::Operand(0)
++                    && graph.value_type(user) == &ValueType::Control);
++            if edge && !seen[user.index()] {
++                queue.push(user);
++            }
++        }
++    }
++    None
++}
+--- /dev/null
++++ b/crates/kfrc-son/src/lower_layout/whole_pack/loads.rs
+@@ -0,0 +1,188 @@
++use super::*;
++
++pub(super) struct Plan {
++    pack: pack::Pack,
++    pub loads: Vec<NodeId>,
++    pub owned: Vec<NodeId>,
++    control: NodeId,
++    effect: NodeId,
++    value_slot: usize,
++}
++
++pub(super) fn plan(
++    graph: &FunctionGraph,
++    uses: &Uses,
++    pack: pack::Pack,
++    fuel: &mut Fuel,
++) -> Option<Plan> {
++    index::forward_join(graph, uses, pack.region, fuel)?;
++    let first = pack.phis[0];
++    let value_slot = (1..=2).find(|&slot| {
++        graph.op(graph.input(first, 3 - slot)) == Opcode::Undefined
++            && graph.op(graph.input(first, slot)) == Opcode::Projection
++    })?;
++    let mut loads = Vec::new();
++    let mut owned = pack.owned.clone();
++    let mut base = NodeId::NONE;
++    let mut first_address = NodeId::NONE;
++    let mut partition = None;
++    let mut next_control = NodeId::NONE;
++    let mut next_effect = NodeId::NONE;
++    for (offset, &phi) in pack.phis.iter().enumerate() {
++        fuel.take(1)?;
++        let poison = graph.input(phi, 3 - value_slot);
++        let value = graph.input(phi, value_slot);
++        if graph.op(poison) != Opcode::Undefined
++            || graph.value_type(poison) != graph.value_type(phi)
++            || !graph.control(poison).is_none()
++            || !graph.inputs(poison).is_empty()
++            || graph.op(value) != Opcode::Projection
++            || graph.payload(value) != 2
++            || !index::only(uses, value, phi, UseKind::Operand(value_slot))
++        {
++            return None;
++        }
++        let load = graph.input(value, 0);
++        if graph.op(load) != Opcode::Load
++            || graph.inputs(load).len() != 2
++            || graph.value_type(load)
++                != &ValueType::Tuple(vec![
++                    ValueType::Control,
++                    ValueType::Effect,
++                    graph.value_type(phi).clone(),
++                ])
++        {
++            return None;
++        }
++        let address = graph.input(load, 1);
++        if offset == 0 {
++            first_address = address;
++            partition = Some(graph.payload(load));
++        } else {
++            let pointer = offset_base(graph, address, offset as u128)?;
++            if offset == 1 {
++                // CSE can erase an identically typed +0 even when the base
++                // itself is a PtrOffset. Resolve the group base from byte 1,
++                // then accept either the bare base or exactly base+0 first.
++                if first_address != pointer && offset_base(graph, first_address, 0) != Some(pointer)
++                {
++                    return None;
++                }
++                base = pointer;
++            }
++            if pointer != base
++                || partition != Some(graph.payload(load))
++                || graph.control(load) != next_control
++                || graph.input(load, 0) != next_effect
++                || !index::only(uses, next_control, load, UseKind::Control)
++                || !index::only(uses, next_effect, load, UseKind::Operand(0))
++            {
++                return None;
++            }
++        }
++        next_control = index::projection(graph, uses, load, 0, fuel)?;
++        next_effect = index::projection(graph, uses, load, 1, fuel)?;
++        if uses.of(load).len() != 3 || index::projection(graph, uses, load, 2, fuel)? != value {
++            return None;
++        }
++        owned.extend([load, value, next_control, next_effect]);
++        loads.push(load);
++    }
++    let edge = graph.input(pack.region, value_slot - 1);
++    if graph.op(edge) != Opcode::Jump
++        || !graph.inputs(edge).is_empty()
++        || graph.control(edge) != next_control
++        || !index::only(uses, next_control, edge, UseKind::Control)
++    {
++        return None;
++    }
++    let [usage] = uses.of(next_effect) else {
++        return None;
++    };
++    let effect_phi = usage.user;
++    if usage.kind != UseKind::Operand(value_slot)
++        || graph.op(effect_phi) != Opcode::Phi
++        || graph.inputs(effect_phi).len() != 3
++        || graph.value_type(effect_phi) != &ValueType::Effect
++        || graph.input(effect_phi, 0) != pack.region
++    {
++        return None;
++    }
++    Some(Plan {
++        pack,
++        loads,
++        owned,
++        control: next_control,
++        effect: next_effect,
++        value_slot,
++    })
++}
++
++fn offset_base(graph: &FunctionGraph, address: NodeId, offset: u128) -> Option<NodeId> {
++    if graph.op(address) != Opcode::PtrOffset
++        || graph.inputs(address).len() != 2
++        || !graph.control(address).is_none()
++        || graph.payload(address) != 0
++    {
++        return None;
++    }
++    let displacement = graph.input(address, 1);
++    (graph.op(displacement) == Opcode::Const && graph.constant_value(displacement) == offset)
++        .then(|| graph.input(address, 0))
++}
++
++impl Plan {
++    pub(super) fn apply(self, graph: &mut FunctionGraph) {
++        let first = self.loads[0];
++        // Reuse the original address and fixed edge. A scalar's layout size
++        // chooses the exact read width; this adds no pointer cast or alignment
++        // promise and cannot execute on the inactive predecessor.
++        let load = graph.add_node(
++            Opcode::Load,
++            graph.control(first),
++            &[graph.input(first, 0), graph.input(first, 1)],
++            graph.payload(first),
++            ValueType::Tuple(vec![
++                ValueType::Control,
++                ValueType::Effect,
++                ValueType::Rust(self.pack.ty),
++            ]),
++        );
++        let mut projections = [NodeId::NONE; 3];
++        for (slot, ty) in [
++            ValueType::Control,
++            ValueType::Effect,
++            ValueType::Rust(self.pack.ty),
++        ]
++        .into_iter()
++        .enumerate()
++        {
++            projections[slot] =
++                graph.add_node(Opcode::Projection, NodeId::NONE, &[load], slot as u32, ty);
++        }
++        let poison = graph.add_node(
++            Opcode::Undefined,
++            NodeId::NONE,
++            &[],
++            0,
++            ValueType::Rust(self.pack.ty),
++        );
++        let mut inputs = [self.pack.region, poison, poison];
++        inputs[self.value_slot] = projections[2];
++        let phi = graph.add_node(
++            Opcode::Phi,
++            NodeId::NONE,
++            &inputs,
++            0,
++            ValueType::Rust(self.pack.ty),
++        );
++        graph.replace(self.pack.root, phi);
++        graph.replace(self.control, projections[0]);
++        graph.replace(self.effect, projections[1]);
++        // Only these fixed reads are removed explicitly. Their dead pure
++        // projections/byte Phis/pack cone are pruned by the final compaction.
++        for load in self.loads {
++            graph.remove_node(load);
++        }
++    }
++}
+--- /dev/null
++++ b/crates/kfrc-son/src/lower_layout/whole_pack/pack.rs
+@@ -0,0 +1,129 @@
++use super::*;
++
++pub(super) struct Pack {
++    pub root: NodeId,
++    pub ty: TyId,
++    pub region: NodeId,
++    pub phis: Vec<NodeId>,
++    pub owned: Vec<NodeId>,
++}
++
++pub(super) fn unsigned(graph: &FunctionGraph, ty: TyId) -> Option<u8> {
++    let TypeShape::Int {
++        width,
++        signed: false,
++    } = *graph.oracle.shape(ty)
++    else {
++        return None;
++    };
++    let bits = width.bits(64);
++    (matches!(bits, 8 | 16 | 32 | 64)
++        && graph.oracle.size_align(ty)?.size == u64::from(bits / 8)
++        && graph.oracle.scalar_validity(ty).is_none()
++        && !graph.oracle.semantic().is_union(ty)
++        && !graph.oracle.semantic().is_vector(ty))
++    .then_some(bits)
++}
++
++fn pure(graph: &FunctionGraph, node: NodeId, op: Opcode, ty: TyId) -> bool {
++    let inputs = if op == Opcode::IntCast { 1 } else { 2 };
++    graph.op(node) == op
++        && graph.inputs(node).len() == inputs
++        && graph.value_type(node) == &ValueType::Rust(ty)
++        && graph.payload(node) == 0
++        && graph.control(node).is_none()
++}
++
++pub(super) fn plan(
++    graph: &FunctionGraph,
++    uses: &Uses,
++    root: NodeId,
++    max_bytes: u64,
++    fuel: &mut Fuel,
++) -> Option<Pack> {
++    let ty = graph.rust_type(root)?;
++    let bytes = unsigned(graph, ty)? / 8;
++    if !matches!(bytes, 2 | 4 | 8) || u64::from(bytes) > max_bytes {
++        return None;
++    }
++    let mut phis = vec![NodeId::NONE; usize::from(bytes)];
++    let mut owned = HashSet::default();
++    let mut pending = vec![root];
++    let mut terms = 0;
++    while let Some(node) = pending.pop() {
++        fuel.take(1)?;
++        // A tree has at most 7 ORs, 7 shifts, 8 casts and 8 Phis. Shared
++        // subexpressions, cycles and duplicated terms all fail this certificate.
++        if owned.len() >= 32 || !owned.insert(node) {
++            return None;
++        }
++        if pure(graph, node, Opcode::BitOr, ty) {
++            pending.extend_from_slice(graph.inputs(node));
++            continue;
++        }
++        let (cast, offset) = if pure(graph, node, Opcode::ShiftLeft, ty) {
++            let count = graph.input(node, 1);
++            if graph.op(count) != Opcode::Const || graph.rust_type(count) != Some(ty) {
++                return None;
++            }
++            let bits = graph.constant_value(count);
++            if bits == 0 || bits % 8 != 0 || bits >= u128::from(bytes) * 8 {
++                return None;
++            }
++            let cast = graph.input(node, 0);
++            if !owned.insert(cast) {
++                return None;
++            }
++            (cast, usize::try_from(bits / 8).ok()?)
++        } else {
++            (node, 0)
++        };
++        if !pure(graph, cast, Opcode::IntCast, ty) {
++            return None;
++        }
++        let phi = graph.input(cast, 0);
++        if graph.op(phi) != Opcode::Phi
++            || graph.inputs(phi).len() != 3
++            || graph.payload(phi) != 0
++            || !matches!(graph.value_type(phi), ValueType::Rust(_))
++            || unsigned(graph, graph.rust_type(phi)?)? != 8
++            || !index::only(uses, phi, cast, UseKind::Operand(0))
++            || !phis[offset].is_none()
++            || !owned.insert(phi)
++        {
++            return None;
++        }
++        phis[offset] = phi;
++        terms += 1;
++    }
++    if terms != bytes || phis.iter().any(|phi| phi.is_none()) {
++        return None;
++    }
++    let region = graph.input(phis[0], 0);
++    if !matches!(graph.op(region), Opcode::Region)
++        || phis.iter().any(|&phi| {
++            graph.input(phi, 0) != region
++                || (!graph.control(phi).is_none() && graph.control(phi) != region)
++        })
++    {
++        return None;
++    }
++    for &node in &owned {
++        if node == root {
++            continue;
++        }
++        for usage in uses.of(node) {
++            fuel.take(1)?;
++            if usage.kind == UseKind::Control || !owned.contains(&usage.user) {
++                return None;
++            }
++        }
++    }
++    Some(Pack {
++        root,
++        ty,
++        region,
++        phis,
++        owned: owned.into_iter().collect(),
++    })
++}
+--- /dev/null
++++ b/crates/kfrc-son/src/lower_layout/whole_pack/tests/fixture.rs
+@@ -0,0 +1,439 @@
++use super::*;
++use kfrc_body::{FunctionAbi, Mutability, PassMode, RecordedTypes};
++
++pub(super) const SENTINEL: u64 = 0xbad0_dead_face_f00d;
++const BYTES: [u8; 8] = [0x98, 0xba, 0xdc, 0xfe, 0x01, 0x7e, 0xff, 0x80];
++
++pub(super) struct Fixture {
++    pub graph: FunctionGraph,
++    pub byte: TyId,
++    pub word: TyId,
++    pub pointer: TyId,
++    pub base: NodeId,
++    pub input_effect: NodeId,
++    pub region: NodeId,
++    pub effect_phi: NodeId,
++    pub loads: Vec<NodeId>,
++    pub addresses: Vec<NodeId>,
++    pub phis: Vec<NodeId>,
++    pub casts: Vec<NodeId>,
++    pub terms: Vec<NodeId>,
++    pub pack: NodeId,
++    pub ret: NodeId,
++    pub active: NodeId,
++    pub bytes: usize,
++    pub slot: usize,
++}
++
++impl Fixture {
++    pub fn new(
++        bytes: usize,
++        slot: usize,
++        balanced: bool,
++        missing: Option<usize>,
++        misalign: u64,
++    ) -> Self {
++        let mut types = RecordedTypes::new();
++        let byte = integer(&mut types, 1);
++        let word = integer(&mut types, bytes as u64);
++        let address_word = integer(&mut types, 8);
++        let boolean = types.intern(TypeShape::Bool, Some(SizeAlign { size: 1, align: 1 }));
++        let pointer = types.intern(
++            TypeShape::RawPointer {
++                mutability: Mutability::Mut,
++                pointee: byte,
++            },
++            Some(SizeAlign { size: 8, align: 8 }),
++        );
++        let mut graph = FunctionGraph::new(
++            "guarded_whole_pack",
++            FunctionAbi {
++                args: vec![PassMode::Direct],
++                ret: PassMode::Direct,
++                c_variadic: false,
++            },
++            types,
++        );
++        graph.level = GraphLevel::Layout;
++        let start = graph.add_node(
++            Opcode::Start,
++            NodeId::NONE,
++            &[],
++            0,
++            ValueType::Tuple(vec![
++                ValueType::Control,
++                ValueType::Effect,
++                ValueType::Rust(boolean),
++            ]),
++        );
++        graph.start = start;
++        let mut control = project(&mut graph, start, 0, ValueType::Control);
++        let mut effect = project(&mut graph, start, 1, ValueType::Effect);
++        let active = project(&mut graph, start, 2, ValueType::Rust(boolean));
++        graph.stack_slots.push(SizeAlign {
++            size: bytes as u64 + misalign,
++            align: 8,
++        });
++        let allocation = graph.add_node(
++            Opcode::StackSlot,
++            NodeId::NONE,
++            &[],
++            0,
++            ValueType::Rust(pointer),
++        );
++        let offset = graph.add_constant(u128::from(misalign), address_word);
++        let base = graph.add_node(
++            Opcode::PtrOffset,
++            NodeId::NONE,
++            &[allocation, offset],
++            0,
++            ValueType::Rust(pointer),
++        );
++        for (offset, &bits) in BYTES[..bytes].iter().enumerate() {
++            if missing == Some(offset) {
++                continue;
++            }
++            let offset = graph.add_constant(offset as u128, address_word);
++            let address = graph.add_node(
++                Opcode::PtrOffset,
++                NodeId::NONE,
++                &[base, offset],
++                0,
++                ValueType::Rust(pointer),
++            );
++            let value = graph.add_constant(u128::from(bits), byte);
++            let store = graph.add_node(
++                Opcode::Store,
++                control,
++                &[effect, address, value],
++                0,
++                ValueType::Tuple(vec![ValueType::Control, ValueType::Effect]),
++            );
++            control = project(&mut graph, store, 0, ValueType::Control);
++            effect = project(&mut graph, store, 1, ValueType::Effect);
++        }
++        let input_effect = effect;
++        let branch = graph.add_node(
++            Opcode::If,
++            control,
++            &[active],
++            0,
++            ValueType::Tuple(vec![ValueType::Control; 2]),
++        );
++        let yes = project(&mut graph, branch, 0, ValueType::Control);
++        let no = project(&mut graph, branch, 1, ValueType::Control);
++        control = yes;
++        let mut loads = Vec::new();
++        let mut values = Vec::new();
++        let mut addresses = Vec::new();
++        for offset in 0..bytes {
++            let offset = graph.add_constant(offset as u128, address_word);
++            let address = graph.add_node(
++                Opcode::PtrOffset,
++                NodeId::NONE,
++                &[base, offset],
++                0,
++                ValueType::Rust(pointer),
++            );
++            let load = graph.add_node(
++                Opcode::Load,
++                control,
++                &[effect, address],
++                0,
++                ValueType::Tuple(vec![
++                    ValueType::Control,
++                    ValueType::Effect,
++                    ValueType::Rust(byte),
++                ]),
++            );
++            control = project(&mut graph, load, 0, ValueType::Control);
++            effect = project(&mut graph, load, 1, ValueType::Effect);
++            values.push(project(&mut graph, load, 2, ValueType::Rust(byte)));
++            loads.push(load);
++            addresses.push(address);
++        }
++        let yes_jump = graph.add_node(Opcode::Jump, control, &[], 0, ValueType::Control);
++        let no_jump = graph.add_node(Opcode::Jump, no, &[], 0, ValueType::Control);
++        let edges = if slot == 1 {
++            [yes_jump, no_jump]
++        } else {
++            [no_jump, yes_jump]
++        };
++        let region = graph.add_node(Opcode::Region, NodeId::NONE, &edges, 0, ValueType::Control);
++        let mut effects = [region, input_effect, input_effect];
++        effects[slot] = effect;
++        let effect_phi = graph.add_node(Opcode::Phi, NodeId::NONE, &effects, 0, ValueType::Effect);
++        let mut phis = Vec::new();
++        let mut casts = Vec::new();
++        let mut terms = Vec::new();
++        for (index, value) in values.into_iter().enumerate() {
++            let undefined = graph.add_node(
++                Opcode::Undefined,
++                NodeId::NONE,
++                &[],
++                0,
++                ValueType::Rust(byte),
++            );
++            let mut inputs = [region, undefined, undefined];
++            inputs[slot] = value;
++            let phi = graph.add_node(Opcode::Phi, NodeId::NONE, &inputs, 0, ValueType::Rust(byte));
++            let cast = graph.add_node(
++                Opcode::IntCast,
++                NodeId::NONE,
++                &[phi],
++                0,
++                ValueType::Rust(word),
++            );
++            let term = if index == 0 {
++                cast
++            } else {
++                let shift = graph.add_constant((index * 8) as u128, word);
++                graph.add_node(
++                    Opcode::ShiftLeft,
++                    NodeId::NONE,
++                    &[cast, shift],
++                    0,
++                    ValueType::Rust(word),
++                )
++            };
++            phis.push(phi);
++            casts.push(cast);
++            terms.push(term);
++        }
++        let pack = pack_tree(&mut graph, &terms, word, balanced);
++        let branch = graph.add_node(
++            Opcode::If,
++            region,
++            &[active],
++            0,
++            ValueType::Tuple(vec![ValueType::Control; 2]),
++        );
++        let yes = project(&mut graph, branch, 0, ValueType::Control);
++        let no = project(&mut graph, branch, 1, ValueType::Control);
++        let returned = graph.add_node(
++            Opcode::IntCast,
++            NodeId::NONE,
++            &[pack],
++            0,
++            ValueType::Rust(address_word),
++        );
++        let ret = graph.add_node(
++            Opcode::Return,
++            yes,
++            &[effect_phi, returned],
++            0,
++            ValueType::Control,
++        );
++        let sentinel = graph.add_constant(u128::from(SENTINEL), address_word);
++        graph.add_node(
++            Opcode::Return,
++            no,
++            &[effect_phi, sentinel],
++            0,
++            ValueType::Control,
++        );
++        Self {
++            graph,
++            byte,
++            word,
++            pointer,
++            base,
++            input_effect,
++            region,
++            effect_phi,
++            loads,
++            addresses,
++            phis,
++            casts,
++            terms,
++            pack,
++            ret,
++            active,
++            bytes,
++            slot,
++        }
++    }
++
++    pub fn expected(&self) -> u64 {
++        let mut bytes = [0; 8];
++        bytes[..self.bytes].copy_from_slice(&BYTES[..self.bytes]);
++        u64::from_le_bytes(bytes)
++    }
++
++    pub fn append_second_group(&mut self) {
++        let final_branch = self.graph.input(self.graph.control(self.ret), 0);
++        let branch = self.graph.add_node(
++            Opcode::If,
++            self.region,
++            &[self.active],
++            0,
++            ValueType::Tuple(vec![ValueType::Control; 2]),
++        );
++        let mut control = project(&mut self.graph, branch, 0, ValueType::Control);
++        let no = project(&mut self.graph, branch, 1, ValueType::Control);
++        let mut effect = self.effect_phi;
++        let mut values = Vec::new();
++        for &address in &self.addresses {
++            let load = self.graph.add_node(
++                Opcode::Load,
++                control,
++                &[effect, address],
++                0,
++                ValueType::Tuple(vec![
++                    ValueType::Control,
++                    ValueType::Effect,
++                    ValueType::Rust(self.byte),
++                ]),
++            );
++            control = project(&mut self.graph, load, 0, ValueType::Control);
++            effect = project(&mut self.graph, load, 1, ValueType::Effect);
++            values.push(project(
++                &mut self.graph,
++                load,
++                2,
++                ValueType::Rust(self.byte),
++            ));
++        }
++        let yes = self
++            .graph
++            .add_node(Opcode::Jump, control, &[], 0, ValueType::Control);
++        let no = self
++            .graph
++            .add_node(Opcode::Jump, no, &[], 0, ValueType::Control);
++        let region = self.graph.add_node(
++            Opcode::Region,
++            NodeId::NONE,
++            &[yes, no],
++            0,
++            ValueType::Control,
++        );
++        let effect = self.graph.add_node(
++            Opcode::Phi,
++            NodeId::NONE,
++            &[region, effect, self.effect_phi],
++            0,
++            ValueType::Effect,
++        );
++        let mut terms = Vec::new();
++        for (index, value) in values.into_iter().enumerate() {
++            let poison = self.graph.add_node(
++                Opcode::Undefined,
++                NodeId::NONE,
++                &[],
++                0,
++                ValueType::Rust(self.byte),
++            );
++            let phi = self.graph.add_node(
++                Opcode::Phi,
++                NodeId::NONE,
++                &[region, value, poison],
++                0,
++                ValueType::Rust(self.byte),
++            );
++            let cast = self.graph.add_node(
++                Opcode::IntCast,
++                NodeId::NONE,
++                &[phi],
++                0,
++                ValueType::Rust(self.word),
++            );
++            let term = if index == 0 {
++                cast
++            } else {
++                let shift = self.graph.add_constant((index * 8) as u128, self.word);
++                self.graph.add_node(
++                    Opcode::ShiftLeft,
++                    NodeId::NONE,
++                    &[cast, shift],
++                    0,
++                    ValueType::Rust(self.word),
++                )
++            };
++            terms.push(term);
++        }
++        let second = pack_tree(&mut self.graph, &terms, self.word, true);
++        let sum = self.graph.add_node(
++            Opcode::Add,
++            NodeId::NONE,
++            &[self.pack, second],
++            0,
++            ValueType::Rust(self.word),
++        );
++        let returned = self.graph.input(self.ret, 1);
++        self.graph.set_input(returned, 0, sum);
++        self.graph.set_control(final_branch, region);
++        let returns: Vec<_> = self
++            .graph
++            .ids()
++            .filter(|&node| self.graph.op(node) == Opcode::Return)
++            .collect();
++        for ret in returns {
++            self.graph.set_input(ret, 0, effect);
++        }
++    }
++
++    pub fn overwrite_after_join(&mut self) {
++        let zero = self.graph.add_constant(0, self.byte);
++        let control = self.graph.control(self.ret);
++        let store = self.graph.add_node(
++            Opcode::Store,
++            control,
++            &[self.effect_phi, self.base, zero],
++            0,
++            ValueType::Tuple(vec![ValueType::Control, ValueType::Effect]),
++        );
++        let control = project(&mut self.graph, store, 0, ValueType::Control);
++        let effect = project(&mut self.graph, store, 1, ValueType::Effect);
++        self.graph.set_control(self.ret, control);
++        self.graph.set_input(self.ret, 0, effect);
++    }
++}
++
++pub(super) fn project(
++    graph: &mut FunctionGraph,
++    source: NodeId,
++    slot: u32,
++    ty: ValueType,
++) -> NodeId {
++    graph.add_node(Opcode::Projection, NodeId::NONE, &[source], slot, ty)
++}
++
++fn integer(types: &mut RecordedTypes, bytes: u64) -> TyId {
++    let width = match bytes {
++        1 => IntegerWidth::W8,
++        2 => IntegerWidth::W16,
++        4 => IntegerWidth::W32,
++        8 => IntegerWidth::W64,
++        _ => unreachable!(),
++    };
++    types.intern(
++        TypeShape::Int {
++            width,
++            signed: false,
++        },
++        Some(SizeAlign {
++            size: bytes,
++            align: bytes,
++        }),
++    )
++}
++
++fn pack_tree(graph: &mut FunctionGraph, terms: &[NodeId], ty: TyId, balanced: bool) -> NodeId {
++    if terms.len() == 1 {
++        return terms[0];
++    }
++    let split = if balanced {
++        terms.len() / 2
++    } else {
++        terms.len() - 1
++    };
++    let left = pack_tree(graph, &terms[..split], ty, balanced);
++    let right = pack_tree(graph, &terms[split..], ty, balanced);
++    graph.add_node(
++        Opcode::BitOr,
++        NodeId::NONE,
++        &[left, right],
++        0,
++        ValueType::Rust(ty),
++    )
++}
+--- /dev/null
++++ b/crates/kfrc-son/src/lower_layout/whole_pack/tests/flow.rs
+@@ -0,0 +1,296 @@
++use super::*;
++
++#[test]
++fn forward_diamond_inside_an_outer_loop_is_not_a_loop_carried_pack() {
++    let mut f = Fixture::new(8, 1, true, None, 0);
++    let source_branch = f.graph.input(f.graph.control(f.loads[0]), 0);
++    let before = f.graph.control(source_branch);
++    let entry = f
++        .graph
++        .add_node(Opcode::Jump, before, &[], 0, ValueType::Control);
++    let inactive_ret = f
++        .graph
++        .ids()
++        .find(|&node| f.graph.op(node) == Opcode::Return && node != f.ret)
++        .unwrap();
++    let back = f.graph.add_node(
++        Opcode::Jump,
++        f.graph.control(inactive_ret),
++        &[],
++        0,
++        ValueType::Control,
++    );
++    let header = f.graph.add_node(
++        Opcode::Region,
++        NodeId::NONE,
++        &[entry, back],
++        0,
++        ValueType::Control,
++    );
++    let effect = f.graph.add_node(
++        Opcode::Phi,
++        NodeId::NONE,
++        &[header, f.input_effect, f.effect_phi],
++        0,
++        ValueType::Effect,
++    );
++    f.graph.set_control(source_branch, header);
++    f.graph.set_input(f.loads[0], 0, effect);
++    f.graph.set_input(f.effect_phi, 3 - f.slot, effect);
++    f.graph.remove_node(inactive_ret);
++    verify_graph(&mut f.graph).unwrap();
++    let before = f.graph.clone();
++    assert_eq!(run(&mut f.graph, 128).groups, 1);
++    verify_graph(&mut f.graph).unwrap();
++    // The active execution exits after one forward diamond. The inactive path
++    // is an intentional divergent outer loop and must never become a read.
++    same_execution(&before, &f.graph, true);
++}
++
++#[test]
++fn repeated_forward_diamonds_capture_each_iterations_bytes_before_the_next_store() {
++    let mut f = Fixture::new(8, 2, true, None, 1);
++    let source_branch = f.graph.input(f.graph.control(f.loads[0]), 0);
++    let entry = f.graph.add_node(
++        Opcode::Jump,
++        f.graph.control(source_branch),
++        &[],
++        0,
++        ValueType::Control,
++    );
++    let header = f.graph.add_node(
++        Opcode::Region,
++        NodeId::NONE,
++        &[entry],
++        0,
++        ValueType::Control,
++    );
++    let zero = f.graph.add_constant(0, f.word);
++    let one = f.graph.add_constant(1, f.word);
++    let limit = f.graph.add_constant(7, f.word);
++    let mut phi = |ty, initial| {
++        f.graph.add_node(
++            Opcode::Phi,
++            NodeId::NONE,
++            &[header, initial, initial],
++            0,
++            ty,
++        )
++    };
++    let counter = phi(ValueType::Rust(f.word), zero);
++    let sum = phi(ValueType::Rust(f.word), zero);
++    let input_effect = phi(ValueType::Effect, f.input_effect);
++    f.graph.set_control(source_branch, header);
++    f.graph.set_input(f.loads[0], 0, input_effect);
++    f.graph.set_input(f.effect_phi, 3 - f.slot, input_effect);
++    let next_counter = f.graph.add_node(
++        Opcode::Add,
++        NodeId::NONE,
++        &[counter, one],
++        0,
++        ValueType::Rust(f.word),
++    );
++    let next_sum = f.graph.add_node(
++        Opcode::Add,
++        NodeId::NONE,
++        &[sum, f.pack],
++        0,
++        ValueType::Rust(f.word),
++    );
++    let byte = f.graph.add_node(
++        Opcode::IntCast,
++        NodeId::NONE,
++        &[next_counter],
++        0,
++        ValueType::Rust(f.byte),
++    );
++    let store = f.graph.add_node(
++        Opcode::Store,
++        f.graph.control(f.ret),
++        &[f.effect_phi, f.base, byte],
++        0,
++        ValueType::Tuple(vec![ValueType::Control, ValueType::Effect]),
++    );
++    let control = fixture::project(&mut f.graph, store, 0, ValueType::Control);
++    let effect = fixture::project(&mut f.graph, store, 1, ValueType::Effect);
++    let boolean = f.graph.rust_type(f.active).unwrap();
++    let again = f.graph.add_node(
++        Opcode::Compare,
++        NodeId::NONE,
++        &[next_counter, limit],
++        crate::ComparePredicate::UnsignedLess as u32,
++        ValueType::Rust(boolean),
++    );
++    let branch = f.graph.add_node(
++        Opcode::If,
++        control,
++        &[again],
++        0,
++        ValueType::Tuple(vec![ValueType::Control; 2]),
++    );
++    let again = fixture::project(&mut f.graph, branch, 0, ValueType::Control);
++    let done = fixture::project(&mut f.graph, branch, 1, ValueType::Control);
++    let back = f
++        .graph
++        .add_node(Opcode::Jump, again, &[], 0, ValueType::Control);
++    f.graph.set_inputs(header, &[entry, back]);
++    f.graph.set_input(counter, 2, next_counter);
++    f.graph.set_input(sum, 2, next_sum);
++    f.graph.set_input(input_effect, 2, effect);
++    f.graph.set_control(f.ret, done);
++    f.graph.set_input(f.ret, 0, effect);
++    let returned = f.graph.input(f.ret, 1);
++    f.graph.set_input(returned, 0, next_sum);
++    verify_graph(&mut f.graph).unwrap();
++    let before = f.graph.clone();
++    assert_eq!(run(&mut f.graph, 128).groups, 1);
++    verify_graph(&mut f.graph).unwrap();
++    let expected = (1..7).fold(f.expected(), |sum, first_byte| {
++        sum.wrapping_add((f.expected() & !0xff) | first_byte)
++    });
++    assert_eq!(evaluate(&f.graph, true), Ok(Outcome::Return(expected)));
++    assert_eq!(
++        evaluate(&f.graph, false),
++        Ok(Outcome::Return(fixture::SENTINEL))
++    );
++    same_execution(&before, &f.graph, true);
++    same_execution(&before, &f.graph, false);
++}
++
++#[test]
++fn a_header_dominating_its_backedge_has_no_forward_join_certificate() {
++    let mut f = Fixture::new(4, 1, false, None, 0);
++    let source_branch = f.graph.input(f.graph.control(f.loads[0]), 0);
++    let entry = f.graph.add_node(
++        Opcode::Jump,
++        f.graph.control(source_branch),
++        &[],
++        0,
++        ValueType::Control,
++    );
++    let back = f.graph.input(f.region, f.slot - 1);
++    let old_other = f.graph.input(f.region, 2 - f.slot);
++    f.graph.set_input(f.region, 2 - f.slot, entry);
++    f.graph.set_control(source_branch, f.region);
++    f.graph.remove_node(old_other);
++    let uses = Uses::new(&f.graph);
++    let mut fuel = Fuel {
++        left: FUEL,
++        exhausted: false,
++    };
++    assert!(index::forward_join(&f.graph, &uses, f.region, &mut fuel).is_none());
++    assert_eq!(
++        f.graph.control(back),
++        f.graph
++            .find_projection(*f.loads.last().unwrap(), 0)
++            .unwrap()
++    );
++    let before = f.graph.dump();
++    assert_eq!(run(&mut f.graph, 128), Stats::default());
++    assert_eq!(f.graph.dump(), before);
++}
++
++#[test]
++fn unreachable_and_duplicate_predecessors_have_no_forward_certificate() {
++    for duplicate in [false, true] {
++        let mut f = Fixture::new(2, 2, false, None, 0);
++        if duplicate {
++            let edge = f.graph.input(f.region, 0);
++            f.graph.set_input(f.region, 1, edge);
++        } else {
++            let detached = f.graph.add_node(
++                Opcode::Projection,
++                NodeId::NONE,
++                &[f.graph.start],
++                0,
++                ValueType::Control,
++            );
++            let edge = f
++                .graph
++                .add_node(Opcode::Jump, detached, &[], 0, ValueType::Control);
++            f.graph.set_input(f.region, 0, edge);
++            // A duplicate Start control is reachable, so explicitly detach the
++            // predecessor under a Region with no path from the real Start.
++            let isolated =
++                f.graph
++                    .add_node(Opcode::Region, NodeId::NONE, &[edge], 0, ValueType::Control);
++            f.graph.set_control(edge, isolated);
++        }
++        let uses = Uses::new(&f.graph);
++        let mut fuel = Fuel {
++            left: FUEL,
++            exhausted: false,
++        };
++        assert!(index::forward_join(&f.graph, &uses, f.region, &mut fuel).is_none());
++    }
++}
++
++#[test]
++fn shared_partial_observers_cannot_form_overlapping_plans() {
++    let mut f = Fixture::new(2, 1, false, None, 0);
++    // Clone the pure pack into another word observer. Its byte Phis now have
++    // two casts each, so neither cone can claim shared partial observations.
++    let mut terms = Vec::new();
++    for (index, &phi) in f.phis.iter().enumerate() {
++        let cast = f.graph.add_node(
++            Opcode::IntCast,
++            NodeId::NONE,
++            &[phi],
++            0,
++            ValueType::Rust(f.word),
++        );
++        terms.push(if index == 0 {
++            cast
++        } else {
++            let eight = f.graph.add_constant(8, f.word);
++            f.graph.add_node(
++                Opcode::ShiftLeft,
++                NodeId::NONE,
++                &[cast, eight],
++                0,
++                ValueType::Rust(f.word),
++            )
++        });
++    }
++    f.graph.add_node(
++        Opcode::BitOr,
++        NodeId::NONE,
++        &terms,
++        0,
++        ValueType::Rust(f.word),
++    );
++    verify_graph(&mut f.graph).unwrap();
++    let before = f.graph.dump();
++    assert_eq!(run(&mut f.graph, 128), Stats::default());
++    assert_eq!(f.graph.dump(), before);
++}
++
++#[test]
++fn sequential_independent_groups_publish_atomically_even_with_cross_plan_effects() {
++    let mut f = Fixture::new(8, 2, true, None, 1);
++    f.append_second_group();
++    verify_graph(&mut f.graph).unwrap();
++    let before = f.graph.clone();
++    let mut successful = None;
++    for budget in 0..FUEL {
++        let mut graph = before.clone();
++        let stats = run_with_fuel(&mut graph, 128, budget);
++        if stats.groups != 0 {
++            assert_eq!(stats.groups, 2);
++            assert_eq!(stats.byte_loads_removed, 14);
++            assert_eq!(stats.payload_phis_removed, 14);
++            verify_graph(&mut graph).unwrap();
++            assert_eq!(
++                evaluate(&graph, true),
++                Ok(Outcome::Return(f.expected().wrapping_mul(2)))
++            );
++            same_execution(&before, &graph, true);
++            same_execution(&before, &graph, false);
++            successful = Some(budget);
++            break;
++        }
++        assert!(stats.budget_exhausted);
++        assert_eq!(graph.dump(), before.dump());
++    }
++    assert!(successful.is_some_and(|budget| budget < 20_000));
++}
+--- /dev/null
++++ b/crates/kfrc-son/src/lower_layout/whole_pack/tests/rejections.rs
+@@ -0,0 +1,270 @@
++use super::*;
++use fixture::project;
++use kfrc_body::{ScalarValidRange, ScalarValidity};
++
++fn unchanged(mut f: Fixture) {
++    verify_graph(&mut f.graph).unwrap();
++    let before = f.graph.dump();
++    assert_eq!(run(&mut f.graph, 128), Stats::default(), "{before}");
++    assert_eq!(f.graph.dump(), before);
++}
++
++#[test]
++fn individual_byte_and_pack_intermediate_observers_reject_the_group() {
++    for observe in 0..3 {
++        let mut f = Fixture::new(8, 2, false, None, 0);
++        let source = [f.phis[3], f.casts[3], f.terms[3]][observe];
++        let ty = f.graph.rust_type(source).unwrap();
++        let zero = f.graph.add_constant(0, ty);
++        f.graph.add_node(
++            Opcode::BitXor,
++            NodeId::NONE,
++            &[source, zero],
++            0,
++            ValueType::Rust(ty),
++        );
++        unchanged(f);
++    }
++    let mut f = Fixture::new(8, 1, false, None, 0);
++    let load = f.loads[3];
++    let value = f.graph.find_projection(load, 2).unwrap();
++    f.graph.add_node(
++        Opcode::IntCast,
++        NodeId::NONE,
++        &[value],
++        0,
++        ValueType::Rust(f.word),
++    );
++    unchanged(f);
++}
++
++#[test]
++fn duplicate_missing_out_of_order_and_different_base_addresses_reject() {
++    for case in 0..5 {
++        let mut f = Fixture::new(8, 1, false, None, 0);
++        let address = f.addresses[3];
++        match case {
++            0 | 1 => {
++                let ty = f.graph.rust_type(f.graph.input(address, 1)).unwrap();
++                let offset = f.graph.add_constant(if case == 0 { 2 } else { 8 }, ty);
++                f.graph.set_input(address, 1, offset);
++            }
++            2 => {
++                let a = f.graph.input(f.addresses[3], 1);
++                let b = f.graph.input(f.addresses[4], 1);
++                f.graph.set_input(f.addresses[3], 1, b);
++                f.graph.set_input(f.addresses[4], 1, a);
++            }
++            3 => {
++                let other = f.graph.add_node(
++                    Opcode::Undefined,
++                    NodeId::NONE,
++                    &[],
++                    0,
++                    ValueType::Rust(f.pointer),
++                );
++                f.graph.set_input(address, 0, other);
++            }
++            4 => {
++                let anchor = f.graph.control(f.loads[0]);
++                f.graph.set_control(address, anchor);
++            }
++            _ => unreachable!(),
++        }
++        unchanged(f);
++    }
++}
++
++#[test]
++fn nonundefined_and_unsynchronized_phi_incoming_slots_reject() {
++    for case in 0..3 {
++        let mut f = Fixture::new(8, 2, true, None, 0);
++        let phi = f.phis[4];
++        match case {
++            0 => {
++                let defined = f.graph.add_constant(0, f.byte);
++                f.graph.set_input(phi, 1, defined);
++            }
++            1 => {
++                // A poison-producing expression is not an explicit Undefined
++                // certificate even when it would happen to behave the same.
++                let poison = f.graph.input(phi, 1);
++                let zero = f.graph.add_constant(0, f.byte);
++                let derived = f.graph.add_node(
++                    Opcode::BitOr,
++                    NodeId::NONE,
++                    &[poison, zero],
++                    0,
++                    ValueType::Rust(f.byte),
++                );
++                f.graph.set_input(phi, 1, derived);
++            }
++            2 => {
++                // An adversarial second merge is not synchronized with the
++                // byte load group's predecessor slots.
++                let edges = f.graph.inputs(f.region).to_vec();
++                let region =
++                    f.graph
++                        .add_node(Opcode::Region, NodeId::NONE, &edges, 0, ValueType::Control);
++                f.graph.set_input(phi, 0, region);
++                // This intentionally adversarial graph has a split successor
++                // of each Jump; planning must still reject before editing it.
++                let before = f.graph.dump();
++                assert_eq!(run(&mut f.graph, 128), Stats::default());
++                assert_eq!(f.graph.dump(), before);
++                continue;
++            }
++            _ => unreachable!(),
++        }
++        unchanged(f);
++    }
++}
++
++#[test]
++fn partial_shift_flags_repeated_terms_and_signed_bytes_reject() {
++    for case in 0..4 {
++        let mut f = Fixture::new(8, 1, false, None, 0);
++        match case {
++            0 => f
++                .graph
++                .set_payload(f.terms[3], crate::ArithmeticFlags::AMOUNT_IN_RANGE),
++            1 => {
++                let shift = f.graph.add_constant(23, f.word);
++                f.graph.set_input(f.terms[3], 1, shift);
++            }
++            2 => {
++                let left = f.graph.input(f.pack, 0);
++                f.graph.set_input(f.pack, 1, left);
++            }
++            3 => {
++                let signed = f.graph.oracle.intern(
++                    TypeShape::Int {
++                        width: IntegerWidth::W8,
++                        signed: true,
++                    },
++                    Some(SizeAlign { size: 1, align: 1 }),
++                );
++                for &phi in &f.phis {
++                    for input in [f.graph.input(phi, 1), f.graph.input(phi, 2)] {
++                        f.graph.set_value_type(input, ValueType::Rust(signed));
++                        if f.graph.op(input) == Opcode::Projection {
++                            let load = f.graph.input(input, 0);
++                            f.graph.set_value_type(
++                                load,
++                                ValueType::Tuple(vec![
++                                    ValueType::Control,
++                                    ValueType::Effect,
++                                    ValueType::Rust(signed),
++                                ]),
++                            );
++                        }
++                    }
++                    f.graph.set_value_type(phi, ValueType::Rust(signed));
++                }
++            }
++            _ => unreachable!(),
++        }
++        unchanged(f);
++    }
++}
++
++#[test]
++fn extra_control_effect_and_projection_observers_reject() {
++    for case in 0..4 {
++        let mut f = Fixture::new(8, 1, true, None, 0);
++        let load = f.loads[3];
++        let control = f.graph.find_projection(load, 0).unwrap();
++        let effect = f.graph.find_projection(load, 1).unwrap();
++        match case {
++            0 => {
++                f.graph
++                    .add_node(Opcode::Unreachable, control, &[], 0, ValueType::Control);
++            }
++            1 => {
++                // An additional dead value use of a token is enough to prevent
++                // retiring its producer; no expression may retain a dead edge.
++                f.graph.add_node(
++                    Opcode::Phi,
++                    NodeId::NONE,
++                    &[f.region, effect, f.input_effect],
++                    0,
++                    ValueType::Effect,
++                );
++            }
++            2 => {
++                project(&mut f.graph, load, 2, ValueType::Rust(f.byte));
++            }
++            3 => {
++                let last = *f.loads.last().unwrap();
++                let effect = f.graph.find_projection(last, 1).unwrap();
++                f.graph.add_node(
++                    Opcode::Phi,
++                    NodeId::NONE,
++                    &[f.region, effect, f.input_effect],
++                    0,
++                    ValueType::Effect,
++                );
++            }
++            _ => unreachable!(),
++        }
++        // These extra edges model a stale/abandoned graph builder as well as
++        // a real effect fork. The pass must reject without relying on cleanup.
++        let before = f.graph.dump();
++        assert_eq!(run(&mut f.graph, 128), Stats::default());
++        assert_eq!(f.graph.dump(), before);
++    }
++}
++
++#[test]
++fn an_interleaved_store_prevents_load_coalescing() {
++    let mut f = Fixture::new(8, 1, false, None, 0);
++    let next = f.loads[4];
++    let control = f.graph.control(next);
++    let effect = f.graph.input(next, 0);
++    let zero = f.graph.add_constant(0, f.byte);
++    let store = f.graph.add_node(
++        Opcode::Store,
++        control,
++        &[effect, f.base, zero],
++        0,
++        ValueType::Tuple(vec![ValueType::Control, ValueType::Effect]),
++    );
++    let control = project(&mut f.graph, store, 0, ValueType::Control);
++    let effect = project(&mut f.graph, store, 1, ValueType::Effect);
++    f.graph.set_control(next, control);
++    f.graph.set_input(next, 0, effect);
++    unchanged(f);
++}
++
++#[test]
++fn differing_partitions_and_restricted_or_vector_words_reject() {
++    let mut f = Fixture::new(8, 1, false, None, 0);
++    f.graph
++        .memory_partitions
++        .push(crate::MemoryPartition::Unknown);
++    f.graph.set_payload(f.loads[4], 1);
++    unchanged(f);
++    for case in 0..3 {
++        let mut f = Fixture::new(8, 1, false, None, 0);
++        match case {
++            0 => f.graph.oracle.record_scalar_validity(
++                f.word,
++                ScalarValidity::Scalar(ScalarValidRange::new(64, 1, u128::from(u64::MAX)).unwrap()),
++            ),
++            1 => f.graph.oracle.record_vector(
++                f.word,
++                kfrc_body::VectorLayout {
++                    element: f.byte,
++                    lanes: 8,
++                },
++            ),
++            2 => {
++                f.graph.oracle.unions.insert(f.word);
++            }
++            _ => unreachable!(),
++        }
++        let before = f.graph.dump();
++        assert_eq!(run(&mut f.graph, 128), Stats::default());
++        assert_eq!(f.graph.dump(), before);
++    }
++}
+--- /dev/null
++++ b/crates/kfrc-son/src/lower_layout/whole_pack/tests/semantic.rs
+@@ -0,0 +1,339 @@
++//! The public S→L path crosses an owned enum Phi while retaining independent
++//! byte lanes and the original guard until the complete pack is certified.
++#[path = "semantic_fixture.rs"]
++mod fixture;
++
++use crate::{InterpretError, Interpreter, Opcode, Outcome, SemanticOutcome, Value, ValueType};
++use fixture::*;
++use kfrc_body::TypeShape;
++
++fn initialized_source(graph: &mut crate::FunctionGraph, bytes: &[u8]) {
++    let source = graph
++        .ids()
++        .find(|&node| {
++            graph.op(node) == Opcode::Projection
++                && graph.input(node, 0) == graph.start
++                && graph.payload(node) == 2
++        })
++        .unwrap();
++    let pointer = graph.rust_type(source).unwrap();
++    assert!(matches!(
++        graph.oracle.semantic().shape(pointer),
++        TypeShape::RawPointer { .. }
++    ));
++    graph.data_objects.push(kfrc_body::DataObject {
++        symbol: "whole_pack_input".into(),
++        bytes: bytes.to_vec(),
++        align: 1,
++        writable: true,
++        ..Default::default()
++    });
++    graph.symbols.push(("whole_pack_input".into(), 0));
++    let address = graph.add_node(
++        Opcode::SymbolAddress,
++        crate::NodeId::NONE,
++        &[],
++        0,
++        ValueType::Rust(pointer),
++    );
++    graph.replace(source, address);
++    graph.resolve_edges();
++    crate::verify_graph(graph).unwrap();
++}
++
++fn poison_suffix(graph: &mut crate::FunctionGraph, initialized: u64, bytes: u64) {
++    let load = graph
++        .ids()
++        .find(|&node| graph.op(node) == Opcode::LoadValue)
++        .unwrap();
++    let address = graph.input(load, 1);
++    let array = match graph
++        .oracle
++        .semantic()
++        .shape(graph.rust_type(address).unwrap())
++    {
++        TypeShape::RawPointer { pointee, .. } => *pointee,
++        _ => unreachable!(),
++    };
++    let byte = match graph.oracle.semantic().shape(array) {
++        TypeShape::Array { element, .. } => *element,
++        _ => unreachable!(),
++    };
++    let pointer = graph.oracle.intern(
++        TypeShape::RawPointer {
++            mutability: kfrc_body::Mutability::Mut,
++            pointee: byte,
++        },
++        Some(kfrc_body::SizeAlign { size: 8, align: 8 }),
++    );
++    let mut control = graph.control(load);
++    let mut effect = graph.input(load, 0);
++    for offset in initialized..bytes {
++        let field = graph.add_node(
++            Opcode::FieldAddr,
++            crate::NodeId::NONE,
++            &[address],
++            offset as u32,
++            ValueType::Rust(pointer),
++        );
++        let poison = graph.add_node(
++            Opcode::Undefined,
++            crate::NodeId::NONE,
++            &[],
++            0,
++            ValueType::Rust(byte),
++        );
++        let store = graph.add_node(
++            Opcode::StoreValue,
++            control,
++            &[effect, field, poison],
++            0,
++            ValueType::Tuple(vec![ValueType::Control, ValueType::Effect]),
++        );
++        control = graph.add_node(
++            Opcode::Projection,
++            crate::NodeId::NONE,
++            &[store],
++            0,
++            ValueType::Control,
++        );
++        effect = graph.add_node(
++            Opcode::Projection,
++            crate::NodeId::NONE,
++            &[store],
++            1,
++            ValueType::Effect,
++        );
++    }
++    graph.set_control(load, control);
++    graph.set_input(load, 0, effect);
++    crate::verify_graph(graph).unwrap();
++}
++
++#[test]
++fn owned_enum_phi_loads_combine_through_the_public_layout_pipeline() {
++    for bytes in [2, 4, 8] {
++        for reverse in [false, true] {
++            for overwrite in [false, true] {
++                for byte_swap in [false, true] {
++                    let options = Options {
++                        bytes,
++                        reverse,
++                        overwrite,
++                        byte_swap,
++                    };
++                    let source = graph("public_guarded_pack", options);
++                    assert!(source.ids().any(|node| {
++                        source.op(node) == Opcode::Phi
++                            && source
++                                .rust_type(node)
++                                .is_some_and(|ty| source.oracle.semantic().is_enum(ty))
++                    }));
++                    let (baseline, baseline_stats) = lower(&source, 0);
++                    let (candidate, stats) = lower(&source, 128);
++                    assert_eq!(baseline_stats.whole_array_transmutes, 0);
++                    assert_eq!(stats.whole_array_transmutes, 1);
++                    assert_eq!(baseline_stats.whole_packs_combined, 0);
++                    assert_eq!(stats.whole_packs_combined, 1, "{}", candidate.dump());
++                    assert_eq!(stats.whole_pack_byte_loads_removed, bytes as usize - 1);
++                    assert_eq!(stats.whole_pack_payload_phis_removed, bytes as usize - 1);
++                    // Budget zero retains the baseline temporary for transmute;
++                    // it is a differential of the complete public pipeline.
++                    assert!(
++                        load_sizes(&baseline)
++                            .iter()
++                            .filter(|&&size| size == 1)
++                            .count()
++                            >= bytes as usize
++                    );
++                    assert_eq!(load_sizes(&candidate), vec![bytes]);
++                }
++            }
++        }
++    }
++}
++
++#[test]
++fn semantic_and_both_layout_forms_keep_errors_effects_and_old_bytes() {
++    let contents = [0x98, 0xba, 0xdc, 0xfe, 0x01, 0x7e, 0xff, 0x80];
++    for bytes in [2, 4, 8] {
++        for overwrite in [false, true] {
++            for byte_swap in [false, true] {
++                let options = Options {
++                    bytes,
++                    reverse: true,
++                    overwrite,
++                    byte_swap,
++                };
++                let mut source = graph("snapshot_semantics", options);
++                initialized_source(&mut source, &contents[..bytes as usize]);
++                let forms = [lower(&source, 0).0, lower(&source, 128).0];
++                for length in [0, bytes - 1, bytes, bytes + 1, u64::MAX] {
++                    let mut semantic_events = vec![];
++                    let semantic = Interpreter::new(&source)
++                        .run_values(
++                            &[Value::Scalar(0), Value::Scalar(length)],
++                            &mut |symbol: &str, arguments: &[Value]| {
++                                assert_eq!(symbol, "whole_pack_probe");
++                                let [Value::Scalar(event)] = arguments else {
++                                    panic!("event scalar expected");
++                                };
++                                semantic_events.push(*event);
++                                Ok(Value::Scalar(0))
++                            },
++                        )
++                        .unwrap();
++                    let want = if length >= bytes {
++                        expected(&contents[..bytes as usize], byte_swap)
++                    } else {
++                        SENTINEL
++                    };
++                    assert_eq!(semantic, SemanticOutcome::Return(Value::Scalar(want)));
++                    assert_eq!(semantic_events, [1, 2]);
++                    for lowered in &forms {
++                        let mut events = vec![];
++                        let physical = Interpreter::new(lowered)
++                            .run(&[0, length], &mut |symbol: &str, arguments: &[u64]| {
++                                assert_eq!(symbol, "whole_pack_probe");
++                                events.push(arguments[0]);
++                                Ok(0)
++                            })
++                            .unwrap();
++                        assert_eq!(physical, Outcome::Return(want), "{}", lowered.dump());
++                        assert_eq!(events, semantic_events);
++                    }
++                }
++            }
++        }
++    }
++}
++
++#[test]
++fn partial_source_bytes_still_poison_only_an_observed_whole_word() {
++    for bytes in [2, 4, 8] {
++        for missing_suffix in 1..=bytes {
++            let options = Options {
++                bytes,
++                reverse: false,
++                overwrite: false,
++                byte_swap: false,
++            };
++            let mut source = graph("partial_snapshot", options);
++            initialized_source(&mut source, &vec![0x80; bytes as usize]);
++            poison_suffix(&mut source, bytes - missing_suffix, bytes);
++            let forms = [lower(&source, 0).0, lower(&source, 128).0];
++            let semantic = Interpreter::new(&source).run_values(
++                &[Value::Scalar(0), Value::Scalar(bytes)],
++                &mut |_: &str, _: &[Value]| Ok(Value::Scalar(0)),
++            );
++            assert!(matches!(semantic, Err(InterpretError::PoisonObserved(_))));
++            for lowered in &forms {
++                assert!(matches!(
++                    Interpreter::new(lowered).run(&[0, bytes], &mut |_: &str, _: &[u64]| Ok(0)),
++                    Err(InterpretError::PoisonObserved(_))
++                ));
++                assert_eq!(
++                    Interpreter::new(lowered).run(&[0, 0], &mut |_: &str, _: &[u64]| Ok(0)),
++                    Ok(Outcome::Return(SENTINEL))
++                );
++            }
++        }
++    }
++}
++
++#[test]
++fn fixed_whole_value_requirement_keeps_the_existing_publishing_contract() {
++    let mut source = graph(
++        "required_snapshot",
++        Options {
++            bytes: 8,
++            reverse: true,
++            overwrite: true,
++            byte_swap: false,
++        },
++    );
++    let contents = [0x98, 0xba, 0xdc, 0xfe, 0x01, 0x7e, 0xff, 0x80];
++    initialized_source(&mut source, &contents);
++    let transmute = source
++        .ids()
++        .find(|&node| source.op(node) == Opcode::TransmuteValue)
++        .unwrap();
++    let requirement = source.add_node(
++        Opcode::RequireDefined,
++        source.control(transmute),
++        &[source.input(transmute, 0), source.input(transmute, 1)],
++        0,
++        ValueType::Tuple(vec![ValueType::Control, ValueType::Effect]),
++    );
++    let control = source.add_node(
++        Opcode::Projection,
++        crate::NodeId::NONE,
++        &[requirement],
++        0,
++        ValueType::Control,
++    );
++    let effect = source.add_node(
++        Opcode::Projection,
++        crate::NodeId::NONE,
++        &[requirement],
++        1,
++        ValueType::Effect,
++    );
++    source.set_control(transmute, control);
++    source.set_input(transmute, 0, effect);
++    crate::verify_graph(&mut source).unwrap();
++    let (candidate, stats) = lower(&source, 128);
++    assert_eq!(stats.whole_packs_combined, 1);
++    assert!(candidate.ids().all(|node| {
++        !matches!(
++            candidate.op(node),
++            Opcode::RequireDefined | Opcode::TransmuteValue
++        )
++    }));
++    for length in [0, 7, 8] {
++        let mut semantic_events = Vec::new();
++        let semantic = Interpreter::new(&source)
++            .run_values(
++                &[Value::Scalar(0), Value::Scalar(length)],
++                &mut |_: &str, args: &[Value]| {
++                    let [Value::Scalar(event)] = args else {
++                        panic!("event scalar expected");
++                    };
++                    semantic_events.push(*event);
++                    Ok(Value::Scalar(0))
++                },
++            )
++            .unwrap();
++        let want = if length == 8 {
++            expected(&contents, false)
++        } else {
++            SENTINEL
++        };
++        assert_eq!(semantic, SemanticOutcome::Return(Value::Scalar(want)));
++        let mut events = Vec::new();
++        assert_eq!(
++            Interpreter::new(&candidate).run(&[0, length], &mut |_: &str, args: &[u64]| {
++                events.push(args[0]);
++                Ok(0)
++            }),
++            Ok(Outcome::Return(want))
++        );
++        assert_eq!(events, semantic_events);
++    }
++    poison_suffix(&mut source, 7, 8);
++    let mut events = Vec::new();
++    assert!(matches!(
++        Interpreter::new(&source).run_values(
++            &[Value::Scalar(0), Value::Scalar(8)],
++            &mut |_: &str, args: &[Value]| {
++                let [Value::Scalar(event)] = args else {
++                    panic!("event scalar expected");
++                };
++                events.push(*event);
++                Ok(Value::Scalar(0))
++            },
++        ),
++        Err(InterpretError::PoisonObserved(node)) if node == requirement
++    ));
++    assert_eq!(events, [1]);
++}
+--- /dev/null
++++ b/crates/kfrc-son/src/lower_layout/whole_pack/tests/semantic_fixture.rs
+@@ -0,0 +1,390 @@
++//! One owned enum Phi keeps independent byte lanes until its later complete
++//! TransmuteValue licenses whole-word observation.
++use crate::{
++    CallTarget, ComparePredicate, FunctionGraph, GraphLevel, LayoutOptions, LayoutStats, NodeId,
++    Opcode, ValueType, lower_layout_with_options, verify_graph,
++};
++use kfrc_body::{
++    AggregateLayout, EnumLayout, FieldLayout, FunctionAbi, IntegerWidth, Mutability, PassMode,
++    RecordedTypes, SizeAlign, TagEncoding, TyId, TypeOracle, TypeShape,
++};
++
++pub const SENTINEL: u64 = 0xbad0_dead_face_f00d;
++
++#[derive(Clone, Copy)]
++pub struct Options {
++    pub bytes: u64,
++    pub reverse: bool,
++    pub overwrite: bool,
++    pub byte_swap: bool,
++}
++
++pub fn graph(name: &str, options: Options) -> FunctionGraph {
++    let mut types = RecordedTypes::new();
++    let byte = integer(&mut types, 1);
++    let word = integer(&mut types, options.bytes);
++    let address_word = integer(&mut types, 8);
++    let boolean = types.intern(TypeShape::Bool, Some(SizeAlign { size: 1, align: 1 }));
++    let array = types.intern(
++        TypeShape::Array {
++            element: byte,
++            length: options.bytes,
++        },
++        Some(SizeAlign {
++            size: options.bytes,
++            align: 1,
++        }),
++    );
++    let pointer = types.intern(
++        TypeShape::RawPointer {
++            mutability: Mutability::Mut,
++            pointee: array,
++        },
++        Some(SizeAlign { size: 8, align: 8 }),
++    );
++    let result = types.intern(
++        TypeShape::Adt {
++            name: format!("OwnedBytes{}", options.bytes),
++        },
++        Some(SizeAlign {
++            size: options.bytes + 1,
++            align: 1,
++        }),
++    );
++    types.record_aggregate(
++        result,
++        AggregateLayout {
++            fields: vec![],
++            variants: vec![
++                vec![FieldLayout {
++                    ty: array,
++                    offset: 1,
++                }],
++                vec![],
++            ],
++        },
++    );
++    types.record_semantic_enum(result, vec![0, 1]);
++    types.enums.insert(
++        result,
++        EnumLayout {
++            tag: Some(FieldLayout {
++                ty: byte,
++                offset: 0,
++            }),
++            encoding: TagEncoding::Direct {
++                discriminants: vec![0, 1],
++            },
++        },
++    );
++    let mut graph = FunctionGraph::new(
++        name,
++        FunctionAbi {
++            args: vec![PassMode::Direct; 2],
++            ret: PassMode::Direct,
++            c_variadic: false,
++        },
++        types,
++    );
++    graph.level = GraphLevel::Specialized;
++    let start = graph.add_node(
++        Opcode::Start,
++        NodeId::NONE,
++        &[],
++        0,
++        ValueType::Tuple(vec![
++            ValueType::Control,
++            ValueType::Effect,
++            ValueType::Rust(pointer),
++            ValueType::Rust(address_word),
++        ]),
++    );
++    graph.start = start;
++    let mut control = project(&mut graph, start, 0, ValueType::Control);
++    let mut effect = project(&mut graph, start, 1, ValueType::Effect);
++    let source = project(&mut graph, start, 2, ValueType::Rust(pointer));
++    let length = project(&mut graph, start, 3, ValueType::Rust(address_word));
++    probe(&mut graph, &mut control, &mut effect, address_word, 1);
++    let required = graph.add_constant(u128::from(options.bytes), address_word);
++    let condition = graph.add_node(
++        Opcode::Compare,
++        NodeId::NONE,
++        &[length, required],
++        ComparePredicate::UnsignedGreaterEqual as u32,
++        ValueType::Rust(boolean),
++    );
++    let branch = graph.add_node(
++        Opcode::If,
++        control,
++        &[condition],
++        0,
++        ValueType::Tuple(vec![ValueType::Control; 2]),
++    );
++    let yes = project(&mut graph, branch, 0, ValueType::Control);
++    let no = project(&mut graph, branch, 1, ValueType::Control);
++    let before_effect = effect;
++    control = yes;
++    let snapshot = fixed(
++        &mut graph,
++        &mut control,
++        &mut effect,
++        Opcode::LoadValue,
++        &[source],
++        Some(array),
++    )
++    .unwrap();
++    let yes_value = graph.add_node(
++        Opcode::MakeVariant,
++        NodeId::NONE,
++        &[snapshot],
++        0,
++        ValueType::Rust(result),
++    );
++    let no_value = graph.add_node(
++        Opcode::MakeVariant,
++        NodeId::NONE,
++        &[],
++        1,
++        ValueType::Rust(result),
++    );
++    let yes = graph.add_node(Opcode::Jump, control, &[], 0, ValueType::Control);
++    let no = graph.add_node(Opcode::Jump, no, &[], 0, ValueType::Control);
++    let (edges, values, effects) = if options.reverse {
++        ([no, yes], [no_value, yes_value], [before_effect, effect])
++    } else {
++        ([yes, no], [yes_value, no_value], [effect, before_effect])
++    };
++    let region = graph.add_node(Opcode::Region, NodeId::NONE, &edges, 0, ValueType::Control);
++    effect = graph.add_node(
++        Opcode::Phi,
++        NodeId::NONE,
++        &[region, effects[0], effects[1]],
++        0,
++        ValueType::Effect,
++    );
++    let joined = graph.add_node(
++        Opcode::Phi,
++        NodeId::NONE,
++        &[region, values[0], values[1]],
++        0,
++        ValueType::Rust(result),
++    );
++    graph.variant_switches.push(vec![0]);
++    let switch = graph.add_node(
++        Opcode::VariantSwitch,
++        region,
++        &[joined],
++        0,
++        ValueType::Tuple(vec![ValueType::Control; 2]),
++    );
++    let yes = project(&mut graph, switch, 0, ValueType::Control);
++    let no = project(&mut graph, switch, 1, ValueType::Control);
++    let joined_effect = effect;
++    control = yes;
++    let witness = graph.add_node(
++        Opcode::VariantWitness,
++        yes,
++        &[joined, yes],
++        0,
++        ValueType::Witness,
++    );
++    let field_index = graph.intern_variant_field(0, 0);
++    let payload = graph.add_node(
++        Opcode::VariantField,
++        NodeId::NONE,
++        &[joined, witness],
++        field_index,
++        ValueType::Rust(array),
++    );
++    if options.overwrite {
++        // This write is after the enum Phi and its original snapshot read. It
++        // must not move before the new wide read, or be observed by its value.
++        let byte_pointer = graph.oracle.intern(
++            TypeShape::RawPointer {
++                mutability: Mutability::Mut,
++                pointee: byte,
++            },
++            Some(SizeAlign { size: 8, align: 8 }),
++        );
++        let first = graph.add_node(
++            Opcode::PointerCast,
++            NodeId::NONE,
++            &[source],
++            0,
++            ValueType::Rust(byte_pointer),
++        );
++        let zero = graph.add_constant(0, byte);
++        fixed(
++            &mut graph,
++            &mut control,
++            &mut effect,
++            Opcode::StoreValue,
++            &[first, zero],
++            None,
++        );
++    }
++    let packed = fixed(
++        &mut graph,
++        &mut control,
++        &mut effect,
++        Opcode::TransmuteValue,
++        &[payload],
++        Some(word),
++    )
++    .unwrap();
++    let packed = if options.byte_swap {
++        graph.add_node(
++            Opcode::ByteSwap,
++            NodeId::NONE,
++            &[packed],
++            0,
++            ValueType::Rust(word),
++        )
++    } else {
++        packed
++    };
++    let returned = graph.add_node(
++        Opcode::IntCast,
++        NodeId::NONE,
++        &[packed],
++        0,
++        ValueType::Rust(address_word),
++    );
++    probe(&mut graph, &mut control, &mut effect, address_word, 2);
++    graph.add_node(
++        Opcode::Return,
++        control,
++        &[effect, returned],
++        0,
++        ValueType::Control,
++    );
++    control = no;
++    effect = joined_effect;
++    probe(&mut graph, &mut control, &mut effect, address_word, 2);
++    let sentinel = graph.add_constant(u128::from(SENTINEL), address_word);
++    graph.add_node(
++        Opcode::Return,
++        control,
++        &[effect, sentinel],
++        0,
++        ValueType::Control,
++    );
++    verify_graph(&mut graph).unwrap();
++    graph
++}
++
++pub fn lower(source: &FunctionGraph, budget: u64) -> (FunctionGraph, LayoutStats) {
++    let mut graph = source.clone();
++    let stats = lower_layout_with_options(
++        &mut graph,
++        LayoutOptions {
++            max_unrolled_memory_bytes: budget,
++        },
++    )
++    .unwrap();
++    verify_graph(&mut graph).unwrap();
++    (graph, stats)
++}
++
++pub fn expected(bytes: &[u8], swap: bool) -> u64 {
++    if swap {
++        bytes
++            .iter()
++            .fold(0, |value, &byte| (value << 8) | u64::from(byte))
++    } else {
++        bytes.iter().enumerate().fold(0, |value, (offset, &byte)| {
++            value | (u64::from(byte) << (offset * 8))
++        })
++    }
++}
++
++pub fn load_sizes(graph: &FunctionGraph) -> Vec<u64> {
++    graph
++        .ids()
++        .filter_map(|node| {
++            if graph.op(node) != Opcode::Load {
++                return None;
++            }
++            let ValueType::Tuple(outputs) = graph.value_type(node) else {
++                return None;
++            };
++            let ValueType::Rust(ty) = outputs[2] else {
++                return None;
++            };
++            Some(graph.oracle.size_align(ty).unwrap().size)
++        })
++        .collect()
++}
++
++fn integer(types: &mut RecordedTypes, bytes: u64) -> TyId {
++    let width = match bytes {
++        1 => IntegerWidth::W8,
++        2 => IntegerWidth::W16,
++        4 => IntegerWidth::W32,
++        8 => IntegerWidth::W64,
++        _ => unreachable!(),
++    };
++    types.intern(
++        TypeShape::Int {
++            width,
++            signed: false,
++        },
++        Some(SizeAlign {
++            size: bytes,
++            align: bytes,
++        }),
++    )
++}
++
++fn project(graph: &mut FunctionGraph, source: NodeId, slot: u32, ty: ValueType) -> NodeId {
++    graph.add_node(Opcode::Projection, NodeId::NONE, &[source], slot, ty)
++}
++
++fn fixed(
++    graph: &mut FunctionGraph,
++    control: &mut NodeId,
++    effect: &mut NodeId,
++    op: Opcode,
++    operands: &[NodeId],
++    result: Option<TyId>,
++) -> Option<NodeId> {
++    let mut inputs = vec![*effect];
++    inputs.extend_from_slice(operands);
++    let mut outputs = vec![ValueType::Control, ValueType::Effect];
++    outputs.extend(result.map(ValueType::Rust));
++    let fixed = graph.add_node(op, *control, &inputs, 0, ValueType::Tuple(outputs));
++    *control = project(graph, fixed, 0, ValueType::Control);
++    *effect = project(graph, fixed, 1, ValueType::Effect);
++    result.map(|ty| project(graph, fixed, 2, ValueType::Rust(ty)))
++}
++
++fn probe(
++    graph: &mut FunctionGraph,
++    control: &mut NodeId,
++    effect: &mut NodeId,
++    word: TyId,
++    event: u128,
++) {
++    let callee = graph.add_callee(CallTarget {
++        symbol: "whole_pack_probe".into(),
++        abi: FunctionAbi {
++            args: vec![PassMode::Direct],
++            ret: PassMode::Direct,
++            c_variadic: false,
++        },
++    });
++    let event = graph.add_constant(event, word);
++    let call = graph.add_node(
++        Opcode::Call,
++        *control,
++        &[*effect, event],
++        callee,
++        ValueType::Tuple(vec![
++            ValueType::Control,
++            ValueType::Effect,
++            ValueType::Rust(word),
++        ]),
++    );
++    *control = project(graph, call, 0, ValueType::Control);
++    *effect = project(graph, call, 1, ValueType::Effect);
++}
+--- /dev/null
++++ b/crates/kfrc-son/src/lower_layout/whole_pack/tests/transmute_bridge.rs
+@@ -0,0 +1,181 @@
++use super::*;
++use crate::CallTarget;
++use kfrc_body::{FunctionAbi, PassMode, ScalarValidRange, ScalarValidity};
++
++fn source(f: &mut Fixture) -> Value {
++    let array = f.graph.oracle.intern(
++        TypeShape::Array {
++            element: f.byte,
++            length: f.bytes as u64,
++        },
++        Some(SizeAlign {
++            size: f.bytes as u64,
++            align: 1,
++        }),
++    );
++    Value {
++        ty: array,
++        parts: Parts::Fields(
++            f.phis
++                .iter()
++                .map(|&node| Value {
++                    ty: f.byte,
++                    parts: Parts::Scalar(node),
++                })
++                .collect(),
++        ),
++    }
++}
++
++#[test]
++fn narrow_bridge_checks_the_entire_representation_before_mutating() {
++    for case in 0..11 {
++        let mut f = Fixture::new(8, 1, false, None, 0);
++        let mut value = source(&mut f);
++        match case {
++            0 => {
++                value.parts = Parts::OwnedStorage(f.base);
++            }
++            1 => {
++                value.parts = Parts::Repeat {
++                    element: Box::new(Value {
++                        ty: f.byte,
++                        parts: Parts::Scalar(f.phis[0]),
++                    }),
++                    count: 8,
++                    overrides: BTreeMap::new(),
++                };
++            }
++            2 | 3 | 4 => {
++                let Parts::Fields(fields) = &mut value.parts else {
++                    unreachable!();
++                };
++                match case {
++                    2 => fields[7].parts = Parts::Omitted,
++                    3 => fields[7].ty = f.word,
++                    4 => {
++                        fields.pop();
++                    }
++                    _ => unreachable!(),
++                }
++            }
++            5 => f.graph.oracle.record_scalar_validity(
++                f.word,
++                ScalarValidity::Scalar(ScalarValidRange::new(64, 1, u128::from(u64::MAX)).unwrap()),
++            ),
++            6 => f.graph.oracle.record_scalar_validity(
++                f.byte,
++                ScalarValidity::Scalar(ScalarValidRange::new(8, 1, 255).unwrap()),
++            ),
++            7 => {
++                f.graph.oracle.unions.insert(value.ty);
++            }
++            8 => f.graph.oracle.record_vector(
++                value.ty,
++                kfrc_body::VectorLayout {
++                    element: f.byte,
++                    lanes: 8,
++                },
++            ),
++            9 => {
++                value.ty = f.graph.oracle.intern(
++                    TypeShape::Array {
++                        element: f.byte,
++                        length: 7,
++                    },
++                    Some(SizeAlign { size: 8, align: 1 }),
++                );
++            }
++            10 => {
++                let signed = f.graph.oracle.intern(
++                    TypeShape::Int {
++                        width: IntegerWidth::W8,
++                        signed: true,
++                    },
++                    Some(SizeAlign { size: 1, align: 1 }),
++                );
++                value.ty = f.graph.oracle.intern(
++                    TypeShape::Array {
++                        element: signed,
++                        length: 8,
++                    },
++                    Some(SizeAlign { size: 8, align: 1 }),
++                );
++            }
++            _ => unreachable!(),
++        }
++        let before = f.graph.dump();
++        let len = f.graph.len();
++        assert!(transmute::pack(&mut f.graph, &value, f.word, 128).is_none());
++        assert_eq!(f.graph.dump(), before, "case {case}");
++        assert_eq!(f.graph.len(), len, "case {case}");
++    }
++}
++
++#[test]
++fn bridge_keeps_partial_byte_observers_and_their_independent_poison() {
++    for bytes in [2, 4, 8] {
++        for missing in 0..bytes {
++            let mut f = Fixture::new(bytes, 2, false, Some(missing), 1);
++            let value = source(&mut f);
++            let packed = transmute::pack(&mut f.graph, &value, f.word, 128).unwrap();
++            let Parts::Scalar(packed) = packed.parts else {
++                unreachable!();
++            };
++            f.graph.replace(f.pack, packed);
++            // A fixed observer of a different byte keeps it independently
++            // available even when the whole pack contains a poison byte.
++            let index = (missing + 1) % bytes;
++            let observed = f.phis[index];
++            let observed = f.graph.add_node(
++                Opcode::IntCast,
++                NodeId::NONE,
++                &[observed],
++                0,
++                ValueType::Rust(f.word),
++            );
++            let callee = f.graph.add_callee(CallTarget {
++                symbol: "observe_byte".into(),
++                abi: FunctionAbi {
++                    args: vec![PassMode::Direct],
++                    ret: PassMode::Direct,
++                    c_variadic: false,
++                },
++            });
++            let call = f.graph.add_node(
++                Opcode::Call,
++                f.graph.control(f.ret),
++                &[f.graph.input(f.ret, 0), observed],
++                callee,
++                ValueType::Tuple(vec![
++                    ValueType::Control,
++                    ValueType::Effect,
++                    ValueType::Rust(f.word),
++                ]),
++            );
++            let control = fixture::project(&mut f.graph, call, 0, ValueType::Control);
++            let effect = fixture::project(&mut f.graph, call, 1, ValueType::Effect);
++            f.graph.set_control(f.ret, control);
++            f.graph.set_input(f.ret, 0, effect);
++            f.graph.compact();
++            verify_graph(&mut f.graph).unwrap();
++            let before = f.graph.clone();
++            assert_eq!(run(&mut f.graph, 128), Stats::default());
++            verify_graph(&mut f.graph).unwrap();
++            let execute = |graph: &FunctionGraph| {
++                let mut events = Vec::new();
++                let result = Interpreter::new(graph).run(&[1], &mut |name: &str, args: &[u64]| {
++                    assert_eq!(name, "observe_byte");
++                    events.push(args[0]);
++                    Ok(0)
++                });
++                assert!(matches!(result, Err(InterpretError::PoisonObserved(_))));
++                events
++            };
++            let expected = (f.expected() >> (index * 8)) & 0xff;
++            assert_eq!(execute(&before), [expected]);
++            assert_eq!(execute(&f.graph), [expected]);
++            same_execution(&before, &f.graph, false);
++        }
++    }
++}
+--- /dev/null
++++ b/crates/kfrc-son/src/lower_layout/whole_pack/tests.rs
+@@ -0,0 +1,188 @@
++use super::*;
++use crate::{InterpretError, Interpreter, Outcome, verify_graph};
++
++mod fixture;
++mod flow;
++mod rejections;
++mod semantic;
++mod transmute_bridge;
++
++use fixture::Fixture;
++
++fn evaluate(graph: &FunctionGraph, active: bool) -> Result<Outcome, InterpretError> {
++    Interpreter::new(graph).run(&[u64::from(active)], &mut |name: &str, _: &[u64]| {
++        Err(InterpretError::UnknownCallee(name.into()))
++    })
++}
++
++fn same_execution(before: &FunctionGraph, after: &FunctionGraph, active: bool) {
++    match (evaluate(before, active), evaluate(after, active)) {
++        (Err(InterpretError::PoisonObserved(_)), Err(InterpretError::PoisonObserved(_))) => {}
++        (expected, actual) => assert_eq!(expected, actual),
++    }
++}
++
++#[test]
++fn complete_words_keep_little_endian_bits_in_both_phi_orders_and_or_trees() {
++    for bytes in [2, 4, 8] {
++        for slot in [1, 2] {
++            for balanced in [false, true] {
++                let mut f = Fixture::new(bytes, slot, balanced, None, 1);
++                verify_graph(&mut f.graph).unwrap();
++                let before = f.graph.clone();
++                let stats = run(&mut f.graph, 128);
++                assert_eq!(stats.groups, 1, "{}", before.dump());
++                assert_eq!(stats.byte_loads_removed, bytes - 1);
++                assert_eq!(stats.payload_phis_removed, bytes - 1);
++                verify_graph(&mut f.graph).unwrap();
++                assert_eq!(
++                    f.graph
++                        .ids()
++                        .filter(|&n| f.graph.op(n) == Opcode::Load)
++                        .count(),
++                    1
++                );
++                assert_eq!(
++                    f.graph
++                        .ids()
++                        .filter(|&n| f.graph.op(n) == Opcode::Phi
++                            && f.graph.rust_type(n) == Some(f.byte))
++                        .count(),
++                    0
++                );
++                assert_eq!(evaluate(&f.graph, true), Ok(Outcome::Return(f.expected())));
++                assert_eq!(
++                    evaluate(&f.graph, false),
++                    Ok(Outcome::Return(fixture::SENTINEL))
++                );
++                same_execution(&before, &f.graph, true);
++                same_execution(&before, &f.graph, false);
++            }
++        }
++    }
++}
++
++#[test]
++fn each_missing_byte_keeps_whole_word_poison_and_inactive_guard() {
++    for bytes in [2, 4, 8] {
++        for missing in 0..bytes {
++            let mut f = Fixture::new(bytes, 2, true, Some(missing), 3);
++            verify_graph(&mut f.graph).unwrap();
++            let before = f.graph.clone();
++            assert_eq!(run(&mut f.graph, 128).groups, 1);
++            verify_graph(&mut f.graph).unwrap();
++            assert!(matches!(
++                evaluate(&f.graph, true),
++                Err(InterpretError::PoisonObserved(_))
++            ));
++            assert_eq!(
++                evaluate(&f.graph, false),
++                Ok(Outcome::Return(fixture::SENTINEL))
++            );
++            same_execution(&before, &f.graph, true);
++            same_execution(&before, &f.graph, false);
++        }
++    }
++}
++
++#[test]
++fn poisoned_inactive_pointer_is_never_read() {
++    let mut f = Fixture::new(8, 1, false, None, 0);
++    let pointer = f.graph.rust_type(f.base).unwrap();
++    let invalid = f.graph.add_node(
++        Opcode::Undefined,
++        NodeId::NONE,
++        &[],
++        0,
++        ValueType::Rust(pointer),
++    );
++    for &address in &f.addresses {
++        f.graph.set_input(address, 0, invalid);
++    }
++    verify_graph(&mut f.graph).unwrap();
++    let before = f.graph.clone();
++    assert_eq!(run(&mut f.graph, 128).groups, 1);
++    verify_graph(&mut f.graph).unwrap();
++    assert_eq!(
++        evaluate(&f.graph, false),
++        Ok(Outcome::Return(fixture::SENTINEL))
++    );
++    same_execution(&before, &f.graph, false);
++    same_execution(&before, &f.graph, true);
++}
++
++#[test]
++fn snapshot_stays_before_source_overwrite_after_the_join() {
++    for slot in [1, 2] {
++        let mut f = Fixture::new(8, slot, true, None, 1);
++        f.overwrite_after_join();
++        verify_graph(&mut f.graph).unwrap();
++        let before = f.graph.clone();
++        assert_eq!(run(&mut f.graph, 128).groups, 1);
++        verify_graph(&mut f.graph).unwrap();
++        assert_eq!(evaluate(&f.graph, true), Ok(Outcome::Return(f.expected())));
++        same_execution(&before, &f.graph, true);
++        same_execution(&before, &f.graph, false);
++    }
++}
++
++#[test]
++fn erased_zero_offset_and_word_observers_keep_the_same_result() {
++    let mut f = Fixture::new(4, 1, false, None, 0);
++    f.graph.set_input(f.loads[0], 1, f.base);
++    // A second full-value consumer is legal; all byte observations still pass
++    // through exactly the same poison-propagating complete pack.
++    let zero = f.graph.add_constant(0, f.word);
++    f.graph.add_node(
++        Opcode::BitXor,
++        NodeId::NONE,
++        &[f.pack, zero],
++        0,
++        ValueType::Rust(f.word),
++    );
++    verify_graph(&mut f.graph).unwrap();
++    let before = f.graph.clone();
++    assert_eq!(run(&mut f.graph, 128).groups, 1);
++    verify_graph(&mut f.graph).unwrap();
++    same_execution(&before, &f.graph, true);
++}
++
++#[test]
++fn fuel_exhaustion_discards_every_tentative_plan() {
++    let f = Fixture::new(8, 2, true, None, 1);
++    let mut generous = f.graph.clone();
++    assert_eq!(run_with_fuel(&mut generous, 128, FUEL).groups, 1);
++    let mut first_success = None;
++    for budget in 0..FUEL {
++        let mut graph = f.graph.clone();
++        let before = graph.dump();
++        let stats = run_with_fuel(&mut graph, 128, budget);
++        if stats.groups == 1 {
++            first_success = Some(budget);
++            verify_graph(&mut graph).unwrap();
++            break;
++        }
++        assert!(stats.budget_exhausted);
++        assert_eq!(stats.byte_loads_removed, 0);
++        assert_eq!(graph.dump(), before, "budget {budget}");
++        assert_eq!(graph.len(), f.graph.len());
++    }
++    assert!(first_success.is_some_and(|budget| budget < 10_000));
++}
++
++#[test]
++fn code_size_budget_and_wrong_graph_level_leave_storage_untouched() {
++    for bytes in [2, 4, 8] {
++        for budget in 0..bytes as u64 {
++            let mut f = Fixture::new(bytes, 1, false, None, 0);
++            let before = f.graph.dump();
++            assert_eq!(run(&mut f.graph, budget), Stats::default());
++            assert_eq!(f.graph.dump(), before);
++        }
++        let mut f = Fixture::new(bytes, 1, false, None, 0);
++        f.graph.level = GraphLevel::Specialized;
++        let before = f.graph.dump();
++        assert_eq!(run(&mut f.graph, 128), Stats::default());
++        assert_eq!(f.graph.dump(), before);
++    }
++}
+--- /dev/null
++++ b/crates/kfrc-son/src/lower_layout/whole_pack/transmute.rs
+@@ -0,0 +1,78 @@
++//! A narrow bridge from scalarized S arrays to the complete L pack certificate.
++use super::*;
++
++pub(super) fn pack(
++    graph: &mut FunctionGraph,
++    source: &Value,
++    target: TyId,
++    max_bytes: u64,
++) -> Option<Value> {
++    let bytes = u64::from(pack::unsigned(graph, target)? / 8);
++    let TypeShape::Array { element, length } = *graph.oracle.shape(source.ty) else {
++        return None;
++    };
++    if !matches!(bytes, 2 | 4 | 8)
++        || bytes > max_bytes
++        || length != bytes
++        || pack::unsigned(graph, element)? != 8
++        || graph.oracle.size_align(source.ty)?.size != bytes
++        || graph.oracle.scalar_validity(source.ty).is_some()
++        || graph.oracle.semantic().is_union(source.ty)
++        || graph.oracle.semantic().is_vector(source.ty)
++    {
++        return None;
++    }
++    let Parts::Fields(fields) = &source.parts else {
++        return None;
++    };
++    if fields.len() != bytes as usize {
++        return None;
++    }
++    // Validate the entire bounded representation before creating any nodes.
++    // Storage, repeats, omitted leaves and partially available trees fall back.
++    let scalars: Vec<_> = fields
++        .iter()
++        .map(|field| {
++            let Parts::Scalar(node) = &field.parts else {
++                return None;
++            };
++            let node = graph.resolve(*node);
++            (field.ty == element && graph.value_type(node) == &ValueType::Rust(element))
++                .then_some(node)
++        })
++        .collect::<Option<_>>()?;
++    let mut packed = None;
++    for (offset, byte) in scalars.into_iter().enumerate() {
++        let mut bits = graph.add_node(
++            Opcode::IntCast,
++            NodeId::NONE,
++            &[byte],
++            0,
++            ValueType::Rust(target),
++        );
++        if offset != 0 {
++            let shift = graph.add_constant((offset * 8) as u128, target);
++            bits = graph.add_node(
++                Opcode::ShiftLeft,
++                NodeId::NONE,
++                &[bits, shift],
++                0,
++                ValueType::Rust(target),
++            );
++        }
++        packed = Some(match packed {
++            None => bits,
++            Some(previous) => graph.add_node(
++                Opcode::BitOr,
++                NodeId::NONE,
++                &[previous, bits],
++                0,
++                ValueType::Rust(target),
++            ),
++        });
++    }
++    Some(Value {
++        ty: target,
++        parts: Parts::Scalar(packed?),
++    })
++}
+--- /dev/null
++++ b/crates/kfrc-son/src/lower_layout/whole_pack.rs
+@@ -0,0 +1,127 @@
++//! Recover one whole integer from synchronized byte Phis. Only a complete pack
++//! can collapse independently undefined bytes to one scalar poison bit. Reads
++//! stay on their original guarded fixed edge, before any subsequent effect.
++use super::*;
++use crate::analysis::uses::{UseKind, Uses};
++
++mod index;
++mod loads;
++mod pack;
++mod transmute;
++
++#[cfg(test)]
++mod tests;
++
++const FUEL: usize = 262_144;
++
++impl LayoutLowering<'_> {
++    pub(super) fn pack_array_transmute(&mut self, source: &Value, target: TyId) -> Option<Value> {
++        let packed = transmute::pack(
++            self.graph,
++            source,
++            target,
++            self.options.max_unrolled_memory_bytes,
++        )?;
++        self.stats.whole_array_transmutes += 1;
++        Some(packed)
++    }
++}
++
++#[derive(Debug, Default, PartialEq, Eq)]
++pub(super) struct Stats {
++    pub groups: usize,
++    /// Net reduction after replacing N byte loads with one word load.
++    pub byte_loads_removed: usize,
++    /// Net reduction after replacing N byte Phis with one word Phi.
++    pub payload_phis_removed: usize,
++    pub budget_exhausted: bool,
++}
++
++struct Fuel {
++    left: usize,
++    exhausted: bool,
++}
++
++impl Fuel {
++    fn take(&mut self, count: usize) -> Option<()> {
++        self.left = self.left.checked_sub(count).or_else(|| {
++            self.exhausted = true;
++            None
++        })?;
++        Some(())
++    }
++}
++
++pub(super) fn run(graph: &mut FunctionGraph, max_bytes: u64) -> Stats {
++    run_with_fuel(graph, max_bytes, FUEL)
++}
++
++fn run_with_fuel(graph: &mut FunctionGraph, max_bytes: u64, limit: usize) -> Stats {
++    if graph.level != GraphLevel::Layout || max_bytes < 2 {
++        return Stats::default();
++    }
++    let mut fuel = Fuel {
++        left: limit,
++        exhausted: false,
++    };
++    // Most functions have no pack at all. Avoid allocating a dense use index
++    // there, while charging the scan to the same all-or-nothing budget.
++    let mut roots = Vec::new();
++    for node in graph.ids() {
++        if fuel.take(1).is_none() {
++            return Stats {
++                budget_exhausted: true,
++                ..Stats::default()
++            };
++        }
++        if graph.op(node) == Opcode::BitOr {
++            roots.push(node);
++        }
++    }
++    if roots.is_empty() {
++        return Stats::default();
++    }
++    let Some(uses) = index::uses(graph, &mut fuel) else {
++        return Stats {
++            budget_exhausted: fuel.exhausted,
++            ..Stats::default()
++        };
++    };
++    // All analysis precedes mutation. Plans own disjoint byte/pack cones;
++    // shared pointer roots, effects outside a cone and scalar consumers survive.
++    let mut plans = Vec::new();
++    let mut claimed = HashSet::default();
++    for root in roots {
++        if fuel.take(1).is_none() {
++            break;
++        }
++        let Some(pack) = pack::plan(graph, &uses, root, max_bytes, &mut fuel) else {
++            continue;
++        };
++        let Some(plan) = loads::plan(graph, &uses, pack, &mut fuel) else {
++            continue;
++        };
++        if plan.owned.iter().any(|node| claimed.contains(node)) {
++            continue;
++        }
++        claimed.extend(plan.owned.iter().copied());
++        plans.push(plan);
++    }
++    if fuel.exhausted {
++        return Stats {
++            budget_exhausted: true,
++            ..Stats::default()
++        };
++    }
++    let mut stats = Stats::default();
++    for plan in plans {
++        stats.groups += 1;
++        stats.byte_loads_removed += plan.loads.len() - 1;
++        stats.payload_phis_removed += plan.loads.len() - 1;
++        plan.apply(graph);
++    }
++    if stats.groups != 0 {
++        graph.compact();
++    }
++    stats
++}
+--- a/crates/kfrc-son/src/lower_layout.rs
++++ b/crates/kfrc-son/src/lower_layout.rs
+@@ -28,6 +28,7 @@
+ mod variant_scalar;
+ mod variant_switch;
+ mod variants;
++mod whole_pack;
+ 
+ use demand::{Demand, Key as DemandKey};
+ use kfrc_body::fx_hash::{HashMap, HashSet};
+@@ -81,6 +82,14 @@
+     pub niche_tag_conditions: usize,
+     /// Last cases of exhaustive VariantSwitches selected without a compare.
+     pub exhaustive_switch_compares_removed: usize,
++    /// Dense byte-array transmutes emitted as complete pure integer packs.
++    pub whole_array_transmutes: usize,
++    /// Complete packs recovered from synchronized byte Phi/load groups.
++    pub whole_packs_combined: usize,
++    pub whole_pack_byte_loads_removed: usize,
++    pub whole_pack_payload_phis_removed: usize,
++    /// The bounded whole-pack analysis abandoned all tentative plans.
++    pub whole_pack_budget_exhausted: bool,
+ }
+ 
+ /// Target-dependent code size policy; this does not change Rust value semantics.
+@@ -148,9 +157,14 @@
+     };
+     lowering.run()?;
+     lowering.projections.write_stats(&mut lowering.stats);
+-    let stats = lowering.stats;
++    let mut stats = lowering.stats;
+     candidate.level = GraphLevel::Layout;
+     cleanup::run(&mut candidate)?;
++    let packs = whole_pack::run(&mut candidate, options.max_unrolled_memory_bytes);
++    stats.whole_packs_combined = packs.groups;
++    stats.whole_pack_byte_loads_removed = packs.byte_loads_removed;
++    stats.whole_pack_payload_phis_removed = packs.payload_phis_removed;
++    stats.whole_pack_budget_exhausted = packs.budget_exhausted;
+     // Permissions belong to S parameters and source calls (RS5.1 erasure
+     // point). L parameters follow physical passing modes instead.
+     candidate.arg_permissions.clear();

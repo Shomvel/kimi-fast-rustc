@@ -1,0 +1,264 @@
+{
+  "status": "passed_local_semantic_and_archive_verification",
+  "source_manifest_sha256": "2647a5018e70021128ad0c646f936cdd48613d66a61fb307c10da03eb72b917a",
+  "source_tree_sha256": "9235520b2dd380f635c5c51d76baa2c890b9c84b61d2de9f10841dafeef495a3",
+  "source_files": 1846,
+  "backend_sha256": "6c25173e5b00a7056f891748beaf80294fba00e71fd3a4de15e9d81a0616521c",
+  "targeted_test_totals": {
+    "passed": 43,
+    "failed": 0,
+    "ignored": 0
+  },
+  "fresh_privatecopy_libtest_binding": {
+    "package_id": "path+file:///workspace/callsite/generic-parity-20261110/decode-private-copy-v1-source/crates/kfrc-son#0.1.0",
+    "manifest_path": "/workspace/callsite/generic-parity-20261110/decode-private-copy-v1-source/crates/kfrc-son/Cargo.toml",
+    "target": "kfrc_son",
+    "test": true,
+    "fresh": false,
+    "executable": "/workspace/callsite/generic-parity-20261110/targets/decode-private-copy-v1-r1-workspace/debug/deps/kfrc_son-379662cf6e80a355",
+    "files": {
+      "/workspace/callsite/generic-parity-20261110/targets/decode-private-copy-v1-r1-workspace/debug/deps/kfrc_son-379662cf6e80a355": {
+        "sha256": "7606484767cc73100bd573a0cce8f921b23a5592934114a239b47b66f48fb98e",
+        "bytes": 24730120,
+        "mtime_ns": 1794389205118571939
+      }
+    }
+  },
+  "release_backend_fresh_false": true,
+  "normal_original_base64_checker_enabled": true,
+  "observe_original_base64_checker_enabled": true,
+  "normal_observe_complete_objects_byte_identical": 14,
+  "normal_chunk8_calls": 0,
+  "normal_tail_copy_calls": 1,
+  "final_layout_8byte_slots": 0,
+  "final_layout_memcpy_calls": 0,
+  "chunk8_inlined": 4,
+  "buffer_cases": 7202,
+  "buffer_arms": [
+    "llvm",
+    "accepted18r2",
+    "candidate"
+  ],
+  "buffer_observations_complete_bytes_identical": true,
+  "buffer_output_sha256": "bf543eed189b5b353d05aecefdb9f07f1983061d5b6db7f6546fa0ed20d08a11",
+  "decode_screen_samples_total": 30,
+  "decode_screen_measured_samples": 27,
+  "decode_screen_warmup_triads": 1,
+  "decode_screen_measured_triads": 9,
+  "decode_screen_candidate_accepted_median": 0.36917476814318495,
+  "decode_screen_candidate_closure_median": 0.7270486578256682,
+  "full_workspace": {
+    "status": "passed_workspace_with_one_known_timing_ignore",
+    "raw_wrapper_status": "failed",
+    "raw_wrapper_failure": "RuntimeError('empty/failed/ignored tests: full-workspace')",
+    "raw_summary_sha256": "7e61a2b4dcd43e4eae6d808708fd89ba7f21a04867c73520105959ea54be6e5c",
+    "raw_cargo_exit_code": 0,
+    "test_totals": {
+      "passed": 1137,
+      "failed": 0,
+      "ignored": 1
+    },
+    "ignored_test_ids": [
+      "large_live_spill_set_allocation_time"
+    ],
+    "source_contract": "/workspace/callsite/generic-parity-20261110/decode-private-copy-v1-source/crates/kfrc-x86/tests/regalloc_preference.rs",
+    "source_contract_sha256": "09215fd41d3fc80b974d2bdd208e29e6cdfadb5f60e0b918644cac3472c25cd8",
+    "reason": "The narrow unit-test runner guard incorrectly rejected the accepted workspace timing ignore. Native workspace contract requires passing minimum and zero failed; no timing test was run. Raw runner and logs are preserved.",
+    "repeated_cargo_commands": 0,
+    "verified_at_utc": "2026-11-11T09:49:09.485862+00:00"
+  },
+  "native_differential_fixtures": {
+    "private-integer-lanes": {
+      "exit_code": 0,
+      "output_sha256": "c5a2c303e0300eb5cd899f0edcd67739712cd81d6f4fd77e3013f28532e5716f",
+      "output_bytes": 69,
+      "register_allocation_checker_enabled": true,
+      "complete_output_byte_identical": true
+    },
+    "enum-boundary-snapshot": {
+      "exit_code": 0,
+      "output_sha256": "199f7d04e601126bf16881c1e91d27a05d1558907c11b2a0071cc7bd377a4302",
+      "output_bytes": 41,
+      "register_allocation_checker_enabled": true,
+      "complete_output_byte_identical": true
+    },
+    "integer-intrinsics": {
+      "exit_code": 0,
+      "output_sha256": "d381cad4f7e3c709fc45edc393748cb519cbcffbdd45c6a2d083c756e1d79b03",
+      "output_bytes": 19021,
+      "register_allocation_checker_enabled": true,
+      "complete_output_byte_identical": true
+    },
+    "generic-memory": {
+      "exit_code": 0,
+      "output_sha256": "7213edbc2b41bb2bb06640eefbe455d77eef2be9ccaa600e1a4963ce78ef785c",
+      "output_bytes": 62,
+      "register_allocation_checker_enabled": true,
+      "complete_output_byte_identical": true
+    },
+    "generic-scalar": {
+      "exit_code": 0,
+      "output_sha256": "3db132a19f9d7c157bf209edad6476b6a96ed2259fbb6bfa5565bf683689a27d",
+      "output_bytes": 62,
+      "register_allocation_checker_enabled": true,
+      "complete_output_byte_identical": true
+    },
+    "byte-dse": {
+      "exit_code": 0,
+      "output_sha256": "1dff6a3dd98fb50f3a8d52623cb42803a029ca8eb2a1bc7393715809be8d5611",
+      "output_bytes": 56,
+      "register_allocation_checker_enabled": true,
+      "complete_output_byte_identical": true
+    },
+    "induction": {
+      "exit_code": 0,
+      "output_sha256": "e61dbda605972f9aaaec3b47dbb2e0ecb8309a99fd458540c4d59a6f40ea21ea",
+      "output_bytes": 57,
+      "register_allocation_checker_enabled": true,
+      "complete_output_byte_identical": true
+    }
+  },
+  "four_library_checker_enabled": true,
+  "four_library_corpus_and_checksums": {
+    "semver": {
+      "corpus": {
+        "exit_code": 0,
+        "sha256": "96c9f6c125b42251fee60f392b8ecfbdbae5691d6651db27947d32f3b5e4d56a",
+        "lines": 87
+      },
+      "workload_check": {
+        "parse": {
+          "exit_code": 0,
+          "checksum": 9666685
+        },
+        "req": {
+          "exit_code": 0,
+          "checksum": 400000
+        },
+        "identifier": {
+          "exit_code": 0,
+          "checksum": 30750000
+        }
+      },
+      "corpus_complete_bytes_identical_to_llvm": true
+    },
+    "base64": {
+      "corpus": {
+        "exit_code": 0,
+        "sha256": "6b6bc7c96dea2202adfbf8faebfef7f2b583b409619cb0a019c695e4802ff24a",
+        "lines": 491
+      },
+      "workload_check": {
+        "encode": {
+          "exit_code": 0,
+          "checksum": 55493921
+        },
+        "decode": {
+          "exit_code": 0,
+          "checksum": 42229339
+        },
+        "short": {
+          "exit_code": 0,
+          "checksum": 55990625
+        }
+      },
+      "corpus_complete_bytes_identical_to_llvm": true
+    },
+    "unicode-segmentation": {
+      "corpus": {
+        "exit_code": 0,
+        "sha256": "7a39af42d1e29be38305ff8b3144ca098bc99f35daa9339818d47301394640dd",
+        "lines": 153
+      },
+      "workload_check": {
+        "graphemes-mixed": {
+          "exit_code": 0,
+          "checksum": 4502913975839704316
+        },
+        "graphemes-ascii": {
+          "exit_code": 0,
+          "checksum": 18227791836399012924
+        },
+        "graphemes-rev": {
+          "exit_code": 0,
+          "checksum": 12754887892209847992
+        }
+      },
+      "corpus_complete_bytes_identical_to_llvm": true
+    },
+    "humantime": {
+      "corpus": {
+        "exit_code": 0,
+        "sha256": "a9425cd88ba9a9d39fae77ce8c1399af21168d6e2938ad1377b560e49a029b1d",
+        "lines": 553
+      },
+      "workload_check": {
+        "dur-parse": {
+          "exit_code": 0,
+          "checksum": 9931678550000
+        },
+        "dur-format": {
+          "exit_code": 0,
+          "checksum": 9619162
+        },
+        "ts-parse": {
+          "exit_code": 0,
+          "checksum": 10339638455182523344
+        },
+        "ts-format": {
+          "exit_code": 0,
+          "checksum": 32966122
+        }
+      },
+      "corpus_complete_bytes_identical_to_llvm": true
+    }
+  },
+  "four_library_workload_checksums": 13,
+  "global_screen": {
+    "status": "passed",
+    "archive_sha256": "4c30df7968c16e3e4aeff1c444800b32422e845fae978a92a4fd9dcf0e7aa1fa",
+    "archive_bytes": 8688083,
+    "members_verified": 2989,
+    "selection_sha256": "47b8b2b3412040fbb114d6932ccb2b211e8b334028df8ee4d569da7a0f01cd4d",
+    "arms": [
+      "generic-v18r2",
+      "decode-private-copy-v1-r1",
+      "llvm"
+    ],
+    "formal_v13_modified": false,
+    "performance_interpretation": "owned by root; raw evidence only",
+    "runtime_rows_total": 390,
+    "runtime_measured_rows": 351,
+    "runtime_warmup_rows": 39,
+    "compile_rows_total": 240,
+    "compile_measured_rows": 216,
+    "compile_warmup_rows": 24,
+    "complete_object_pairs_verified_byte_for_byte": 1500,
+    "normal_mode_text_bytes": {
+      "generic-v18r2": {
+        "semver": 30829,
+        "base64": 23597,
+        "unicode-segmentation": 18520,
+        "humantime": 49835
+      },
+      "decode-private-copy-v1-r1": {
+        "semver": 30780,
+        "base64": 25723,
+        "unicode-segmentation": 18210,
+        "humantime": 46959
+      },
+      "llvm": {
+        "semver": 18515,
+        "base64": 8648,
+        "unicode-segmentation": 8398,
+        "humantime": 10426
+      }
+    },
+    "every_row_fingerprints_verified": true,
+    "rotating_paired_order_verified": true,
+    "full_and_metadata_are_separate_measurements": true
+  },
+  "upstream_tests_scope": "Not rerun; known fabsf64 and other intrinsic blockers remain; four-library corpus and thirteen checksums are not full upstream tests.",
+  "validation_repeated_by_this_verifier": false,
+  "verified_at_utc": "2026-11-11T10:07:44.577055+00:00"
+}

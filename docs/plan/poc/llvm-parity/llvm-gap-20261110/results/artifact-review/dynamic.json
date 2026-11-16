@@ -1,0 +1,119 @@
+[
+  {
+    "crate": "semver",
+    "workload": "parse",
+    "paired_time_ratio": 4.054714124805885,
+    "instruction_ratio": 4.073286075064814,
+    "cycle_ratio": 3.938568089767453,
+    "data_cpi": 0.24303422537890385,
+    "llvm_cpi": 0.2513471656290453
+  },
+  {
+    "crate": "semver",
+    "workload": "req",
+    "paired_time_ratio": 7.437748098561464,
+    "instruction_ratio": 6.32184681132289,
+    "cycle_ratio": 7.628988575510855,
+    "data_cpi": 0.2957841648097296,
+    "llvm_cpi": 0.24510486031459025
+  },
+  {
+    "crate": "semver",
+    "workload": "identifier",
+    "paired_time_ratio": 1.6991988039237869,
+    "instruction_ratio": 1.6543728524100298,
+    "cycle_ratio": 1.7781591632448164,
+    "data_cpi": 0.229296747634,
+    "llvm_cpi": 0.21333428540748442
+  },
+  {
+    "crate": "base64",
+    "workload": "encode",
+    "paired_time_ratio": 9.710032102367375,
+    "instruction_ratio": 5.913999174444224,
+    "cycle_ratio": 9.658248535102896,
+    "data_cpi": 0.3604719366610774,
+    "llvm_cpi": 0.22072643172059467
+  },
+  {
+    "crate": "base64",
+    "workload": "decode",
+    "paired_time_ratio": 8.134972896562138,
+    "instruction_ratio": 5.9827926661110205,
+    "cycle_ratio": 8.043371262980319,
+    "data_cpi": 0.2360622962908355,
+    "llvm_cpi": 0.17558704289758623
+  },
+  {
+    "crate": "base64",
+    "workload": "short",
+    "paired_time_ratio": 4.435517381703163,
+    "instruction_ratio": 3.323466350119856,
+    "cycle_ratio": 4.767017269585337,
+    "data_cpi": 0.26805832877508,
+    "llvm_cpi": 0.18688475102395374
+  },
+  {
+    "crate": "unicode-segmentation",
+    "workload": "graphemes-mixed",
+    "paired_time_ratio": 1.3404156022236628,
+    "instruction_ratio": 1.329482415401094,
+    "cycle_ratio": 1.377963541613731,
+    "data_cpi": 0.25477603954602324,
+    "llvm_cpi": 0.2458122107100866
+  },
+  {
+    "crate": "unicode-segmentation",
+    "workload": "graphemes-ascii",
+    "paired_time_ratio": 1.0905304590854876,
+    "instruction_ratio": 1.0453811051743604,
+    "cycle_ratio": 1.0967111387750426,
+    "data_cpi": 0.22682064566460422,
+    "llvm_cpi": 0.2162046220357235
+  },
+  {
+    "crate": "unicode-segmentation",
+    "workload": "graphemes-rev",
+    "paired_time_ratio": 3.760156798206897,
+    "instruction_ratio": 3.55755086502543,
+    "cycle_ratio": 3.769486566897859,
+    "data_cpi": 0.22232862337992762,
+    "llvm_cpi": 0.2098284136017208
+  },
+  {
+    "crate": "humantime",
+    "workload": "dur-parse",
+    "paired_time_ratio": 10.24467632272679,
+    "instruction_ratio": 7.570137043135844,
+    "cycle_ratio": 10.094164968288698,
+    "data_cpi": 0.3289652983527002,
+    "llvm_cpi": 0.24670811293350625
+  },
+  {
+    "crate": "humantime",
+    "workload": "dur-format",
+    "paired_time_ratio": 1.1641153989856632,
+    "instruction_ratio": 1.1502183475454217,
+    "cycle_ratio": 1.1894625191298078,
+    "data_cpi": 0.22590286446556673,
+    "llvm_cpi": 0.21844960668576144
+  },
+  {
+    "crate": "humantime",
+    "workload": "ts-parse",
+    "paired_time_ratio": 3.145415704529889,
+    "instruction_ratio": 4.194730937588827,
+    "cycle_ratio": 3.2875938760155363,
+    "data_cpi": 0.20934227682710133,
+    "llvm_cpi": 0.26710553622766775
+  },
+  {
+    "crate": "humantime",
+    "workload": "ts-format",
+    "paired_time_ratio": 1.654758685539534,
+    "instruction_ratio": 1.9500474262892515,
+    "cycle_ratio": 1.6502109341561197,
+    "data_cpi": 0.2719248802021605,
+    "llvm_cpi": 0.3213325047160727
+  }
+]

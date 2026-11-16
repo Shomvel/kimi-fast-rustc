@@ -14,11 +14,16 @@ struct Fixture {
     right_variant: NodeId,
 }
 
-fn projection(graph: &mut FunctionGraph, source: NodeId, slot: u32, ty: ValueType) -> NodeId {
+pub(super) fn projection(
+    graph: &mut FunctionGraph,
+    source: NodeId,
+    slot: u32,
+    ty: ValueType,
+) -> NodeId {
     graph.add_node(Opcode::Projection, NodeId::NONE, &[source], slot, ty)
 }
 
-fn call(
+pub(super) fn call(
     graph: &mut FunctionGraph,
     control: NodeId,
     effect: NodeId,
@@ -222,7 +227,7 @@ fn fixture() -> Fixture {
     }
 }
 
-fn execute(
+pub(super) fn execute(
     graph: &FunctionGraph,
     input: u64,
 ) -> (Result<SemanticOutcome, InterpretError>, Vec<String>) {
@@ -237,6 +242,195 @@ fn execute(
         },
     );
     (outcome, trace)
+}
+
+#[test]
+fn layout_threading_translates_pointer_offsets_without_speculating_loads() {
+    use crate::{GraphLevel, Outcome};
+    use kfrc_body::{DataObject, Mutability, SizeAlign};
+
+    let mut types = RecordedTypes::new();
+    let word = types.intern(
+        TypeShape::Int {
+            width: IntegerWidth::W64,
+            signed: false,
+        },
+        Some(SizeAlign { size: 8, align: 8 }),
+    );
+    let boolean = types.intern(TypeShape::Bool, Some(SizeAlign { size: 1, align: 1 }));
+    let pointer = types.intern(
+        TypeShape::RawPointer {
+            mutability: Mutability::Not,
+            pointee: word,
+        },
+        Some(SizeAlign { size: 8, align: 8 }),
+    );
+    let mut graph = FunctionGraph::new(
+        "layout_pointer_threading",
+        FunctionAbi {
+            args: vec![PassMode::Direct],
+            ret: PassMode::Direct,
+            c_variadic: false,
+        },
+        types,
+    );
+    graph.level = GraphLevel::Layout;
+    let start = graph.add_node(
+        Opcode::Start,
+        NodeId::NONE,
+        &[],
+        0,
+        ValueType::Tuple(vec![
+            ValueType::Control,
+            ValueType::Effect,
+            ValueType::Rust(word),
+        ]),
+    );
+    graph.start = start;
+    let control = projection(&mut graph, start, 0, ValueType::Control);
+    let effect = projection(&mut graph, start, 1, ValueType::Effect);
+    let argument = projection(&mut graph, start, 2, ValueType::Rust(word));
+    let zero = graph.add_constant(0, word);
+    let condition = graph.add_node(
+        Opcode::Compare,
+        NodeId::NONE,
+        &[argument, zero],
+        ComparePredicate::Equal as u32,
+        ValueType::Rust(boolean),
+    );
+    let branch = graph.add_node(
+        Opcode::If,
+        control,
+        &[condition],
+        0,
+        ValueType::Tuple(vec![ValueType::Control; 2]),
+    );
+    graph.data_objects.push(DataObject {
+        symbol: "threading_data".into(),
+        bytes: 0x123456789abcdef0u64.to_le_bytes().to_vec(),
+        align: 8,
+        ..Default::default()
+    });
+    graph.symbols.push(("threading_data".into(), 0));
+    let address = graph.add_node(
+        Opcode::SymbolAddress,
+        NodeId::NONE,
+        &[],
+        0,
+        ValueType::Rust(pointer),
+    );
+    let poison = graph.add_node(
+        Opcode::Undefined,
+        NodeId::NONE,
+        &[],
+        0,
+        ValueType::Rust(pointer),
+    );
+    let mut jumps = Vec::new();
+    let mut effects = Vec::new();
+    for side in 0..2 {
+        let control = projection(&mut graph, branch, side, ValueType::Control);
+        let (control, effect, _) = call(
+            &mut graph,
+            control,
+            effect,
+            argument,
+            word,
+            if side == 0 { "left" } else { "right" },
+        );
+        jumps.push(graph.add_node(Opcode::Jump, control, &[], 0, ValueType::Control));
+        effects.push(effect);
+    }
+    let region = graph.add_node(Opcode::Region, NodeId::NONE, &jumps, 0, ValueType::Control);
+    let selected = graph.add_node(
+        Opcode::Phi,
+        NodeId::NONE,
+        &[region, address, poison],
+        0,
+        ValueType::Rust(pointer),
+    );
+    let yes = graph.add_constant(1, boolean);
+    let no = graph.add_constant(0, boolean);
+    let tag = graph.add_node(
+        Opcode::Phi,
+        NodeId::NONE,
+        &[region, yes, no],
+        0,
+        ValueType::Rust(boolean),
+    );
+    let effect = graph.add_node(
+        Opcode::Phi,
+        region,
+        &[region, effects[0], effects[1]],
+        0,
+        ValueType::Effect,
+    );
+    let branch = graph.add_node(
+        Opcode::If,
+        region,
+        &[tag],
+        0,
+        ValueType::Tuple(vec![ValueType::Control; 2]),
+    );
+    let success = projection(&mut graph, branch, 0, ValueType::Control);
+    let failure = projection(&mut graph, branch, 1, ValueType::Control);
+    let address = graph.add_node(
+        Opcode::PtrOffset,
+        NodeId::NONE,
+        &[selected, zero],
+        0,
+        ValueType::Rust(pointer),
+    );
+    let load = graph.add_node(
+        Opcode::Load,
+        success,
+        &[effect, address],
+        0,
+        ValueType::Tuple(vec![
+            ValueType::Control,
+            ValueType::Effect,
+            ValueType::Rust(word),
+        ]),
+    );
+    let control = projection(&mut graph, load, 0, ValueType::Control);
+    let after = projection(&mut graph, load, 1, ValueType::Effect);
+    let value = projection(&mut graph, load, 2, ValueType::Rust(word));
+    graph.add_node(
+        Opcode::Return,
+        control,
+        &[after, value],
+        0,
+        ValueType::Control,
+    );
+    graph.add_node(
+        Opcode::Return,
+        failure,
+        &[effect, argument],
+        0,
+        ValueType::Control,
+    );
+    crate::verify_graph(&mut graph).unwrap();
+    let execute = |graph: &FunctionGraph, input| {
+        let mut events = Vec::new();
+        let outcome = Interpreter::new(graph).run(&[input], &mut |name: &str, args: &[u64]| {
+            events.push(name.to_owned());
+            Ok(args[0])
+        });
+        (outcome, events)
+    };
+    let inputs = [0, 1, 17, u64::MAX];
+    let expected = inputs.map(|input| execute(&graph, input));
+    assert_eq!(expected[0].0, Ok(Outcome::Return(0x123456789abcdef0)));
+    let stats = super::run(&mut graph).unwrap();
+    assert_eq!(stats.regions_threaded, 1, "{}", graph.dump());
+    crate::verify_graph(&mut graph).unwrap();
+    for (input, expected) in inputs.into_iter().zip(expected) {
+        assert_eq!(execute(&graph, input), expected);
+    }
+    assert_eq!(
+        graph.ids().filter(|&n| graph.op(n) == Opcode::Load).count(),
+        1
+    );
 }
 
 #[test]
@@ -263,6 +457,300 @@ fn anchored_effect_phi_threads_without_changing_payloads_or_calls() {
             .ids()
             .any(|node| f.graph.op(node) == Opcode::VariantSwitch)
     );
+}
+
+#[test]
+fn threading_repairs_values_after_reconvergence_and_through_a_loop() {
+    for (with_loop, only_side) in [
+        (false, None),
+        (true, None),
+        (false, Some(1)),
+        (true, Some(1)),
+        (false, Some(2)),
+        (true, Some(2)),
+    ] {
+        let mut f = fixture();
+        if let Some(slot) = only_side {
+            // Keep each predecessor's own call result; only the variant tag
+            // is shared when one outgoing side becomes unreachable.
+            let value = f.graph.input(f.value, 3 - slot);
+            f.graph.set_payload(value, (slot - 1) as u32);
+        }
+        let one = f.graph.add_constant(1, f.word);
+        let left = f.graph.input(f.graph.input(f.value, 1), 0);
+        let right = f.graph.input(f.graph.input(f.value, 2), 0);
+        let next = f.graph.add_node(
+            Opcode::Add,
+            NodeId::NONE,
+            &[right, one],
+            0,
+            ValueType::Rust(f.word),
+        );
+        let selected = f.graph.add_node(
+            Opcode::Phi,
+            NodeId::NONE,
+            &[f.region, left, next],
+            0,
+            ValueType::Rust(f.word),
+        );
+        let result = f.graph.add_node(
+            Opcode::BitXor,
+            NodeId::NONE,
+            &[selected, one],
+            0,
+            ValueType::Rust(f.word),
+        );
+        let returns: Vec<_> = f
+            .graph
+            .ids()
+            .filter(|&node| f.graph.op(node) == Opcode::Return)
+            .collect();
+        let mut incoming = Vec::new();
+        let mut effects = Vec::new();
+        for ret in returns {
+            let control = f.graph.control(ret);
+            effects.push(f.graph.input(ret, 0));
+            f.graph.remove_node(ret);
+            incoming.push(
+                f.graph
+                    .add_node(Opcode::Jump, control, &[], 0, ValueType::Control),
+            );
+        }
+        let joined = f.graph.add_node(
+            Opcode::Region,
+            NodeId::NONE,
+            &incoming,
+            0,
+            ValueType::Control,
+        );
+        let mut effect_inputs = vec![joined];
+        effect_inputs.extend(effects);
+        let effect = f
+            .graph
+            .add_node(Opcode::Phi, joined, &effect_inputs, 0, ValueType::Effect);
+        let (mut control, effect, _) = call(&mut f.graph, joined, effect, result, f.word, "joined");
+        if with_loop {
+            let entry = f
+                .graph
+                .add_node(Opcode::Jump, control, &[], 0, ValueType::Control);
+            let latch = f
+                .graph
+                .add_node(Opcode::Jump, control, &[], 0, ValueType::Control);
+            let header = f.graph.add_node(
+                Opcode::Region,
+                NodeId::NONE,
+                &[entry, latch],
+                0,
+                ValueType::Control,
+            );
+            let counter = f.graph.add_node(
+                Opcode::Phi,
+                NodeId::NONE,
+                &[header, f.input, f.input],
+                0,
+                ValueType::Rust(f.word),
+            );
+            let zero = f.graph.add_constant(0, f.word);
+            let boolean = f.graph.oracle.intern(TypeShape::Bool, None);
+            let condition = f.graph.add_node(
+                Opcode::Compare,
+                NodeId::NONE,
+                &[counter, zero],
+                ComparePredicate::NotEqual as u32,
+                ValueType::Rust(boolean),
+            );
+            let branch = f.graph.add_node(
+                Opcode::If,
+                header,
+                &[condition],
+                0,
+                ValueType::Tuple(vec![ValueType::Control; 2]),
+            );
+            let again = projection(&mut f.graph, branch, 0, ValueType::Control);
+            control = projection(&mut f.graph, branch, 1, ValueType::Control);
+            let decrement = f.graph.add_node(
+                Opcode::Sub,
+                NodeId::NONE,
+                &[counter, one],
+                0,
+                ValueType::Rust(f.word),
+            );
+            // The old merged value also escapes through a loop-Phi edge.
+            let carried = f.graph.add_node(
+                Opcode::Phi,
+                NodeId::NONE,
+                &[header, result, result],
+                0,
+                ValueType::Rust(f.word),
+            );
+            f.graph.set_control(latch, again);
+            f.graph.set_input(counter, 2, decrement);
+            f.graph.add_node(
+                Opcode::Return,
+                control,
+                &[effect, carried],
+                0,
+                ValueType::Control,
+            );
+        } else {
+            f.graph.add_node(
+                Opcode::Return,
+                control,
+                &[effect, result],
+                0,
+                ValueType::Control,
+            );
+        }
+        crate::verify_graph(&mut f.graph)
+            .unwrap_or_else(|error| panic!("loop={with_loop}, side={only_side:?}: {error:?}"));
+        let inputs = [0, 1, 3];
+        let expected = inputs.map(|input| execute(&f.graph, input));
+        assert!(expected.iter().all(|(outcome, _)| outcome.is_ok()));
+        let stats = super::run(&mut f.graph).unwrap();
+        assert_eq!(stats.regions_threaded, 1, "{}", f.graph.dump());
+        crate::verify_graph(&mut f.graph)
+            .unwrap_or_else(|error| panic!("loop={with_loop}, side={only_side:?}: {error:?}"));
+        assert!(f.graph.is_dead(selected));
+        for (input, expected) in inputs.into_iter().zip(expected) {
+            assert_eq!(execute(&f.graph, input), expected);
+        }
+        assert_eq!(
+            f.graph
+                .ids()
+                .filter(|&n| f.graph.op(n) == Opcode::Call)
+                .count(),
+            5 - usize::from(only_side.is_some())
+        );
+    }
+}
+
+#[test]
+fn reconvergence_repair_keeps_later_call_results_at_their_uses() {
+    let mut f = fixture();
+    let left = f.graph.input(f.graph.input(f.value, 1), 0);
+    let right = f.graph.input(f.graph.input(f.value, 2), 0);
+    let selected = f.graph.add_node(
+        Opcode::Phi,
+        NodeId::NONE,
+        &[f.region, left, right],
+        0,
+        ValueType::Rust(f.word),
+    );
+    let returns: Vec<_> = f
+        .graph
+        .ids()
+        .filter(|&n| f.graph.op(n) == Opcode::Return)
+        .collect();
+    let mut edges = Vec::new();
+    let mut effects = Vec::new();
+    for ret in returns {
+        let control = f.graph.control(ret);
+        effects.push(f.graph.input(ret, 0));
+        f.graph.remove_node(ret);
+        edges.push(
+            f.graph
+                .add_node(Opcode::Jump, control, &[], 0, ValueType::Control),
+        );
+    }
+    let joined = f
+        .graph
+        .add_node(Opcode::Region, NodeId::NONE, &edges, 0, ValueType::Control);
+    let mut inputs = vec![joined];
+    inputs.extend(effects);
+    let effect = f
+        .graph
+        .add_node(Opcode::Phi, joined, &inputs, 0, ValueType::Effect);
+    let (control, effect, late) = call(&mut f.graph, joined, effect, f.input, f.word, "late");
+    let result = f.graph.add_node(
+        Opcode::Add,
+        NodeId::NONE,
+        &[selected, late],
+        0,
+        ValueType::Rust(f.word),
+    );
+    f.graph.add_node(
+        Opcode::Return,
+        control,
+        &[effect, result],
+        0,
+        ValueType::Control,
+    );
+    crate::verify_graph(&mut f.graph).unwrap();
+    let inputs = [0, 1, 17, u64::MAX];
+    let expected = inputs.map(|input| execute(&f.graph, input));
+    assert_eq!(super::run(&mut f.graph).unwrap().regions_threaded, 1);
+    crate::verify_graph(&mut f.graph).unwrap();
+    assert_eq!(
+        f.graph
+            .ids()
+            .filter(|&n| f.graph.op(n) == Opcode::Call)
+            .count(),
+        5
+    );
+    for (input, expected) in inputs.into_iter().zip(expected) {
+        assert_eq!(execute(&f.graph, input), expected);
+    }
+}
+
+#[test]
+fn partial_variant_threading_preserves_dynamic_payloads_and_witnesses() {
+    let mut f = fixture();
+    let enumeration = f.graph.rust_type(f.value).unwrap();
+    let jump = f.graph.input(f.region, 1);
+    let target = f.graph.add_callee(CallTarget {
+        symbol: "dynamic-variant".into(),
+        abi: FunctionAbi {
+            args: vec![PassMode::Direct],
+            ret: PassMode::Direct,
+            c_variadic: false,
+        },
+    });
+    let dynamic = f.graph.add_node(
+        Opcode::Call,
+        f.graph.control(jump),
+        &[f.graph.input(f.effect, 2), f.input],
+        target,
+        ValueType::Tuple(vec![
+            ValueType::Control,
+            ValueType::Effect,
+            ValueType::Rust(enumeration),
+        ]),
+    );
+    let control = projection(&mut f.graph, dynamic, 0, ValueType::Control);
+    let effect = projection(&mut f.graph, dynamic, 1, ValueType::Effect);
+    let value = projection(&mut f.graph, dynamic, 2, ValueType::Rust(enumeration));
+    f.graph.set_control(jump, control);
+    f.graph.set_input(f.effect, 2, effect);
+    f.graph.set_input(f.value, 2, value);
+    crate::verify_graph(&mut f.graph).unwrap();
+    let observe = |graph: &FunctionGraph, input: u64| {
+        let mut trace = Vec::new();
+        let outcome = Interpreter::new(graph).run_values(
+            &[crate::Value::Scalar(input)],
+            &mut |name: &str, args: &[crate::Value]| {
+                trace.push(format!("{name}:{args:?}"));
+                if name == "dynamic-variant" {
+                    Ok(crate::Value::Variant {
+                        variant: (input & 1) as u32,
+                        fields: vec![args[0].clone()],
+                    })
+                } else {
+                    Ok(args[0].clone())
+                }
+            },
+        );
+        (outcome, trace)
+    };
+    let inputs = [0, 1, 2, 3, 17, u64::MAX];
+    let expected = inputs.map(|input| observe(&f.graph, input));
+    assert!(expected.iter().all(|(result, _)| result.is_ok()));
+    let stats = super::run(&mut f.graph).unwrap();
+    assert_eq!(stats.predecessors_threaded, 1);
+    assert_eq!(stats.branches_removed, 0);
+    crate::verify_graph(&mut f.graph).unwrap();
+    for (input, expected) in inputs.into_iter().zip(expected) {
+        assert_eq!(observe(&f.graph, input), expected);
+    }
 }
 
 #[test]
@@ -325,7 +813,7 @@ struct SpineFixture {
 
 fn forward_uses(graph: &mut FunctionGraph, uses: &[crate::analysis::uses::Use], value: NodeId) {
     for usage in uses {
-        let UseKind::Operand(slot) = usage.kind else {
+        let UseKind::Operand(slot) = usage.kind() else {
             panic!("fixture expected operand uses");
         };
         graph.set_input(usage.user, slot, value);
@@ -385,9 +873,14 @@ fn transparent_spine_preserves_all_exits_payloads_and_effects() {
         crate::verify_graph(&mut f.graph).unwrap();
         let expected = [0, 1, 17, u64::MAX].map(|input| execute(&f.graph, input));
         assert!(expected.iter().all(|(outcome, _)| outcome.is_ok()));
-        let stats = super::run(&mut f.graph).unwrap();
+        let mut eager = f.graph.clone();
+        let eager_stats = super::run_with_analysis_policy(&mut eager, true).unwrap();
+        let stats = super::run_with_analysis_policy(&mut f.graph, false).unwrap();
         assert_eq!(stats.control_spines_collapsed, 1);
         assert_eq!(stats.regions_threaded, 1);
+        assert_eq!(eager.dump(), f.graph.dump());
+        assert_eq!(eager_stats.regions_threaded, stats.regions_threaded);
+        assert!(stats.nodes_indexed < eager_stats.nodes_indexed);
         assert!(f.graph.is_dead(spine.switch));
         assert!(spine.regions.iter().all(|&region| f.graph.is_dead(region)));
         crate::verify_graph(&mut f.graph).unwrap();
@@ -398,27 +891,34 @@ fn transparent_spine_preserves_all_exits_payloads_and_effects() {
 }
 
 #[test]
-fn spine_collapse_reports_dirty_users_even_when_variant_threading_is_rejected() {
-    let mut f = fixture();
-    let unknown = f.graph.add_node(
-        Opcode::Undefined,
-        NodeId::NONE,
-        &[],
-        0,
-        f.graph.value_type(f.value).clone(),
-    );
-    f.graph.set_input(f.value, 2, unknown);
-    let spine = add_spine(&mut f, 1);
-    crate::verify_graph(&mut f.graph).unwrap();
-    let expected = [0, 1].map(|input| execute(&f.graph, input));
-    let stats = super::run(&mut f.graph).unwrap();
-    assert_eq!(stats.control_spines_collapsed, 1);
-    assert_eq!(stats.regions_threaded, 0);
-    assert!(stats.dirty_nodes.contains(&spine.switch));
-    assert_eq!(f.graph.control(spine.switch), f.region);
-    crate::verify_graph(&mut f.graph).unwrap();
-    for (input, expected) in [0, 1].into_iter().zip(expected) {
-        assert_eq!(execute(&f.graph, input), expected);
+fn spine_collapse_reports_dirty_users_with_partial_and_wholly_unknown_decisions() {
+    for known_left in [false, true] {
+        let mut f = fixture();
+        let unknown = f.graph.add_node(
+            Opcode::Undefined,
+            NodeId::NONE,
+            &[],
+            0,
+            f.graph.value_type(f.value).clone(),
+        );
+        f.graph.set_input(f.value, 2, unknown);
+        if !known_left {
+            f.graph.set_input(f.value, 1, unknown);
+        }
+        let spine = add_spine(&mut f, 1);
+        crate::verify_graph(&mut f.graph).unwrap();
+        let expected = [0, 1].map(|input| execute(&f.graph, input));
+        let stats = super::run(&mut f.graph).unwrap();
+        assert_eq!(stats.control_spines_collapsed, 1);
+        assert_eq!(stats.regions_threaded, usize::from(known_left));
+        assert_eq!(stats.predecessors_threaded, usize::from(known_left));
+        assert_eq!(stats.branches_removed, 0);
+        assert!(stats.dirty_nodes.contains(&spine.switch));
+        assert_eq!(f.graph.control(spine.switch), f.region);
+        crate::verify_graph(&mut f.graph).unwrap();
+        for (input, expected) in [0, 1].into_iter().zip(expected) {
+            assert_eq!(execute(&f.graph, input), expected);
+        }
     }
 }
 

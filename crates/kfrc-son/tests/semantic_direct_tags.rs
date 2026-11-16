@@ -319,11 +319,17 @@ fn known_direct_variant_index_remains_constant() {
     graph.set_input(query, 0, known);
     verify_graph(&mut graph).unwrap();
     let graph = compare(graph, [2, 2]);
-    assert_eq!(
-        graph
+    assert!(
+        !graph
             .ids()
-            .filter(|&node| graph.op(node) == Opcode::Compare)
-            .count(),
-        1
+            .any(|node| matches!(graph.op(node), Opcode::Compare | Opcode::If)),
+        "a constant query needs neither tag decoding nor the unused source diamond"
     );
+    let ret = graph
+        .ids()
+        .find(|&node| graph.op(node) == Opcode::Return)
+        .unwrap();
+    let result = graph.input(ret, 1);
+    assert_eq!(graph.op(result), Opcode::Const);
+    assert_eq!(graph.constant_value(result), 2);
 }

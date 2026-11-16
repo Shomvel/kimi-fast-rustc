@@ -308,14 +308,18 @@ fn object_writer_rejects_mixing_tls_with_ordinary_addresses() {
     }
     assert!(matches!(
         write_object_with_data(&[ordinary], &[tls]),
-        Err(ObjectError::SymbolKindMismatch { .. })
+        Err(ObjectError::Object(
+            kfrc_object::ObjectError::SymbolKindMismatch { .. }
+        ))
     ));
     assert!(matches!(
         write_object_with_data(
             &[address_function("same_symbol")],
             &[datum("same_symbol", 0, true, false)]
         ),
-        Err(ObjectError::SymbolKindMismatch { .. })
+        Err(ObjectError::Object(
+            kfrc_object::ObjectError::SymbolKindMismatch { .. }
+        ))
     ));
     let mut pointer = datum("ordinary_pointer", 0, true, false);
     pointer.relocations.push(DataRelocation {
@@ -325,7 +329,9 @@ fn object_writer_rejects_mixing_tls_with_ordinary_addresses() {
     });
     assert!(matches!(
         write_object_with_data(&[], &[datum("same_symbol", 0, true, true), pointer]),
-        Err(ObjectError::SymbolKindMismatch { .. })
+        Err(ObjectError::Object(
+            kfrc_object::ObjectError::SymbolKindMismatch { .. }
+        ))
     ));
     let mut mixed = address_function("external_symbol");
     mixed.function.instructions.insert(
@@ -338,6 +344,8 @@ fn object_writer_rejects_mixing_tls_with_ordinary_addresses() {
     );
     assert!(matches!(
         write_object_with_data(&[mixed], &[]),
-        Err(ObjectError::SymbolKindMismatch { .. })
+        Err(ObjectError::Object(
+            kfrc_object::ObjectError::SymbolKindMismatch { .. }
+        ))
     ));
 }

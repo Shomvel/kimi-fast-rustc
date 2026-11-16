@@ -1,7 +1,9 @@
 //! The platform entry point. This follows rustc's `main -> lang_start`
 //! contract, including runtime initialization and `Termination::report`.
 
-use kfrc_x86::{FunctionCode, MachineFunction, MachineInstr, Reg, SymbolBinding};
+use crate::machine::CompiledFunction;
+use kfrc_object::{ObjectFunction, SymbolBinding};
+use kfrc_x86::{MachineFunction, MachineInstr, Reg};
 use rustc_hir::LangItem;
 use rustc_middle::ty::{self, Instance, TyCtxt};
 use rustc_session::config::EntryFnType;
@@ -102,13 +104,9 @@ impl<'tcx> UnitEntryPlan<'tcx> {
         }
         let abi = crate::abi::instance_abi(tcx, internal)
             .unwrap_or_else(|error| tcx.dcx().fatal(format!("kfrc: unit runtime ABI: {error}")));
-        if abi.args
-            != [
-                PassMode::Pair,
-                PassMode::Direct,
-                PassMode::Direct,
-                PassMode::Direct,
-            ]
+        if abi.args.len() != 4
+            || !abi.args[0].is_pair()
+            || !abi.args[1..].iter().all(|mode| mode.is_direct())
             || abi.ret != PassMode::Direct
         {
             tcx.dcx().fatal(format!(
@@ -128,9 +126,14 @@ impl<'tcx> UnitEntryPlan<'tcx> {
         &self,
         tcx: TyCtxt<'tcx>,
         instance: Instance<'tcx>,
-    ) -> Option<(MachineFunction, Vec<DataObject>)> {
+    ) -> Option<CompiledFunction> {
+        let encode = |function: MachineFunction| {
+            crate::machine::encode(&function)
+                .unwrap_or_else(|error| tcx.dcx().fatal(format!("kfrc: unit entry: {error}")))
+        };
         if instance == self.start {
-            return Some(self.compile_start(tcx));
+            let (function, data) = self.compile_start(tcx);
+            return Some((encode(function), data));
         }
         let is_closure = instance.def_id() == self.closure
             || instance.args.iter().any(|arg| {
@@ -204,7 +207,7 @@ impl<'tcx> UnitEntryPlan<'tcx> {
                 MachineInstr::Ret,
             ]);
         }
-        Some((function, Vec::new()))
+        Some((encode(function), Vec::new()))
     }
 
     fn compile_start(&self, tcx: TyCtxt<'tcx>) -> (MachineFunction, Vec<DataObject>) {
@@ -284,15 +287,15 @@ where
 pub(crate) fn entry_wrapper<'tcx>(
     tcx: TyCtxt<'tcx>,
     is_primary_cgu: bool,
-    functions: &[FunctionCode],
-) -> Option<FunctionCode> {
+    functions: &[ObjectFunction],
+) -> Option<ObjectFunction> {
     let (main_def_id, EntryFnType::Main { sigpipe }) = tcx.entry_fn(())?;
     let main_instance = Instance::mono(tcx, main_def_id);
     let main_symbol = tcx.symbol_name(main_instance).name.to_owned();
     if main_def_id.is_local() {
         if !functions
             .iter()
-            .any(|code| code.function.name == main_symbol)
+            .any(|code| code.function.symbol == main_symbol)
         {
             return None;
         }
@@ -317,7 +320,7 @@ pub(crate) fn entry_wrapper<'tcx>(
     let entry_name = tcx.sess.target.options.entry_name.to_string();
     if functions
         .iter()
-        .any(|code| code.function.name == entry_name)
+        .any(|code| code.function.symbol == entry_name)
     {
         tcx.dcx().fatal(format!(
             "kfrc: entry symbol `{entry_name}` is already defined"
@@ -349,8 +352,9 @@ pub(crate) fn entry_wrapper<'tcx>(
         MachineInstr::Call { target: 1 },
         MachineInstr::Ret,
     ];
-    Some(FunctionCode {
-        function,
+    Some(ObjectFunction {
+        function: crate::machine::encode(&function)
+            .unwrap_or_else(|error| tcx.dcx().fatal(format!("kfrc: entry wrapper: {error}"))),
         binding: SymbolBinding::Global { hidden: false },
     })
 }

@@ -5,10 +5,14 @@ use crate::{FunctionGraph, MemoryPartition, NodeId, Opcode, ValueType};
 use kfrc_body::fx_hash::HashSet;
 
 pub(super) struct Spliced {
-    pub(super) nested: Vec<NodeId>,
+    /// (source call, copied call), preserving path hints through the splice.
+    pub(super) nested: Vec<(NodeId, NodeId)>,
     pub(super) dirty: Vec<NodeId>,
     pub(super) argument_slots: Vec<NodeId>,
     pub(super) cloned_nodes: usize,
+    /// No normal exit exists. The removed call disconnects its continuation;
+    /// the driver must prune it before inspecting or verifying another seam.
+    pub(super) diverges: bool,
 }
 pub(super) fn splice(
     graph: &mut FunctionGraph,
@@ -22,11 +26,14 @@ pub(super) fn splice(
         oracle,
         expected_result,
         locals,
+        data,
+        constant_bytes_imported: _,
     } = plan;
     if let Some(oracle) = oracle {
         graph.oracle = oracle;
     }
-    for data in &source.data_objects {
+    for index in data {
+        let data = &source.data_objects[index];
         if !graph.data_objects.iter().any(|d| d.symbol == data.symbol) {
             graph.data_objects.push(data.clone());
         }
@@ -60,12 +67,24 @@ pub(super) fn splice(
     let callees: Vec<_> = source
         .callees
         .iter()
-        .map(|target| graph.add_callee(target.clone()))
+        .enumerate()
+        .map(
+            |(index, target)| match source.runtime_comparison(index as u32) {
+                Some(comparison) => graph.add_runtime_comparison(comparison),
+                None => graph.add_callee(target.clone()),
+            },
+        )
         .collect();
     // Call-site permissions travel with the copied direct calls. The callee's
     // own `arg_permissions` stay behind: its protector ends at this seam
     // (inlining v1), so no spliced access gains a scope it did not have.
     for target in &source.callees {
+        if let Some(attrs) = source.callee_attrs.get(&target.symbol) {
+            graph
+                .callee_attrs
+                .entry(target.symbol.clone())
+                .or_insert_with(|| attrs.clone());
+        }
         if let Some(permissions) = source.callee_permissions.get(&target.symbol) {
             graph
                 .callee_permissions
@@ -178,7 +197,7 @@ pub(super) fn splice(
             dirty.push(cloned);
         }
         if source.op(id) == Opcode::Call {
-            nested.push(cloned);
+            nested.push((id, cloned));
         }
     }
     let map = |node: NodeId| {
@@ -227,6 +246,19 @@ pub(super) fn splice(
             (control, effect) = lifetime(graph, Opcode::SlotDead, control, effect, slot);
         }
         returns.push((control, effect, value));
+    }
+    if returns.is_empty() {
+        // All reachable callee paths terminate or loop in the cloned body.
+        // Keeping the old projections attached to this dead source makes the
+        // entire normal continuation unreachable, including merge/Phi slots.
+        graph.remove_node(call);
+        return Spliced {
+            nested,
+            dirty,
+            argument_slots,
+            cloned_nodes,
+            diverges: true,
+        };
     }
     let (control, effect, value) = if returns.len() == 1 {
         returns[0]
@@ -278,6 +310,7 @@ pub(super) fn splice(
         dirty,
         argument_slots,
         cloned_nodes,
+        diverges: false,
     }
 }
 fn lifetime(

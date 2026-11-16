@@ -8,6 +8,33 @@ use crate::Opcode;
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct ArithmeticFlags(pub u32);
 
+impl std::fmt::Display for ArithmeticFlags {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut separator = "";
+        let mut unknown = self.0;
+        for (flag, name) in [
+            (Self::NUW, "nuw"),
+            (Self::NSW, "nsw"),
+            (Self::EXACT, "exact"),
+            (Self::DISJOINT, "disjoint"),
+            (Self::AMOUNT_IN_RANGE, "amount_in_range"),
+        ] {
+            unknown &= !flag;
+            if self.contains(flag) {
+                write!(f, "{separator}{name}")?;
+                separator = ",";
+            }
+        }
+        if unknown != 0 {
+            write!(f, "{separator}unknown:{unknown:#x}")
+        } else if separator.is_empty() {
+            f.write_str("none")
+        } else {
+            Ok(())
+        }
+    }
+}
+
 impl ArithmeticFlags {
     pub const NUW: u32 = 1 << 0;
     pub const NSW: u32 = 1 << 1;

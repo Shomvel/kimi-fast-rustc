@@ -6,11 +6,14 @@ mod allocated;
 mod arithmetic;
 mod branch;
 mod cast;
+mod checked;
 mod fallthrough;
 mod intrinsics;
 mod known_width;
+mod masked_tests;
 mod private_slots;
 mod schedule;
+mod switch;
 mod vector;
 
 use schedule::Schedule;
@@ -19,14 +22,13 @@ use kfrc_body::fx_hash::{HashMap, HashSet};
 
 use crate::machine::allocate::CompileError;
 use crate::machine::x86::{
-    BitWidth, Condition, MachineFunction, MachineInstr, Operand as MachineOperand, Reg, StackSlot,
-    VirtualInstr, VirtualReg, VirtualValue, Xmm,
+    BitWidth, Condition, MachineFunction, MachineInstr, MemoryAddress, Operand as MachineOperand,
+    Reg, Scale, StackSlot, VirtualInstr, VirtualReg, VirtualValue, Xmm,
 };
 use kfrc_body::{PassMode, SizeAlign, TyId, TypeOracle, TypeShape};
 use kfrc_son::lower_layout::LayoutOptions;
 use kfrc_son::{
-    ArithmeticFlags, ComparePredicate, FunctionGraph, GraphLevel, GraphState, NodeId, Opcode,
-    ValueType,
+    ArithmeticFlags, ComparePredicate, FunctionGraph, GraphLevel, NodeId, Opcode, ValueType,
 };
 
 #[derive(Debug)]
@@ -78,7 +80,7 @@ fn lower_function_inner(
     graph: &FunctionGraph,
     options: LayoutOptions,
 ) -> Result<MachineFunction, LowerError> {
-    if graph.state != GraphState::Verified {
+    if !graph.state.is_ready_for_lowering() {
         return Err(LowerError::NotVerified);
     }
     if graph.level != GraphLevel::Layout {
@@ -94,20 +96,46 @@ fn lower_function_inner(
         instructions: Vec::new(),
         emitted: HashSet::default(),
         next_temporary: graph.len() as u32,
+        next_switch_label: u32::try_from(schedule.blocks.len())
+            .ok()
+            .and_then(|last| last.checked_add(1))
+            .ok_or_else(|| LowerError::Unsupported("label space exhausted".into()))?,
         stack_layouts: graph.stack_slots.clone(),
         return_address: None,
+        constant_quotients: HashMap::default(),
+        checked_values: checked::Values::new(graph, &schedule),
+        current_block: 0,
+        address_modes: HashMap::default(),
         options,
     };
     lowering.run()?;
     private_slots::run(&mut lowering.instructions, &mut lowering.stack_layouts);
     known_width::run(&mut lowering.instructions);
+    // The four-library paired run found latency regressions despite fewer
+    // instructions. Keep this selector available for explicit experiments.
+    if std::env::var("KFRC_MASKED_TEST").as_deref() == Ok("1") {
+        let combined = masked_tests::run(&mut lowering.instructions);
+        if combined != 0 && std::env::var("KFRC_REGALLOC_STATS").as_deref() == Ok("1") {
+            eprintln!(
+                "kfrc-masked-test symbol={} combined={combined}",
+                graph.symbol
+            );
+        }
+    }
     let instructions = lowering.instructions;
-    allocated::compile(
+    let mut function = allocated::compile(
         graph,
         instructions,
         lowering.next_temporary,
         &lowering.stack_layouts,
-    )
+    )?;
+    function.loop_headers = schedule
+        .loop_headers
+        .iter()
+        .copied()
+        .map(label_of)
+        .collect();
+    Ok(function)
 }
 
 // -- scheduling -------------------------------------------------------------------------
@@ -121,8 +149,14 @@ struct Lowering<'a> {
     instructions: Vec<LowerInstr>,
     emitted: HashSet<NodeId>,
     next_temporary: u32,
+    next_switch_label: u32,
     stack_layouts: Vec<SizeAlign>,
     return_address: Option<VirtualReg>,
+    /// Block-local scalar values; never reused across a phi edge or backedge.
+    constant_quotients: HashMap<(NodeId, u64, bool), VirtualValue>,
+    checked_values: checked::Values,
+    current_block: usize,
+    address_modes: HashMap<NodeId, MemoryAddress<NodeId>>,
     options: LayoutOptions,
 }
 
@@ -160,6 +194,13 @@ enum LowerInstr {
     TestLowByte {
         value: VirtualReg,
     },
+    /// Bitwise register/immediate TEST; only the adjacent Eq/NotEq branch
+    /// observes its zero flag. It does not modify `value`.
+    TestMasked {
+        value: VirtualReg,
+        mask: u32,
+        width: BitWidth,
+    },
     StackAddress {
         dst: VirtualReg,
         slot: usize,
@@ -194,8 +235,20 @@ enum LowerInstr {
         src: VirtualValue,
         bytes: u8,
     },
+    LoadAddress {
+        dst: VirtualReg,
+        address: MemoryAddress<VirtualValue>,
+        bytes: u8,
+    },
+    StoreAddress {
+        address: MemoryAddress<VirtualValue>,
+        src: VirtualValue,
+        bytes: u8,
+    },
     MulOverflow {
         dst: VirtualReg,
+        /// The unsigned 64-bit product left in RAX by the overflow operation.
+        product: Option<VirtualReg>,
         lhs: VirtualValue,
         rhs: VirtualValue,
         signed: bool,
@@ -449,6 +502,23 @@ impl Lowering<'_> {
             operands.push(self.value(*input)?);
         }
         let destination = register(node);
+        if let Some(overflow) = self
+            .checked_values
+            .overflow(self.graph, self.current_block, node)
+            && !self.emitted.contains(&overflow)
+        {
+            self.emit_pure(overflow)?;
+        }
+        if let Some(value) =
+            self.checked_values
+                .get(self.graph, self.schedule, self.current_block, node)
+        {
+            self.push(VirtualInstr::Mov {
+                dst: destination,
+                src: value,
+            });
+            return Ok(());
+        }
         let kind = if matches!(
             op,
             Opcode::PtrOffset | Opcode::StackSlot | Opcode::SymbolAddress
@@ -507,13 +577,26 @@ impl Lowering<'_> {
             }
             Opcode::MulOverflow => {
                 let input_kind = self.node_kind(inputs[0])?;
+                let product = self
+                    .checked_values
+                    .needs_product(self.graph, node)
+                    .then(|| self.temporary());
                 self.instructions.push(LowerInstr::MulOverflow {
                     dst: destination,
+                    product,
                     lhs: operands[0],
                     rhs: operands[1],
                     signed: input_kind.signed,
                     bits: input_kind.bits as u8,
                 });
+                if let Some(product) = product {
+                    self.checked_values.record_product(
+                        self.graph,
+                        self.current_block,
+                        node,
+                        VirtualValue::Reg(product),
+                    );
+                }
             }
             Opcode::Add
             | Opcode::Sub
@@ -547,6 +630,12 @@ impl Lowering<'_> {
                 } else {
                     self.canonicalize(destination, VirtualValue::Reg(raw), kind);
                 }
+                self.checked_values.record(
+                    self.graph,
+                    self.current_block,
+                    node,
+                    VirtualValue::Reg(destination),
+                );
             }
             Opcode::ShiftLeft | Opcode::ShiftRightArithmetic | Opcode::ShiftRightLogical => {
                 let rhs = if ArithmeticFlags(self.graph.payload(node))
@@ -554,14 +643,21 @@ impl Lowering<'_> {
                 {
                     operands[1]
                 } else {
-                    let amount = self.temporary();
-                    let mask = i64::from(kind.bits.max(1) - 1);
-                    self.push(VirtualInstr::And {
-                        dst: amount,
-                        lhs: operands[1],
-                        rhs: VirtualValue::Imm(mask),
-                    });
-                    VirtualValue::Reg(amount)
+                    match operands[1] {
+                        VirtualValue::Imm(value) => {
+                            VirtualValue::Imm(((value as u64) % u64::from(kind.bits)) as i64)
+                        }
+                        value => {
+                            let amount = self.temporary();
+                            let mask = i64::from(kind.bits - 1);
+                            self.push(VirtualInstr::And {
+                                dst: amount,
+                                lhs: value,
+                                rhs: VirtualValue::Imm(mask),
+                            });
+                            VirtualValue::Reg(amount)
+                        }
+                    }
                 };
                 let lhs = operands[0];
                 self.push(match op {
@@ -653,8 +749,11 @@ impl Lowering<'_> {
     fn run(&mut self) -> Result<(), LowerError> {
         let schedule = self.schedule;
         let order = schedule.order.clone();
-        let address_only = self.address_only_offsets();
+        let (address_modes, address_only) = self.select_address_modes();
+        self.address_modes = address_modes;
         for block in order {
+            self.current_block = block;
+            self.constant_quotients.clear();
             self.push(VirtualInstr::Label(label_of(block)));
             if block == 0 {
                 self.emit_parameters()?;
@@ -696,7 +795,9 @@ impl Lowering<'_> {
             | Opcode::RemUnsigned) => {
                 let lhs = self.value(graph.input(node, 0))?;
                 let rhs = self.value(graph.input(node, 1))?;
-                if self.emit_exact_constant_division(node, lhs, rhs)? {
+                if self.emit_exact_constant_division(node, lhs, rhs)?
+                    || self.emit_constant_division(node, lhs, rhs)?
+                {
                     self.emitted.insert(node);
                     return Ok(());
                 }
@@ -757,21 +858,29 @@ impl Lowering<'_> {
                 self.emitted.insert(node);
             }
             Opcode::Load => {
-                let (base, offset) = self.address_mode(graph.input(node, 1));
                 let Some(result) = self.schedule.projections.get(&(node, 2)).copied() else {
                     // A nonvolatile load with an unused value has no observable
                     // behavior; keep its control/effect order without code.
                     self.emitted.insert(node);
                     return Ok(());
                 };
-                let address = self.value(base)?;
+                let address = self.address_modes[&node].try_map(|node| self.value(node))?;
                 let kind = self.node_kind(result)?;
                 let raw = self.temporary();
-                self.instructions.push(LowerInstr::Load {
-                    dst: raw,
-                    address,
-                    offset,
-                    bytes: (kind.bits / 8) as u8,
+                let bytes = (kind.bits / 8) as u8;
+                self.instructions.push(if address.index.is_some() {
+                    LowerInstr::LoadAddress {
+                        dst: raw,
+                        address,
+                        bytes,
+                    }
+                } else {
+                    LowerInstr::Load {
+                        dst: raw,
+                        address: address.base,
+                        offset: address.offset,
+                        bytes,
+                    }
                 });
                 if kind.signed {
                     self.canonicalize(register(result), VirtualValue::Reg(raw), kind);
@@ -786,16 +895,24 @@ impl Lowering<'_> {
                 self.emitted.insert(node);
             }
             Opcode::Store => {
-                let (base, offset) = self.address_mode(graph.input(node, 1));
-                let address = self.value(base)?;
+                let address = self.address_modes[&node].try_map(|node| self.value(node))?;
                 let value = graph.input(node, 2);
                 let src = self.value(value)?;
                 let kind = self.node_kind(value)?;
-                self.instructions.push(LowerInstr::Store {
-                    address,
-                    offset,
-                    src,
-                    bytes: (kind.bits / 8) as u8,
+                let bytes = (kind.bits / 8) as u8;
+                self.instructions.push(if address.index.is_some() {
+                    LowerInstr::StoreAddress {
+                        address,
+                        src,
+                        bytes,
+                    }
+                } else {
+                    LowerInstr::Store {
+                        address: address.base,
+                        offset: address.offset,
+                        src,
+                        bytes,
+                    }
                 });
                 self.emitted.insert(node);
             }
@@ -822,7 +939,15 @@ impl Lowering<'_> {
                     .args
                     .iter()
                     .chain(std::iter::once(&abi.ret))
-                    .any(|mode| matches!(mode, PassMode::Cast(_) | PassMode::Vector { .. }))
+                    .any(|mode| {
+                        matches!(
+                            mode,
+                            PassMode::Cast(_)
+                                | PassMode::Vector { .. }
+                                | PassMode::DirectScalar(_)
+                                | PassMode::ScalarPair(_)
+                        )
+                    })
                 {
                     return self.emit_cast_call(node, abi, target, first_arg);
                 }
@@ -857,10 +982,12 @@ impl Lowering<'_> {
                     })?;
                     match mode {
                         PassMode::Ignore => {}
-                        PassMode::Direct if self.scalar_kind(ty).is_ok() => {
+                        PassMode::Direct | PassMode::DirectScalar(_)
+                            if self.scalar_kind(ty).is_ok() =>
+                        {
                             args.push(self.value(*input)?)
                         }
-                        PassMode::Direct => {
+                        PassMode::Direct | PassMode::DirectScalar(_) => {
                             let address = self.value(*input)?;
                             let dst = self.temporary();
                             let bytes = self.direct_bits(ty)?;
@@ -877,7 +1004,7 @@ impl Lowering<'_> {
                             // entering the call; this value is that private address.
                             args.push(self.value(*input)?);
                         }
-                        PassMode::Pair => {
+                        PassMode::Pair | PassMode::ScalarPair(_) => {
                             let address = self.value(*input)?;
                             let fields = *graph.oracle.abi_pairs.get(&ty).ok_or_else(|| {
                                 LowerError::Unsupported(format!(
@@ -897,7 +1024,7 @@ impl Lowering<'_> {
                     }
                 }
                 let raw = self.temporary();
-                if abi.ret == PassMode::Pair {
+                if abi.ret.is_pair() {
                     let second = self.temporary();
                     self.instructions.push(LowerInstr::CallPair {
                         first: raw,
@@ -981,6 +1108,7 @@ impl Lowering<'_> {
                 // body node; reaching here means the block ended in a call.
                 Err(LowerError::Malformed(format!("block ends in call {node}")))
             }
+            Opcode::Switch => self.emit_switch(node, block),
             Opcode::If => {
                 let (lhs, rhs, condition) = if let Some(direct) = self.branches.get(node) {
                     (
@@ -1077,24 +1205,34 @@ impl Lowering<'_> {
                             self.copy_bytes(VirtualValue::Reg(destination), source, layout.size);
                             self.push(VirtualInstr::Return(VirtualValue::Reg(destination)));
                         }
-                        PassMode::Pair => {
+                        PassMode::Pair | PassMode::ScalarPair(_) => {
                             let address = self.value(*value)?;
                             let fields = *graph.oracle.abi_pairs.get(&ty).ok_or_else(|| {
                                 LowerError::Unsupported(
                                     "missing ScalarPair return layout".to_owned(),
                                 )
                             })?;
-                            let first = self.load_field(address, fields[0].offset, fields[0].ty)?;
-                            let second =
+                            let mut first =
+                                self.load_field(address, fields[0].offset, fields[0].ty)?;
+                            let mut second =
                                 self.load_field(address, fields[1].offset, fields[1].ty)?;
+                            if let PassMode::ScalarPair(scalars) = graph.abi.ret {
+                                first = self.pass_scalar_abi(first, scalars[0])?;
+                                second = self.pass_scalar_abi(second, scalars[1])?;
+                            }
                             self.instructions
                                 .push(LowerInstr::ReturnPair { first, second });
                         }
-                        PassMode::Direct if self.scalar_kind(ty).is_ok() => {
-                            let value = self.value(*value)?;
+                        PassMode::Direct | PassMode::DirectScalar(_)
+                            if self.scalar_kind(ty).is_ok() =>
+                        {
+                            let mut value = self.value(*value)?;
+                            if let PassMode::DirectScalar(scalar) = graph.abi.ret {
+                                value = self.pass_scalar_abi(value, scalar)?;
+                            }
                             self.push(VirtualInstr::Return(value));
                         }
-                        PassMode::Direct => {
+                        PassMode::Direct | PassMode::DirectScalar(_) => {
                             let address = self.value(*value)?;
                             let dst = self.temporary();
                             let bytes = self.direct_bits(ty)?;
@@ -1104,7 +1242,11 @@ impl Lowering<'_> {
                                 offset: 0,
                                 bytes,
                             });
-                            self.push(VirtualInstr::Return(VirtualValue::Reg(dst)));
+                            let mut value = VirtualValue::Reg(dst);
+                            if let PassMode::DirectScalar(scalar) = graph.abi.ret {
+                                value = self.pass_scalar_abi(value, scalar)?;
+                            }
+                            self.push(VirtualInstr::Return(value));
                         }
                         PassMode::Ignore => self.push(VirtualInstr::Return(VirtualValue::Imm(0))),
                         other => {

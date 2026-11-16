@@ -64,6 +64,7 @@ pub(super) fn facts(instruction: &LowerInstr) -> Facts {
             | VirtualInstr::Div { dst, lhs, rhs }
             | VirtualInstr::Rem { dst, lhs, rhs }
             | VirtualInstr::UDiv { dst, lhs, rhs }
+            | VirtualInstr::MulHigh { dst, lhs, rhs }
             | VirtualInstr::URem { dst, lhs, rhs }
             | VirtualInstr::Compare { dst, lhs, rhs, .. } => {
                 f.defs.push(*dst);
@@ -107,7 +108,9 @@ pub(super) fn facts(instruction: &LowerInstr) -> Facts {
             f.defs.push(*dst);
             f.use_value(*value);
         }
-        LowerInstr::TestLowByte { value } => f.uses.push(*value),
+        LowerInstr::TestLowByte { value } | LowerInstr::TestMasked { value, .. } => {
+            f.uses.push(*value)
+        }
         LowerInstr::BitScanZero {
             dst, value, zero, ..
         } => {
@@ -126,11 +129,26 @@ pub(super) fn facts(instruction: &LowerInstr) -> Facts {
             f.use_value(*address);
             f.use_value(*src);
         }
+        LowerInstr::LoadAddress { dst, address, .. } => {
+            f.defs.push(*dst);
+            address.map(|value| f.use_value(value));
+        }
+        LowerInstr::StoreAddress { address, src, .. } => {
+            address.map(|value| f.use_value(value));
+            f.use_value(*src);
+        }
         LowerInstr::LoadVector { address, .. } | LowerInstr::StoreVector { address, .. } => {
             f.use_value(*address)
         }
-        LowerInstr::MulOverflow { dst, lhs, rhs, .. } => {
+        LowerInstr::MulOverflow {
+            dst,
+            product,
+            lhs,
+            rhs,
+            ..
+        } => {
             f.defs.push(*dst);
+            f.defs.extend(product);
             f.use_value(*lhs);
             f.use_value(*rhs);
         }
@@ -271,7 +289,9 @@ pub(super) fn run(stream: &mut Vec<LowerInstr>, layouts: &mut Vec<SizeAlign>) ->
             && !index.checked_sub(1).is_some_and(|previous| {
                 matches!(
                     stream[previous],
-                    LowerInstr::Scalar(VirtualInstr::Test { .. }) | LowerInstr::TestLowByte { .. }
+                    LowerInstr::Scalar(VirtualInstr::Test { .. })
+                        | LowerInstr::TestLowByte { .. }
+                        | LowerInstr::TestMasked { .. }
                 )
             })
     }) {

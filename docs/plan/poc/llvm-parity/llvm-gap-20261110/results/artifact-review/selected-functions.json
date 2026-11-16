@@ -1,0 +1,1219 @@
+[
+  {
+    "arm": "llvm",
+    "crate": "semver",
+    "object_sha256": "439e001f898394164a10067c591df7bdf033b070bd23ad0f81614f4ededafab9",
+    "name": "<semver::identifier::Identifier>::ptr_eq",
+    "start": 0,
+    "bytes": 10,
+    "section": ".text._RNvMNtCslLN4iPamcnI_6semver10identifierNtB2_10Identifier6ptr_eq",
+    "aliases": [],
+    "counts": {
+      "instructions": 4,
+      "memory_operand_instructions": 2
+    },
+    "opcodes": {
+      "mov": 1,
+      "cmp": 1,
+      "sete": 1,
+      "ret": 1
+    },
+    "call_targets": {},
+    "stack_reservations": [],
+    "inspection": {
+      "setcc": 1,
+      "stack_sub_rsp_bytes": []
+    }
+  },
+  {
+    "arm": "llvm",
+    "crate": "semver",
+    "object_sha256": "439e001f898394164a10067c591df7bdf033b070bd23ad0f81614f4ededafab9",
+    "name": "<semver::identifier::Identifier>::is_empty",
+    "start": 0,
+    "bytes": 8,
+    "section": ".text._RNvMNtCslLN4iPamcnI_6semver10identifierNtB2_10Identifier8is_empty",
+    "aliases": [],
+    "counts": {
+      "instructions": 3,
+      "memory_operand_instructions": 1
+    },
+    "opcodes": {
+      "cmp": 1,
+      "sete": 1,
+      "ret": 1
+    },
+    "call_targets": {},
+    "stack_reservations": [],
+    "inspection": {
+      "setcc": 1,
+      "stack_sub_rsp_bytes": []
+    }
+  },
+  {
+    "arm": "llvm",
+    "crate": "base64",
+    "object_sha256": "9c266a1eb442e9a2cb877ec48c06762ea0defdfb46f208b1e1b56a54b4ce15a0",
+    "name": "<base64::engine::general_purpose::GeneralPurpose as base64::engine::Engine>::internal_encode",
+    "start": 0,
+    "bytes": 1376,
+    "section": ".text._RNvXs_NtNtCs2gPXRUVJHRq_6base646engine15general_purposeNtB4_14GeneralPurposeNtB6_6Engine15internal_encode",
+    "aliases": [],
+    "counts": {
+      "instructions": 327,
+      "branches": 17,
+      "memory_operand_instructions": 101,
+      "non_cl_shifts": 44,
+      "calls": 9
+    },
+    "opcodes": {
+      "push": 5,
+      "mov": 107,
+      "xor": 3,
+      "sub": 3,
+      "cmovb": 1,
+      "jbe": 2,
+      "nop": 2,
+      "lea": 20,
+      "cmp": 15,
+      "ja": 4,
+      "bswap": 4,
+      "shr": 39,
+      "movzx": 50,
+      "and": 34,
+      "add": 3,
+      "movabs": 1,
+      "mul": 1,
+      "jae": 6,
+      "shl": 5,
+      "or": 3,
+      "jb": 1,
+      "je": 1,
+      "jne": 2,
+      "jmp": 1,
+      "pop": 4,
+      "ret": 1,
+      "call": 9
+    },
+    "call_targets": {
+      "core::slice::index::slice_index_fail": 4,
+      "core::panicking::panic_bounds_check": 5
+    },
+    "stack_reservations": [],
+    "inspection": {
+      "cmov": 1,
+      "conditional_jumps": 16,
+      "unconditional_jumps": 1,
+      "stack_sub_rsp_bytes": []
+    }
+  },
+  {
+    "arm": "llvm",
+    "crate": "unicode-segmentation",
+    "object_sha256": "62ba86cfc1b84af97701079f7c57637508dbf65c62a8f3915a95565a3053d688",
+    "name": "<unicode_segmentation::grapheme::GraphemeCursor>::prev_boundary",
+    "start": 0,
+    "bytes": 2906,
+    "section": ".text._RNvMs4_NtCs3QdUL2vdWVj_20unicode_segmentation8graphemeNtB5_14GraphemeCursor13prev_boundary",
+    "aliases": [],
+    "counts": {
+      "instructions": 761,
+      "memory_operand_instructions": 197,
+      "branches": 159,
+      "direct_stack_operand_instructions": 71,
+      "calls": 19,
+      "non_cl_shifts": 14
+    },
+    "opcodes": {
+      "push": 6,
+      "sub": 10,
+      "mov": 212,
+      "test": 12,
+      "je": 36,
+      "cmp": 123,
+      "jne": 21,
+      "jmp": 49,
+      "xorps": 1,
+      "movups": 1,
+      "xor": 24,
+      "cmovae": 2,
+      "jbe": 10,
+      "jae": 8,
+      "jg": 6,
+      "lea": 28,
+      "call": 19,
+      "movsx": 3,
+      "js": 2,
+      "add": 14,
+      "dec": 3,
+      "movzx": 38,
+      "jge": 3,
+      "and": 25,
+      "shl": 14,
+      "or": 16,
+      "nop": 5,
+      "jb": 14,
+      "setb": 3,
+      "ja": 8,
+      "cmovb": 3,
+      "cmova": 16,
+      "setbe": 2,
+      "cmovne": 2,
+      "sete": 5,
+      "cmove": 4,
+      "setae": 1,
+      "jns": 2,
+      "bt": 2,
+      "movsxd": 1,
+      "pop": 6,
+      "ret": 1
+    },
+    "call_targets": {
+      "core::str::slice_error_fail": 3,
+      ".text._RNvNtCs3QdUL2vdWVj_20unicode_segmentation6tables14is_incb_linker": 1,
+      "unicode_segmentation::tables::grapheme::grapheme_category": 5,
+      ".text._RNvXs2_NtNtCshX3mvxHm3fC_4core3str6traitseINtNtNtB9_3ops5index5IndexINtNtBJ_5range7RangeTojEE5indexCs3QdUL2vdWVj_20unicode_segmentation": 3,
+      ".text._RNvMs4_NtCs3QdUL2vdWVj_20unicode_segmentation8graphemeNtB5_14GraphemeCursor12handle_emoji": 1,
+      ".text._RNvMs4_NtCs3QdUL2vdWVj_20unicode_segmentation8graphemeNtB5_14GraphemeCursor21handle_incb_consonant": 1,
+      ".text._RNvMs4_NtCs3QdUL2vdWVj_20unicode_segmentation8graphemeNtB5_14GraphemeCursor18is_boundary_result": 1,
+      ".text._RNvMs4_NtCs3QdUL2vdWVj_20unicode_segmentation8graphemeNtB5_14GraphemeCursor15handle_regional": 1,
+      "core::option::unwrap_failed": 3
+    },
+    "stack_reservations": [
+      "0x78"
+    ],
+    "inspection": {
+      "conditional_jumps": 110,
+      "unconditional_jumps": 49,
+      "vector_register_instructions": 2,
+      "cmov": 27,
+      "setcc": 11,
+      "stack_address_lea": 6,
+      "stack_sub_rsp_bytes": [
+        120
+      ]
+    }
+  },
+  {
+    "arm": "llvm",
+    "crate": "unicode-segmentation",
+    "object_sha256": "62ba86cfc1b84af97701079f7c57637508dbf65c62a8f3915a95565a3053d688",
+    "name": "<unicode_segmentation::grapheme::GraphemeCursor>::is_boundary_result",
+    "start": 0,
+    "bytes": 84,
+    "section": ".text._RNvMs4_NtCs3QdUL2vdWVj_20unicode_segmentation8graphemeNtB5_14GraphemeCursor18is_boundary_result",
+    "aliases": [],
+    "counts": {
+      "instructions": 25,
+      "memory_operand_instructions": 9,
+      "branches": 3,
+      "calls": 1
+    },
+    "opcodes": {
+      "movzx": 3,
+      "lea": 1,
+      "cmp": 4,
+      "mov": 8,
+      "cmovae": 1,
+      "je": 2,
+      "jne": 1,
+      "ret": 3,
+      "push": 1,
+      "call": 1
+    },
+    "call_targets": {
+      ".text.unlikely._RINvNtCshX3mvxHm3fC_4core9panicking19unreachable_displayReECs3QdUL2vdWVj_20unicode_segmentation": 1
+    },
+    "stack_reservations": [],
+    "inspection": {
+      "cmov": 1,
+      "conditional_jumps": 3,
+      "stack_sub_rsp_bytes": []
+    }
+  },
+  {
+    "arm": "llvm",
+    "crate": "humantime",
+    "object_sha256": "d285c592795918d9f19702c450e9d148fc911ed141a25de091f355a76cdb9f8e",
+    "name": "<humantime::duration::Parser>::parse_unit",
+    "start": 0,
+    "bytes": 1093,
+    "section": ".text._RNvMs1_NtCsaGZho4zWNqb_9humantime8durationNtB5_6Parser10parse_unit",
+    "aliases": [],
+    "counts": {
+      "instructions": 293,
+      "memory_operand_instructions": 47,
+      "direct_stack_operand_instructions": 12,
+      "branches": 80,
+      "calls": 9,
+      "non_cl_shifts": 6
+    },
+    "opcodes": {
+      "push": 6,
+      "sub": 4,
+      "mov": 93,
+      "jb": 9,
+      "test": 9,
+      "je": 14,
+      "cmp": 14,
+      "jae": 8,
+      "jge": 2,
+      "jmp": 26,
+      "jne": 5,
+      "jg": 2,
+      "lea": 8,
+      "call": 9,
+      "movzx": 1,
+      "movsxd": 2,
+      "add": 12,
+      "mul": 16,
+      "jno": 9,
+      "jo": 5,
+      "xor": 10,
+      "shr": 6,
+      "movabs": 6,
+      "imul": 2,
+      "inc": 2,
+      "or": 2,
+      "div": 4,
+      "pop": 6,
+      "ret": 1
+    },
+    "call_targets": {
+      "core::str::slice_error_fail": 2,
+      "<humantime::duration::Unit as core::str::traits::FromStr>::from_str": 1,
+      "__rustc::__rust_no_alloc_shim_is_unstable_v2": 1,
+      "__rustc::__rust_alloc": 1,
+      "memcpy": 1,
+      "core::option::expect_failed": 1,
+      "alloc::raw_vec::handle_error": 1,
+      "core::panicking::panic_const::panic_const_rem_by_zero": 1
+    },
+    "stack_reservations": [
+      "0x18"
+    ],
+    "inspection": {
+      "conditional_jumps": 54,
+      "unconditional_jumps": 26,
+      "niche_tag_constant_materializations": 3,
+      "stack_sub_rsp_bytes": [
+        24
+      ]
+    }
+  },
+  {
+    "arm": "llvm",
+    "crate": "humantime",
+    "object_sha256": "d285c592795918d9f19702c450e9d148fc911ed141a25de091f355a76cdb9f8e",
+    "name": "<humantime::duration::Unit as core::str::traits::FromStr>::from_str",
+    "start": 0,
+    "bytes": 675,
+    "section": ".text._RNvXs2_NtCsaGZho4zWNqb_9humantime8durationNtB5_4UnitNtNtNtCshX3mvxHm3fC_4core3str6traits7FromStr8from_str",
+    "aliases": [],
+    "counts": {
+      "instructions": 187,
+      "branches": 35,
+      "memory_operand_instructions": 54
+    },
+    "opcodes": {
+      "mov": 27,
+      "dec": 1,
+      "cmp": 18,
+      "ja": 2,
+      "lea": 3,
+      "movsxd": 2,
+      "add": 2,
+      "jmp": 2,
+      "movzx": 24,
+      "sete": 3,
+      "sub": 3,
+      "ret": 14,
+      "xor": 37,
+      "or": 18,
+      "je": 27,
+      "jne": 4
+    },
+    "call_targets": {},
+    "stack_reservations": [],
+    "inspection": {
+      "conditional_jumps": 33,
+      "unconditional_jumps": 2,
+      "setcc": 3,
+      "stack_sub_rsp_bytes": []
+    }
+  },
+  {
+    "arm": "data",
+    "crate": "semver",
+    "object_sha256": "7e3a0c2d891ab3eea370d2363776913fd6e5faf8dd92eae3bc531cfa9b977b5c",
+    "name": "semver::parse::op",
+    "start": 6240,
+    "bytes": 1214,
+    "section": ".text",
+    "aliases": [],
+    "counts": {
+      "instructions": 321,
+      "branches": 42,
+      "memory_operand_instructions": 37,
+      "calls": 35
+    },
+    "opcodes": {
+      "push": 5,
+      "mov": 172,
+      "sub": 1,
+      "lea": 39,
+      "cmp": 7,
+      "jb": 5,
+      "jmp": 21,
+      "call": 35,
+      "test": 14,
+      "je": 14,
+      "pop": 4,
+      "leave": 1,
+      "ret": 1,
+      "jbe": 2
+    },
+    "call_targets": {
+      "<core::option::Option<&u8> as core::cmp::PartialEq>::eq": 7,
+      "core::ptr::metadata::metadata::<[u8]>": 7,
+      "<str>::is_char_boundary": 7,
+      "<core::ops::range::RangeFrom<usize> as core::slice::index::SliceIndex<str>>::get_unchecked": 7,
+      "core::str::slice_error_fail": 7
+    },
+    "stack_reservations": [
+      "0xc0"
+    ],
+    "inspection": {
+      "stack_address_lea": 23,
+      "conditional_jumps": 21,
+      "unconditional_jumps": 21,
+      "stack_sub_rsp_bytes": [
+        192
+      ]
+    }
+  },
+  {
+    "arm": "data",
+    "crate": "semver",
+    "object_sha256": "7fdb0504d4dbd477e658d3d9b0da6439ae244838c9616b48c33a539a43430dd3",
+    "name": "<semver::identifier::Identifier>::ptr_eq",
+    "start": 656,
+    "bytes": 30,
+    "section": ".text",
+    "aliases": [],
+    "counts": {
+      "instructions": 11,
+      "memory_operand_instructions": 2,
+      "branches": 2
+    },
+    "opcodes": {
+      "mov": 3,
+      "cmp": 1,
+      "sete": 1,
+      "movzx": 1,
+      "test": 1,
+      "je": 1,
+      "jmp": 1,
+      "xor": 1,
+      "ret": 1
+    },
+    "call_targets": {},
+    "stack_reservations": [],
+    "inspection": {
+      "setcc": 1,
+      "conditional_jumps": 1,
+      "unconditional_jumps": 1,
+      "stack_sub_rsp_bytes": []
+    }
+  },
+  {
+    "arm": "data",
+    "crate": "semver",
+    "object_sha256": "7fdb0504d4dbd477e658d3d9b0da6439ae244838c9616b48c33a539a43430dd3",
+    "name": "<semver::identifier::Identifier>::is_empty",
+    "start": 688,
+    "bytes": 58,
+    "section": ".text",
+    "aliases": [],
+    "counts": {
+      "instructions": 20,
+      "memory_operand_instructions": 4,
+      "branches": 2
+    },
+    "opcodes": {
+      "push": 1,
+      "mov": 7,
+      "sub": 1,
+      "lea": 1,
+      "cmp": 1,
+      "sete": 1,
+      "movzx": 1,
+      "test": 1,
+      "je": 1,
+      "jmp": 1,
+      "xor": 2,
+      "leave": 1,
+      "ret": 1
+    },
+    "call_targets": {},
+    "stack_reservations": [
+      "0x10"
+    ],
+    "inspection": {
+      "stack_address_lea": 1,
+      "setcc": 1,
+      "conditional_jumps": 1,
+      "unconditional_jumps": 1,
+      "stack_sub_rsp_bytes": [
+        16
+      ]
+    }
+  },
+  {
+    "arm": "data",
+    "crate": "base64",
+    "object_sha256": "e46ba179023ab92a9afef84f92a850c09a2de088e2a2657fa1e37d3eef7e49de",
+    "name": "base64::engine::general_purpose::decode::decode_chunk_8",
+    "start": 5712,
+    "bytes": 1542,
+    "section": ".text",
+    "aliases": [],
+    "counts": {
+      "instructions": 374,
+      "memory_operand_instructions": 76,
+      "direct_stack_operand_instructions": 14,
+      "branches": 57,
+      "calls": 25,
+      "non_cl_shifts": 8
+    },
+    "opcodes": {
+      "push": 6,
+      "mov": 164,
+      "sub": 2,
+      "test": 1,
+      "ja": 8,
+      "lea": 31,
+      "call": 25,
+      "pop": 5,
+      "leave": 1,
+      "ret": 1,
+      "movzx": 24,
+      "cmp": 26,
+      "jb": 9,
+      "jmp": 30,
+      "add": 15,
+      "jne": 8,
+      "jae": 1,
+      "je": 1,
+      "shl": 8,
+      "or": 7,
+      "bswap": 1
+    },
+    "call_targets": {
+      "core::panicking::panic_bounds_check": 16,
+      "core::ptr::metadata::metadata::<[u8]>": 2,
+      "<usize>::checked_sub": 1,
+      "<[u8]>::len": 2,
+      "core::slice::index::get_offset_len_noubcheck::<u8>": 1,
+      "core::slice::copy_from_slice_impl::<u8>": 1,
+      "core::slice::index::slice_index_fail": 2
+    },
+    "stack_reservations": [
+      "0xd0",
+      "0x8"
+    ],
+    "inspection": {
+      "conditional_jumps": 27,
+      "stack_address_lea": 12,
+      "unconditional_jumps": 30,
+      "stack_sub_rsp_bytes": [
+        208,
+        8
+      ]
+    }
+  },
+  {
+    "arm": "data",
+    "crate": "base64",
+    "object_sha256": "e46ba179023ab92a9afef84f92a850c09a2de088e2a2657fa1e37d3eef7e49de",
+    "name": "<base64::engine::general_purpose::GeneralPurpose as base64::engine::Engine>::internal_encode",
+    "start": 7344,
+    "bytes": 5629,
+    "section": ".text",
+    "aliases": [],
+    "counts": {
+      "instructions": 1287,
+      "memory_operand_instructions": 334,
+      "direct_stack_operand_instructions": 243,
+      "branches": 162,
+      "calls": 68,
+      "non_cl_shifts": 44
+    },
+    "opcodes": {
+      "push": 6,
+      "mov": 623,
+      "sub": 8,
+      "lea": 117,
+      "cmp": 70,
+      "setb": 4,
+      "movzx": 59,
+      "xor": 9,
+      "and": 35,
+      "test": 11,
+      "ja": 41,
+      "jmp": 85,
+      "jbe": 4,
+      "jae": 5,
+      "je": 4,
+      "jb": 15,
+      "call": 68,
+      "pop": 5,
+      "leave": 1,
+      "ret": 1,
+      "add": 58,
+      "shr": 39,
+      "movabs": 1,
+      "mul": 1,
+      "imul": 1,
+      "shl": 5,
+      "or": 3,
+      "jne": 8
+    },
+    "call_targets": {
+      "core::slice::index::slice_index_fail": 8,
+      "base64::engine::general_purpose::read_u64": 4,
+      "core::panicking::panic_bounds_check": 56
+    },
+    "stack_reservations": [
+      "0x178"
+    ],
+    "inspection": {
+      "setcc": 4,
+      "conditional_jumps": 77,
+      "unconditional_jumps": 85,
+      "stack_address_lea": 1,
+      "stack_sub_rsp_bytes": [
+        376
+      ]
+    }
+  },
+  {
+    "arm": "data",
+    "crate": "base64",
+    "object_sha256": "e46ba179023ab92a9afef84f92a850c09a2de088e2a2657fa1e37d3eef7e49de",
+    "name": "base64::engine::general_purpose::read_u64",
+    "start": 12976,
+    "bytes": 397,
+    "section": ".text",
+    "aliases": [],
+    "counts": {
+      "instructions": 108,
+      "calls": 7,
+      "branches": 13,
+      "memory_operand_instructions": 35
+    },
+    "opcodes": {
+      "push": 3,
+      "mov": 46,
+      "sub": 1,
+      "call": 7,
+      "cmp": 3,
+      "jb": 1,
+      "jne": 1,
+      "jmp": 6,
+      "xor": 4,
+      "test": 4,
+      "je": 5,
+      "lea": 6,
+      "pop": 2,
+      "leave": 1,
+      "ret": 1,
+      "movzx": 16,
+      "bswap": 1
+    },
+    "call_targets": {
+      "core::ptr::metadata::metadata::<[u8]>": 2,
+      "<[u8]>::len": 1,
+      "<[u8]>::as_ptr": 1,
+      "<*const u8>::cast_array::<8>": 1,
+      "<core::result::Result<[u8; 8], core::array::TryFromSliceError>>::unwrap": 1,
+      "core::slice::index::slice_index_fail": 1
+    },
+    "stack_reservations": [
+      "0x20"
+    ],
+    "inspection": {
+      "conditional_jumps": 7,
+      "unconditional_jumps": 6,
+      "jump_to_next_instruction": 1,
+      "stack_address_lea": 4,
+      "stack_sub_rsp_bytes": [
+        32
+      ]
+    }
+  },
+  {
+    "arm": "data",
+    "crate": "unicode-segmentation",
+    "object_sha256": "add1d5380d8291ec6dfb696bfb848ece1e48c6e0469814b0e2f04a731e3fbab1",
+    "name": "<unicode_segmentation::grapheme::GraphemeCursor>::prev_boundary",
+    "start": 0,
+    "bytes": 1326,
+    "section": ".text",
+    "aliases": [],
+    "counts": {
+      "instructions": 363,
+      "memory_operand_instructions": 100,
+      "direct_stack_operand_instructions": 43,
+      "branches": 64,
+      "calls": 15
+    },
+    "opcodes": {
+      "push": 6,
+      "mov": 202,
+      "sub": 6,
+      "test": 14,
+      "jne": 11,
+      "lea": 11,
+      "jmp": 35,
+      "cmp": 16,
+      "je": 13,
+      "setb": 1,
+      "movzx": 5,
+      "xor": 8,
+      "and": 8,
+      "call": 15,
+      "jae": 3,
+      "ja": 2,
+      "pop": 5,
+      "leave": 1,
+      "ret": 1
+    },
+    "call_targets": {
+      "<str>::is_char_boundary": 1,
+      "<core::ops::range::RangeTo<usize> as core::slice::index::SliceIndex<str>>::get_unchecked": 1,
+      "<core::slice::iter::Iter<u8>>::new": 1,
+      "core::str::validations::next_code_point_reverse::<core::slice::iter::Iter<u8>>": 2,
+      "<char>::from_u32_unchecked": 2,
+      "<unicode_segmentation::grapheme::GraphemeCursor>::grapheme_category": 3,
+      "unicode_segmentation::tables::is_incb_linker": 1,
+      "unicode_segmentation::tables::derived_property::InCB_Extend": 1,
+      "<unicode_segmentation::grapheme::GraphemeCursor>::is_boundary": 1,
+      "core::option::unwrap_failed": 1,
+      "core::str::slice_error_fail": 1
+    },
+    "stack_reservations": [
+      "0x108"
+    ],
+    "inspection": {
+      "conditional_jumps": 29,
+      "stack_address_lea": 9,
+      "unconditional_jumps": 35,
+      "setcc": 1,
+      "jump_to_next_instruction": 2,
+      "stack_sub_rsp_bytes": [
+        264
+      ]
+    }
+  },
+  {
+    "arm": "data",
+    "crate": "unicode-segmentation",
+    "object_sha256": "add1d5380d8291ec6dfb696bfb848ece1e48c6e0469814b0e2f04a731e3fbab1",
+    "name": "core::str::validations::next_code_point_reverse::<core::slice::iter::Iter<u8>>",
+    "start": 1328,
+    "bytes": 484,
+    "section": ".text",
+    "aliases": [],
+    "counts": {
+      "instructions": 140,
+      "memory_operand_instructions": 27,
+      "branches": 22,
+      "calls": 7,
+      "non_cl_shifts": 3
+    },
+    "opcodes": {
+      "push": 5,
+      "mov": 48,
+      "sub": 2,
+      "cmp": 7,
+      "sete": 4,
+      "movzx": 8,
+      "test": 7,
+      "jne": 1,
+      "jmp": 12,
+      "lea": 7,
+      "call": 7,
+      "jb": 1,
+      "je": 6,
+      "xor": 3,
+      "movsx": 2,
+      "jge": 2,
+      "and": 6,
+      "shl": 3,
+      "or": 3,
+      "pop": 4,
+      "leave": 1,
+      "ret": 1
+    },
+    "call_targets": {
+      "<core::ptr::non_null::NonNull<u8>>::sub": 4,
+      "core::hint::unreachable_unchecked": 3
+    },
+    "stack_reservations": [
+      "0x18",
+      "0x8"
+    ],
+    "inspection": {
+      "setcc": 4,
+      "conditional_jumps": 10,
+      "unconditional_jumps": 12,
+      "stack_address_lea": 4,
+      "stack_sub_rsp_bytes": [
+        24,
+        8
+      ]
+    }
+  },
+  {
+    "arm": "data",
+    "crate": "unicode-segmentation",
+    "object_sha256": "add1d5380d8291ec6dfb696bfb848ece1e48c6e0469814b0e2f04a731e3fbab1",
+    "name": "<unicode_segmentation::grapheme::GraphemeCursor>::is_boundary",
+    "start": 1952,
+    "bytes": 2105,
+    "section": ".text",
+    "aliases": [],
+    "counts": {
+      "instructions": 575,
+      "memory_operand_instructions": 71,
+      "direct_stack_operand_instructions": 11,
+      "calls": 37,
+      "branches": 137
+    },
+    "opcodes": {
+      "push": 6,
+      "mov": 203,
+      "sub": 6,
+      "lea": 25,
+      "call": 37,
+      "test": 21,
+      "je": 57,
+      "xor": 29,
+      "jmp": 63,
+      "cmp": 60,
+      "jae": 1,
+      "add": 4,
+      "setb": 3,
+      "movzx": 23,
+      "and": 10,
+      "jb": 1,
+      "jbe": 1,
+      "jne": 14,
+      "pop": 5,
+      "leave": 1,
+      "ret": 1,
+      "setne": 3,
+      "sete": 1
+    },
+    "call_targets": {
+      "<unicode_segmentation::grapheme::GraphemeState as core::cmp::PartialEq>::eq": 2,
+      "core::ptr::metadata::metadata::<[u8]>": 1,
+      "<str>::is_char_boundary": 5,
+      "<core::ops::range::RangeFrom<usize> as core::slice::index::SliceIndex<str>>::get_unchecked": 1,
+      "<core::slice::iter::Iter<u8>>::new": 2,
+      "core::str::validations::next_code_point::<core::slice::iter::Iter<u8>>": 1,
+      "<char>::from_u32_unchecked": 2,
+      "<unicode_segmentation::grapheme::GraphemeCursor>::grapheme_category": 2,
+      "core::option::unwrap_failed": 5,
+      "core::str::slice_error_fail": 5,
+      "<core::ops::range::RangeTo<usize> as core::slice::index::SliceIndex<str>>::get_unchecked": 4,
+      "core::str::validations::next_code_point_reverse::<core::slice::iter::Iter<u8>>": 1,
+      "<unicode_segmentation::grapheme::GraphemeCursor>::handle_regional": 1,
+      "<unicode_segmentation::grapheme::GraphemeCursor>::is_boundary_result": 3,
+      "<unicode_segmentation::grapheme::GraphemeCursor>::handle_incb_consonant": 1,
+      "<unicode_segmentation::grapheme::GraphemeCursor>::handle_emoji": 1
+    },
+    "stack_reservations": [
+      "0x80",
+      "0x8"
+    ],
+    "inspection": {
+      "conditional_jumps": 74,
+      "unconditional_jumps": 63,
+      "setcc": 7,
+      "stack_address_lea": 11,
+      "jump_to_next_instruction": 2,
+      "stack_sub_rsp_bytes": [
+        128,
+        8
+      ]
+    }
+  },
+  {
+    "arm": "data",
+    "crate": "unicode-segmentation",
+    "object_sha256": "add1d5380d8291ec6dfb696bfb848ece1e48c6e0469814b0e2f04a731e3fbab1",
+    "name": "<unicode_segmentation::grapheme::GraphemeCursor>::is_boundary_result",
+    "start": 6016,
+    "bytes": 182,
+    "section": ".text",
+    "aliases": [],
+    "counts": {
+      "instructions": 50,
+      "calls": 3,
+      "branches": 6,
+      "memory_operand_instructions": 12
+    },
+    "opcodes": {
+      "push": 3,
+      "mov": 20,
+      "sub": 1,
+      "lea": 10,
+      "call": 3,
+      "test": 2,
+      "je": 3,
+      "jmp": 3,
+      "cmp": 1,
+      "pop": 2,
+      "leave": 1,
+      "ret": 1
+    },
+    "call_targets": {
+      "<unicode_segmentation::grapheme::GraphemeState as core::cmp::PartialEq>::eq": 2,
+      "core::panicking::unreachable_display::<&str>": 1
+    },
+    "stack_reservations": [
+      "0x30"
+    ],
+    "inspection": {
+      "conditional_jumps": 3,
+      "stack_address_lea": 4,
+      "unconditional_jumps": 3,
+      "stack_sub_rsp_bytes": [
+        48
+      ]
+    }
+  },
+  {
+    "arm": "data",
+    "crate": "humantime",
+    "object_sha256": "fe04aba3627ccd4d1f9afa4ce8fa85ba401bd04650338e224ed0bfb3cb9f5f16",
+    "name": "<humantime::duration::Parser>::parse_unit",
+    "start": 8288,
+    "bytes": 23799,
+    "section": ".text",
+    "aliases": [],
+    "counts": {
+      "instructions": 5674,
+      "memory_operand_instructions": 1450,
+      "direct_stack_operand_instructions": 52,
+      "calls": 64,
+      "branches": 1436
+    },
+    "opcodes": {
+      "push": 6,
+      "mov": 1889,
+      "sub": 114,
+      "call": 64,
+      "lea": 139,
+      "test": 94,
+      "jne": 126,
+      "jmp": 722,
+      "je": 532,
+      "movzx": 74,
+      "cmp": 692,
+      "pop": 5,
+      "leave": 1,
+      "ret": 1,
+      "mul": 16,
+      "setne": 16,
+      "imul": 16,
+      "movabs": 719,
+      "ja": 56,
+      "setbe": 56,
+      "add": 56,
+      "neg": 56,
+      "not": 56,
+      "and": 112,
+      "or": 56
+    },
+    "call_targets": {
+      "<core::ops::range::Range<usize> as core::slice::index::SliceIndex<str>>::get": 2,
+      "<humantime::duration::Unit as core::str::traits::FromStr>::from_str": 1,
+      "<[u8] as alloc::borrow::ToOwned>::to_owned": 1,
+      "core::str::slice_error_fail": 2,
+      "<core::option::Option<u64>>::ok_or::<humantime::duration::Error>": 17,
+      "<core::result::Result<u64, humantime::duration::Error> as core::ops::try_trait::Try>::branch": 26,
+      "humantime::duration::add_current": 2,
+      "<core::result::Result<(), humantime::duration::Error> as core::ops::try_trait::Try>::branch": 2,
+      "<u64 as humantime::duration::OverflowOp>::div": 9,
+      "core::intrinsics::unlikely": 1,
+      "<u64>::checked_mul": 1
+    },
+    "stack_reservations": [
+      "0x1930",
+      "0x8"
+    ],
+    "inspection": {
+      "stack_address_lea": 137,
+      "conditional_jumps": 714,
+      "unconditional_jumps": 722,
+      "setcc": 72,
+      "niche_tag_constant_materializations": 717,
+      "jump_to_next_instruction": 2,
+      "stack_sub_rsp_bytes": [
+        6448,
+        8
+      ]
+    }
+  },
+  {
+    "arm": "data",
+    "crate": "humantime",
+    "object_sha256": "fe04aba3627ccd4d1f9afa4ce8fa85ba401bd04650338e224ed0bfb3cb9f5f16",
+    "name": "<core::option::Option<u64>>::ok_or::<humantime::duration::Error>",
+    "start": 32096,
+    "bytes": 871,
+    "section": ".text",
+    "aliases": [],
+    "counts": {
+      "instructions": 216,
+      "memory_operand_instructions": 66,
+      "branches": 45,
+      "direct_stack_operand_instructions": 2,
+      "calls": 2
+    },
+    "opcodes": {
+      "push": 6,
+      "mov": 78,
+      "sub": 5,
+      "lea": 5,
+      "movabs": 30,
+      "cmp": 21,
+      "je": 20,
+      "jmp": 21,
+      "ja": 4,
+      "test": 3,
+      "xor": 14,
+      "call": 2,
+      "pop": 5,
+      "leave": 1,
+      "ret": 1
+    },
+    "call_targets": {
+      "<alloc::vec::Vec<u8> as core::ops::drop::Drop>::drop": 1,
+      "<alloc::raw_vec::RawVec<u8> as core::ops::drop::Drop>::drop": 1
+    },
+    "stack_reservations": [
+      "0xa8"
+    ],
+    "inspection": {
+      "stack_address_lea": 5,
+      "niche_tag_constant_materializations": 30,
+      "conditional_jumps": 24,
+      "unconditional_jumps": 21,
+      "stack_sub_rsp_bytes": [
+        168
+      ]
+    }
+  },
+  {
+    "arm": "data",
+    "crate": "humantime",
+    "object_sha256": "fe04aba3627ccd4d1f9afa4ce8fa85ba401bd04650338e224ed0bfb3cb9f5f16",
+    "name": "<u64 as humantime::duration::OverflowOp>::div",
+    "start": 40912,
+    "bytes": 152,
+    "section": ".text",
+    "aliases": [],
+    "counts": {
+      "instructions": 44,
+      "branches": 4,
+      "calls": 1,
+      "memory_operand_instructions": 15
+    },
+    "opcodes": {
+      "push": 1,
+      "mov": 22,
+      "sub": 1,
+      "test": 2,
+      "je": 2,
+      "jmp": 2,
+      "lea": 3,
+      "call": 1,
+      "leave": 2,
+      "ret": 2,
+      "xor": 2,
+      "div": 2,
+      "movabs": 2
+    },
+    "call_targets": {
+      "core::panicking::panic_const::panic_const_rem_by_zero": 1
+    },
+    "stack_reservations": [
+      "0x60"
+    ],
+    "inspection": {
+      "conditional_jumps": 2,
+      "unconditional_jumps": 2,
+      "stack_address_lea": 2,
+      "niche_tag_constant_materializations": 2,
+      "stack_sub_rsp_bytes": [
+        96
+      ]
+    }
+  },
+  {
+    "arm": "data",
+    "crate": "humantime",
+    "object_sha256": "fe04aba3627ccd4d1f9afa4ce8fa85ba401bd04650338e224ed0bfb3cb9f5f16",
+    "name": "<humantime::duration::Unit as core::str::traits::FromStr>::from_str",
+    "start": 41616,
+    "bytes": 1294,
+    "section": ".text",
+    "aliases": [],
+    "counts": {
+      "instructions": 355,
+      "calls": 40,
+      "branches": 80,
+      "memory_operand_instructions": 12
+    },
+    "opcodes": {
+      "push": 3,
+      "mov": 134,
+      "sub": 1,
+      "lea": 52,
+      "call": 40,
+      "test": 40,
+      "je": 40,
+      "jmp": 40,
+      "movzx": 1,
+      "pop": 2,
+      "leave": 1,
+      "ret": 1
+    },
+    "call_targets": {
+      "<[u8] as core::slice::cmp::SlicePartialEq<u8>>::equal": 18,
+      "<str as core::cmp::PartialEq>::eq": 22
+    },
+    "stack_reservations": [
+      "0x10"
+    ],
+    "inspection": {
+      "conditional_jumps": 40,
+      "unconditional_jumps": 40,
+      "stack_address_lea": 12,
+      "stack_sub_rsp_bytes": [
+        16
+      ]
+    }
+  },
+  {
+    "arm": "data",
+    "crate": "humantime",
+    "object_sha256": "fe04aba3627ccd4d1f9afa4ce8fa85ba401bd04650338e224ed0bfb3cb9f5f16",
+    "name": "<core::result::Result<(), humantime::duration::Error> as core::ops::try_trait::Try>::branch",
+    "start": 45744,
+    "bytes": 444,
+    "section": ".text",
+    "aliases": [],
+    "counts": {
+      "instructions": 114,
+      "memory_operand_instructions": 35,
+      "branches": 23
+    },
+    "opcodes": {
+      "push": 5,
+      "mov": 40,
+      "sub": 3,
+      "movabs": 13,
+      "cmp": 12,
+      "je": 9,
+      "jne": 2,
+      "jmp": 11,
+      "ja": 1,
+      "setbe": 1,
+      "movzx": 1,
+      "add": 1,
+      "neg": 1,
+      "not": 1,
+      "and": 2,
+      "or": 1,
+      "lea": 3,
+      "pop": 4,
+      "leave": 1,
+      "ret": 1,
+      "test": 1
+    },
+    "call_targets": {},
+    "stack_reservations": [
+      "0x60"
+    ],
+    "inspection": {
+      "niche_tag_constant_materializations": 13,
+      "conditional_jumps": 12,
+      "jump_to_next_instruction": 1,
+      "unconditional_jumps": 11,
+      "setcc": 1,
+      "stack_address_lea": 3,
+      "stack_sub_rsp_bytes": [
+        96
+      ]
+    }
+  },
+  {
+    "arm": "data",
+    "crate": "humantime",
+    "object_sha256": "fe04aba3627ccd4d1f9afa4ce8fa85ba401bd04650338e224ed0bfb3cb9f5f16",
+    "name": "<core::result::Result<u64, humantime::duration::Error> as core::ops::try_trait::Try>::branch",
+    "start": 46192,
+    "bytes": 465,
+    "section": ".text",
+    "aliases": [],
+    "counts": {
+      "instructions": 120,
+      "memory_operand_instructions": 37,
+      "branches": 24
+    },
+    "opcodes": {
+      "push": 6,
+      "mov": 42,
+      "sub": 4,
+      "movabs": 13,
+      "cmp": 12,
+      "je": 9,
+      "jmp": 12,
+      "jne": 2,
+      "ja": 1,
+      "setbe": 1,
+      "movzx": 1,
+      "add": 1,
+      "neg": 1,
+      "not": 1,
+      "and": 2,
+      "or": 1,
+      "lea": 3,
+      "pop": 5,
+      "leave": 1,
+      "ret": 1,
+      "test": 1
+    },
+    "call_targets": {},
+    "stack_reservations": [
+      "0x60",
+      "0x8"
+    ],
+    "inspection": {
+      "niche_tag_constant_materializations": 13,
+      "conditional_jumps": 12,
+      "unconditional_jumps": 12,
+      "setcc": 1,
+      "stack_address_lea": 3,
+      "stack_sub_rsp_bytes": [
+        96,
+        8
+      ]
+    }
+  }
+]

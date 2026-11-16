@@ -8,6 +8,8 @@
 use std::collections::BTreeMap;
 use std::fmt;
 
+pub use super::address::{MemoryAddress, Scale};
+
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub struct VirtualReg(pub u32);
 
@@ -95,6 +97,11 @@ pub enum VirtualInstr {
         rhs: VirtualValue,
     },
     Mul {
+        dst: VirtualReg,
+        lhs: VirtualValue,
+        rhs: VirtualValue,
+    },
+    MulHigh {
         dst: VirtualReg,
         lhs: VirtualValue,
         rhs: VirtualValue,
@@ -502,6 +509,10 @@ pub enum MachineInstr {
     UDiv {
         src: Operand,
     },
+    /// Unsigned 64-bit RAX * src, with the high half in RDX.
+    MulHigh {
+        src: Reg,
+    },
     Cmp {
         lhs: Reg,
         rhs: Operand,
@@ -512,6 +523,13 @@ pub enum MachineInstr {
     /// `test r8, r8`: flags of the low byte, read only by `Eq`/`NotEq`.
     TestByte {
         reg: Reg,
+    },
+    /// Register AND immediate flags, without modifying the register. The
+    /// immediate is truncated for W8/W16 and sign-extended from imm32 for W64.
+    TestMasked {
+        reg: Reg,
+        mask: u32,
+        width: BitWidth,
     },
     SetCc {
         condition: Condition,
@@ -540,6 +558,11 @@ pub enum MachineInstr {
         base: Reg,
         offset: i32,
     },
+    /// `lea dst, [base + index*scale + offset]`, without a memory access.
+    EffectiveAddress {
+        dst: Reg,
+        address: MemoryAddress<Reg>,
+    },
     /// Load/store exactly `bytes` (1, 2, 4 or 8) through an address register.
     /// `bytes` from `[address + offset]`, zero-extended below four bytes.
     LoadIndirect {
@@ -558,6 +581,22 @@ pub enum MachineInstr {
     StoreImmediate {
         address: Reg,
         offset: i32,
+        value: i32,
+        bytes: u8,
+    },
+    /// Address operands have already been selected and allocated.
+    LoadAddress {
+        dst: Reg,
+        address: MemoryAddress<Reg>,
+        bytes: u8,
+    },
+    StoreAddress {
+        address: MemoryAddress<Reg>,
+        src: Reg,
+        bytes: u8,
+    },
+    StoreAddressImmediate {
+        address: MemoryAddress<Reg>,
         value: i32,
         bytes: u8,
     },
@@ -612,6 +651,9 @@ pub struct MachineFunction {
     pub stack_slots: u32,
     pub callee_saved: Vec<Reg>,
     pub symbols: Vec<String>,
+    /// Labels proved to be natural-loop headers by the source CFG scheduler.
+    /// Allocation may append backward critical edges that are not loops.
+    pub loop_headers: Vec<u32>,
 }
 
 /// An architectural SSE register. All XMM registers are caller-saved on SysV.
@@ -626,6 +668,7 @@ impl MachineFunction {
             stack_slots: 0,
             callee_saved: Vec::new(),
             symbols: Vec::new(),
+            loop_headers: Vec::new(),
         }
     }
 
@@ -750,9 +793,11 @@ pub fn optimize_zero_idioms(instructions: &mut [MachineInstr]) -> usize {
                     | MachineInstr::LShr { .. }
                     | MachineInstr::IDiv { .. }
                     | MachineInstr::UDiv { .. }
+                    | MachineInstr::MulHigh { .. }
                     | MachineInstr::Cmp { .. }
                     | MachineInstr::Test { .. }
                     | MachineInstr::TestByte { .. }
+                    | MachineInstr::TestMasked { .. }
                     | MachineInstr::Call { .. }
             ) || matches!(
                 instruction,
@@ -980,6 +1025,10 @@ fn validate_instruction(
             validate_reg(dst)?;
             validate_reg(src)?;
         }
+        EffectiveAddress { dst, address } => {
+            validate_reg(dst)?;
+            address.try_map(validate_reg)?;
+        }
         Add { dst, src }
         | Sub { dst, src }
         | IMul { dst, src }
@@ -999,11 +1048,17 @@ fn validate_instruction(
                 return Err(AsmError::InvalidDivisor(reg));
             }
         }
+        MulHigh { src } => {
+            validate_reg(src)?;
+            if matches!(src, Reg::Rax | Reg::Rdx) {
+                return Err(AsmError::InvalidMultiplyRegister(src));
+            }
+        }
         Cmp { lhs, rhs } => {
             validate_reg(lhs)?;
             validate_operand(rhs)?;
         }
-        Test { reg } | TestByte { reg } => validate_reg(reg)?,
+        Test { reg } | TestByte { reg } | TestMasked { reg, .. } => validate_reg(reg)?,
         Load { dst, slot } => {
             validate_reg(dst)?;
             validate_slot(slot, stack_slots)?;
@@ -1051,6 +1106,28 @@ fn validate_instruction(
         }
         StoreImmediate { address, bytes, .. } => {
             validate_reg(address)?;
+            if !matches!(bytes, 1 | 2 | 4 | 8) {
+                return Err(AsmError::FrameSizeOverflow);
+            }
+        }
+        LoadAddress {
+            dst,
+            address,
+            bytes,
+        }
+        | StoreAddress {
+            src: dst,
+            address,
+            bytes,
+        } => {
+            validate_reg(dst)?;
+            address.try_map(validate_reg)?;
+            if !matches!(bytes, 1 | 2 | 4 | 8) {
+                return Err(AsmError::FrameSizeOverflow);
+            }
+        }
+        StoreAddressImmediate { address, bytes, .. } => {
+            address.try_map(validate_reg)?;
             if !matches!(bytes, 1 | 2 | 4 | 8) {
                 return Err(AsmError::FrameSizeOverflow);
             }
@@ -1201,6 +1278,7 @@ fn emit_instruction(
             emit_operand(out, src, stack_slots)?;
             out.push('\n');
         }
+        MulHigh { src } => out.push_str(&format!("\tmul {}\n", src.name())),
         Cmp {
             lhs,
             rhs: Operand::Imm(0),
@@ -1211,6 +1289,15 @@ fn emit_instruction(
         TestByte { reg } => {
             let byte = reg.bit_name(BitWidth::W8);
             out.push_str(&format!("\ttest {byte}, {byte}\n"));
+        }
+        TestMasked { reg, mask, width } => {
+            let immediate = match width {
+                BitWidth::W8 => i64::from(mask as u8),
+                BitWidth::W16 => i64::from(mask as u16),
+                BitWidth::W32 => i64::from(mask),
+                BitWidth::W64 => i64::from(mask as i32),
+            };
+            out.push_str(&format!("\ttest {}, {immediate}\n", reg.bit_name(width)));
         }
         Cmp { lhs, rhs } => {
             out.push_str(&format!("\tcmp {}, ", lhs.name()));
@@ -1241,78 +1328,70 @@ fn emit_instruction(
             dst.name(),
             base.name()
         )),
+        EffectiveAddress { dst, address } => {
+            out.push_str(&format!("\tlea {}, [{address}]\n", dst.name()))
+        }
         LoadIndirect {
             dst,
             address,
             offset,
             bytes,
-        } => {
-            let size = match bytes {
-                1 => "BYTE",
-                2 => "WORD",
-                4 => "DWORD",
-                _ => "QWORD",
-            };
-            let op = if bytes < 4 { "movzx" } else { "mov" };
-            let dst = if bytes == 4 { dst.low32() } else { dst.name() };
-            out.push_str(&format!(
-                "\t{op} {dst}, {size} PTR [{}{offset:+}]\n",
-                address.name()
-            ));
-        }
-        StoreImmediate {
-            address,
-            offset,
-            value,
+        } => emit_load_address(
+            out,
+            dst,
+            MemoryAddress {
+                base: address,
+                index: None,
+                offset,
+            },
             bytes,
-        } => {
-            let (size, value) = match bytes {
-                1 => ("BYTE", i64::from(value as i8)),
-                2 => ("WORD", i64::from(value as i16)),
-                4 => ("DWORD", i64::from(value)),
-                _ => ("QWORD", i64::from(value)),
-            };
-            out.push_str(&format!(
-                "\tmov {size} PTR [{}{offset:+}], {value}\n",
-                address.name()
-            ));
-        }
+        ),
+        LoadAddress {
+            dst,
+            address,
+            bytes,
+        } => emit_load_address(out, dst, address, bytes),
         StoreIndirect {
             address,
             offset,
             src,
             bytes,
+        } => emit_store_address(
+            out,
+            MemoryAddress {
+                base: address,
+                index: None,
+                offset,
+            },
+            src,
+            bytes,
+        ),
+        StoreAddress {
+            address,
+            src,
+            bytes,
+        } => emit_store_address(out, address, src, bytes),
+        StoreImmediate {
+            address,
+            offset,
+            value,
+            bytes,
+        } => emit_store_immediate(
+            out,
+            MemoryAddress {
+                base: address,
+                index: None,
+                offset,
+            },
+            value,
+            bytes,
+        ),
+        StoreAddressImmediate {
+            address,
+            value,
+            bytes,
         } => {
-            let (size, src) = match bytes {
-                1 => ("BYTE", src.low8()),
-                2 => (
-                    "WORD",
-                    match src {
-                        Reg::Rax => "ax",
-                        Reg::Rbx => "bx",
-                        Reg::Rcx => "cx",
-                        Reg::Rdx => "dx",
-                        Reg::Rsi => "si",
-                        Reg::Rdi => "di",
-                        Reg::Rbp => "bp",
-                        Reg::Rsp => "sp",
-                        Reg::R8 => "r8w",
-                        Reg::R9 => "r9w",
-                        Reg::R10 => "r10w",
-                        Reg::R11 => "r11w",
-                        Reg::R12 => "r12w",
-                        Reg::R13 => "r13w",
-                        Reg::R14 => "r14w",
-                        Reg::R15 => "r15w",
-                    },
-                ),
-                4 => ("DWORD", src.low32()),
-                _ => ("QWORD", src.name()),
-            };
-            out.push_str(&format!(
-                "\tmov {size} PTR [{}{offset:+}], {src}\n",
-                address.name()
-            ));
+            emit_store_immediate(out, address, value, bytes);
         }
         LoadVector { dst, address } => out.push_str(&format!(
             "\tmovdqu xmm{}, XMMWORD PTR [{}]\n",
@@ -1393,6 +1472,68 @@ fn emit_instruction(
     Ok(())
 }
 
+impl fmt::Display for MemoryAddress<Reg> {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str(self.base.name())?;
+        if let Some((index, scale)) = self.index {
+            write!(formatter, "+{}*{}", index.name(), scale.factor())?;
+        }
+        write!(formatter, "{:+}", self.offset)
+    }
+}
+
+fn emit_load_address(out: &mut String, dst: Reg, address: MemoryAddress<Reg>, bytes: u8) {
+    let size = match bytes {
+        1 => "BYTE",
+        2 => "WORD",
+        4 => "DWORD",
+        _ => "QWORD",
+    };
+    let op = if bytes < 4 { "movzx" } else { "mov" };
+    let dst = if bytes == 4 { dst.low32() } else { dst.name() };
+    out.push_str(&format!("\t{op} {dst}, {size} PTR [{address}]\n"));
+}
+
+fn emit_store_address(out: &mut String, address: MemoryAddress<Reg>, src: Reg, bytes: u8) {
+    let (size, src) = match bytes {
+        1 => ("BYTE", src.low8()),
+        2 => (
+            "WORD",
+            match src {
+                Reg::Rax => "ax",
+                Reg::Rbx => "bx",
+                Reg::Rcx => "cx",
+                Reg::Rdx => "dx",
+                Reg::Rsi => "si",
+                Reg::Rdi => "di",
+                Reg::Rbp => "bp",
+                Reg::Rsp => "sp",
+                Reg::R8 => "r8w",
+                Reg::R9 => "r9w",
+                Reg::R10 => "r10w",
+                Reg::R11 => "r11w",
+                Reg::R12 => "r12w",
+                Reg::R13 => "r13w",
+                Reg::R14 => "r14w",
+                Reg::R15 => "r15w",
+            },
+        ),
+        4 => ("DWORD", src.low32()),
+        _ => ("QWORD", src.name()),
+    };
+    out.push_str(&format!("\tmov {size} PTR [{address}], {src}\n"));
+}
+
+fn emit_store_immediate(out: &mut String, address: MemoryAddress<Reg>, value: i32, bytes: u8) {
+    let (size, value) = match bytes {
+        1 => ("BYTE", i64::from(value as i8)),
+        2 => ("WORD", i64::from(value as i16)),
+        4 => ("DWORD", i64::from(value)),
+        _ => ("QWORD", i64::from(value)),
+    };
+    out.push_str(&format!("\tmov {size} PTR [{address}], {value}\n"));
+}
+
 fn emit_binary(
     out: &mut String,
     mnemonic: &str,
@@ -1450,6 +1591,7 @@ mod tests {
             stack_slots: 0,
             callee_saved: Vec::new(),
             symbols: Vec::new(),
+            loop_headers: Vec::new(),
         }
     }
 
@@ -1596,6 +1738,7 @@ mod tests {
             stack_slots: 1,
             callee_saved: vec![Reg::Rbx, Reg::R12],
             symbols: Vec::new(),
+            loop_headers: Vec::new(),
         }
         .emit_gnu_assembly()
         .unwrap();

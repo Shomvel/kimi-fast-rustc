@@ -1,0 +1,10 @@
+{
+  "source_manifest": "source-manifest.json",
+  "command": "cargo test --workspace",
+  "exit_code": 0,
+  "suites": 90,
+  "passed": 798,
+  "failed": 0,
+  "ignored": 1,
+  "log_sha256": "8af1dfc206ce50e3f067a6d11a17e2b7c0b85d6cb9d117ec945be0c2d5928178"
+}

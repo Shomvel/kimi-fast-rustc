@@ -1,11 +1,14 @@
 //! Demand-driven SSA promotion for unescaped, logically addressed local storage.
 //!
 //! W05/F08: an inlined argument slot may become promotable on a later seeded
-//! invocation. W09/F45: dynamic indexing remains storage. W10/F49/F50: escaping
+//! invocation. Constant in-bounds array indices select logical fields;
+//! W09/F45: dynamic indexing remains storage. W10/F49/F50: escaping
 //! and merged pointer roots never acquire a new alias assumption here.
 //! Whole enum values can be replaced and read through variant payload paths.
 //! Payload writes and tag mutations stay in storage; no partial enum update
 //! operation is invented by this pass.
+
+mod partitions;
 
 use kfrc_body::fx_hash::{HashMap, HashSet};
 use std::collections::VecDeque;
@@ -20,6 +23,9 @@ use crate::{FunctionGraph, GraphLevel, NodeId, Opcode, ValueType};
 #[derive(Clone, Debug, Default)]
 pub struct PromotionStats {
     pub slots_promoted: usize,
+    pub partitions_promoted: usize,
+    pub partition_node_visits: usize,
+    pub partition_budget_bailouts: usize,
     pub loads_removed: usize,
     pub stores_removed: usize,
     pub lifetime_ops_removed: usize,
@@ -29,7 +35,7 @@ pub struct PromotionStats {
     pub dirty_nodes: Vec<NodeId>,
 }
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 struct Field {
     variant: Option<u32>,
     index: u32,
@@ -39,6 +45,51 @@ struct Field {
 struct Slot {
     ty: TyId,
     accesses: HashMap<NodeId, Vec<Field>>,
+    /// Writes of an enclosing aggregate still materialize retained storage.
+    /// Their selected snapshot also defines this partition's SSA value.
+    definitions: HashMap<NodeId, (NodeId, Vec<Field>)>,
+    preserve_storage: bool,
+}
+
+/// Recover slots reached by changed address users without scanning unrelated
+/// storage. Pointer Phis, casts through integers and unknown producers stop
+/// the walk; full escape and access checks still run before promotion.
+pub(crate) fn candidate_slots(graph: &FunctionGraph, seeds: &[NodeId]) -> HashSet<u32> {
+    let mut memo = vec![None; graph.len()];
+    let mut candidates = HashSet::default();
+    for &seed in seeds {
+        let mut node = graph.resolve(seed);
+        let mut path = Vec::new();
+        let root = loop {
+            if node.is_none() || graph.is_dead(node) || path.len() == 64 {
+                break None;
+            }
+            if let Some(root) = memo[node.index()] {
+                break root;
+            }
+            path.push(node);
+            match graph.op(node) {
+                Opcode::LocalSlot => break Some(graph.payload(node)),
+                Opcode::FieldAddr
+                | Opcode::VariantFieldAddr
+                | Opcode::IndexAddr
+                | Opcode::PointerCast => node = graph.resolve(graph.input(node, 0)),
+                Opcode::LoadValue
+                | Opcode::StoreValue
+                | Opcode::SlotLive
+                | Opcode::SlotDead
+                | Opcode::RequireDefined => node = graph.resolve(graph.input(node, 1)),
+                _ => break None,
+            }
+        };
+        for node in path {
+            memo[node.index()] = Some(root);
+        }
+        if let Some(local) = root {
+            candidates.insert(local);
+        }
+    }
+    candidates
 }
 
 /// `candidates` contains source local identities, not NodeIds. Recompute escape
@@ -68,7 +119,7 @@ pub fn run(graph: &mut FunctionGraph, candidates: Option<&HashSet<u32>>) -> Prom
     }
     let uses = Uses::new(graph);
     let cfg = ControlFlow::new(graph);
-    stats.node_visits += 2 * graph.ids().count();
+    stats.node_visits += 2 * graph.live_count();
     stats.edge_visits += graph
         .ids()
         .map(|node| graph.inputs(node).len() + usize::from(!graph.control(node).is_none()))
@@ -82,44 +133,90 @@ pub fn run(graph: &mut FunctionGraph, candidates: Option<&HashSet<u32>>) -> Prom
     }) {
         return stats;
     }
-    let mut rewrites = Vec::new();
+    // Partial operand proofs may rely on a fixed load having executed. Whole
+    // promotion has a wider value domain, so enumerate its retired producers
+    // before checking any partition, independently of source-local order.
+    let mut whole_loads = Vec::new();
+    let mut planned = Vec::new();
     for (_, root) in roots {
-        let Some(slot) = collect_slot(graph, &uses, &cfg, root, &mut stats) else {
-            continue;
-        };
-        if slot.accesses.is_empty() || !accesses_are_live(graph, &cfg, &slot, &mut stats) {
-            continue;
+        let slot = collect_slot(graph, &uses, &cfg, root, &mut stats);
+        if let Some(slot) = &slot {
+            if !accesses_are_live(graph, &cfg, slot, &mut stats) {
+                continue;
+            }
+            whole_loads.extend(
+                slot.accesses
+                    .keys()
+                    .copied()
+                    .filter(|&node| graph.op(node) == Opcode::LoadValue),
+            );
         }
-        let undefined = graph.add_node(
-            Opcode::Undefined,
-            NodeId::NONE,
-            &[],
-            0,
-            ValueType::Rust(slot.ty),
-        );
-        stats.dirty_nodes.push(undefined);
-        let mut state = States {
-            graph,
-            cfg: &cfg,
-            slot: &slot,
-            values: HashMap::default(),
-            undefined,
-            stats: &mut stats,
+        planned.push((root, slot));
+    }
+    let mut rewrites = Vec::new();
+    let mut facts = Some(facts);
+    let mut partitions = None;
+    let mut slots_by_root = Vec::new();
+    for (root, slot) in planned {
+        let slots = match slot {
+            Some(slot) => vec![slot],
+            None => partitions
+                .get_or_insert_with(|| {
+                    partitions::Partitions::new(graph, &cfg, facts.take().unwrap(), &whole_loads)
+                })
+                .collect(graph, &uses, root),
         };
-        let mut accesses: Vec<_> = slot.accesses.keys().copied().collect();
-        accesses.sort_unstable();
-        for access in accesses {
-            let replacement = if state.graph.op(access) == Opcode::LoadValue {
-                let control = state.graph.control(access);
-                let current = state.read(control);
-                let value = state.select(current, &slot.accesses[&access]);
-                Some(value)
-            } else {
-                None
+        slots_by_root.push(slots);
+    }
+    if let Some(partitions) = partitions {
+        partitions.account(&mut stats);
+    }
+    for slots in slots_by_root {
+        let mut promoted = false;
+        for slot in slots {
+            if slot.accesses.is_empty()
+                || slot.preserve_storage && !accesses_are_live(graph, &cfg, &slot, &mut stats)
+            {
+                continue;
+            }
+            let undefined = graph.add_node(
+                Opcode::Undefined,
+                NodeId::NONE,
+                &[],
+                0,
+                ValueType::Rust(slot.ty),
+            );
+            stats.dirty_nodes.push(undefined);
+            let mut state = States {
+                graph,
+                cfg: &cfg,
+                slot: &slot,
+                values: HashMap::default(),
+                undefined,
+                stats: &mut stats,
             };
-            rewrites.push((access, replacement));
+            let mut accesses: Vec<_> = slot.accesses.keys().copied().collect();
+            accesses.sort_unstable();
+            for access in accesses {
+                if slot.preserve_storage
+                    && matches!(state.graph.op(access), Opcode::SlotLive | Opcode::SlotDead)
+                {
+                    continue;
+                }
+                let replacement = if state.graph.op(access) == Opcode::LoadValue {
+                    let control = state.graph.control(access);
+                    let current = state.read(control);
+                    let value = state.select(current, &slot.accesses[&access]);
+                    Some(value)
+                } else {
+                    None
+                };
+                rewrites.push((access, replacement));
+            }
+            state.stats.partitions_promoted += usize::from(slot.preserve_storage);
+            promoted = true;
         }
-        state.stats.slots_promoted += 1;
+        stats.slots_promoted += usize::from(promoted);
     }
     // Build every slot's values before mutating the shared control skeleton.
     // Other promoted slots then still see the same CFG snapshot.
@@ -174,6 +271,8 @@ fn collect_slot(
     let mut slot = Slot {
         ty,
         accesses: HashMap::default(),
+        definitions: HashMap::default(),
+        preserve_storage: false,
     };
     let mut pending = VecDeque::from([(root, Vec::<Field>::new())]);
     let mut seen = HashSet::default();
@@ -185,7 +284,7 @@ fn collect_slot(
         for usage in uses.of(address) {
             stats.edge_visits += 1;
             let user = usage.user;
-            match (graph.op(user), usage.kind) {
+            match (graph.op(user), usage.kind()) {
                 (Opcode::FieldAddr, UseKind::Operand(0)) => {
                     let container = pointee(graph, address)?;
                     if graph.oracle.semantic().is_enum(container)
@@ -220,6 +319,28 @@ fn collect_slot(
                     });
                     pending.push_back((user, path));
                 }
+                (Opcode::IndexAddr, UseKind::Operand(0)) => {
+                    // An immediate array-element projection has a logical
+                    // field identity. General pointer arithmetic (including
+                    // an array-sized stride) has no such identity here.
+                    let container = pointee(graph, address)?;
+                    let semantic = graph.oracle.semantic();
+                    let kfrc_body::TypeShape::Array { element, length } = semantic.shape(container)
+                    else {
+                        return None;
+                    };
+                    let index = constant_index(graph, graph.input(user, 1))?;
+                    if u64::from(index) >= *length || pointee(graph, user) != Some(*element) {
+                        return None;
+                    }
+                    let mut path = path.clone();
+                    path.push(Field {
+                        variant: None,
+                        index,
+                        ty: *element,
+                    });
+                    pending.push_back((user, path));
+                }
                 (Opcode::PointerCast, UseKind::Operand(0))
                     if pointee(graph, address) == pointee(graph, user) =>
                 {
@@ -251,7 +372,7 @@ fn collect_slot(
                         1
                     };
                     if uses.of(user).iter().any(|usage| {
-                        usage.kind != UseKind::Operand(0)
+                        usage.kind() != UseKind::Operand(0)
                             || graph.op(usage.user) != Opcode::Projection
                             || graph.payload(usage.user) > max_projection
                     }) {
@@ -259,13 +380,35 @@ fn collect_slot(
                     }
                     slot.accesses.insert(user, path.clone());
                 }
-                // Copy, indexing, tag mutation, raw loads and every value
+                // Copy, dynamic indexing, tag mutation, raw loads and every value
                 // use of the address require storage, even when unescaped.
                 _ => return None,
             }
         }
     }
     Some(slot)
+}
+
+fn constant_index(graph: &FunctionGraph, node: NodeId) -> Option<u32> {
+    let node = graph.resolve(node);
+    if graph.op(node) != Opcode::Const {
+        return None;
+    }
+    let semantic = graph.oracle.semantic();
+    let kfrc_body::TypeShape::Int { width, signed } = semantic.shape(graph.rust_type(node)?) else {
+        return None;
+    };
+    let bits = width.bits(64);
+    if bits > 64 {
+        return None;
+    }
+    let value = graph.constant_value(node);
+    // IndexAddr's S normalization and L literal/dynamic conversions only
+    // agree here for canonical, nonnegative source-width constants.
+    if value >= 1u128 << bits || (*signed && value & (1u128 << (bits - 1)) != 0) {
+        return None;
+    }
+    u32::try_from(value).ok()
 }
 
 /// Every path leaving SlotDead must encounter SlotLive before a memory access.
@@ -332,6 +475,9 @@ impl States<'_> {
                     self.stats.node_visits += 1;
                     if node == self.graph.start {
                         self.values.insert(node, self.undefined);
+                    } else if let Some((value, path)) = self.slot.definitions.get(&node) {
+                        let value = self.select(*value, path);
+                        self.values.insert(node, value);
                     } else if self.graph.op(node) == Opcode::Region {
                         let predecessors = self.graph.inputs(node).to_vec();
                         let phi = self.graph.add_growable_node(

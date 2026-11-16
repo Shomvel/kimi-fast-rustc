@@ -4,12 +4,15 @@
 //! crosses only effect nodes that leave the loaded place unchanged:
 //!
 //! - every read (`LoadValue`), for any place;
+//! - a direct call with a same-crate no-write proof; its execution and the
+//!   original load's control/effect continuation remain in place;
 //! - every effect node except `Opaque`, when the place is based on a `Frozen`
 //!   parameter (Q1: `noalias readonly` covers the whole execution, callees
 //!   included);
-//! - a direct call that receives this exact place through a `Frozen`
-//!   argument covering it (Q3: the callee's protector forbids every write to
-//!   the pointee during the call).
+//! - a direct call whose sized `Frozen` reference covers this place (Q3: the
+//!   callee's protector forbids every write to the borrowed object during the
+//!   call). A protected object can cover a typed subfield; it does not cover
+//!   the pointee of a pointer loaded from that object.
 //!
 //! An effect Phi is crossed when all of its inputs reach one memory version
 //! through such nodes; inputs that return to a Phi under inspection (loop
@@ -18,26 +21,28 @@
 //! paths provides the value once it dominates the load. Lifetime changes,
 //! requirements and other writes stop the walk for every other place.
 
-use kfrc_body::fx_hash::HashSet;
-
 use crate::analysis::cfg::ControlFlow;
 use crate::analysis::dominators::Dominators;
-use crate::analysis::memory::is_frozen_parameter_address;
+use crate::analysis::memory::{MemoryLocations, is_frozen_parameter_address};
 use crate::analysis::uses::{UseKind, Uses};
 use crate::{ArgPermission, FunctionGraph, GraphLevel, NodeId, Opcode, ValueType};
-use kfrc_body::{TyId, TypeShape};
+use kfrc_body::{Mutability, TyId, TypeOracle, TypeShape};
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct ForwardStats {
     pub loads_forwarded: usize,
     /// Forwarded loads whose walk crossed a write-capable node through Q1.
     pub frozen_loads_reused: usize,
-    /// Calls crossed by successful forwards (through Q1 or Q3).
+    /// Calls crossed by successful forwards (attributes, Q1 or Q3).
     pub calls_crossed_by_forwarding: usize,
     /// Calls crossed through a `Frozen` call-site argument (Q3).
     pub call_permissions_used: usize,
     /// Effect Phis crossed by successful forwards.
     pub effect_phis_crossed: usize,
+    /// Writes/lifetime events proved to address separate storage or bytes.
+    pub disjoint_writes_crossed: usize,
+    pub location_node_visits: usize,
+    pub location_budget_bailouts: usize,
     pub walk_steps: usize,
     pub budget_bailouts: usize,
 }
@@ -58,16 +63,23 @@ pub fn run(graph: &mut FunctionGraph) -> ForwardStats {
         .collect();
     // Forwarding only redirects projections; the control skeleton is unchanged.
     let mut dominance: Option<(ControlFlow, Dominators)> = None;
+    let mut locations = None;
     for load in loads {
-        let Some(available) = available_snapshot(graph, &uses, load, &mut dominance, &mut stats)
-        else {
+        let Some(available) = available_snapshot(
+            graph,
+            &uses,
+            load,
+            &mut dominance,
+            &mut locations,
+            &mut stats,
+        ) else {
             continue;
         };
         // A verified graph only uses a tuple result through its projections.
         // Do not partially rewrite an unexpected tuple consumer.
         let consumers = uses.of(load);
         if consumers.iter().any(|usage| {
-            usage.kind != UseKind::Operand(0)
+            usage.kind() != UseKind::Operand(0)
                 || graph.op(usage.user) != Opcode::Projection
                 || graph.payload(usage.user) > 2
         }) {
@@ -91,6 +103,11 @@ pub fn run(graph: &mut FunctionGraph) -> ForwardStats {
         stats.calls_crossed_by_forwarding += crossed.calls;
         stats.call_permissions_used += crossed.call_permissions;
         stats.effect_phis_crossed += crossed.effect_phis;
+        stats.disjoint_writes_crossed += crossed.disjoint_writes;
+    }
+    if let Some(locations) = locations {
+        stats.location_node_visits = locations.node_visits;
+        stats.location_budget_bailouts = locations.budget_bailouts;
     }
     graph.resolve_edges();
     stats
@@ -110,6 +127,7 @@ struct Crossed {
     calls: usize,
     call_permissions: usize,
     effect_phis: usize,
+    disjoint_writes: usize,
 }
 
 fn available_snapshot(
@@ -117,6 +135,7 @@ fn available_snapshot(
     uses: &Uses,
     load: NodeId,
     dominance: &mut Option<(ControlFlow, Dominators)>,
+    locations: &mut Option<MemoryLocations>,
     stats: &mut ForwardStats,
 ) -> Option<Available> {
     if graph.inputs(load).len() != 2 {
@@ -146,6 +165,7 @@ fn available_snapshot(
         loaded,
         frozen: is_frozen_parameter_address(graph, address),
         dominance,
+        locations,
         steps: 0,
         on_stack: Vec::new(),
     };
@@ -168,7 +188,7 @@ fn available_snapshot(
             .of(access)
             .iter()
             .find(|usage| {
-                usage.kind == UseKind::Operand(0)
+                usage.kind() == UseKind::Operand(0)
                     && graph.op(usage.user) == Opcode::Projection
                     && graph.payload(usage.user) == 2
             })?
@@ -194,6 +214,7 @@ struct Walk<'a> {
     loaded: TyId,
     frozen: bool,
     dominance: &'a mut Option<(ControlFlow, Dominators)>,
+    locations: &'a mut Option<MemoryLocations>,
     steps: usize,
     /// Effect Phis whose inputs are being inspected.
     on_stack: Vec<NodeId>,
@@ -316,19 +337,48 @@ impl Walk<'_> {
         }
     }
 
-    fn matches(&self, node: NodeId) -> bool {
-        matches!(
-            self.graph.op(node),
-            Opcode::StoreValue | Opcode::LoadValue
-        ) && self.graph.inputs(node).len() >= 2
-            && same_address(self.graph, self.graph.input(node, 1), self.address)
+    fn matches(&mut self, node: NodeId) -> bool {
+        let graph = self.graph;
+        matches!(graph.op(node), Opcode::StoreValue | Opcode::LoadValue)
+            && graph.inputs(node).len() >= 2
+            && (same_address(graph, graph.input(node, 1), self.address)
+                || self
+                    .locations
+                    .get_or_insert_with(|| MemoryLocations::new(graph))
+                    .same_typed_place(graph, graph.input(node, 1), self.address))
     }
 
     /// Whether effect node `node` leaves the loaded place unchanged.
-    fn preserves(&self, node: NodeId, crossed: &mut Crossed) -> bool {
+    fn preserves(&mut self, node: NodeId, crossed: &mut Crossed) -> bool {
         let graph = self.graph;
         match graph.op(node) {
             Opcode::LoadValue => true,
+            Opcode::StoreValue | Opcode::SetVariant
+                if self
+                    .locations
+                    .get_or_insert_with(|| MemoryLocations::new(graph))
+                    .disjoint(graph, self.address, graph.input(node, 1)) =>
+            {
+                crossed.disjoint_writes += 1;
+                true
+            }
+            Opcode::SlotLive | Opcode::SlotDead
+                if self
+                    .locations
+                    .get_or_insert_with(|| MemoryLocations::new(graph))
+                    .separate_allocations(graph, self.address, graph.input(node, 1)) =>
+            {
+                crossed.disjoint_writes += 1;
+                true
+            }
+            Opcode::Call
+                if graph
+                    .callee_attrs(graph.payload(node))
+                    .is_some_and(|attrs| attrs.memory.cannot_write()) =>
+            {
+                crossed.calls += 1;
+                true
+            }
             Opcode::Call if self.frozen => {
                 crossed.calls += 1;
                 crossed.frozen_writers += 1;
@@ -361,22 +411,51 @@ impl Walk<'_> {
         }
     }
 
-    /// Q3: the call passes this place through a `Frozen` argument whose
-    /// dereferenceable range starts at the place and covers its type.
-    fn call_reads_place(&self, call: NodeId) -> bool {
+    /// Q3 protects the complete sized pointee, including its subfields. Both
+    /// exact-place and subfield reuse require the producer's full-size carrier;
+    /// hand-built graphs can otherwise carry zero, short or overstated sizes.
+    fn call_reads_place(&mut self, call: NodeId) -> bool {
         let graph = self.graph;
         let callee = graph.payload(call);
         graph.inputs(call)[1..]
             .iter()
             .enumerate()
             .any(|(argument, &value)| {
-                matches!(
-                    graph.callee_permission(callee, argument),
-                    ArgPermission::Frozen {
-                        dereferenceable: Some(_)
-                    }
-                ) && reference_pointee(graph, value) == Some(self.loaded)
-                    && same_place(graph, value, self.address)
+                let ArgPermission::Frozen {
+                    dereferenceable: Some(bytes),
+                } = graph.callee_permission(callee, argument)
+                else {
+                    return false;
+                };
+                let Some(pointee) = shared_reference_pointee(graph, value) else {
+                    return false;
+                };
+                let Some(layout) = graph.oracle.size_align(pointee) else {
+                    return false;
+                };
+                // Even a Unit load observes allocation/liveness in S. A
+                // zero-byte protector is not an access-validity proof.
+                if layout.size == 0 || bytes != layout.size {
+                    return false;
+                }
+                let locations = self
+                    .locations
+                    .get_or_insert_with(|| MemoryLocations::new(graph));
+                let (Some(borrowed), Some(loaded)) = (
+                    locations.location(graph, value),
+                    locations.location(graph, self.address),
+                ) else {
+                    return false;
+                };
+                borrowed.root == loaded.root
+                    && loaded.ty == self.loaded
+                    && loaded.size != 0
+                    && borrowed.offset <= loaded.offset
+                    && borrowed
+                        .offset
+                        .checked_add(borrowed.size)
+                        .zip(loaded.offset.checked_add(loaded.size))
+                        .is_some_and(|(end, loaded_end)| loaded_end <= end)
             })
     }
 
@@ -394,12 +473,15 @@ impl Walk<'_> {
     }
 }
 
-fn reference_pointee(graph: &FunctionGraph, value: NodeId) -> Option<TyId> {
+fn shared_reference_pointee(graph: &FunctionGraph, value: NodeId) -> Option<TyId> {
     let ValueType::Rust(ty) = graph.value_type(graph.resolve(value)) else {
         return None;
     };
     match graph.oracle.semantic().shape(*ty) {
-        TypeShape::Reference { pointee, .. } => Some(*pointee),
+        TypeShape::Reference {
+            mutability: Mutability::Not,
+            pointee,
+        } if !graph.oracle.semantic().is_unsized(*pointee) => Some(*pointee),
         _ => None,
     }
 }
@@ -435,19 +517,6 @@ fn same_address(graph: &FunctionGraph, a: NodeId, b: NodeId) -> bool {
         b = graph.resolve(graph.input(b, 0));
     }
     false
-}
-
-/// Equal addresses regardless of the pointer types they carry.
-fn same_place(graph: &FunctionGraph, a: NodeId, b: NodeId) -> bool {
-    let strip = |mut node: NodeId| {
-        node = graph.resolve(node);
-        let mut seen = HashSet::default();
-        while graph.op(node) == Opcode::PointerCast && seen.insert(node) {
-            node = graph.resolve(graph.input(node, 0));
-        }
-        node
-    };
-    same_address(graph, strip(a), strip(b))
 }
 
 fn control_descends_from_access(
@@ -490,3 +559,7 @@ fn projection_source(graph: &FunctionGraph, node: NodeId, index: u32) -> Option<
     }
     Some(graph.resolve(*graph.inputs(node).first()?))
 }
+
+#[cfg(test)]
+#[path = "forward_range_tests.rs"]
+mod tests;

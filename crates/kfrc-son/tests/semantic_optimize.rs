@@ -5,7 +5,8 @@ use kfrc_body::{
 use kfrc_son::interpret::{SemanticOutcome, Value};
 use kfrc_son::{
     CallTarget, ComparePredicate, FunctionGraph, GraphLevel, InterpretError, Interpreter, NodeId,
-    Opcode, ValueType, optimize_graph, optimize_specialized_graph, verify_graph,
+    Opcode, ValueType, optimize_graph, optimize_specialized_graph, optimize_specialized_seams,
+    verify_graph,
 };
 
 struct Fixture {
@@ -411,6 +412,73 @@ fn gvn_representative_placement_follows_fixed_inputs_not_creation_order() {
             .unwrap();
         assert_eq!(calls, 1);
         assert_eq!(outcome, SemanticOutcome::Return(Value::Scalar(42)));
+    }
+}
+
+#[test]
+fn seam_substitution_revisits_value_numbering() {
+    let mut f = Fixture::new(2);
+    let three = f.graph.add_constant(3, f.int);
+    let first = f.value(Opcode::Add, &[f.args[0], three], 0, f.int);
+    let second = f.value(Opcode::Add, &[f.args[1], three], 0, f.int);
+    let result = f.value(Opcode::Add, &[first, second], 0, f.int);
+    f.finish(result);
+    // An inline/identity seam can make formerly distinct operands equal.
+    f.graph.replace(f.args[1], f.args[0]);
+    f.graph.resolve_edges();
+    let stats = optimize_specialized_seams(&mut f.graph, &[second], &[]).unwrap();
+    assert!(stats.values_merged >= 1);
+    verify_graph(&mut f.graph).unwrap();
+    for input in [0, 1, 17, u64::MAX] {
+        assert_eq!(
+            f.run(&[input, 99]).unwrap(),
+            SemanticOutcome::Return(Value::Scalar(input.wrapping_add(3).wrapping_mul(2)))
+        );
+    }
+}
+
+#[test]
+fn seam_substitution_revisits_constant_division_without_losing_poison_observation() {
+    for poison in [false, true] {
+        let mut f = Fixture::new(2);
+        let numerator = if poison {
+            f.value(Opcode::Undefined, &[], 0, f.int)
+        } else {
+            f.args[0]
+        };
+        let division = f.graph.add_node(
+            Opcode::DivUnsigned,
+            f.control,
+            &[numerator, f.args[1]],
+            0,
+            ValueType::Rust(f.int),
+        );
+        f.finish(division);
+        let eight = f.graph.add_constant(8, f.int);
+        f.graph.replace(f.args[1], eight);
+        f.graph.resolve_edges();
+        let stats = optimize_specialized_seams(&mut f.graph, &[division], &[]).unwrap();
+        verify_graph(&mut f.graph).unwrap();
+        if poison {
+            assert_eq!(stats.divisions_reduced, 0);
+            assert!(matches!(
+                f.run(&[17, 8]),
+                Err(InterpretError::PoisonObserved(_))
+            ));
+        } else {
+            assert_eq!(stats.divisions_reduced, 1);
+            assert!(
+                !f.graph
+                    .ids()
+                    .any(|id| f.graph.op(id) == Opcode::DivUnsigned)
+            );
+            for input in [0, 1, 17, u64::MAX] {
+                assert_eq!(
+                    f.run(&[input, 8]).unwrap(),
+                    SemanticOutcome::Return(Value::Scalar(input / 8))
+                );
+            }
+        }
     }
 }
 

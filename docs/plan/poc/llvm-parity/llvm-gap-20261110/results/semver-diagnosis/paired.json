@@ -1,0 +1,20 @@
+[
+  {
+    "workload": "parse",
+    "shift_over_baseline": 1.014804802472482,
+    "combined_over_baseline": 1.0317836469492518,
+    "combined_over_shift": 1.0167311432064594
+  },
+  {
+    "workload": "req",
+    "shift_over_baseline": 1.013225236956577,
+    "combined_over_baseline": 1.0539995613636342,
+    "combined_over_shift": 1.0407982654566934
+  },
+  {
+    "workload": "identifier",
+    "shift_over_baseline": 0.9967935526173413,
+    "combined_over_baseline": 0.997446296871532,
+    "combined_over_shift": 1.0008753954653782
+  }
+]

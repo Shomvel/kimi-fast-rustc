@@ -11,7 +11,14 @@ repository = "https://github.com/Shomvel/kimi-fast-rustc"
 license = "MIT OR Apache-2.0"
 
 [workspace]
-members = [".", "crates/kfrc-body", "crates/kfrc-son", "crates/kfrc-x86"]
+members = [
+    ".",
+    "crates/kfrc-body",
+    "crates/kfrc-son",
+    "crates/kfrc-object",
+    "crates/kfrc-cranelift",
+    "crates/kfrc-x86",
+]
 # The codegen backend shell links rustc_private and is built with its own
 # pinned toolchain (rustc 1.94.1 + rustc-dev); see crates/rustc_codegen_kfrc.
 exclude = ["crates/rustc_codegen_kfrc", "crates/rustc_codegen_llvm_profile"]
@@ -26,6 +33,12 @@ kfrc-x86 = { path = "crates/kfrc-x86" }
 [[bin]]
 name = "kfrc"
 path = "src/main.rs"
+
+# cranelift-codegen 0.134.4 with the kfrc patches listed in
+# third_party/cranelift-codegen/KFRC-PATCHES.md.
+[patch.crates-io]
+cranelift-codegen = { path = "third_party/cranelift-codegen" }
+regalloc2 = { path = "third_party/regalloc2" }
 
 [profile.release]
 opt-level = 3

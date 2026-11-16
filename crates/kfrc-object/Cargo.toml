@@ -1,0 +1,14 @@
+[package]
+name = "kfrc-object"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.89"
+description = "kfrc object emission: ELF relocatables from encoded functions and data objects"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+kfrc-body = { path = "../kfrc-body" }
+object = { version = "0.36", default-features = false, features = ["write"] }
+
+[dev-dependencies]
+object = { version = "0.36", default-features = false, features = ["read"] }

@@ -3,6 +3,7 @@
 //! This layer consumes lowered virtual instructions. It has no dependency on
 //! a source-language graph or the historical root compiler pipeline.
 
+mod address;
 pub mod allocate;
 pub mod eval;
 pub mod regalloc;

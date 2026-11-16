@@ -428,14 +428,15 @@ fn enum_functions() -> Vec<Body> {
 }
 
 #[test]
-fn dynamic_enum_niche_and_phi_lower_with_lanes_or_guarded_payload_reads() {
+fn whole_enum_transport_avoids_decoding_while_phi_keeps_value_merges() {
     for (index, body) in enum_functions().into_iter().enumerate() {
         let graph = lower(&body);
         let count = |op| graph.ids().filter(|&node| graph.op(node) == op).count();
-        if index == 0 {
-            // A direct-tag payload is one byte-offset lane: the identity
-            // copies the tag and the lane without a variant guard or merge.
+        if index != 1 {
+            // Direct-tag and niche identities both retain their whole ABI
+            // representation without decoding a tag or inactive payload.
             assert_eq!((count(Opcode::If), count(Opcode::Phi)), (0, 0));
+            assert_eq!((count(Opcode::Load), count(Opcode::Store)), (0, 0));
         } else {
             assert!(count(Opcode::If) > 0);
             assert!(count(Opcode::Phi) > 0);
@@ -997,8 +998,8 @@ fn layout_materializes_only_explicit_abi_snapshots() {
     let graph = lower(&call_pair());
     assert_eq!(
         graph.stack_slots.len(),
-        1,
-        "only the outgoing argument is a graph value slot"
+        2,
+        "the entry snapshot and outgoing argument have separate storage"
     );
     assert!(
         graph
@@ -1035,12 +1036,18 @@ fn failed_layout_lowering_preserves_the_verified_input() {
         "unsupported_enum",
         types,
         vec![PassMode::Indirect],
-        PassMode::Indirect,
+        PassMode::Direct,
     );
-    let ret = local(&mut b, enumeration);
+    let ret = local(&mut b, word);
     let arg = local(&mut b, enumeration);
     b.set_arg_count(1);
-    assign(&mut b, Place::local(ret), Rvalue::Use(copy(arg)));
+    // Observing the discriminant needs the missing physical enum layout.
+    // Merely transporting the whole value does not inspect its encoding.
+    assign(
+        &mut b,
+        Place::local(ret),
+        Rvalue::Discriminant(Place::local(arg)),
+    );
     b.finish_block(Terminator::Return, false);
     let mut graph = build_graph(&b.finish()).unwrap();
     verify_graph(&mut graph).unwrap();

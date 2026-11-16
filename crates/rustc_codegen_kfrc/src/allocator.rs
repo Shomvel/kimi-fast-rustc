@@ -3,7 +3,8 @@
 //! Custom global allocator implementations are already emitted as mono items.
 //! Only rustc's requested default allocator/error-handler methods need wrappers.
 
-use kfrc_x86::{FunctionCode, MachineFunction, MachineInstr, SymbolBinding};
+use kfrc_object::{ObjectFunction, SymbolBinding};
+use kfrc_x86::{MachineFunction, MachineInstr};
 use rustc_ast::expand::allocator::{NO_ALLOC_SHIM_IS_UNSTABLE, default_fn_name, global_fn_name};
 use rustc_codegen_ssa::base::{allocator_kind_for_codegen, allocator_shim_contents};
 use rustc_codegen_ssa::{CompiledModule, ModuleKind};
@@ -25,18 +26,12 @@ pub(crate) fn codegen(tcx: TyCtxt<'_>) -> Option<CompiledModule> {
         // and every allocator return is a pointer, unit, or never. Passing
         // the argument registers unchanged exactly preserves that ABI.
         function.instructions = vec![MachineInstr::Call { target: 0 }, MachineInstr::Ret];
-        functions.push(FunctionCode {
-            function,
-            binding: SymbolBinding::Global { hidden: true },
-        });
+        functions.push(shim(tcx, &function));
     }
 
     let mut marker = MachineFunction::new(mangle_internal_symbol(tcx, NO_ALLOC_SHIM_IS_UNSTABLE));
     marker.instructions.push(MachineInstr::Ret);
-    functions.push(FunctionCode {
-        function: marker,
-        binding: SymbolBinding::Global { hidden: true },
-    });
+    functions.push(shim(tcx, &marker));
 
     let name = CodegenUnitNameBuilder::new(tcx)
         .build_cgu_name(LOCAL_CRATE, &["crate"], Some("allocator"))
@@ -47,7 +42,7 @@ pub(crate) fn codegen(tcx: TyCtxt<'_>) -> Option<CompiledModule> {
         &name,
         tcx.sess.invocation_temp.as_deref(),
     );
-    let bytes = kfrc_x86::write_object(&functions)
+    let bytes = kfrc_object::write_object(&functions)
         .unwrap_or_else(|error| tcx.dcx().fatal(format!("kfrc: allocator shim: {error}")));
     std::fs::write(&path, bytes).unwrap_or_else(|error| {
         tcx.dcx()
@@ -63,4 +58,13 @@ pub(crate) fn codegen(tcx: TyCtxt<'_>) -> Option<CompiledModule> {
         llvm_ir: None,
         links_from_incr_cache: Vec::new(),
     })
+}
+
+/// A hidden global symbol with the hand-assembled forwarding code.
+fn shim(tcx: TyCtxt<'_>, function: &MachineFunction) -> ObjectFunction {
+    ObjectFunction {
+        function: crate::machine::encode(function)
+            .unwrap_or_else(|error| tcx.dcx().fatal(format!("kfrc: allocator shim: {error}"))),
+        binding: SymbolBinding::Global { hidden: true },
+    }
 }

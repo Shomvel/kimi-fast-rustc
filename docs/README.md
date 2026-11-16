@@ -1,10 +1,10 @@
 # kfrc：自有 Rust 编译器计划
 
-状态：**计划，尚未实施**。基线 commit `44c9d80b02ab140d7edf5348b6946d8122d842b6`。这里描述的接口、目录和能力都还不存在。
+本页保留基于 commit `44c9d80b02ab140d7edf5348b6946d8122d842b6` 的长期设计计划；下文“现状”表格描述该历史基线。当前实现与支持范围见[项目说明](../README.md)，已交付改动、验证结果和未完成目标见[2026-11-16 验收记录](validation/parallel-semantics-20261116.md)。
 
 ## 一句话
 
-把 kfrc 从“标量子集编译器”变成能原生编译 ripgrep 和 Cargo 的 Rust 编译器：语义规则参考并移植 rustc；数据模型、带 Rust 语义的 SoN 优化器、x86 后端和构建流水线都是自己的。目标是运行时间和体积不差于 rustc+LLVM，编译更快，缓存更小。
+把 kfrc 从“标量子集编译器”变成能原生编译 ripgrep 和 Cargo 的 Rust 编译器：语义规则参考并移植 rustc；数据模型、带 Rust 语义的 SoN 优化器和构建流水线都是自己的，机器层建立在 Cranelift 上。目标是运行时间和体积不差于 rustc+LLVM，编译更快，缓存更小。
 
 ## 现状 → 目标
 
@@ -12,7 +12,7 @@
 |---|---|---|
 | 前端 | `frontend.rs` 边解析边建 SoN；类型只有 `i64/u64/bool/()` | 自有 AST → 名称解析 → 类型/trait → Typed Body → 借用/drop 检查 |
 | 中端 | 整数 SoN，`memory` 只是预留输入 | 三级 SoN：Rust 语义多态（R）→ 单态（S）→ 布局（L） |
-| 后端 | 标量线性扫描、spill 用 Load/Store、ELF 文本段 | 完整 System V ABI、通用内存、数据段/TLS/展开表 |
+| 后端 | 标量线性扫描、spill 用 Load/Store、ELF 文本段 | 排程后的 L 图导出给 Cranelift；完整 System V ABI、数据段/TLS/展开表 |
 | 构建 | 函数级并行、图对象缓存；Cargo 显式拒绝 | 实例级任务图、按答案键的内容寻址缓存、Cargo 驱动、自有 sysroot |
 
 ## 固定的技术决策
@@ -20,7 +20,7 @@
 - **自有实现，参考 rustc。** rustc 是算法、测试和对照结果的来源，产品不做 `CodegenBackend` 插件，也不把 `TyCtxt`/query 运行时包进产品。唯一例外是 [PoC](plan/poc/README.md)：它借用 rustc 前端作外壳，但 SoN 与后端代码不依赖任何 `rustc_*` crate。
 - **优化在带 Rust 语义的 SoN 上做。** 聚合/enum 是值、借用是内存分区、drop 和 trait 调用是节点，最后才按布局降低；不先降成 LLVM 式低级 IR 再重建语义。
 - **依赖少量 rustc 发布的算法 crate。** 以 `ra-ap-*` `=0.148.0` 形式依赖（与 rustc 1.94.1 源码逐字节相同）：`rustc_lexer`、`rustc_parse_format`、`rustc_pattern_analysis`、`rustc_abi`（布局计算），以及 `rustc_type_ir` + `rustc_next_trait_solver`（kfrc 实现 `Interner`）。其余语义自写；rust-analyzer 只作设计参考，不作移植来源。
-- **后端不用 LLVM/Cranelift。** 线性扫描寄存器分配，不加静态 ILP 指令调度。rustc+LLVM 只作对照工具链。
+- **机器层使用 Cranelift（2026-11-13 决定，取代“后端不用 LLVM/Cranelift”）。** L 级图经排程后导出为 Cranelift IR，指令选择、寄存器分配与编码由 Cranelift 完成；三级 SoN 与全部 Rust 语义优化仍是自有实现，契约见 [design/machine/](design/machine/layer.md)。自研 x86 选择器保留为差分基线。rustc+LLVM 只作对照工具链。
 - **首个目标平台** Linux x86_64 System V。
 
 ## 红线（所有文档共用）

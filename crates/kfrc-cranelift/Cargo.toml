@@ -1,0 +1,16 @@
+[package]
+name = "kfrc-cranelift"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.94"
+description = "kfrc machine layer: scheduled Layout graphs to x86-64 code through Cranelift"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+kfrc-body = { path = "../kfrc-body" }
+kfrc-son = { path = "../kfrc-son" }
+# The newest Cranelift release line whose minimum Rust version is the pinned
+# rustc 1.94 of the codegen-backend shell.
+cranelift-codegen = { version = "=0.134.4", default-features = false, features = ["std", "x86"] }
+cranelift-frontend = { version = "=0.134.4", default-features = false, features = ["std"] }
+target-lexicon = "0.13"

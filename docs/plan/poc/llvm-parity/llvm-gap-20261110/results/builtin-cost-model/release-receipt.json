@@ -1,0 +1,21 @@
+{
+  "sandbox_id": "ivnaqo0ohks51dg9savz9",
+  "template": "mirx-rust1941-linux",
+  "released": true,
+  "released_at_utc": "2026-11-10T04:09:13.751924+00:00",
+  "evidence": [
+    {
+      "archive": "final-evidence.tar.gz",
+      "bytes": 171763813,
+      "sha256": "59280042f7d54cadbd9b459c2fa07c94071135d80d1a73a9ede7ae2a43600cd8",
+      "all_member_hashes_verified": true
+    },
+    {
+      "archive": "cost-model-evidence.tar.gz",
+      "bytes": 34778792,
+      "sha256": "e26f4b0860036f07939f8d4e8dac22c1e2c15c6b3260ec0540bff0c03e284823",
+      "all_member_hashes_verified": true
+    }
+  ],
+  "local_evidence_preserved": true
+}

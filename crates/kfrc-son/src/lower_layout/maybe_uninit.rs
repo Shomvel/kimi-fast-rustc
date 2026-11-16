@@ -115,6 +115,7 @@ impl LayoutLowering<'_> {
             symbol: symbol.clone(),
             bytes,
             align: layout.align,
+            unnamed_address: true,
             ..DataObject::default()
         });
         let payload = self.graph.symbols.len() as u32;

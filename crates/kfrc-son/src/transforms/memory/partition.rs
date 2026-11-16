@@ -2,8 +2,6 @@
 //! Recompute after layout creates calls or changes allocation identities; a
 //! semantic Local proof is not automatically a proof about the resulting L.
 
-use kfrc_body::fx_hash::HashSet;
-
 use crate::analysis::memory::MemoryFacts;
 use crate::{FunctionGraph, MemoryPartition, Opcode};
 
@@ -21,12 +19,6 @@ pub fn run(graph: &mut FunctionGraph, facts: &MemoryFacts) -> PartitionStats {
         edge_visits: facts.edge_visits,
         ..PartitionStats::default()
     };
-    let immutable: HashSet<_> = graph
-        .data_objects
-        .iter()
-        .filter(|object| !object.writable && !object.thread_local)
-        .map(|object| object.symbol.clone())
-        .collect();
     let nodes: Vec<_> = graph.ids().collect();
     for node in nodes {
         stats.node_visits += 1;
@@ -59,7 +51,10 @@ pub fn run(graph: &mut FunctionGraph, facts: &MemoryFacts) -> PartitionStats {
         {
             let symbol = graph.payload(root);
             let name = &graph.symbols[symbol as usize].0;
-            if immutable.contains(name) {
+            if graph
+                .data_object(name)
+                .is_some_and(|object| !object.writable && !object.thread_local)
+            {
                 stats.const_loads += 1;
                 MemoryPartition::Const { symbol }
             } else {

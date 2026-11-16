@@ -1,0 +1,1401 @@
+{
+  "base": "f321983",
+  "backends": {
+    "baseline": "53a87ea4948de415e347eb99721b9e1ed1a717de444a7fcb1ad38d4fc42451a2",
+    "sccp": "90149dae473bc2098ac5e71d998b671d3cd38cd5b5983f5d08e6cb66df46ad4a"
+  },
+  "linux_tests": {
+    "passed": 843,
+    "ignored": 1
+  },
+  "preflight": [
+    {
+      "crate": "semver",
+      "arm": "baseline",
+      "status": "ok",
+      "checker": 1,
+      "upstream_incomplete": {},
+      "corpus_equal": true,
+      "checksums_equal": true
+    },
+    {
+      "crate": "semver",
+      "arm": "sccp",
+      "status": "ok",
+      "checker": 1,
+      "upstream_incomplete": {},
+      "corpus_equal": true,
+      "checksums_equal": true
+    },
+    {
+      "crate": "regex-syntax",
+      "arm": "baseline",
+      "status": "compile_failed",
+      "checker": 1,
+      "expected_unsupported": [
+        "error: kfrc: cannot compile `core::core_simd::swizzle::<impl core::simd::Simd<i8, 16>>::resize::<16>` (_RINvMNtNtCshX3mvxHm3fC_4core9core_simd7swizzleINtNtB5_6vector4SimdaKj10_E6resizeKB14_ECsgtqDAkISWhW_12regex_syntax): SoN construction: unsupported: union and SIMD values are outside the semantic path",
+        "error: aborting due to 1 previous error"
+      ]
+    },
+    {
+      "crate": "regex-syntax",
+      "arm": "sccp",
+      "status": "compile_failed",
+      "checker": 1,
+      "expected_unsupported": [
+        "error: kfrc: cannot compile `core::core_simd::swizzle::<impl core::simd::Simd<i8, 16>>::resize::<16>` (_RINvMNtNtCshX3mvxHm3fC_4core9core_simd7swizzleINtNtB5_6vector4SimdaKj10_E6resizeKB14_ECsgtqDAkISWhW_12regex_syntax): SoN construction: unsupported: union and SIMD values are outside the semantic path",
+        "error: aborting due to 1 previous error"
+      ]
+    },
+    {
+      "crate": "base64",
+      "arm": "baseline",
+      "status": "ok",
+      "checker": 1,
+      "upstream_incomplete": {
+        "unit": [
+          "error: kfrc: cannot compile `std::hash::RandomState::new::KEYS::{constant#0}::{closure#1}` (_RNCNKNvNvMNtNtCskdEs339NOXv_3std4hash6randomNtB8_11RandomState3new4KEYS0s_0Csfmw7w5XwWdq_6base64): SoN construction: unsupported: TLS is outside the semantic path"
+        ]
+      },
+      "corpus_equal": true,
+      "checksums_equal": true
+    },
+    {
+      "crate": "base64",
+      "arm": "sccp",
+      "status": "ok",
+      "checker": 1,
+      "upstream_incomplete": {
+        "unit": [
+          "error: kfrc: cannot compile `std::hash::RandomState::new::KEYS::{constant#0}::{closure#1}` (_RNCNKNvNvMNtNtCskdEs339NOXv_3std4hash6randomNtB8_11RandomState3new4KEYS0s_0CsXKC3Sn1jy8_6base64): SoN construction: unsupported: TLS is outside the semantic path"
+        ]
+      },
+      "corpus_equal": true,
+      "checksums_equal": true
+    },
+    {
+      "crate": "unicode-segmentation",
+      "arm": "baseline",
+      "status": "ok",
+      "checker": 1,
+      "upstream_incomplete": {
+        "unit": [
+          "error: kfrc: cannot compile `core::sync::atomic::atomic_sub::<usize, usize>` (_RINvNtNtCshX3mvxHm3fC_4core4sync6atomic10atomic_subjjECs87syuzlRB8g_20unicode_segmentation): MIR conversion: intrinsic `atomic_xsub` is not implemented"
+        ]
+      },
+      "corpus_equal": true,
+      "checksums_equal": true
+    },
+    {
+      "crate": "unicode-segmentation",
+      "arm": "sccp",
+      "status": "ok",
+      "checker": 1,
+      "upstream_incomplete": {
+        "unit": [
+          "error: kfrc: cannot compile `core::sync::atomic::atomic_sub::<usize, usize>` (_RINvNtNtCshX3mvxHm3fC_4core4sync6atomic10atomic_subjjECs3FOGFr7McTw_20unicode_segmentation): MIR conversion: intrinsic `atomic_xsub` is not implemented"
+        ]
+      },
+      "corpus_equal": true,
+      "checksums_equal": true
+    },
+    {
+      "crate": "humantime",
+      "arm": "baseline",
+      "status": "ok",
+      "checker": 1,
+      "upstream_incomplete": {
+        "unit": [
+          "error: kfrc: cannot compile `<u64 as rand::distr::utils::WideningMultiply>::wmul` (_RNvXs4_NtNtCs9WOZcrf9gIs_4rand5distr5utilsyNtB5_16WideningMultiply4wmul): SoN construction: unsupported: unsupported semantic type u128"
+        ]
+      },
+      "corpus_equal": true,
+      "checksums_equal": true
+    },
+    {
+      "crate": "humantime",
+      "arm": "sccp",
+      "status": "ok",
+      "checker": 1,
+      "upstream_incomplete": {
+        "unit": [
+          "error: kfrc: cannot compile `<u64 as rand::distr::utils::WideningMultiply>::wmul` (_RNvXs4_NtNtCs9WOZcrf9gIs_4rand5distr5utilsyNtB5_16WideningMultiply4wmul): SoN construction: unsupported: unsupported semantic type u128"
+        ]
+      },
+      "corpus_equal": true,
+      "checksums_equal": true
+    }
+  ],
+  "sizes": [
+    {
+      "crate": "semver",
+      "size": {
+        "llvm": {
+          "text_bytes": 18515,
+          "func_symbol_bytes": 19015,
+          "func_symbols": 81,
+          "rodata_bytes": 2029,
+          "object_count": 14,
+          "object_bytes": 85256,
+          "rlib_bytes": 238670
+        },
+        "baseline": {
+          "text_bytes": 34148,
+          "func_symbol_bytes": 32791,
+          "func_symbols": 196,
+          "rodata_bytes": 12211,
+          "object_count": 14,
+          "object_bytes": 151304,
+          "rlib_bytes": 304078
+        },
+        "sccp": {
+          "text_bytes": 34148,
+          "func_symbol_bytes": 32786,
+          "func_symbols": 196,
+          "rodata_bytes": 12211,
+          "object_count": 14,
+          "object_bytes": 151304,
+          "rlib_bytes": 304078
+        }
+      },
+      "text_ratio": 1.0
+    },
+    {
+      "crate": "base64",
+      "size": {
+        "llvm": {
+          "text_bytes": 8648,
+          "func_symbol_bytes": 8648,
+          "func_symbols": 35,
+          "rodata_bytes": 1982,
+          "object_count": 14,
+          "object_bytes": 53704,
+          "rlib_bytes": 411962
+        },
+        "baseline": {
+          "text_bytes": 29651,
+          "func_symbol_bytes": 29025,
+          "func_symbols": 92,
+          "rodata_bytes": 11262,
+          "object_count": 14,
+          "object_bytes": 130784,
+          "rlib_bytes": 488858
+        },
+        "sccp": {
+          "text_bytes": 29651,
+          "func_symbol_bytes": 29025,
+          "func_symbols": 92,
+          "rodata_bytes": 11262,
+          "object_count": 14,
+          "object_bytes": 130784,
+          "rlib_bytes": 488858
+        }
+      },
+      "text_ratio": 1.0
+    },
+    {
+      "crate": "unicode-segmentation",
+      "size": {
+        "llvm": {
+          "text_bytes": 8398,
+          "func_symbol_bytes": 8398,
+          "func_symbols": 24,
+          "rodata_bytes": 75916,
+          "object_count": 9,
+          "object_bytes": 112600,
+          "rlib_bytes": 1268848
+        },
+        "baseline": {
+          "text_bytes": 18618,
+          "func_symbol_bytes": 18087,
+          "func_symbols": 78,
+          "rodata_bytes": 90617,
+          "object_count": 9,
+          "object_bytes": 180168,
+          "rlib_bytes": 1335588
+        },
+        "sccp": {
+          "text_bytes": 18602,
+          "func_symbol_bytes": 18082,
+          "func_symbols": 78,
+          "rodata_bytes": 90617,
+          "object_count": 9,
+          "object_bytes": 180152,
+          "rlib_bytes": 1335572
+        }
+      },
+      "text_ratio": 0.999140616607584
+    },
+    {
+      "crate": "humantime",
+      "size": {
+        "llvm": {
+          "text_bytes": 10426,
+          "func_symbol_bytes": 10426,
+          "func_symbols": 32,
+          "rodata_bytes": 1670,
+          "object_count": 13,
+          "object_bytes": 53784,
+          "rlib_bytes": 148752
+        },
+        "baseline": {
+          "text_bytes": 57477,
+          "func_symbol_bytes": 56816,
+          "func_symbols": 100,
+          "rodata_bytes": 11494,
+          "object_count": 13,
+          "object_bytes": 165984,
+          "rlib_bytes": 261196
+        },
+        "sccp": {
+          "text_bytes": 57461,
+          "func_symbol_bytes": 56798,
+          "func_symbols": 100,
+          "rodata_bytes": 11494,
+          "object_count": 13,
+          "object_bytes": 165968,
+          "rlib_bytes": 261180
+        }
+      },
+      "text_ratio": 0.9997216277815474
+    }
+  ],
+  "runtime": [
+    {
+      "crate": "semver",
+      "workload": "parse",
+      "paired_ratios": [
+        1.4990078801626607,
+        1.0150845161321647,
+        1.0911559927449854,
+        0.8427898404763454,
+        1.0010606860097242,
+        1.0467749289101784,
+        1.0076102148186832,
+        1.0052716988511563,
+        1.012385225716791,
+        1.0107313874202737,
+        0.9974006304826735
+      ],
+      "paired_median": 1.0107313874202737,
+      "arms": {
+        "llvm": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 11223019,
+          "min_ns": 11007855,
+          "max_ns": 11495988,
+          "checksums": [
+            9666685
+          ],
+          "instructions": 173125844,
+          "cycles": 42698497
+        },
+        "baseline": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 46969416,
+          "min_ns": 46662254,
+          "max_ns": 57236778,
+          "checksums": [
+            9666685
+          ],
+          "instructions": 705264171,
+          "cycles": 171345540
+        },
+        "sccp": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 47473463,
+          "min_ns": 46711748,
+          "max_ns": 70363271,
+          "checksums": [
+            9666685
+          ],
+          "instructions": 705263772,
+          "cycles": 175339744
+        }
+      }
+    },
+    {
+      "crate": "semver",
+      "workload": "req",
+      "paired_ratios": [
+        0.9612038420690713,
+        0.9909986131740547,
+        1.01026318751813,
+        1.0417455988757232,
+        1.0207766429667144,
+        1.009294454197493,
+        1.028317161820861,
+        1.0081340968271533,
+        1.017813265110616,
+        1.014615253707063,
+        0.994805019371413
+      ],
+      "paired_median": 1.01026318751813,
+      "arms": {
+        "llvm": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 17084138,
+          "min_ns": 16983376,
+          "max_ns": 17143317,
+          "checksums": [
+            400000
+          ],
+          "instructions": 262258676,
+          "cycles": 63237822
+        },
+        "baseline": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 128303501,
+          "min_ns": 127291821,
+          "max_ns": 137181084,
+          "checksums": [
+            400000
+          ],
+          "instructions": 1658728761,
+          "cycles": 471178825
+        },
+        "sccp": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 129773631,
+          "min_ns": 128285043,
+          "max_ns": 133730167,
+          "checksums": [
+            400000
+          ],
+          "instructions": 1658728777,
+          "cycles": 504678502
+        }
+      }
+    },
+    {
+      "crate": "semver",
+      "workload": "identifier",
+      "paired_ratios": [
+        0.9990220854964429,
+        1.0028577202669382,
+        1.0095819270223765,
+        0.9949185390478685,
+        1.0082536118167316,
+        0.9907655514479577,
+        0.9962968742037469,
+        0.9818582460279209,
+        0.7861280805192385,
+        0.9991935170026621,
+        0.9964334800507406
+      ],
+      "paired_median": 0.9964334800507406,
+      "arms": {
+        "llvm": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 28183691,
+          "min_ns": 28119173,
+          "max_ns": 28747999,
+          "checksums": [
+            30750000
+          ],
+          "instructions": 555108714,
+          "cycles": 103545616
+        },
+        "baseline": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 55160697,
+          "min_ns": 54870661,
+          "max_ns": 69993111,
+          "checksums": [
+            30750000
+          ],
+          "instructions": 918623622,
+          "cycles": 202985999
+        },
+        "sccp": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 55027466,
+          "min_ns": 54842199,
+          "max_ns": 55756363,
+          "checksums": [
+            30750000
+          ],
+          "instructions": 918623360,
+          "cycles": 201769449
+        }
+      }
+    },
+    {
+      "crate": "base64",
+      "workload": "encode",
+      "paired_ratios": [
+        0.9992881175831476,
+        0.9926189291612492,
+        1.0297263840366087,
+        1.0124332891384744,
+        1.0027414979666125,
+        0.9924372840682776,
+        0.9644632553325151,
+        0.9974851175361907,
+        0.9697927614205359,
+        0.9975159889241321,
+        1.0942676216934992
+      ],
+      "paired_median": 0.9975159889241321,
+      "arms": {
+        "llvm": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 17527744,
+          "min_ns": 17460934,
+          "max_ns": 17757991,
+          "checksums": [
+            55493921
+          ],
+          "instructions": 292760744,
+          "cycles": 64908306
+        },
+        "baseline": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 173253331,
+          "min_ns": 171983051,
+          "max_ns": 178921200,
+          "checksums": [
+            55493921
+          ],
+          "instructions": 1870915703,
+          "cycles": 633800302
+        },
+        "sccp": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 172985528,
+          "min_ns": 172354631,
+          "max_ns": 189557576,
+          "checksums": [
+            55493921
+          ],
+          "instructions": 1870915765,
+          "cycles": 686952998
+        }
+      }
+    },
+    {
+      "crate": "base64",
+      "workload": "decode",
+      "paired_ratios": [
+        1.0115752167630188,
+        0.8678965588964397,
+        1.0369396168561273,
+        0.9445006220199703,
+        1.1036281444942377,
+        1.0291166296366463,
+        0.7909446126471256,
+        1.032872638937517,
+        1.0281270795758155,
+        1.055963205407017,
+        1.0280417206357066
+      ],
+      "paired_median": 1.0281270795758155,
+      "arms": {
+        "llvm": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 18519536,
+          "min_ns": 18456109,
+          "max_ns": 27856829,
+          "checksums": [
+            42229339
+          ],
+          "instructions": 385642646,
+          "cycles": 68506562
+        },
+        "baseline": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 153830778,
+          "min_ns": 152792578,
+          "max_ns": 197057567,
+          "checksums": [
+            42229339
+          ],
+          "instructions": 2429135645,
+          "cycles": 566212636
+        },
+        "sccp": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 157202827,
+          "min_ns": 155740419,
+          "max_ns": 169536783,
+          "checksums": [
+            42229339
+          ],
+          "instructions": 2429135877,
+          "cycles": 572740148
+        }
+      }
+    },
+    {
+      "crate": "base64",
+      "workload": "short",
+      "paired_ratios": [
+        0.9936216537487816,
+        0.9868064926731976,
+        1.0004447773434508,
+        0.9854776050967476,
+        1.0670887963234663,
+        1.0642212340240154,
+        0.9922552589338343,
+        0.9994270675189488,
+        1.1394892343374556,
+        1.010036555820406,
+        0.9970763540077778
+      ],
+      "paired_median": 0.9994270675189488,
+      "arms": {
+        "llvm": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 17119861,
+          "min_ns": 17043796,
+          "max_ns": 17739904,
+          "checksums": [
+            55990625
+          ],
+          "instructions": 335776477,
+          "cycles": 65891113
+        },
+        "baseline": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 78499586,
+          "min_ns": 78115118,
+          "max_ns": 80046721,
+          "checksums": [
+            55990625
+          ],
+          "instructions": 1172202559,
+          "cycles": 286430641
+        },
+        "sccp": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 78372916,
+          "min_ns": 78016258,
+          "max_ns": 89011336,
+          "checksums": [
+            55990625
+          ],
+          "instructions": 1172202760,
+          "cycles": 288681953
+        }
+      }
+    },
+    {
+      "crate": "unicode-segmentation",
+      "workload": "graphemes-mixed",
+      "paired_ratios": [
+        1.0020552791154949,
+        0.9842468860123513,
+        0.995785849860588,
+        1.0003918219946433,
+        1.0005827538308643,
+        1.013243728502342,
+        1.0014663269688489,
+        1.0112854468692885,
+        0.9991252945363392,
+        1.0058327919183125,
+        0.9968490326450629
+      ],
+      "paired_median": 1.0005827538308643,
+      "arms": {
+        "llvm": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 17365039,
+          "min_ns": 17294164,
+          "max_ns": 17559823,
+          "checksums": [
+            4502913975839704316
+          ],
+          "instructions": 270091320,
+          "cycles": 64293771
+        },
+        "baseline": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 23695895,
+          "min_ns": 23629394,
+          "max_ns": 24017918,
+          "checksums": [
+            4502913975839704316
+          ],
+          "instructions": 361360017,
+          "cycles": 88548041
+        },
+        "sccp": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 23703717,
+          "min_ns": 23621564,
+          "max_ns": 24009717,
+          "checksums": [
+            4502913975839704316
+          ],
+          "instructions": 361359727,
+          "cycles": 93505142
+        }
+      }
+    },
+    {
+      "crate": "unicode-segmentation",
+      "workload": "graphemes-ascii",
+      "paired_ratios": [
+        1.0018941126718504,
+        1.3608935912329296,
+        1.0189197065487559,
+        1.0523171451163604,
+        0.9759911741132231,
+        1.0031614895788084,
+        0.9951330459305582,
+        1.0034996345675724,
+        1.006757432603727,
+        0.9949162946663246,
+        0.9991376499781399
+      ],
+      "paired_median": 1.0031614895788084,
+      "arms": {
+        "llvm": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 27919734,
+          "min_ns": 27650579,
+          "max_ns": 28826878,
+          "checksums": [
+            18227791836399012924
+          ],
+          "instructions": 469604796,
+          "cycles": 101742064
+        },
+        "baseline": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 30265359,
+          "min_ns": 30105429,
+          "max_ns": 32084424,
+          "checksums": [
+            18227791836399012924
+          ],
+          "instructions": 490907441,
+          "cycles": 123868346
+        },
+        "sccp": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 30307222,
+          "min_ns": 30088253,
+          "max_ns": 43663487,
+          "checksums": [
+            18227791836399012924
+          ],
+          "instructions": 490908051,
+          "cycles": 125974948
+        }
+      }
+    },
+    {
+      "crate": "unicode-segmentation",
+      "workload": "graphemes-rev",
+      "paired_ratios": [
+        1.0055244876994294,
+        1.0030387771844431,
+        1.2684870908536394,
+        1.0215502419619602,
+        1.0065524616499613,
+        0.7746094544465174,
+        0.9326179215955611,
+        1.0068213375653736,
+        0.9949729096557393,
+        1.0041853010811017,
+        1.0030881473991082
+      ],
+      "paired_median": 1.0041853010811017,
+      "arms": {
+        "llvm": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 23062874,
+          "min_ns": 22347939,
+          "max_ns": 31713768,
+          "checksums": [
+            12754887892209847992
+          ],
+          "instructions": 364549918,
+          "cycles": 85725554
+        },
+        "baseline": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 80394933,
+          "min_ns": 79929925,
+          "max_ns": 103735274,
+          "checksums": [
+            12754887892209847992
+          ],
+          "instructions": 1305242235,
+          "cycles": 293910327
+        },
+        "sccp": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 80727132,
+          "min_ns": 80019560,
+          "max_ns": 106558979,
+          "checksums": [
+            12754887892209847992
+          ],
+          "instructions": 1305242129,
+          "cycles": 294791128
+        }
+      }
+    },
+    {
+      "crate": "humantime",
+      "workload": "dur-parse",
+      "paired_ratios": [
+        1.0221365634777386,
+        1.037079797035721,
+        1.021651183657883,
+        1.0389262196757194,
+        1.0145401296634098,
+        0.9847035826438454,
+        0.9840479208234028,
+        1.0109538034749928,
+        1.0233645961150697,
+        0.9218218810685935,
+        0.9914389906242115
+      ],
+      "paired_median": 1.0145401296634098,
+      "arms": {
+        "llvm": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 20990420,
+          "min_ns": 20676857,
+          "max_ns": 21307275,
+          "checksums": [
+            9931678550000
+          ],
+          "instructions": 329610013,
+          "cycles": 76833727
+        },
+        "baseline": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 226694865,
+          "min_ns": 222757986,
+          "max_ns": 245364205,
+          "checksums": [
+            9931678550000
+          ],
+          "instructions": 2494762977,
+          "cycles": 891489511
+        },
+        "sccp": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 229178036,
+          "min_ns": 225996916,
+          "max_ns": 236077978,
+          "checksums": [
+            9931678550000
+          ],
+          "instructions": 2494763037,
+          "cycles": 879293010
+        }
+      }
+    },
+    {
+      "crate": "humantime",
+      "workload": "dur-format",
+      "paired_ratios": [
+        0.9906716798428301,
+        1.0076715847362394,
+        0.9857816826239646,
+        0.9796860550961667,
+        1.007646613480395,
+        0.9849655969464013,
+        0.9384831754789398,
+        0.9795624593363695,
+        1.0221050960791918,
+        1.3078543668831146,
+        1.0031031156913874
+      ],
+      "paired_median": 0.9906716798428301,
+      "arms": {
+        "llvm": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 24079822,
+          "min_ns": 23191197,
+          "max_ns": 24371731,
+          "checksums": [
+            9619162
+          ],
+          "instructions": 380623090,
+          "cycles": 87991795
+        },
+        "baseline": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 27881076,
+          "min_ns": 27095184,
+          "max_ns": 29177205,
+          "checksums": [
+            9619162
+          ],
+          "instructions": 436463179,
+          "cycles": 102551212
+        },
+        "sccp": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 27492001,
+          "min_ns": 27303047,
+          "max_ns": 36464387,
+          "checksums": [
+            9619162
+          ],
+          "instructions": 436463235,
+          "cycles": 103061234
+        }
+      }
+    },
+    {
+      "crate": "humantime",
+      "workload": "ts-parse",
+      "paired_ratios": [
+        0.9915611387701451,
+        0.6917015241680958,
+        0.937384874888952,
+        0.9918825104246192,
+        1.0232561254647474,
+        0.9744070923700158,
+        1.0062452724231064,
+        0.9961687474259944,
+        0.7503207625983209,
+        1.0299109900035874,
+        0.9988500566344308
+      ],
+      "paired_median": 0.9918825104246192,
+      "arms": {
+        "llvm": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 21819546,
+          "min_ns": 21544582,
+          "max_ns": 23860202,
+          "checksums": [
+            10339638455182523344
+          ],
+          "instructions": 295759695,
+          "cycles": 80769324
+        },
+        "baseline": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 74795538,
+          "min_ns": 73982917,
+          "max_ns": 107146712,
+          "checksums": [
+            10339638455182523344
+          ],
+          "instructions": 1239262955,
+          "cycles": 272483194
+        },
+        "sccp": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 74188386,
+          "min_ns": 73998940,
+          "max_ns": 76261782,
+          "checksums": [
+            10339638455182523344
+          ],
+          "instructions": 1239262371,
+          "cycles": 271814838
+        }
+      }
+    },
+    {
+      "crate": "humantime",
+      "workload": "ts-format",
+      "paired_ratios": [
+        1.0018552446635514,
+        1.00063403603216,
+        0.9980683856479953,
+        1.0011590699482869,
+        1.0001113943505306,
+        1.0369829553178371,
+        1.0013103852042435,
+        1.0000416505633583,
+        1.0001416116745891,
+        1.001181284949512,
+        0.9987643092998846
+      ],
+      "paired_median": 1.00063403603216,
+      "arms": {
+        "llvm": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 22918917,
+          "min_ns": 22782803,
+          "max_ns": 23213831,
+          "checksums": [
+            32966122
+          ],
+          "instructions": 264257816,
+          "cycles": 84288413
+        },
+        "baseline": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 50799952,
+          "min_ns": 50673633,
+          "max_ns": 51146913,
+          "checksums": [
+            32966122
+          ],
+          "instructions": 447939770,
+          "cycles": 186228354
+        },
+        "sccp": {
+          "runs": 11,
+          "failures": 0,
+          "median_ns": 50798180,
+          "min_ns": 50657138,
+          "max_ns": 52696143,
+          "checksums": [
+            32966122
+          ],
+          "instructions": 447939397,
+          "cycles": 208288063
+        }
+      }
+    }
+  ],
+  "runtime_geomean": 1.0036568998253435,
+  "confirm_regressions": [],
+  "compile": [
+    {
+      "crate": "semver",
+      "rounds": 3,
+      "checker": 0,
+      "order": "forward/reverse/forward",
+      "arms": {
+        "baseline": [
+          {
+            "exit_code": 0,
+            "wall_seconds": 0.38077280499999233,
+            "user_seconds": 0.295396,
+            "sys_seconds": 0.071295,
+            "maxrss_kib": 148524,
+            "instructions": 1851695134,
+            "instructions_running_pct": 100.0,
+            "cycles": 1078290111,
+            "cycles_running_pct": 100.0,
+            "objects_identical_to_own_reference": true
+          },
+          {
+            "exit_code": 0,
+            "wall_seconds": 0.3407519330000923,
+            "user_seconds": 0.278535,
+            "sys_seconds": 0.0635,
+            "maxrss_kib": 148280,
+            "instructions": 1851668192,
+            "instructions_running_pct": 100.0,
+            "cycles": 1029463071,
+            "cycles_running_pct": 100.0,
+            "objects_identical_to_own_reference": true
+          },
+          {
+            "exit_code": 0,
+            "wall_seconds": 0.3553360840001005,
+            "user_seconds": 0.303428,
+            "sys_seconds": 0.052067999999999996,
+            "maxrss_kib": 148624,
+            "instructions": 1851676565,
+            "instructions_running_pct": 100.0,
+            "cycles": 1077062973,
+            "cycles_running_pct": 100.0,
+            "objects_identical_to_own_reference": true
+          }
+        ],
+        "sccp": [
+          {
+            "exit_code": 0,
+            "wall_seconds": 0.3667604240000628,
+            "user_seconds": 0.307973,
+            "sys_seconds": 0.059946,
+            "maxrss_kib": 148420,
+            "instructions": 1862838179,
+            "instructions_running_pct": 100.0,
+            "cycles": 1112199603,
+            "cycles_running_pct": 100.0,
+            "objects_identical_to_own_reference": true
+          },
+          {
+            "exit_code": 0,
+            "wall_seconds": 0.3661766660000012,
+            "user_seconds": 0.323646,
+            "sys_seconds": 0.044605,
+            "maxrss_kib": 148388,
+            "instructions": 1862811068,
+            "instructions_running_pct": 100.0,
+            "cycles": 1120436538,
+            "cycles_running_pct": 100.0,
+            "objects_identical_to_own_reference": true
+          },
+          {
+            "exit_code": 0,
+            "wall_seconds": 0.352464255999962,
+            "user_seconds": 0.308378,
+            "sys_seconds": 0.04423,
+            "maxrss_kib": 148356,
+            "instructions": 1862846662,
+            "instructions_running_pct": 100.0,
+            "cycles": 1071536634,
+            "cycles_running_pct": 100.0,
+            "objects_identical_to_own_reference": true
+          }
+        ]
+      },
+      "medians": {
+        "baseline": {
+          "instructions": 1851676565,
+          "cycles": 1077062973,
+          "wall_seconds": 0.3553360840001005,
+          "user_seconds": 0.295396,
+          "maxrss_kib": 148524
+        },
+        "sccp": {
+          "instructions": 1862838179,
+          "cycles": 1112199603,
+          "wall_seconds": 0.3661766660000012,
+          "user_seconds": 0.308378,
+          "maxrss_kib": 148388
+        }
+      },
+      "paired_instruction_ratio": 1.0060177535682826
+    },
+    {
+      "crate": "base64",
+      "rounds": 3,
+      "checker": 0,
+      "order": "forward/reverse/forward",
+      "arms": {
+        "baseline": [
+          {
+            "exit_code": 0,
+            "wall_seconds": 0.2944806470000003,
+            "user_seconds": 0.229819,
+            "sys_seconds": 0.06378199999999999,
+            "maxrss_kib": 144000,
+            "instructions": 1499564597,
+            "instructions_running_pct": 100.0,
+            "cycles": 856664756,
+            "cycles_running_pct": 100.0,
+            "objects_identical_to_own_reference": true
+          },
+          {
+            "exit_code": 0,
+            "wall_seconds": 0.2894018939999796,
+            "user_seconds": 0.233035,
+            "sys_seconds": 0.055453999999999996,
+            "maxrss_kib": 143928,
+            "instructions": 1499517234,
+            "instructions_running_pct": 100.0,
+            "cycles": 831920734,
+            "cycles_running_pct": 100.0,
+            "objects_identical_to_own_reference": true
+          },
+          {
+            "exit_code": 0,
+            "wall_seconds": 0.30994471999997586,
+            "user_seconds": 0.257726,
+            "sys_seconds": 0.05124,
+            "maxrss_kib": 143868,
+            "instructions": 1499561135,
+            "instructions_running_pct": 100.0,
+            "cycles": 907159918,
+            "cycles_running_pct": 100.0,
+            "objects_identical_to_own_reference": true
+          }
+        ],
+        "sccp": [
+          {
+            "exit_code": 0,
+            "wall_seconds": 0.3099183100000573,
+            "user_seconds": 0.23824499999999998,
+            "sys_seconds": 0.056784999999999995,
+            "maxrss_kib": 144104,
+            "instructions": 1506339441,
+            "instructions_running_pct": 100.0,
+            "cycles": 863502618,
+            "cycles_running_pct": 100.0,
+            "objects_identical_to_own_reference": true
+          },
+          {
+            "exit_code": 0,
+            "wall_seconds": 0.2844265159999395,
+            "user_seconds": 0.234112,
+            "sys_seconds": 0.051963999999999996,
+            "maxrss_kib": 144000,
+            "instructions": 1506343050,
+            "instructions_running_pct": 100.0,
+            "cycles": 829068392,
+            "cycles_running_pct": 100.0,
+            "objects_identical_to_own_reference": true
+          },
+          {
+            "exit_code": 0,
+            "wall_seconds": 0.28938732100004927,
+            "user_seconds": 0.21637199999999998,
+            "sys_seconds": 0.071126,
+            "maxrss_kib": 143872,
+            "instructions": 1506357998,
+            "instructions_running_pct": 100.0,
+            "cycles": 837857218,
+            "cycles_running_pct": 100.0,
+            "objects_identical_to_own_reference": true
+          }
+        ]
+      },
+      "medians": {
+        "baseline": {
+          "instructions": 1499561135,
+          "cycles": 856664756,
+          "wall_seconds": 0.2944806470000003,
+          "user_seconds": 0.233035,
+          "maxrss_kib": 143928
+        },
+        "sccp": {
+          "instructions": 1506343050,
+          "cycles": 837857218,
+          "wall_seconds": 0.28938732100004927,
+          "user_seconds": 0.234112,
+          "maxrss_kib": 144000
+        }
+      },
+      "paired_instruction_ratio": 1.004532568123673
+    },
+    {
+      "crate": "unicode-segmentation",
+      "rounds": 3,
+      "checker": 0,
+      "order": "forward/reverse/forward",
+      "arms": {
+        "baseline": [
+          {
+            "exit_code": 0,
+            "wall_seconds": 0.34687529599989375,
+            "user_seconds": 0.261498,
+            "sys_seconds": 0.084288,
+            "maxrss_kib": 137664,
+            "instructions": 1840516348,
+            "instructions_running_pct": 100.0,
+            "cycles": 1021248029,
+            "cycles_running_pct": 100.0,
+            "objects_identical_to_own_reference": true
+          },
+          {
+            "exit_code": 0,
+            "wall_seconds": 0.340878263000036,
+            "user_seconds": 0.269632,
+            "sys_seconds": 0.067907,
+            "maxrss_kib": 138088,
+            "instructions": 1840437386,
+            "instructions_running_pct": 100.0,
+            "cycles": 995570362,
+            "cycles_running_pct": 100.0,
+            "objects_identical_to_own_reference": true
+          },
+          {
+            "exit_code": 0,
+            "wall_seconds": 0.32987985099998696,
+            "user_seconds": 0.26657,
+            "sys_seconds": 0.061459999999999994,
+            "maxrss_kib": 137936,
+            "instructions": 1840455710,
+            "instructions_running_pct": 100.0,
+            "cycles": 961637394,
+            "cycles_running_pct": 100.0,
+            "objects_identical_to_own_reference": true
+          }
+        ],
+        "sccp": [
+          {
+            "exit_code": 0,
+            "wall_seconds": 0.3400853109999389,
+            "user_seconds": 0.277766,
+            "sys_seconds": 0.059843,
+            "maxrss_kib": 137836,
+            "instructions": 1848213802,
+            "instructions_running_pct": 100.0,
+            "cycles": 993754387,
+            "cycles_running_pct": 100.0,
+            "objects_identical_to_own_reference": true
+          },
+          {
+            "exit_code": 0,
+            "wall_seconds": 0.3304046020000442,
+            "user_seconds": 0.24481799999999998,
+            "sys_seconds": 0.08301,
+            "maxrss_kib": 137872,
+            "instructions": 1848255951,
+            "instructions_running_pct": 100.0,
+            "cycles": 958673719,
+            "cycles_running_pct": 100.0,
+            "objects_identical_to_own_reference": true
+          },
+          {
+            "exit_code": 0,
+            "wall_seconds": 0.3359072120000519,
+            "user_seconds": 0.292332,
+            "sys_seconds": 0.04421,
+            "maxrss_kib": 137796,
+            "instructions": 1848270948,
+            "instructions_running_pct": 100.0,
+            "cycles": 989680960,
+            "cycles_running_pct": 100.0,
+            "objects_identical_to_own_reference": true
+          }
+        ]
+      },
+      "medians": {
+        "baseline": {
+          "instructions": 1840455710,
+          "cycles": 995570362,
+          "wall_seconds": 0.340878263000036,
+          "user_seconds": 0.26657,
+          "maxrss_kib": 137936
+        },
+        "sccp": {
+          "instructions": 1848255951,
+          "cycles": 989680960,
+          "wall_seconds": 0.3359072120000519,
+          "user_seconds": 0.277766,
+          "maxrss_kib": 137836
+        }
+      },
+      "paired_instruction_ratio": 1.0042463602669363
+    },
+    {
+      "crate": "humantime",
+      "rounds": 3,
+      "checker": 0,
+      "order": "forward/reverse/forward",
+      "arms": {
+        "baseline": [
+          {
+            "exit_code": 0,
+            "wall_seconds": 0.355683084999896,
+            "user_seconds": 0.275904,
+            "sys_seconds": 0.078138,
+            "maxrss_kib": 164856,
+            "instructions": 2229299498,
+            "instructions_running_pct": 100.0,
+            "cycles": 1042412651,
+            "cycles_running_pct": 100.0,
+            "objects_identical_to_own_reference": true
+          },
+          {
+            "exit_code": 0,
+            "wall_seconds": 0.3508468759999914,
+            "user_seconds": 0.258353,
+            "sys_seconds": 0.09159199999999999,
+            "maxrss_kib": 164964,
+            "instructions": 2229475333,
+            "instructions_running_pct": 100.0,
+            "cycles": 1012950176,
+            "cycles_running_pct": 100.0,
+            "objects_identical_to_own_reference": true
+          },
+          {
+            "exit_code": 0,
+            "wall_seconds": 0.3564974890000485,
+            "user_seconds": 0.282038,
+            "sys_seconds": 0.07470399999999999,
+            "maxrss_kib": 164988,
+            "instructions": 2229408298,
+            "instructions_running_pct": 100.0,
+            "cycles": 1049094220,
+            "cycles_running_pct": 100.0,
+            "objects_identical_to_own_reference": true
+          }
+        ],
+        "sccp": [
+          {
+            "exit_code": 0,
+            "wall_seconds": 0.3466315299999678,
+            "user_seconds": 0.275289,
+            "sys_seconds": 0.072217,
+            "maxrss_kib": 165436,
+            "instructions": 2237658055,
+            "instructions_running_pct": 100.0,
+            "cycles": 1013770782,
+            "cycles_running_pct": 100.0,
+            "objects_identical_to_own_reference": true
+          },
+          {
+            "exit_code": 0,
+            "wall_seconds": 0.34162574600009066,
+            "user_seconds": 0.29783899999999996,
+            "sys_seconds": 0.043049,
+            "maxrss_kib": 165564,
+            "instructions": 2237753538,
+            "instructions_running_pct": 100.0,
+            "cycles": 990434240,
+            "cycles_running_pct": 100.0,
+            "objects_identical_to_own_reference": true
+          },
+          {
+            "exit_code": 0,
+            "wall_seconds": 0.3403562180000108,
+            "user_seconds": 0.275464,
+            "sys_seconds": 0.066482,
+            "maxrss_kib": 165472,
+            "instructions": 2237746593,
+            "instructions_running_pct": 100.0,
+            "cycles": 999283303,
+            "cycles_running_pct": 100.0,
+            "objects_identical_to_own_reference": true
+          }
+        ]
+      },
+      "medians": {
+        "baseline": {
+          "instructions": 2229408298,
+          "cycles": 1042412651,
+          "wall_seconds": 0.355683084999896,
+          "user_seconds": 0.275904,
+          "maxrss_kib": 164964
+        },
+        "sccp": {
+          "instructions": 2237746593,
+          "cycles": 999283303,
+          "wall_seconds": 0.34162574600009066,
+          "user_seconds": 0.275464,
+          "maxrss_kib": 165472
+        }
+      },
+      "paired_instruction_ratio": 1.0037401381377653
+    }
+  ]
+}

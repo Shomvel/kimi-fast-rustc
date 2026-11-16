@@ -171,24 +171,31 @@ impl LayoutLowering<'_> {
         if source_layout.size != target_layout.size {
             return Err(LayoutError::Malformed("transmute sizes differ".into()));
         }
-        let slot = self.graph.stack_slots.len() as u32;
-        self.graph.stack_slots.push(SizeAlign {
-            size: source_layout.size,
-            align: source_layout.align.max(target_layout.align),
-        });
-        let pointer = self.pointer_type(source.ty);
-        let address = self.graph.add_node(
-            Opcode::StackSlot,
-            NodeId::NONE,
-            &[],
-            slot,
-            ValueType::Rust(pointer),
-        );
         let mut control = self.graph.resolve(self.graph.control(node));
         let mut effect = self.graph.resolve(self.graph.input(node, 0));
-        self.encode_fields(&source, address, &mut control, &mut effect)?;
-        let target_address = self.field_address(address, 0, target_ty);
-        let value = self.decode_fields(target_address, target_ty, &mut control, &mut effect)?;
+        let value = if let Some(value) = self.pack_array_transmute(&source, target_ty) {
+            // Every source byte is an immutable SSA snapshot. The complete
+            // pack propagates poison from every byte without moving its fixed
+            // read or creating a new pointer/provenance or alignment claim.
+            value
+        } else {
+            let slot = self.graph.stack_slots.len() as u32;
+            self.graph.stack_slots.push(SizeAlign {
+                size: source_layout.size,
+                align: source_layout.align.max(target_layout.align),
+            });
+            let pointer = self.pointer_type(source.ty);
+            let address = self.graph.add_node(
+                Opcode::StackSlot,
+                NodeId::NONE,
+                &[],
+                slot,
+                ValueType::Rust(pointer),
+            );
+            self.encode_fields(&source, address, &mut control, &mut effect)?;
+            let target_address = self.field_address(address, 0, target_ty);
+            self.decode_fields(target_address, target_ty, &mut control, &mut effect)?
+        };
         // Source validity/definedness obligations are interpreted in S. The
         // publishing seam retains actual representation reads, writes and raw
         // MaybeUninit initialization masks, but emits no diagnostic scan.

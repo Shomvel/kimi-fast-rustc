@@ -1,14 +1,16 @@
 //! Route known variant predecessors around a merge-and-test diamond.
 //!
 //! Each edit is planned before mutation. All merge phis, including effects,
-//! are split together, and only pure values are cloned. Unknown or poison
-//! decisions, loop-carried dependencies and unplaceable uses reject the edit.
+//! are split together, and only pure values are cloned. Unknown and poison
+//! decisions keep a residual branch; loop-carried roots and unplaceable uses
+//! reject the edit.
 
 use kfrc_body::fx_hash::{HashMap, HashSet};
 use std::collections::VecDeque;
 
 use kfrc_body::{TypeOracle, TypeShape};
 
+use super::thread_values::{Expression, Merge, Placement, Planner};
 use crate::analysis::cfg::ControlFlow;
 use crate::analysis::dominators::Dominators;
 use crate::analysis::uses::{UseKind, Uses};
@@ -30,6 +32,16 @@ pub struct VariantThreadStats {
 }
 
 pub fn run(graph: &mut FunctionGraph) -> Result<VariantThreadStats, CfgEditError> {
+    static EAGER: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+    let eager =
+        *EAGER.get_or_init(|| std::env::var("KFRC_THREAD_ANALYSIS").as_deref() == Ok("eager"));
+    run_with_analysis_policy(graph, eager)
+}
+
+fn run_with_analysis_policy(
+    graph: &mut FunctionGraph,
+    eager: bool,
+) -> Result<VariantThreadStats, CfgEditError> {
     let mut stats = VariantThreadStats::default();
     graph.resolve_edges();
     let mut pending: VecDeque<_> = graph
@@ -38,6 +50,7 @@ pub fn run(graph: &mut FunctionGraph) -> Result<VariantThreadStats, CfgEditError
         .map(|n| (n, 0))
         .collect();
     let mut analysis = None;
+    let mut deferred_cleanup = false;
     // Only newly split regions can expose the next test in a SwitchInt chain.
     while let Some((region, depth)) = pending.pop_front() {
         if graph.is_dead(region) || depth >= 8 {
@@ -48,19 +61,15 @@ pub fn run(graph: &mut FunctionGraph) -> Result<VariantThreadStats, CfgEditError
             continue;
         }
         if analysis.is_none() {
-            let uses = Uses::new(graph);
-            let cfg = ControlFlow::new(graph);
-            let dominators = Dominators::new(&cfg);
-            stats.nodes_indexed += graph.ids().count() * 2;
-            analysis = Some((uses, cfg, dominators));
+            analysis = Some(Analysis::new(graph, eager, &mut stats.nodes_indexed));
         }
-        let (uses, cfg, dominators) = analysis.as_ref().unwrap();
-        if let Some(spine) = TransparentSpine::new(graph, region, uses) {
+        let index = analysis.as_mut().unwrap();
+        if let Some(spine) = TransparentSpine::new(graph, region, &index.uses) {
             stats.dirty_nodes.extend(
                 spine
                     .phis
                     .iter()
-                    .flat_map(|phi| uses.of(*phi).iter().map(|usage| usage.user)),
+                    .flat_map(|phi| index.uses.of(*phi).iter().map(|usage| usage.user)),
             );
             spine.apply(graph, region);
             stats.control_spines_collapsed += 1;
@@ -68,28 +77,75 @@ pub fn run(graph: &mut FunctionGraph) -> Result<VariantThreadStats, CfgEditError
             pending.push_front((region, depth));
             continue;
         }
-        let Some(plan) = Plan::new(graph, region, uses, cfg, dominators, &mut stats.node_visits)
-        else {
+        let Some(plan) = Plan::new(graph, region, index, &mut stats) else {
             continue;
         };
-        stats.predecessors_threaded += graph.inputs(region).len();
+        stats.predecessors_threaded += plan.slots.iter().map(Vec::len).sum::<usize>();
+        stats.branches_removed += usize::from(plan.residual.is_empty());
         let old_len = graph.len();
         let (cloned, regions, consumers) = plan.apply(graph);
         stats.values_cloned += cloned;
         stats.regions_threaded += 1;
-        stats.branches_removed += 1;
         stats
             .dirty_nodes
             .extend((old_len..graph.len()).map(|i| NodeId(i as u32)));
         stats.dirty_nodes.extend(consumers);
-        super::simplify::run(graph)?;
+        if simplify_once() {
+            deferred_cleanup = true;
+        } else {
+            super::simplify::run(graph)?;
+        }
         analysis = None;
         pending.extend(regions.into_iter().map(|n| (n, depth + 1)));
+    }
+    if deferred_cleanup {
+        super::simplify::run(graph)?;
     }
     stats.dirty_nodes.retain(|node| !graph.is_dead(*node));
     stats.dirty_nodes.sort_unstable();
     stats.dirty_nodes.dedup();
     Ok(stats)
+}
+
+/// Transparent spines and dynamic decisions need only reverse edges. Delay
+/// reachability and dominance until a known predecessor could actually be
+/// threaded. Every edit still discards the complete immutable snapshot.
+struct Analysis {
+    uses: Uses,
+    dominance: Option<(ControlFlow, Dominators)>,
+}
+
+impl Analysis {
+    fn new(graph: &FunctionGraph, eager: bool, nodes_indexed: &mut usize) -> Self {
+        *nodes_indexed += graph.live_count();
+        let mut index = Self {
+            uses: Uses::new(graph),
+            dominance: None,
+        };
+        if eager {
+            index.dominance = Some(Self::build_dominance(graph, nodes_indexed));
+        }
+        index
+    }
+
+    fn build_dominance(
+        graph: &FunctionGraph,
+        nodes_indexed: &mut usize,
+    ) -> (ControlFlow, Dominators) {
+        *nodes_indexed += graph.live_count();
+        let cfg = ControlFlow::new(graph);
+        let dominators = Dominators::new(&cfg);
+        (cfg, dominators)
+    }
+}
+
+/// Clean control once after the threading worklist drains. Planning always
+/// rebuilds its Uses/CFG snapshot after an edit; full simplification is not
+/// needed to validate the next independent plan. `each` retains the old policy
+/// as a measurement control.
+fn simplify_once() -> bool {
+    static ONCE: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+    *ONCE.get_or_init(|| std::env::var("KFRC_THREAD_SIMPLIFY").as_deref() != Ok("each"))
 }
 
 // Inlining leaves Jump -> single-entry Region wrappers between a merge and
@@ -120,7 +176,7 @@ impl TransparentSpine {
                 return None;
             };
             let region = usage.user;
-            if usage.kind != UseKind::Operand(0)
+            if usage.kind() != UseKind::Operand(0)
                 || graph.op(region) != Opcode::Region
                 || graph.inputs(region) != [exit]
             {
@@ -165,7 +221,7 @@ fn region_exit(
     let mut phis = Vec::new();
     let mut exit = None;
     for usage in uses.of(region) {
-        match usage.kind {
+        match usage.kind() {
             UseKind::Operand(0) if graph.op(usage.user) == Opcode::Phi => {
                 if graph.inputs(usage.user).len() != count + 1 {
                     return None;
@@ -193,7 +249,7 @@ struct Rewrite {
     user: NodeId,
     slot: usize,
     value: NodeId,
-    side: usize,
+    placement: Placement,
 }
 
 struct Plan {
@@ -201,21 +257,23 @@ struct Plan {
     branch: NodeId,
     leaves: Vec<NodeId>,
     slots: Vec<Vec<usize>>,
+    residual: Vec<usize>,
     phis: Vec<NodeId>,
     dependent: HashSet<NodeId>,
     witnesses: HashSet<NodeId>,
     rewrites: Vec<Rewrite>,
+    merges: Vec<Merge>,
+    expressions: Vec<Expression>,
 }
 
 impl Plan {
     fn new(
         graph: &FunctionGraph,
         region: NodeId,
-        uses: &Uses,
-        cfg: &ControlFlow,
-        dominators: &Dominators,
-        visits: &mut usize,
+        analysis: &mut Analysis,
+        stats: &mut VariantThreadStats,
     ) -> Option<Self> {
+        let Analysis { uses, dominance } = analysis;
         let count = graph.inputs(region).len();
         if !(2..=64).contains(&count) {
             return None;
@@ -238,7 +296,7 @@ impl Plan {
         for usage in uses.of(branch) {
             let node = usage.user;
             let side = graph.payload(node) as usize;
-            if usage.kind != UseKind::Operand(0)
+            if usage.kind() != UseKind::Operand(0)
                 || graph.op(node) != Opcode::Projection
                 || graph.value_type(node) != &ValueType::Control
                 || side >= sides
@@ -253,24 +311,29 @@ impl Plan {
         }
         let condition = *graph.inputs(branch).first()?;
         let mut slots = vec![Vec::new(); sides];
+        let mut residual = Vec::new();
         for slot in 0..count {
             let side = if let Some(cases) = cases {
                 let value = incoming(graph, condition, region, slot);
                 if graph.op(value) != Opcode::MakeVariant {
-                    return None;
+                    residual.push(slot);
+                    continue;
                 }
                 cases
                     .iter()
                     .position(|&variant| variant == graph.payload(value))
                     .unwrap_or(cases.len())
             } else {
-                let value = evaluate(graph, condition, region, slot, 0)?;
-                if value > 1 {
-                    return None;
-                }
+                let Some(value @ 0..=1) = evaluate(graph, condition, region, slot, 0) else {
+                    residual.push(slot);
+                    continue;
+                };
                 usize::from(value == 0)
             };
             slots[side].push(slot);
+        }
+        if residual.len() == count {
+            return None;
         }
         // Retire proof edges with their branch. Every routed predecessor
         // constructs the witnessed variant; cloned fields can conservatively
@@ -279,7 +342,8 @@ impl Plan {
         for (side, &leaf) in leaves.iter().enumerate() {
             for usage in uses.of(leaf) {
                 let witness = usage.user;
-                if graph.op(witness) != Opcode::VariantWitness || usage.kind != UseKind::Operand(1)
+                if graph.op(witness) != Opcode::VariantWitness
+                    || usage.kind() != UseKind::Operand(1)
                 {
                     continue;
                 }
@@ -296,6 +360,8 @@ impl Plan {
                 witnesses.insert(witness);
             }
         }
+        let (cfg, dominators) = dominance
+            .get_or_insert_with(|| Analysis::build_dominance(graph, &mut stats.nodes_indexed));
         if !cfg.contains(region) {
             return None;
         }
@@ -312,7 +378,7 @@ impl Plan {
         let mut pending: Vec<_> = dependent.iter().copied().collect();
         pending.sort_unstable();
         while let Some(node) = pending.pop() {
-            *visits += 1;
+            stats.node_visits += 1;
             for usage in uses.of(node) {
                 if usage.user == branch || phis.contains(&usage.user) {
                     continue;
@@ -327,14 +393,17 @@ impl Plan {
         }
         for &witness in &witnesses {
             if uses.of(witness).iter().any(|usage| {
-                usage.kind != UseKind::Operand(1)
+                usage.kind() != UseKind::Operand(1)
                     || graph.op(usage.user) != Opcode::VariantField
                     || !dependent.contains(&usage.user)
             }) {
                 return None;
             }
         }
-        if (dependent.len() + phis.len() + 1) * sides > 512 {
+        // Partial edits also add a residual projection and Jump per side.
+        let side_growth =
+            (dependent.len() + phis.len() + 1 + 2 * usize::from(!residual.is_empty())) * sides;
+        if side_growth > 512 {
             return None;
         }
         for &phi in &phis {
@@ -343,6 +412,21 @@ impl Plan {
             }
         }
         let mut rewrites = Vec::new();
+        let live_sides: Vec<_> = slots
+            .iter()
+            .map(|side| !side.is_empty() || !residual.is_empty())
+            .collect();
+        let mut repair = Planner::new(
+            graph,
+            cfg,
+            dominators,
+            region,
+            &leaves,
+            &live_sides,
+            &phis,
+            &dependent,
+            &witnesses,
+        );
         let mut ordered: Vec<_> = dependent.iter().copied().collect();
         ordered.sort_unstable();
         for value in ordered {
@@ -353,7 +437,7 @@ impl Plan {
                 {
                     continue;
                 }
-                let UseKind::Operand(slot) = usage.kind else {
+                let UseKind::Operand(slot) = usage.kind() else {
                     return None;
                 };
                 let control = if graph.op(usage.user) == Opcode::Phi {
@@ -365,42 +449,70 @@ impl Plan {
                 } else {
                     graph.control(usage.user)
                 };
-                let side = leaves
-                    .iter()
-                    .position(|leaf| dominators.dominates(cfg, *leaf, control))?;
+                let before = repair.visits;
+                let placement = repair.at(value, control);
+                stats.node_visits += repair.visits - before;
+                let placement = placement?;
                 rewrites.push(Rewrite {
                     user: usage.user,
                     slot,
                     value,
-                    side,
+                    placement,
                 });
             }
         }
+        if side_growth + repair.merges.len() + repair.expressions.len() > 512 {
+            return None;
+        }
+        let merges = repair.merges;
+        let expressions = repair.expressions;
         Some(Self {
             region,
             branch,
             leaves,
             slots,
+            residual,
             phis,
             dependent,
             witnesses,
             rewrites,
+            merges,
+            expressions,
         })
     }
 
     fn apply(self, graph: &mut FunctionGraph) -> (usize, Vec<NodeId>, Vec<NodeId>) {
         let mut maps = vec![HashMap::default(); self.leaves.len()];
-        let mut cloned = 0;
         let mut regions = Vec::new();
         let consumers = self.rewrites.iter().map(|r| r.user).collect();
+        let residual = !self.residual.is_empty();
         for (side, map) in maps.iter_mut().enumerate() {
-            if self.slots[side].is_empty() {
+            if self.slots[side].is_empty() && !residual {
                 continue;
             }
-            let predecessors: Vec<_> = self.slots[side]
+            let mut predecessors: Vec<_> = self.slots[side]
                 .iter()
                 .map(|i| graph.inputs(self.region)[*i])
                 .collect();
+            if residual {
+                // The old projection is replaced by the side merge below.
+                // A fresh projection keeps that merge's residual edge from
+                // resolving to itself during replacement normalization.
+                let projection = graph.add_node(
+                    Opcode::Projection,
+                    NodeId::NONE,
+                    &[self.branch],
+                    graph.payload(self.leaves[side]),
+                    ValueType::Control,
+                );
+                predecessors.push(graph.add_node(
+                    Opcode::Jump,
+                    projection,
+                    &[],
+                    0,
+                    ValueType::Control,
+                ));
+            }
             let region = graph.add_node(
                 Opcode::Region,
                 NodeId::NONE,
@@ -410,10 +522,13 @@ impl Plan {
             );
             regions.push(region);
             for &phi in &self.phis {
-                let values: Vec<_> = self.slots[side]
+                let mut values: Vec<_> = self.slots[side]
                     .iter()
                     .map(|i| graph.inputs(phi)[i + 1])
                     .collect();
+                if residual {
+                    values.push(phi);
+                }
                 let replacement = if values.len() == 1 {
                     values[0]
                 } else {
@@ -429,30 +544,125 @@ impl Plan {
                 };
                 map.insert(phi, replacement);
             }
-            for rewrite in self.rewrites.iter().filter(|r| r.side == side) {
-                let replacement = clone_value(
-                    graph,
-                    rewrite.value,
-                    &self.dependent,
-                    &self.witnesses,
-                    map,
-                    &mut cloned,
-                );
-                graph.set_input(rewrite.user, rewrite.slot, replacement);
-            }
             graph.replace(self.leaves[side], region);
         }
-        graph.remove_node(self.branch);
-        graph.remove_node(self.region);
-        for node in self.dependent.into_iter().chain(self.witnesses) {
-            graph.remove_node(node);
+        if residual {
+            let predecessors: Vec<_> = self
+                .residual
+                .iter()
+                .map(|&slot| graph.inputs(self.region)[slot])
+                .collect();
+            for &phi in &self.phis {
+                let mut inputs = vec![self.region];
+                inputs.extend(self.residual.iter().map(|&slot| graph.input(phi, slot + 1)));
+                graph.set_inputs(phi, &inputs);
+            }
+            graph.set_inputs(self.region, &predecessors);
+        }
+        let merged: Vec<_> = self
+            .merges
+            .iter()
+            .map(|merge| {
+                graph.add_node(
+                    Opcode::Phi,
+                    NodeId::NONE,
+                    &[merge.region],
+                    0,
+                    graph.value_type(merge.value).clone(),
+                )
+            })
+            .collect();
+        let mut values = ValueRepair {
+            plan: &self,
+            maps,
+            merged: &merged,
+            expressions: vec![NodeId::NONE; self.expressions.len()],
+            cloned: 0,
+        };
+        for (merge, &phi) in self.merges.iter().zip(&merged) {
+            let mut inputs = vec![merge.region];
+            inputs.extend(
+                merge
+                    .inputs
+                    .iter()
+                    .map(|&placement| values.at(graph, merge.value, placement)),
+            );
+            graph.set_inputs(phi, &inputs);
+        }
+        for rewrite in &self.rewrites {
+            if rewrite.placement != Placement::Unreachable {
+                let replacement = values.at(graph, rewrite.value, rewrite.placement);
+                graph.set_input(rewrite.user, rewrite.slot, replacement);
+            }
+        }
+        let cloned = values.cloned;
+        if !residual {
+            graph.remove_node(self.branch);
+            graph.remove_node(self.region);
+            for node in self.dependent {
+                graph.remove_node(node);
+            }
+        }
+        for witness in self.witnesses {
+            graph.remove_node(witness);
         }
         graph.resolve_edges();
         (cloned, regions, consumers)
     }
 }
 
-fn cloneable(graph: &FunctionGraph, node: NodeId) -> bool {
+/// Materialize side translations and repaired expressions only when used.
+/// Repair Phis are allocated first so loop inputs can refer back to them.
+struct ValueRepair<'a> {
+    plan: &'a Plan,
+    maps: Vec<HashMap<NodeId, NodeId>>,
+    merged: &'a [NodeId],
+    expressions: Vec<NodeId>,
+    cloned: usize,
+}
+
+impl ValueRepair<'_> {
+    fn at(&mut self, graph: &mut FunctionGraph, value: NodeId, placement: Placement) -> NodeId {
+        match placement {
+            Placement::Original => value,
+            Placement::Side(side) => clone_value(
+                graph,
+                value,
+                &self.plan.dependent,
+                &self.plan.witnesses,
+                &mut self.maps[side],
+                &mut self.cloned,
+            ),
+            Placement::Merge(index) => self.merged[index],
+            Placement::Expression(index) => {
+                if !self.expressions[index].is_none() {
+                    return self.expressions[index];
+                }
+                let original = self.plan.expressions[index].value;
+                let mut inputs = Vec::with_capacity(self.plan.expressions[index].inputs.len());
+                for slot in 0..self.plan.expressions[index].inputs.len() {
+                    let (input, placement) = self.plan.expressions[index].inputs[slot];
+                    inputs.push(self.at(graph, input, placement));
+                }
+                let replacement = graph.add_node(
+                    graph.op(original),
+                    NodeId::NONE,
+                    &inputs,
+                    graph.payload(original),
+                    graph.value_type(original).clone(),
+                );
+                self.expressions[index] = replacement;
+                self.cloned += 1;
+                replacement
+            }
+            // Reachability repair removes this operand's predecessor before
+            // verification observes the retired original definition.
+            Placement::Unreachable => value,
+        }
+    }
+}
+
+pub(super) fn cloneable(graph: &FunctionGraph, node: NodeId) -> bool {
     graph.control(node).is_none()
         && matches!(
             graph.op(node),
@@ -488,6 +698,7 @@ fn cloneable(graph: &FunctionGraph, node: NodeId) -> bool {
                 | Opcode::FieldAddr
                 | Opcode::VariantFieldAddr
                 | Opcode::IndexAddr
+                | Opcode::PtrOffset
         )
 }
 
@@ -601,3 +812,7 @@ fn evaluate(
 #[cfg(test)]
 #[path = "thread_variants_tests.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "thread_partial_tests.rs"]
+mod partial_tests;

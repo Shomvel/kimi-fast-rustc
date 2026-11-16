@@ -10,8 +10,16 @@ crate-type = ["dylib"]
 
 [dependencies]
 kfrc-body = { path = "../kfrc-body" }
+kfrc-cranelift = { path = "../kfrc-cranelift" }
+kfrc-object = { path = "../kfrc-object" }
 kfrc-son = { path = "../kfrc-son" }
 kfrc-x86 = { path = "../kfrc-x86" }
+
+# cranelift-codegen 0.134.4 with the kfrc patches listed in
+# third_party/cranelift-codegen/KFRC-PATCHES.md.
+[patch.crates-io]
+cranelift-codegen = { path = "../../third_party/cranelift-codegen" }
+regalloc2 = { path = "../../third_party/regalloc2" }
 
 [package.metadata.rust-analyzer]
 rustc_private = true

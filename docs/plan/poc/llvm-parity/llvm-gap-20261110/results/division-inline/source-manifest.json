@@ -1,0 +1,22 @@
+{
+  "base": "ae096c77b49a56b8661c9568bcdc71289ebd9d64",
+  "files": {
+    "crates/kfrc-son/src/transforms/ipo/plan.rs": "76754c4bb2522b3d4ee4edd2cc34475183d5c24dc69fb5580472e932360b0d7d",
+    "crates/kfrc-son/src/transforms/ipo/plan/data.rs": "b9c51dee992aea04973401ef4533cf4622f288ecfdf320df0718c9bccca26004",
+    "crates/kfrc-son/src/transforms/ipo/splice.rs": "e1f688597784a14f27aaf2ef0d2c0a52baf9f780f30eaf39ac9f87dcf463a09d",
+    "crates/kfrc-son/tests/semantic_inline.rs": "e380323372a8843fea011deb1e7f97e0f1098ff154b786461b5eb61dd15d8758",
+    "crates/kfrc-x86/src/lower.rs": "078928e03be8af415a4953fd99d0ea09a4ffd4837d3dc71f178efe1ccf663f07",
+    "crates/kfrc-x86/src/lower/allocated/constraints.rs": "b791daa5b3149f5c2413f95d7edc33c81b3f93023edcab3a0f9b15a4704b8286",
+    "crates/kfrc-x86/src/lower/allocated/emit.rs": "632eba1db158741f300ae4ff29e74af3ed0c028dc3cb2be32d837297dd2a4860",
+    "crates/kfrc-x86/src/lower/allocated/fixed_input_tests.rs": "0cb19eebc33612a1b4ab502e0aae9589375b3605ebcc10a06a2a56452692d0ce",
+    "crates/kfrc-x86/src/lower/arithmetic.rs": "83229d0785c67eb2b55f5a278110d325b2e66ad362bf06e4096650402020579b",
+    "crates/kfrc-x86/src/lower/arithmetic/division_magic.rs": "9faf33de32878935f68d0cea8ada367836516b8ab24871459f563dd623e2d4be",
+    "crates/kfrc-x86/src/lower/private_slots.rs": "e4514aed639d979a960e00465e7674e76dd0c24a412a9d65825773d57c2b252c",
+    "crates/kfrc-x86/src/machine/allocate.rs": "e30f20e36bd72bcc2c880739fc3d858de18b950da3460338620706beb79fae72",
+    "crates/kfrc-x86/src/machine/eval.rs": "eb4cba6d7e8c4399090c190063fddda42347a849c1421500f748480e6b15eac7",
+    "crates/kfrc-x86/src/machine/x86.rs": "5e7406e911af299a47d7adcc9742f98bb80014174d79da3c65d5482980882267",
+    "crates/kfrc-x86/src/machine/x86_encode.rs": "adaaa0f90c2f018d0058ee15f7e172558c180c28639d4e769eeff99518f4a4f3",
+    "crates/kfrc-x86/tests/arithmetic_contracts.rs": "f05e8993749739f5cbe80a4d222663f7d820fd6723fb8e2c7b7379c8bee2295e"
+  },
+  "patch_sha256": "68a265c75748f788cd0f34d74fd6eb39b7db13ebed1f752996b475c7e65cb3a4"
+}

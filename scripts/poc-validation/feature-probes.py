@@ -102,7 +102,7 @@ for arm in ('llvm', 'semantic-off', 'semantic-on'):
             prepared = [line for line in variant_log.splitlines() if line.startswith('kfrc R prepared ') and re.search(r'(?:prepared |::)' + name + r': count=1(?: stats=.*)?$', line)]
             assert len(prepared) == 1, f'{name}: enum definition was not prepared exactly once'
         if arm == 'semantic-on':
-            definitions = {name.rsplit('::', 1)[-1]: body for name, body in re.findall(r'^graph ([^\n]+) \(Rust, Verified\) \{\n(.*?)^\}', variant_log, re.M | re.S)}
+            definitions = {name.rsplit('::', 1)[-1]: body for name, body in re.findall(r'^graph ([^\n]+) \(Rust, (?:Verified|Sealed)\) \{\n(.*?)^\}', variant_log, re.M | re.S)}
             for name in ('select', 'nested'):
                 assert 'VariantSwitch' in definitions[name] and 'VariantWitness' in definitions[name], f'{name}: semantic variant witnesses were lost'
             assert not re.search(r'= (If|VariantSwitch)\b', definitions['known']), 'known constructor branch survived definition optimization'
@@ -113,7 +113,7 @@ for arm in ('llvm', 'semantic-off', 'semantic-on'):
     assert output == b'1 4 2\n7 10 14\n99 102 198\ngeneric 17 -23\n', 'defined assume inputs differ'
     if arm != 'llvm':
         assume_log = (folder/'assume-build.stderr').read_text()
-        graphs = re.findall(r'^graph ([^\n]+) \((Rust|Specialized|Layout), Verified\) \{\n(.*?)^\}', assume_log, re.M | re.S)
+        graphs = re.findall(r'^graph ([^\n]+) \((Rust|Specialized|Layout), (?:Verified|Sealed)\) \{\n(.*?)^\}', assume_log, re.M | re.S)
         source_assumes = [(name, level) for name, level, body in graphs if level in ('Rust', 'Specialized') and re.search(r'= Assume\b', body)]
         assert source_assumes, 'real rustc producer dropped every assume before semantic IR'
         assert any('through_intrinsic' in name for name, _ in source_assumes), 'direct intrinsic assume was lost'

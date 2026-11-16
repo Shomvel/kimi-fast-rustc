@@ -107,7 +107,8 @@ fn whole_dense_array_uses_block_snapshot_instead_of_scalar_leaves() {
     let mut graph = fixture(false, false, 256);
     let stats = lower_layout(&mut graph).unwrap();
     verify_graph(&mut graph).unwrap();
-    assert_eq!(stats.transported_arrays, 1);
+    assert_eq!(stats.whole_value_transports, 1);
+    assert_eq!(stats.transported_arrays, 0);
     assert_eq!(stats.field_loads, 0);
     assert_eq!(stats.field_stores, 0);
     assert!(graph.len() < 40, "{}", graph.dump());
@@ -131,9 +132,12 @@ fn phi_transport_does_not_carry_reusable_snapshot_addresses() {
 }
 
 #[test]
-fn small_arrays_keep_scalar_representation() {
+fn small_arrays_share_whole_value_transport() {
     let mut graph = fixture(false, false, 8);
     let stats = lower_layout(&mut graph).unwrap();
     verify_graph(&mut graph).unwrap();
     assert_eq!(stats.transported_arrays, 0);
+    assert_eq!(stats.whole_value_transports, 1);
+    assert_eq!(stats.field_loads, 0);
+    assert_eq!(stats.field_stores, 0);
 }

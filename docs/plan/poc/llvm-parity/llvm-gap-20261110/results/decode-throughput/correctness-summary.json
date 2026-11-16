@@ -1,0 +1,195 @@
+{
+  "label": "decode-private-copy-v1-r1-final-correctness",
+  "status": "passed",
+  "started_at_utc": "2026-11-11T09:49:09.339838+00:00",
+  "wrapper_pid": 541084,
+  "stages": [
+    {
+      "name": "native-private-integer-lanes",
+      "command": [
+        "bash",
+        "scripts/poc-validation/private-integer-lanes.sh",
+        "/workspace/callsite/generic-parity-20261110/decode-private-copy-v1-r1.so",
+        "/workspace/callsite/generic-parity-20261110/results/decode-private-copy-v1-r1-final-correctness/native/private-integer-lanes"
+      ],
+      "cwd": "/workspace/callsite/generic-parity-20261110/decode-private-copy-v1-source",
+      "started_at_utc": "2026-11-11T09:49:09.486327+00:00",
+      "environment_overrides": {
+        "RUSTC_BOOTSTRAP": "1",
+        "KFRC_SYSROOT": "/workspace/shared-std-mir0/sysroot",
+        "KFRC_REGALLOC_CHECK": "1",
+        "KFRC_CODEGEN_THREADS": "8",
+        "KFRC_TOOLCHAIN": "1.94.1"
+      },
+      "exit_code": 0,
+      "wall_seconds": 0.29308161900553387,
+      "stdout_sha256": "c5a2c303e0300eb5cd899f0edcd67739712cd81d6f4fd77e3013f28532e5716f",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "native-enum-boundary-snapshot",
+      "command": [
+        "bash",
+        "scripts/poc-validation/enum-boundary-snapshot.sh",
+        "/workspace/callsite/generic-parity-20261110/decode-private-copy-v1-r1.so",
+        "/workspace/callsite/generic-parity-20261110/results/decode-private-copy-v1-r1-final-correctness/native/enum-boundary-snapshot"
+      ],
+      "cwd": "/workspace/callsite/generic-parity-20261110/decode-private-copy-v1-source",
+      "started_at_utc": "2026-11-11T09:49:09.780236+00:00",
+      "environment_overrides": {
+        "RUSTC_BOOTSTRAP": "1",
+        "KFRC_SYSROOT": "/workspace/shared-std-mir0/sysroot",
+        "KFRC_REGALLOC_CHECK": "1",
+        "KFRC_CODEGEN_THREADS": "8",
+        "KFRC_TOOLCHAIN": "1.94.1"
+      },
+      "exit_code": 0,
+      "wall_seconds": 0.3661048999929335,
+      "stdout_sha256": "199f7d04e601126bf16881c1e91d27a05d1558907c11b2a0071cc7bd377a4302",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "native-integer-intrinsics",
+      "command": [
+        "bash",
+        "scripts/poc-validation/integer-intrinsics.sh",
+        "/workspace/callsite/generic-parity-20261110/decode-private-copy-v1-r1.so",
+        "/workspace/callsite/generic-parity-20261110/results/decode-private-copy-v1-r1-final-correctness/native/integer-intrinsics"
+      ],
+      "cwd": "/workspace/callsite/generic-parity-20261110/decode-private-copy-v1-source",
+      "started_at_utc": "2026-11-11T09:49:10.147311+00:00",
+      "environment_overrides": {
+        "RUSTC_BOOTSTRAP": "1",
+        "KFRC_SYSROOT": "/workspace/shared-std-mir0/sysroot",
+        "KFRC_REGALLOC_CHECK": "1",
+        "KFRC_CODEGEN_THREADS": "8",
+        "KFRC_TOOLCHAIN": "1.94.1"
+      },
+      "exit_code": 0,
+      "wall_seconds": 0.44620542699703947,
+      "stdout_sha256": "6967f9bf468b4c17cb0b84e9432061edd23f646d6edf4f19169a030a5a5061a1",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "native-generic-memory",
+      "command": [
+        "bash",
+        "scripts/poc-validation/generic-memory.sh",
+        "/workspace/callsite/generic-parity-20261110/decode-private-copy-v1-r1.so",
+        "/workspace/callsite/generic-parity-20261110/results/decode-private-copy-v1-r1-final-correctness/native/generic-memory"
+      ],
+      "cwd": "/workspace/callsite/generic-parity-20261110/decode-private-copy-v1-source",
+      "started_at_utc": "2026-11-11T09:49:10.594454+00:00",
+      "environment_overrides": {
+        "RUSTC_BOOTSTRAP": "1",
+        "KFRC_SYSROOT": "/workspace/shared-std-mir0/sysroot",
+        "KFRC_REGALLOC_CHECK": "1",
+        "KFRC_CODEGEN_THREADS": "8",
+        "KFRC_TOOLCHAIN": "1.94.1"
+      },
+      "exit_code": 0,
+      "wall_seconds": 0.42441704800876323,
+      "stdout_sha256": "7213edbc2b41bb2bb06640eefbe455d77eef2be9ccaa600e1a4963ce78ef785c",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "native-generic-scalar",
+      "command": [
+        "bash",
+        "scripts/poc-validation/generic-scalar.sh",
+        "/workspace/callsite/generic-parity-20261110/decode-private-copy-v1-r1.so",
+        "/workspace/callsite/generic-parity-20261110/results/decode-private-copy-v1-r1-final-correctness/native/generic-scalar"
+      ],
+      "cwd": "/workspace/callsite/generic-parity-20261110/decode-private-copy-v1-source",
+      "started_at_utc": "2026-11-11T09:49:11.019698+00:00",
+      "environment_overrides": {
+        "RUSTC_BOOTSTRAP": "1",
+        "KFRC_SYSROOT": "/workspace/shared-std-mir0/sysroot",
+        "KFRC_REGALLOC_CHECK": "1",
+        "KFRC_CODEGEN_THREADS": "8",
+        "KFRC_TOOLCHAIN": "1.94.1"
+      },
+      "exit_code": 0,
+      "wall_seconds": 0.35969396799919195,
+      "stdout_sha256": "3db132a19f9d7c157bf209edad6476b6a96ed2259fbb6bfa5565bf683689a27d",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "native-byte-dse",
+      "command": [
+        "bash",
+        "scripts/poc-validation/byte-dse.sh",
+        "/workspace/callsite/generic-parity-20261110/decode-private-copy-v1-r1.so",
+        "/workspace/callsite/generic-parity-20261110/results/decode-private-copy-v1-r1-final-correctness/native/byte-dse"
+      ],
+      "cwd": "/workspace/callsite/generic-parity-20261110/decode-private-copy-v1-source",
+      "started_at_utc": "2026-11-11T09:49:11.380269+00:00",
+      "environment_overrides": {
+        "RUSTC_BOOTSTRAP": "1",
+        "KFRC_SYSROOT": "/workspace/shared-std-mir0/sysroot",
+        "KFRC_REGALLOC_CHECK": "1",
+        "KFRC_CODEGEN_THREADS": "8",
+        "KFRC_TOOLCHAIN": "1.94.1"
+      },
+      "exit_code": 0,
+      "wall_seconds": 0.32439999499183614,
+      "stdout_sha256": "1dff6a3dd98fb50f3a8d52623cb42803a029ca8eb2a1bc7393715809be8d5611",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "native-induction",
+      "command": [
+        "bash",
+        "scripts/poc-validation/induction.sh",
+        "/workspace/callsite/generic-parity-20261110/decode-private-copy-v1-r1.so",
+        "/workspace/callsite/generic-parity-20261110/results/decode-private-copy-v1-r1-final-correctness/native/induction"
+      ],
+      "cwd": "/workspace/callsite/generic-parity-20261110/decode-private-copy-v1-source",
+      "started_at_utc": "2026-11-11T09:49:11.705571+00:00",
+      "environment_overrides": {
+        "RUSTC_BOOTSTRAP": "1",
+        "KFRC_SYSROOT": "/workspace/shared-std-mir0/sysroot",
+        "KFRC_REGALLOC_CHECK": "1",
+        "KFRC_CODEGEN_THREADS": "8",
+        "KFRC_TOOLCHAIN": "1.94.1"
+      },
+      "exit_code": 0,
+      "wall_seconds": 0.37716222199378535,
+      "stdout_sha256": "e61dbda605972f9aaaec3b47dbb2e0ecb8309a99fd458540c4d59a6f40ea21ea",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "timing_rounds": 0,
+  "backend_rebuilds": 0,
+  "source_tree_sha256": "9235520b2dd380f635c5c51d76baa2c890b9c84b61d2de9f10841dafeef495a3",
+  "backend_sha256": "6c25173e5b00a7056f891748beaf80294fba00e71fd3a4de15e9d81a0616521c",
+  "upstream_tests": "not rerun; known intrinsic blockers remain; corpus is not upstream test evidence",
+  "source_manifest_sha256": "2647a5018e70021128ad0c646f936cdd48613d66a61fb307c10da03eb72b917a",
+  "workspace": {
+    "status": "passed_workspace_with_one_known_timing_ignore",
+    "raw_wrapper_status": "failed",
+    "raw_wrapper_failure": "RuntimeError('empty/failed/ignored tests: full-workspace')",
+    "raw_summary_sha256": "7e61a2b4dcd43e4eae6d808708fd89ba7f21a04867c73520105959ea54be6e5c",
+    "raw_cargo_exit_code": 0,
+    "test_totals": {
+      "passed": 1137,
+      "failed": 0,
+      "ignored": 1
+    },
+    "ignored_test_ids": [
+      "large_live_spill_set_allocation_time"
+    ],
+    "source_contract": "/workspace/callsite/generic-parity-20261110/decode-private-copy-v1-source/crates/kfrc-x86/tests/regalloc_preference.rs",
+    "source_contract_sha256": "09215fd41d3fc80b974d2bdd208e29e6cdfadb5f60e0b918644cac3472c25cd8",
+    "reason": "The narrow unit-test runner guard incorrectly rejected the accepted workspace timing ignore. Native workspace contract requires passing minimum and zero failed; no timing test was run. Raw runner and logs are preserved.",
+    "repeated_cargo_commands": 0,
+    "verified_at_utc": "2026-11-11T09:49:09.485862+00:00"
+  },
+  "free_bytes_before": 2510630912,
+  "active_stage": null,
+  "native_correctness": "passed",
+  "source_unchanged_after_validation": true,
+  "four_library_correctness": "passed",
+  "finished_at_utc": "2026-11-11T09:49:16.323593+00:00",
+  "free_bytes_after": 2479734784
+}

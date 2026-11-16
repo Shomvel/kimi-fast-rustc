@@ -107,8 +107,8 @@ pub(super) fn select(graph: &FunctionGraph, demands: &HashMap<NodeId, Demand>) -
             .filter(|&node| {
                 uses.of(node).is_empty()
                     || uses.of(node).iter().any(|use_| {
-                        !sink(graph, use_.user, use_.kind)
-                            && !(matches!(use_.kind, UseKind::Operand(index) if index > 0)
+                        !sink(graph, use_.user, use_.kind())
+                            && !(matches!(use_.kind(), UseKind::Operand(index) if index > 0)
                                 && candidates.contains(&use_.user))
                     })
                     || graph.inputs(node)[1..].iter().any(|&input| {

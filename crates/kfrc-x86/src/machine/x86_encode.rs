@@ -1,11 +1,16 @@
 //! x86_64 machine-code emission for the native instruction IR.
 
 use crate::machine::x86::{
-    BitWidth, Condition, MachineFunction, MachineInstr, Operand, Reg, StackSlot, Xmm,
+    BitWidth, Condition, MachineFunction, MachineInstr, MemoryAddress, Operand, Reg, StackSlot, Xmm,
 };
 use std::collections::BTreeMap;
 use std::error::Error;
 use std::fmt;
+
+mod layout;
+
+/// Relative loop-header alignment. Function sections use a multiple of this.
+pub(crate) const CODE_ALIGNMENT: u64 = 16;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct CallRelocation {
@@ -178,7 +183,7 @@ pub fn encode_with_all_relocations(
     for instruction in &function.instructions {
         encoder.instruction(*instruction)?;
     }
-    encoder.resolve_labels()?;
+    encoder.resolve_labels(&function.loop_headers)?;
     Ok((encoder.bytes, encoder.calls, encoder.addresses))
 }
 
@@ -265,6 +270,10 @@ fn validate_instruction(
             validate_reg(dst)?;
             validate_reg(src)?;
         }
+        EffectiveAddress { dst, address } => {
+            validate_reg(dst)?;
+            address.try_map(validate_reg)?;
+        }
         Add { dst, src }
         | Sub { dst, src }
         | IMul { dst, src }
@@ -284,11 +293,17 @@ fn validate_instruction(
                 return Err(EncodeError::InvalidDivisor(reg));
             }
         }
+        MulHigh { src } => {
+            validate_reg(src)?;
+            if matches!(src, Reg::Rax | Reg::Rdx) {
+                return Err(EncodeError::InvalidMultiplyRegister(src));
+            }
+        }
         Cmp { lhs, rhs } => {
             validate_reg(lhs)?;
             validate_operand(rhs, stack_slots)?;
         }
-        Test { reg } | TestByte { reg } => validate_reg(reg)?,
+        Test { reg } | TestByte { reg } | TestMasked { reg, .. } => validate_reg(reg)?,
         Load { dst, slot } => {
             validate_reg(dst)?;
             validate_slot(slot, stack_slots)?;
@@ -336,6 +351,28 @@ fn validate_instruction(
         }
         StoreImmediate { address, bytes, .. } => {
             validate_reg(address)?;
+            if !matches!(bytes, 1 | 2 | 4 | 8) {
+                return Err(EncodeError::FrameSizeOverflow);
+            }
+        }
+        LoadAddress {
+            dst,
+            address,
+            bytes,
+        }
+        | StoreAddress {
+            src: dst,
+            address,
+            bytes,
+        } => {
+            validate_reg(dst)?;
+            address.try_map(validate_reg)?;
+            if !matches!(bytes, 1 | 2 | 4 | 8) {
+                return Err(EncodeError::FrameSizeOverflow);
+            }
+        }
+        StoreAddressImmediate { address, bytes, .. } => {
+            address.try_map(validate_reg)?;
             if !matches!(bytes, 1 | 2 | 4 | 8) {
                 return Err(EncodeError::FrameSizeOverflow);
             }
@@ -674,6 +711,11 @@ impl Encoder<'_> {
                     self.stack_memory(Reg::Rsi, spill_offset(slot)?);
                 }
             },
+            MulHigh { src } => {
+                self.rex(true, None, Some(src), false);
+                self.bytes.push(0xf7);
+                self.modrm(3, Reg::Rsp, src.low_code());
+            }
             Cmp {
                 lhs,
                 rhs: Operand::Imm(0),
@@ -684,6 +726,24 @@ impl Encoder<'_> {
                 self.rex(false, Some(reg), Some(reg), (4..8).contains(&reg.code()));
                 self.bytes.push(0x84);
                 self.modrm(3, reg, reg.low_code());
+            }
+            TestMasked { reg, mask, width } => {
+                if width == BitWidth::W16 {
+                    self.bytes.push(0x66);
+                }
+                self.rex(
+                    width == BitWidth::W64,
+                    None,
+                    Some(reg),
+                    width == BitWidth::W8 && (4..8).contains(&reg.code()),
+                );
+                self.bytes.push(if width == BitWidth::W8 { 0xf6 } else { 0xf7 });
+                self.modrm(3, Reg::Rax, reg.low_code());
+                match width {
+                    BitWidth::W8 => self.bytes.push(mask as u8),
+                    BitWidth::W16 => self.bytes.extend_from_slice(&(mask as u16).to_le_bytes()),
+                    BitWidth::W32 | BitWidth::W64 => self.bytes.extend_from_slice(&mask.to_le_bytes()),
+                }
             }
             Cmp { lhs, rhs } => self.binary(0x39, 0x3b, lhs, rhs)?,
             SetCc { condition, dst } => {
@@ -711,6 +771,17 @@ impl Encoder<'_> {
                 self.bytes.push(0x8d);
                 self.base_memory(dst, base, offset);
             }
+            EffectiveAddress { dst, address } => {
+                self.rex_indexed(
+                    true,
+                    Some(dst),
+                    Some(address.base),
+                    address.index.map(|(index, _)| index),
+                    false,
+                );
+                self.bytes.push(0x8d);
+                self.address_memory(dst, address);
+            }
             LoadIndirect {
                 dst,
                 address,
@@ -728,19 +799,35 @@ impl Encoder<'_> {
                 offset,
                 value,
                 bytes,
+            } => self.store_immediate(
+                MemoryAddress {
+                    base: address,
+                    index: None,
+                    offset,
+                },
+                value,
+                bytes,
+            ),
+            LoadAddress {
+                dst,
+                address,
+                bytes,
             } => {
-                if bytes == 2 {
-                    self.bytes.push(0x66);
-                }
-                self.rex(bytes == 8, None, Some(address), false);
-                self.bytes.push(if bytes == 1 { 0xc6 } else { 0xc7 });
-                // ModRM.reg is the /0 opcode extension.
-                self.base_memory(Reg::Rax, address, offset);
-                match bytes {
-                    1 => self.bytes.push(value as u8),
-                    2 => self.bytes.extend_from_slice(&(value as i16).to_le_bytes()),
-                    _ => self.i32(value),
-                }
+                self.indirect_address(true, dst, address, bytes);
+            }
+            StoreAddress {
+                src,
+                address,
+                bytes,
+            } => {
+                self.indirect_address(false, src, address, bytes);
+            }
+            StoreAddressImmediate {
+                address,
+                value,
+                bytes,
+            } => {
+                self.store_immediate(address, value, bytes);
             }
             LoadVector { dst, address } => self.vector_memory(true, dst, address),
             StoreVector { address, src } => self.vector_memory(false, src, address),
@@ -897,118 +984,8 @@ impl Encoder<'_> {
         Ok(())
     }
 
-    fn resolve_labels(&mut self) -> Result<(), EncodeError> {
-        loop {
-            let mut removed_prefix = Vec::with_capacity(self.fixups.len() + 1);
-            let mut removed = 0;
-            removed_prefix.push(0);
-            for fixup in &self.fixups {
-                if fixup.short {
-                    removed += if self.bytes[fixup.offset] == 0xe9 {
-                        3
-                    } else {
-                        4
-                    };
-                }
-                removed_prefix.push(removed);
-            }
-
-            let mut shortened = false;
-            for index in 0..self.fixups.len() {
-                if self.fixups[index].short {
-                    continue;
-                }
-                let original_offset = self.fixups[index].offset;
-                let target = self.fixups[index].target;
-                let offset = original_offset - removed_prefix[index];
-                let destination = self
-                    .labels
-                    .get(&target)
-                    .copied()
-                    .ok_or(EncodeError::UnknownLabel(target))?;
-                let destination = layout_offset(destination, &self.fixups, &removed_prefix);
-                let unconditional = self.bytes[original_offset] == 0xe9;
-                let long_size = if unconditional { 5 } else { 6 };
-                let short_displacement = if destination > offset {
-                    destination as i128 - (offset as i128 + long_size)
-                } else {
-                    destination as i128 - (offset as i128 + 2)
-                };
-                if i8::try_from(short_displacement).is_ok() {
-                    self.fixups[index].short = true;
-                    shortened = true;
-                }
-            }
-            if !shortened {
-                self.apply_shortened_layout(&removed_prefix);
-                break;
-            }
-        }
-
-        for fixup in &self.fixups {
-            let destination = self
-                .labels
-                .get(&fixup.target)
-                .copied()
-                .ok_or(EncodeError::UnknownLabel(fixup.target))?;
-            if fixup.short {
-                let displacement = destination as i128 - (fixup.offset as i128 + 2);
-                let displacement = i8::try_from(displacement)
-                    .map_err(|_| EncodeError::RelocationOverflow(fixup.target))?;
-                self.bytes[fixup.offset + 1] = displacement as u8;
-            } else {
-                let displacement_offset = if self.bytes[fixup.offset] == 0xe9 {
-                    fixup.offset + 1
-                } else {
-                    fixup.offset + 2
-                };
-                let displacement = destination as i128 - (displacement_offset as i128 + 4);
-                let displacement = i32::try_from(displacement)
-                    .map_err(|_| EncodeError::RelocationOverflow(fixup.target))?;
-                self.bytes[displacement_offset..displacement_offset + 4]
-                    .copy_from_slice(&displacement.to_le_bytes());
-            }
-        }
-        Ok(())
-    }
-
-    fn apply_shortened_layout(&mut self, removed_prefix: &[usize]) {
-        let mut read_offset = 0;
-        let mut write_offset = 0;
-        for fixup in self.fixups.iter().filter(|fixup| fixup.short) {
-            let offset = fixup.offset;
-            self.bytes.copy_within(read_offset..offset, write_offset);
-            write_offset += offset - read_offset;
-            if self.bytes[offset] == 0xe9 {
-                self.bytes[write_offset] = 0xeb;
-                self.bytes[write_offset + 1] = self.bytes[offset + 2];
-                read_offset = offset + 5;
-            } else {
-                self.bytes[write_offset] = 0x70 + (self.bytes[offset + 1] & 0x0f);
-                self.bytes[write_offset + 1] = self.bytes[offset + 2];
-                read_offset = offset + 6;
-            }
-            write_offset += 2;
-        }
-        let original_len = self.bytes.len();
-        self.bytes
-            .copy_within(read_offset..original_len, write_offset);
-        write_offset += original_len - read_offset;
-        self.bytes.truncate(write_offset);
-
-        for label_offset in self.labels.values_mut() {
-            *label_offset = layout_offset(*label_offset, &self.fixups, removed_prefix);
-        }
-        for call in &mut self.calls {
-            call.offset = layout_offset(call.offset as usize, &self.fixups, removed_prefix) as u64;
-        }
-        for address in &mut self.addresses {
-            address.offset =
-                layout_offset(address.offset as usize, &self.fixups, removed_prefix) as u64;
-        }
-        for (index, fixup) in self.fixups.iter_mut().enumerate() {
-            fixup.offset -= removed_prefix[index];
-        }
+    fn resolve_labels(&mut self, loop_headers: &[u32]) -> Result<(), EncodeError> {
+        layout::resolve(self, loop_headers)
     }
 
     fn binary(
@@ -1086,13 +1063,27 @@ impl Encoder<'_> {
     }
 
     fn indirect(&mut self, load: bool, reg: Reg, address: Reg, offset: i32, bytes: u8) {
+        self.indirect_address(
+            load,
+            reg,
+            MemoryAddress {
+                base: address,
+                index: None,
+                offset,
+            },
+            bytes,
+        );
+    }
+
+    fn indirect_address(&mut self, load: bool, reg: Reg, address: MemoryAddress<Reg>, bytes: u8) {
         if !load && bytes == 2 {
             self.bytes.push(0x66);
         }
-        self.rex(
+        self.rex_indexed(
             bytes == 8 || (load && bytes < 4),
             Some(reg),
-            Some(address),
+            Some(address.base),
+            address.index.map(|(index, _)| index),
             !load && bytes == 1 && reg.code() >= 4,
         );
         if load && bytes < 4 {
@@ -1107,25 +1098,62 @@ impl Encoder<'_> {
                 0x89
             });
         }
-        self.base_memory(reg, address, offset);
+        self.address_memory(reg, address);
+    }
+
+    fn store_immediate(&mut self, address: MemoryAddress<Reg>, value: i32, bytes: u8) {
+        if bytes == 2 {
+            self.bytes.push(0x66);
+        }
+        self.rex_indexed(
+            bytes == 8,
+            None,
+            Some(address.base),
+            address.index.map(|(index, _)| index),
+            false,
+        );
+        self.bytes.push(if bytes == 1 { 0xc6 } else { 0xc7 });
+        // ModRM.reg is the /0 opcode extension.
+        self.address_memory(Reg::Rax, address);
+        match bytes {
+            1 => self.bytes.push(value as u8),
+            2 => self.bytes.extend_from_slice(&(value as i16).to_le_bytes()),
+            _ => self.i32(value),
+        }
     }
 
     /// ModRM, SIB and displacement for `[address + offset]`.
     fn base_memory(&mut self, reg: Reg, address: Reg, offset: i32) {
+        self.address_memory(
+            reg,
+            MemoryAddress {
+                base: address,
+                index: None,
+                offset,
+            },
+        );
+    }
+
+    /// ModRM, SIB and displacement; R12 remains a valid index via REX.X.
+    fn address_memory(&mut self, reg: Reg, address: MemoryAddress<Reg>) {
         // mod=00 with rm=101 means RIP-relative, so rbp/r13 bases keep disp8=0.
-        let short = i8::try_from(offset).ok();
+        let short = i8::try_from(address.offset).ok();
         let mode = match short {
-            Some(0) if address.low_code() != 5 => 0,
+            Some(0) if address.base.low_code() != 5 => 0,
             Some(_) => 1,
             None => 2,
         };
-        self.modrm(mode, reg, address.low_code());
-        if address.low_code() == 4 {
+        let sib = address.index.is_some() || address.base.low_code() == 4;
+        self.modrm(mode, reg, if sib { 4 } else { address.base.low_code() });
+        if let Some((index, scale)) = address.index {
+            self.bytes
+                .push((scale.encoding() << 6) | (index.low_code() << 3) | address.base.low_code());
+        } else if sib {
             self.bytes.push(0x24);
         }
         match mode {
-            1 => self.bytes.push(offset as u8),
-            2 => self.i32(offset),
+            1 => self.bytes.push(address.offset as u8),
+            2 => self.i32(address.offset),
             _ => {}
         }
     }
@@ -1155,12 +1183,26 @@ impl Encoder<'_> {
     }
 
     fn rex(&mut self, w: bool, reg: Option<Reg>, base: Option<Reg>, force: bool) {
+        self.rex_indexed(w, reg, base, None, force);
+    }
+
+    fn rex_indexed(
+        &mut self,
+        w: bool,
+        reg: Option<Reg>,
+        base: Option<Reg>,
+        index: Option<Reg>,
+        force: bool,
+    ) {
         let mut rex = if w { 0x48 } else { 0x40 };
         if reg.is_some_and(|reg| reg.code() >= 8) {
             rex |= 0x04;
         }
         if base.is_some_and(|reg| reg.code() >= 8) {
             rex |= 0x01;
+        }
+        if index.is_some_and(|reg| reg.code() >= 8) {
+            rex |= 0x02;
         }
         if rex != 0x40 || force {
             self.bytes.push(rex);
@@ -1174,11 +1216,6 @@ impl Encoder<'_> {
     fn i32(&mut self, value: i32) {
         self.bytes.extend_from_slice(&value.to_le_bytes());
     }
-}
-
-fn layout_offset(offset: usize, fixups: &[JumpFixup], removed_prefix: &[usize]) -> usize {
-    let index = fixups.partition_point(|fixup| fixup.offset + 2 < offset);
-    offset - removed_prefix[index]
 }
 
 trait RegCode: Sized {
@@ -1390,6 +1427,7 @@ mod tests {
             stack_slots: 0,
             callee_saved: Vec::new(),
             symbols: Vec::new(),
+            loop_headers: Vec::new(),
         }
     }
 
@@ -1501,6 +1539,7 @@ mod tests {
             stack_slots: 2,
             callee_saved: vec![Reg::Rbx, Reg::R12],
             symbols: Vec::new(),
+            loop_headers: Vec::new(),
         };
         let code = function.emit_machine_code().unwrap();
         let expected = [
@@ -1797,6 +1836,7 @@ mod tests {
             stack_slots: 1,
             callee_saved: Vec::new(),
             symbols: Vec::new(),
+            loop_headers: Vec::new(),
         };
         let object = write_object(&[FunctionCode {
             function,

@@ -161,12 +161,12 @@ fn lower(body: &Body) -> FunctionGraph {
 #[test]
 fn known_nested_and_fieldless_dynamic_enums_do_not_build_variant_trees() {
     for (nested, known, branches, stores) in [
-        (false, false, 0, 1),
+        (false, false, 0, 0),
         (false, true, 0, 1),
         (true, true, 0, 2),
-        // The fieldless payload is a shared byte-offset lane: one unguarded
-        // read and one unguarded store, never a per-variant branch.
-        (true, false, 0, 2),
+        // Whole incoming values retain their bytes through the return ABI;
+        // neither the tag nor the fieldless payload needs field stores.
+        (true, false, 0, 0),
     ] {
         let graph = lower(&enum_body(nested, known));
         assert_eq!(
@@ -178,8 +178,13 @@ fn known_nested_and_fieldless_dynamic_enums_do_not_build_variant_trees() {
                 .ids()
                 .filter(|&n| graph.op(n) == Opcode::Store)
                 .count(),
-            stores
+            stores,
+            "nested={nested} known={known}\n{}",
+            graph.dump()
         );
+        if !known {
+            assert!(!graph.ids().any(|n| graph.op(n) == Opcode::Load));
+        }
         assert!(
             !graph
                 .ids()

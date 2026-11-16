@@ -144,6 +144,33 @@ pub(super) fn compare(
             {
                 return Some(false);
             }
+            // The earlier comparison observed this exact SSA operand, so its
+            // defined-value bits may restrict the remaining intervals. Scope
+            // and loop-instance validation still belong to PredicateFacts.
+            // Keep signed ordering in its existing biased interval domain.
+            if !is_signed
+                && let Some(bits) = crate::analysis::known_bits::of(graph, known.left)
+                && bits.zero | bits.one != 0
+            {
+                let intersects = |ranges: &[Option<(u128, u128)>; 2]| {
+                    possible.iter().flatten().any(|&(lo, hi)| {
+                        ranges.iter().flatten().any(|&(a, b)| {
+                            bits.intersects_unsigned_range(lo.max(a) as u64, hi.min(b) as u64)
+                        })
+                    })
+                };
+                // An impossible antecedent need not supply a new fact.
+                if !intersects(&[Some((0, max)), None]) {
+                    continue;
+                }
+                let excluded = allowed(query_outcomes ^ 7, (boundary, boundary), max);
+                if !intersects(&excluded) {
+                    return Some(true);
+                }
+                if !intersects(&required) {
+                    return Some(false);
+                }
+            }
         }
     }
     None
