@@ -102,6 +102,75 @@ impl Fixture {
 }
 
 #[test]
+fn canonical_condition_handles_long_boolean_chains_and_cycles() {
+    for length in [0, 1, 2, 7, 32, 128] {
+        let mut f = Fixture::new();
+        let ty = f.graph.rust_type(f.predicate).unwrap();
+        let mut value = f.predicate;
+        let mut outputs = [false, true];
+        let mut chain = vec![value];
+        assert_eq!(
+            canonical_condition(&f.graph, value),
+            Some((f.predicate, false))
+        );
+        for index in 0..length {
+            if index % 3 == 0 {
+                value = f.graph.add_node(
+                    Opcode::BitNot,
+                    NodeId::NONE,
+                    &[value],
+                    0,
+                    ValueType::Rust(ty),
+                );
+                outputs = outputs.map(|output| !output);
+            } else {
+                let constant = index % 4 < 2;
+                let equal = index % 5 < 3;
+                let c = f.graph.add_constant(u128::from(constant), ty);
+                let operands = if index % 2 == 0 {
+                    [value, c]
+                } else {
+                    [c, value]
+                };
+                value = f.graph.add_node(
+                    Opcode::Compare,
+                    NodeId::NONE,
+                    &operands,
+                    if equal {
+                        ComparePredicate::Equal
+                    } else {
+                        ComparePredicate::NotEqual
+                    } as u32,
+                    ValueType::Rust(ty),
+                );
+                // A truth-table oracle independent of the normalizer's
+                // inversion formula and of which operand held the constant.
+                outputs = outputs.map(|output| {
+                    if equal {
+                        output == constant
+                    } else {
+                        output != constant
+                    }
+                });
+            }
+            assert_ne!(outputs[0], outputs[1]);
+            assert_eq!(
+                canonical_condition(&f.graph, value),
+                Some((f.predicate, outputs[0]))
+            );
+            chain.push(value);
+        }
+        // Closing the chain covers a self-loop, a two-node cycle and mixed
+        // comparison/negation cycles. No query may return a proof from a cycle.
+        f.graph.set_opcode(f.predicate, Opcode::BitNot);
+        f.graph.set_inputs(f.predicate, &[value]);
+        for value in chain {
+            assert_eq!(canonical_condition(&f.graph, value), None);
+        }
+    }
+}
+
+#[test]
 fn branch_facts_record_both_truth_values_and_do_not_escape_a_merge() {
     let mut f = Fixture::new();
     let (yes, no) = f.branch(f.control, f.predicate);

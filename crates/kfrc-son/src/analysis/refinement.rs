@@ -106,10 +106,15 @@ pub(crate) fn canonical_condition(graph: &FunctionGraph, value: NodeId) -> Optio
     let mut seen = HashSet::default();
     loop {
         let ty = graph.rust_type(value)?;
-        if !matches!(graph.oracle.semantic().shape(ty), TypeShape::Bool) || !seen.insert(value) {
+        if !matches!(graph.oracle.semantic().shape(ty), TypeShape::Bool) {
             return None;
         }
         if graph.op(value) == Opcode::BitNot {
+            // Only nodes that continue the walk need cycle tracking. Most
+            // conditions are already terminal, so their query allocates no set.
+            if !seen.insert(value) {
+                return None;
+            }
             value = graph.resolve(*graph.inputs(value).first()?);
             inverted = !inverted;
             continue;
@@ -133,6 +138,9 @@ pub(crate) fn canonical_condition(graph: &FunctionGraph, value: NodeId) -> Optio
                     graph.op(operand) == Opcode::Const && graph.constant_value(operand) <= 1
                 });
                 if let Some(slot) = constant {
+                    if !seen.insert(value) {
+                        return None;
+                    }
                     let constant = graph.constant_value(operands[slot]) != 0;
                     let equal = graph.payload(value) == ComparePredicate::Equal as u32;
                     inverted ^= equal != constant;
