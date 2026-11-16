@@ -1646,7 +1646,8 @@ impl<M: ABIMachineSpec> Callee<M> {
     }
 
     /// Materialize a narrow integer constant with its ABI extension already
-    /// applied. Other machines or return layouts retain ordinary lowering.
+    /// applied, or only its specified low bits when no extension is required.
+    /// Other machines or return layouts retain ordinary lowering.
     pub fn gen_const_retval(
         &self,
         sigs: &SigSet,
@@ -1671,15 +1672,24 @@ impl<M: ABIMachineSpec> Callee<M> {
         }
         let mask = u64::MAX >> (64 - bits);
         let constant = constant & mask;
-        let extended = match M::get_ext_mode(sigs[self.sig].call_conv, *extension) {
-            ir::ArgumentExtension::Uext => constant,
-            ir::ArgumentExtension::Sext => ((constant << (64 - bits)) as i64 >> (64 - bits)) as u64,
+        let extension = M::get_ext_mode(sigs[self.sig].call_conv, *extension);
+        let (value, value_ty) = match extension {
+            ir::ArgumentExtension::Uext => (constant, M::word_type()),
+            ir::ArgumentExtension::Sext => (
+                ((constant << (64 - bits)) as i64 >> (64 - bits)) as u64,
+                M::word_type(),
+            ),
+            ir::ArgumentExtension::None if constant != 0 && bits <= 16 => (constant, *ty),
             ir::ArgumentExtension::None => return None,
         };
-        let dst = writable_value_regs(vregs.alloc_with_deferred_error(M::word_type()))
+        let dst = writable_value_regs(vregs.alloc_with_deferred_error(value_ty))
             .only_reg()
             .unwrap();
-        let inst = M::I::gen_imm_u64(extended, dst)?;
+        let inst = if extension == ir::ArgumentExtension::None {
+            M::I::gen_imm_narrow(*ty, value, dst)?
+        } else {
+            M::I::gen_imm_u64(value, dst)?
+        };
         Some((
             RetPair {
                 vreg: dst.to_reg(),

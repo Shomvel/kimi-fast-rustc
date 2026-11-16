@@ -347,6 +347,13 @@ pub trait MachInst: Clone + Debug {
         None
     }
 
+    /// Materialize only the specified low integer bits of a return register.
+    /// All higher bits are unspecified. This is usable only for ABI slots
+    /// without an extension obligation, never for an ordinary full-word value.
+    fn gen_imm_narrow(_ty: Type, _value: u64, _dst: Writable<Reg>) -> Option<Self> {
+        None
+    }
+
     /// Generate a store of an immediate 64-bit integer to a register. Used by
     /// the control plane to generate random instructions. The tmp register may
     /// be used by architectures which don't support writing immediate values to

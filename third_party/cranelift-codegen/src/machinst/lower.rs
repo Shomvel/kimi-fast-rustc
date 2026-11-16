@@ -187,6 +187,18 @@ fn constant_returns() -> bool {
     }
 }
 
+fn narrow_constant_returns() -> bool {
+    #[cfg(feature = "std")]
+    {
+        static ENABLED: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+        *ENABLED.get_or_init(|| std::env::var("KFRC_NARROW_RETURNS").as_deref() != Ok("0"))
+    }
+    #[cfg(not(feature = "std"))]
+    {
+        true
+    }
+}
+
 /// Machine-independent lowering driver / machine-instruction container. Maintains a correspondence
 /// from original Inst to MachInsts.
 pub struct Lower<'func, I: VCodeInst> {
@@ -628,7 +640,9 @@ impl<'func, I: VCodeInst> Lower<'func, I> {
             } else {
                 let value = *rets.next().unwrap();
                 let constant = if ret.value_type.is_int()
-                    && ret.extension != crate::ir::ArgumentExtension::None
+                    && (ret.extension != crate::ir::ArgumentExtension::None
+                        || (matches!(ret.value_type, crate::ir::types::I8 | crate::ir::types::I16)
+                            && narrow_constant_returns()))
                     && constant_returns()
                 {
                     self.get_value_as_source_or_const(value).constant

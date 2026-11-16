@@ -1,7 +1,7 @@
 # kfrc patches to cranelift-codegen 0.134.4
 
 This directory is the crates.io release `cranelift-codegen 0.134.4` (Apache-2.0 WITH LLVM-exception, see
-`LICENSE`) with the changes below. Each change is marked `kfrc:` in the source. `Cargo.toml` of the workspace
+`LICENSE`) with the local changes recorded below. `Cargo.toml` of the workspace
 and of `crates/rustc_codegen_kfrc` select this copy through `[patch.crates-io]`.
 
 | # | File | Change |
@@ -11,3 +11,4 @@ and of `crates/rustc_codegen_kfrc` select this copy through `[patch.crates-io]`.
 | 3 | `src/isa/x64/inst.isle` | Zero extension to a 32/64-bit register reuses already materialized little/native-endian unsigned scalar loads whose lowering clears the complete register. Single-use loads retain the existing load/extension fusion. Signed loads, narrow arithmetic, parameters and block arguments retain their required extensions. |
 | 4 | `src/machinst/lower.rs`, `vcode.rs` | Register arguments to calls in cold blocks pass through fresh temporaries, keeping cold fixed-register uses from constraining hot live ranges. Moves use the actual per-register type; ABI extensions and stack arguments retain their order. `KFRC_CALL_ARG_COPIES=off` retains the original lowering; `all` is an experimental control. |
 | 5 | `src/prelude_lower.isle`, `src/machinst/{abi,isle,lower,mod}.rs` | Preserve return SSA values until ABI lowering. A single narrow integer constant with an explicit ABI extension materializes the final extended immediate directly when the target supports it. Dynamic values, unextended or multiple slots, stack returns and implicit return-area pointers retain the ordinary copy path. The complete declared register extension remains intact. `KFRC_CONSTANT_RETURNS=0` retains the original lowering. |
+| 6 | `src/isa/x64/inst/mod.rs`, `src/machinst/{abi,lower,mod}.rs` | On x64, a nonzero I8/I16 constant return without an extension can materialize only its specified low bits with movb/movw. Each eligible register return slot has a separate virtual register, preserving shared narrow stores and independent pair-lane contracts. Zero keeps the existing xor path; explicit Uext/Sext, stack and unsupported return slots keep their prior lowering. `KFRC_NARROW_RETURNS=0` disables this additional path while retaining change 5. |

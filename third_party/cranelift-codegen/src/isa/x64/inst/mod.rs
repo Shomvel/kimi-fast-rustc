@@ -1447,6 +1447,22 @@ impl MachInst for Inst {
         Some(Inst::imm(OperandSize::Size64, value, dst))
     }
 
+    fn gen_imm_narrow(ty: Type, value: u64, dst: Writable<Reg>) -> Option<Self> {
+        // Ordinary zero materialization uses xor, which is already as short
+        // and breaks the partial-register dependency. Other bits need only
+        // define the ABI's low byte/word; the new vreg has no wider users.
+        if value == 0 {
+            return None;
+        }
+        let dst = WritableGpr::from_writable_reg(dst)?;
+        let inst = match ty {
+            types::I8 => asm::inst::movb_oi::new(dst, u8::try_from(value).ok()?).into(),
+            types::I16 => asm::inst::movw_oi::new(dst, u16::try_from(value).ok()?).into(),
+            _ => return None,
+        };
+        Some(Inst::External { inst })
+    }
+
     fn gen_imm_f64(value: f64, tmp: Writable<Reg>, dst: Writable<Reg>) -> SmallVec<[Self; 2]> {
         let imm_to_gpr = Inst::imm(OperandSize::Size64, value.to_bits(), tmp);
         let gpr_to_xmm = Inst::External {
