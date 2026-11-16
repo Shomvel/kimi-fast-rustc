@@ -102,11 +102,13 @@ pub fn run(graph: &mut FunctionGraph) -> Result<VariantThreadStats, CfgEditError
     Ok(stats)
 }
 
-/// `KFRC_THREAD_SIMPLIFY=once` (experiment): one control cleanup after all
-/// threading edits instead of one after every edit.
+/// Clean control once after the threading worklist drains. Planning always
+/// rebuilds its Uses/CFG snapshot after an edit; full simplification is not
+/// needed to validate the next independent plan. `each` retains the old policy
+/// as a measurement control.
 fn simplify_once() -> bool {
     static ONCE: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
-    *ONCE.get_or_init(|| std::env::var("KFRC_THREAD_SIMPLIFY").as_deref() == Ok("once"))
+    *ONCE.get_or_init(|| std::env::var("KFRC_THREAD_SIMPLIFY").as_deref() != Ok("each"))
 }
 
 // Inlining leaves Jump -> single-entry Region wrappers between a merge and
