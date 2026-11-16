@@ -8,6 +8,9 @@ use kfrc_son::{
     ValueType,
 };
 
+#[path = "semantic_ranges/slices.rs"]
+mod slices;
+
 fn word(types: &mut RecordedTypes) -> TyId {
     types.intern(
         TypeShape::Int {

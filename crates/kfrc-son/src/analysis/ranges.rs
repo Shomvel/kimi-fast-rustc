@@ -215,8 +215,33 @@ impl<'a> RangeFacts<'a> {
                 if !self.typed(source, budget) {
                     return None;
                 }
-                let own = self.type_range(ty)?;
+                let mut own = self.type_range(ty)?;
                 let source_ty = g.rust_type(source)?;
+                // A typed slice reference spans at most isize::MAX bytes.
+                // Raw slice pointers need not describe an allocation, and ZST
+                // slices may have any usize length. Apply this only to the
+                // logical metadata field of a boundary-validated reference.
+                if index == 1
+                    && matches!(
+                        g.oracle.shape(ty),
+                        TypeShape::Int {
+                            width: kfrc_body::IntegerWidth::Pointer,
+                            signed: false,
+                        }
+                    )
+                    && let TypeShape::Reference { pointee, .. } = g.oracle.shape(source_ty)
+                {
+                    let element_size = match g.oracle.shape(*pointee) {
+                        TypeShape::Str => Some(1),
+                        TypeShape::Slice { element } => {
+                            g.oracle.size_align(*element).map(|s| s.size)
+                        }
+                        _ => None,
+                    };
+                    if let Some(size) = element_size.filter(|&size| size != 0) {
+                        own.max = own.max.min((i64::MAX as u64) / size);
+                    }
+                }
                 // A field can have weaker validity than its enclosing newtype.
                 // Only exact scalar-lane boundaries retain the parent fact.
                 let field = g.oracle.aggregates.get(&source_ty)?.fields.get(index)?;
