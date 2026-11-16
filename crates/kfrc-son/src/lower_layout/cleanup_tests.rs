@@ -473,3 +473,73 @@ fn comparison_range_refinement_follows_boolean_inversions_only_at_the_branch() {
         }
     }
 }
+
+#[test]
+fn observed_tag_comparisons_keep_holes_in_the_remaining_values() {
+    for (a, b) in [(0u64, 2u64), (1, 3), (0, 128), (2, 6), (1, 255), (0, 3)] {
+        for predicate in [P::Equal, P::NotEqual] {
+            let mut f = Fixture::new();
+            f.call_before_branch();
+            let [left, right] = f.branch(f.args[2]);
+            let jumps = [left, right].map(|control| {
+                f.graph
+                    .add_node(Opcode::Jump, control, &[], 0, ValueType::Control)
+            });
+            let region =
+                f.graph
+                    .add_node(Opcode::Region, NodeId::NONE, &jumps, 0, ValueType::Control);
+            let a = f.graph.add_constant(u128::from(a), f.word);
+            let b = f.graph.add_constant(u128::from(b), f.word);
+            let tag = f.graph.add_node(
+                Opcode::Phi,
+                NodeId::NONE,
+                &[region, a, b],
+                0,
+                ValueType::Rust(f.word),
+            );
+            let first = f.graph.add_node(
+                Opcode::Compare,
+                NodeId::NONE,
+                &[tag, b],
+                predicate as u32,
+                ValueType::Rust(f.boolean),
+            );
+            f.control = region;
+            let exits = f.branch(first);
+            let (residual, selected) = if predicate == P::Equal {
+                (exits[1], exits[0])
+            } else {
+                (exits[0], exits[1])
+            };
+            f.return_at(selected, b);
+            let second = f.graph.add_node(
+                Opcode::Compare,
+                NodeId::NONE,
+                &[tag, a],
+                P::Equal as u32,
+                ValueType::Rust(f.boolean),
+            );
+            f.control = residual;
+            let [yes, no] = f.branch(second);
+            f.return_at(yes, a);
+            f.return_at(no, tag);
+            verify_graph(&mut f.graph).unwrap();
+            let before = f.graph.clone();
+            let stats = conditions::run(&mut f.graph).unwrap();
+            let difference = f.graph.constant_value(a) ^ f.graph.constant_value(b);
+            assert_eq!(
+                stats.conditions_folded,
+                usize::from(difference.is_power_of_two())
+            );
+            // The comparison is still available to any non-branch observer.
+            assert_eq!(f.graph.op(second), Opcode::Compare);
+            verify_graph(&mut f.graph).unwrap();
+            for selector in [0, 1] {
+                assert_eq!(
+                    evaluate(&before, 0, 0, selector),
+                    evaluate(&f.graph, 0, 0, selector),
+                );
+            }
+        }
+    }
+}

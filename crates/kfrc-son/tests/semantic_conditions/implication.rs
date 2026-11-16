@@ -204,6 +204,43 @@ fn comparison_implication_keeps_the_initial_poison_observation() {
 }
 
 #[test]
+fn observed_masked_values_refine_remaining_cases_without_erasing_poison() {
+    for seam in [false, true] {
+        for mask in [2u64, 128, 1 << 63] {
+            let mut f = Fixture::new();
+            let mask = f.graph.add_constant(u128::from(mask), f.word);
+            let zero = f.graph.add_constant(0, f.word);
+            let value = f.graph.add_node(
+                Opcode::BitAnd,
+                NodeId::NONE,
+                &[f.args[0], mask],
+                0,
+                ValueType::Rust(f.word),
+            );
+            let condition = compare(&mut f, P::Equal, mask, value);
+            let [selected, residual] = f.branch(f.control, condition);
+            f.ret(selected, f.effect, 3);
+            let query = compare(&mut f, P::Equal, value, zero);
+            let [yes, no] = f.branch(residual, query);
+            f.ret(yes, f.effect, 7);
+            f.ret(no, f.effect, 99);
+            differential(
+                &mut f,
+                &[[0, 0, 0], [2, 0, 0], [128, 0, 0], [u64::MAX, 0, 0]],
+                1,
+                seam,
+            );
+            let mut interpreter = Interpreter::new(&f.graph);
+            let outcome = interpreter.run_values(
+                &[Value::Poison, Value::Scalar(0), Value::Scalar(0)],
+                &mut |symbol: &str, _: &[Value]| Err(InterpretError::UnknownCallee(symbol.into())),
+            );
+            assert!(matches!(outcome, Err(InterpretError::PoisonObserved(_))));
+        }
+    }
+}
+
+#[test]
 fn a_sibling_threshold_does_not_prove_a_condition_after_the_join() {
     let mut f = Fixture::new();
     let [left, right] = f.branch(f.control, f.args[2]);

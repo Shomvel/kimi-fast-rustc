@@ -17,6 +17,33 @@ impl KnownBits {
     pub(crate) fn unsigned_bounds(self) -> (u64, u64) {
         (self.one, self.mask() & !self.zero)
     }
+    /// Whether a closed unsigned interval contains a value with these bits.
+    /// Unlike the convex bounds, this preserves holes such as {0, 2}.
+    pub(crate) fn intersects_unsigned_range(self, min: u64, max: u64) -> bool {
+        let max = max.min(self.mask());
+        if min > max {
+            return false;
+        }
+        let mut candidate = (min | self.one) & !self.zero & self.mask();
+        if candidate > min {
+            // A required one already raised the prefix above `min`; the
+            // lower variable bits must be cleared to get its least successor.
+            let mismatch = 63 - (candidate ^ min).leading_zeros();
+            candidate = (candidate & !((1u64 << mismatch) - 1)) | self.one;
+        } else if candidate < min {
+            // The highest mismatch cleared a forbidden one in `min`. Round
+            // up at the next available higher zero, then minimize its suffix.
+            let mismatch = 63 - (candidate ^ min).leading_zeros();
+            let higher = u64::MAX.checked_shl(mismatch + 1).unwrap_or(0);
+            let available = !min & !self.zero & self.mask() & higher;
+            if available == 0 {
+                return false;
+            }
+            let increment = 1u64 << available.trailing_zeros();
+            candidate = (min & !(increment | (increment - 1))) | increment | self.one;
+        }
+        candidate <= max
+    }
     fn mask(self) -> u64 {
         u64::MAX >> (64 - self.bits)
     }
@@ -175,6 +202,47 @@ mod tests {
     use super::*;
     use crate::ValueType;
     use kfrc_body::{FunctionAbi, IntegerWidth, PassMode, RecordedTypes, SizeAlign};
+
+    #[test]
+    fn interval_intersection_matches_every_byte_mask() {
+        for zero in 0..=255u64 {
+            for one in 0..=255u64 {
+                if zero & one != 0 {
+                    continue;
+                }
+                let facts = KnownBits { zero, one, bits: 8 };
+                let mut next = None;
+                for min in (0..=255u64).rev() {
+                    if min & zero == 0 && min & one == one {
+                        next = Some(min);
+                    }
+                    for max in [min, (min + 1).min(255), (min + 31).min(255), 255, u64::MAX] {
+                        assert_eq!(
+                            facts.intersects_unsigned_range(min, max),
+                            next.is_some_and(|value| value <= max),
+                            "zero={zero:#x} one={one:#x} min={min} max={max}"
+                        );
+                    }
+                }
+                assert!(!facts.intersects_unsigned_range(256, u64::MAX));
+                assert!(!facts.intersects_unsigned_range(1, 0));
+            }
+        }
+        // Exercise the top-bit mismatch without shifting by the word width.
+        let low_half = KnownBits {
+            zero: 1 << 63,
+            one: 0,
+            bits: 64,
+        };
+        assert!(!low_half.intersects_unsigned_range(1 << 63, u64::MAX));
+        let high_half = KnownBits {
+            zero: 0,
+            one: 1 << 63,
+            bits: 64,
+        };
+        assert!(high_half.intersects_unsigned_range(0, 1 << 63));
+        assert!(!high_half.intersects_unsigned_range(0, (1 << 63) - 1));
+    }
 
     #[test]
     fn a_cycle_cannot_supply_its_own_known_bits() {
