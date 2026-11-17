@@ -3,6 +3,11 @@ use super::cfg::ControlFlow;
 use crate::graph::NodeId;
 use std::sync::Arc;
 
+fn monotone_queries() -> bool {
+    static ENABLED: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+    *ENABLED.get_or_init(|| std::env::var("KFRC_DOMINANCE_RPO").as_deref() != Ok("0"))
+}
+
 #[derive(Clone, Debug)]
 pub struct Dominators {
     idom: Arc<[usize]>,
@@ -44,6 +49,14 @@ impl Dominators {
     }
 
     pub fn dominates_position(&self, a: usize, mut b: usize) -> bool {
+        if monotone_queries() {
+            // Positions are reachable reverse postorder. Every proper
+            // dominator precedes its child, so walking below a cannot find a.
+            while b > a {
+                b = self.idom[b];
+            }
+            return a == b;
+        }
         loop {
             if a == b {
                 return true;
@@ -74,3 +87,7 @@ fn intersect(idom: &[usize], mut a: usize, mut b: usize) -> usize {
     }
     a
 }
+
+#[cfg(test)]
+#[path = "dominators_tests.rs"]
+mod tests;
