@@ -144,3 +144,41 @@ pub fn generic_reload<T: Probe>(x: &T, f: fn(&T)) -> u32 {
     f(x);
     a.wrapping_add(x.read())
 }
+
+struct SnapshotParser<'a> {
+    position: usize,
+    source: &'a str,
+}
+
+#[inline(never)]
+fn observe_snapshot_source(source: &str) -> usize {
+    source.len()
+}
+
+// The first argument is only read, while another parameter is written and
+// calls remain. The later source reload exercises the protected snapshot.
+#[inline(never)]
+fn parser_snapshot_step(parser: &mut SnapshotParser<'_>, out: &mut u64) -> usize {
+    let first = observe_snapshot_source(parser.source);
+    *out = out.wrapping_add(first as u64);
+    if first > 4 {
+        observe_snapshot_source(parser.source).wrapping_add(1)
+    } else {
+        first
+    }
+}
+
+#[inline(never)]
+pub fn protected_parser_snapshot(source: &str, rounds: u32) -> (usize, u64) {
+    let mut parser = SnapshotParser {
+        position: 0,
+        source,
+    };
+    let mut out = 0u64;
+    for _ in 0..rounds {
+        parser.position = parser.position.wrapping_add(3);
+        let step = parser_snapshot_step(&mut parser, &mut out);
+        parser.position = parser.position.wrapping_add(step);
+    }
+    (parser.position, out)
+}

@@ -19,7 +19,10 @@ pub fn check() {
         assert_eq!(frozen_reload(&value, nothing), value.wrapping_mul(2));
         assert_eq!(observed_local(value), value.wrapping_mul(3).wrapping_mul(8));
         let cell = Cell::new(value);
-        assert_eq!(cell_reload(&cell, bump_cell), value.wrapping_mul(2).wrapping_add(100));
+        assert_eq!(
+            cell_reload(&cell, bump_cell),
+            value.wrapping_mul(2).wrapping_add(100)
+        );
         let mixed = Mixed {
             n: 3,
             c: Cell::new(value),
@@ -47,10 +50,29 @@ pub fn check() {
     let words = [9u64, 4, 7];
     assert_eq!(frozen_slice(&words, nothing), 18);
     for rounds in [0u32, 1, 5] {
-        assert_eq!(frozen_loop(&words[1], rounds, nothing), 4 * (u64::from(rounds) + 1));
+        assert_eq!(
+            frozen_loop(&words[1], rounds, nothing),
+            4 * (u64::from(rounds) + 1)
+        );
     }
     let text = b"Az-09.~";
-    let classes: Vec<u32> = (0..=text.len()).map(|index| classify(text, index)).collect();
+    let classes: Vec<u32> = (0..=text.len())
+        .map(|index| classify(text, index))
+        .collect();
     assert_eq!(classes, [1, 1, 1, 2, 2, 3, 3, 0]);
     println!("rs5-permissions classify {classes:?}");
+    for source in ["", "a", "abcde", "µ秒 duration"] {
+        for rounds in [0u32, 1, 7] {
+            let length = source.len();
+            let step = length + usize::from(length > 4);
+            assert_eq!(
+                protected_parser_snapshot(source, rounds),
+                (
+                    (3 + step) * rounds as usize,
+                    length as u64 * u64::from(rounds)
+                ),
+            );
+            println!("rs5-protected-snapshot {} {rounds}", length);
+        }
+    }
 }

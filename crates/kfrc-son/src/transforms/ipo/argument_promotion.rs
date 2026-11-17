@@ -4,6 +4,7 @@
 //! rejects every address reference visible in those graphs and their data.
 mod plan;
 mod rewrite;
+mod snapshots;
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -15,6 +16,8 @@ pub struct ArgumentPromotionStats {
     pub arguments_promoted: usize,
     pub scalar_parts: usize,
     pub calls_changed: usize,
+    pub protected_arguments: usize,
+    pub pair_parts: usize,
 }
 
 #[derive(Debug)]
@@ -112,6 +115,21 @@ pub fn promote_arguments(
             .map(|arg| arg.parts.len())
             .sum::<usize>();
         stats.calls_changed += changed_calls;
+        stats.protected_arguments += plan.arguments.iter().filter(|arg| arg.protected).count();
+        stats.pair_parts += plan
+            .arguments
+            .iter()
+            .flat_map(|arg| &arg.parts)
+            .filter(|part| part.abi == kfrc_body::PassMode::Pair)
+            .count();
+        if snapshots::enabled() && std::env::var_os("KFRC_DUMP_GRAPH").is_some() {
+            // Keep the ordinary input/S/Layout graph stream unchanged. The
+            // final S dump contains the promoted Start and permission types.
+            eprintln!(
+                "kfrc argument promotion definition {symbol}: {:?}",
+                plan.abi
+            );
+        }
         bodies.extend(updates);
     }
     Ok(stats)
