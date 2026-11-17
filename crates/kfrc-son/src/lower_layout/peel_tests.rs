@@ -173,6 +173,48 @@ fn checked_recurrence_peels_and_repairs_each_exit() {
 }
 
 #[test]
+fn cleanup_removes_only_the_peeled_constant_overflow_guard() {
+    let before = fixture();
+    let mut after = before.clone();
+    assert_eq!(run(&mut after).loops, 1);
+    verify_graph(&mut after).unwrap();
+    assert_eq!(
+        after
+            .ids()
+            .filter(|&n| after.op(n) == Opcode::MulOverflow)
+            .count(),
+        2
+    );
+    super::super::cleanup::run(&mut after).unwrap();
+    verify_graph(&mut after).unwrap();
+    let overflows: Vec<_> = after
+        .ids()
+        .filter(|&n| after.op(n) == Opcode::MulOverflow)
+        .collect();
+    let enabled = std::env::var("KFRC_FOLD_MUL_OVERFLOW").as_deref() != Ok("0");
+    assert_eq!(overflows.len(), if enabled { 1 } else { 2 });
+    if enabled {
+        let recurrence = after.input(overflows[0], 0);
+        assert_eq!(after.op(recurrence), Opcode::Phi);
+        assert!(!after.ids().any(|n| {
+            after.op(n) == Opcode::MulOverflow
+                && after
+                    .inputs(n)
+                    .iter()
+                    .all(|&input| after.op(input) == Opcode::Const)
+        }));
+    }
+    for limit in [0, 1, 2, 3, 4, 17, 255] {
+        for digit in [0, 1, 2, 9, 25, 127, 255] {
+            assert_eq!(
+                execute(&before, limit, digit),
+                execute(&after, limit, digit)
+            );
+        }
+    }
+}
+
+#[test]
 fn reverse_header_slots_preserve_state() {
     let mut before = fixture();
     // Find the structural loop rather than depending on fixture NodeIds.

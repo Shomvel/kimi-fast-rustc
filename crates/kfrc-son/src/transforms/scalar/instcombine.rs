@@ -339,6 +339,7 @@ fn fold(graph: &FunctionGraph, node: NodeId) -> Option<u64> {
 pub(crate) fn supports_evaluation(op: Opcode) -> bool {
     use Opcode::*;
     op.integer_intrinsic_arity().is_some()
+        || (op == MulOverflow && fold_mul_overflow_enabled())
         || matches!(
             op,
             Add | Sub
@@ -354,6 +355,11 @@ pub(crate) fn supports_evaluation(op: Opcode) -> bool {
                 | IntCast
                 | Compare
         )
+}
+
+fn fold_mul_overflow_enabled() -> bool {
+    static ENABLED: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+    *ENABLED.get_or_init(|| std::env::var("KFRC_FOLD_MUL_OVERFLOW").as_deref() != Ok("0"))
 }
 
 pub(crate) fn evaluate(
@@ -403,6 +409,18 @@ pub(crate) fn evaluate(
         Add => a.wrapping_add(b),
         Sub => a.wrapping_sub(b),
         Mul => a.wrapping_mul(b),
+        // Both operands must be constants in the caller's lattice. Never
+        // fold zero times an unknown value: that could discard source poison.
+        MulOverflow if source.signed => {
+            let product = i128::from(source.signed(a)) * i128::from(source.signed(b));
+            let min = -(1i128 << (source.bits - 1));
+            let max = (1i128 << (source.bits - 1)) - 1;
+            u64::from(product < min || product > max)
+        }
+        MulOverflow => {
+            let product = u128::from(a) * u128::from(b);
+            u64::from(product > (1u128 << source.bits) - 1)
+        }
         BitAnd => a & b,
         BitOr => a | b,
         BitXor => a ^ b,
@@ -495,3 +513,7 @@ fn identity(graph: &FunctionGraph, node: NodeId, ty: TyId, scalar: Integer) -> O
     };
     (graph.rust_type(replacement) == Some(ty)).then_some(replacement)
 }
+
+#[cfg(test)]
+#[path = "instcombine/overflow_tests.rs"]
+mod overflow_tests;
