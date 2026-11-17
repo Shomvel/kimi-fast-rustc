@@ -7,11 +7,13 @@ use kfrc_son::{InlineBudget, InlineCostPolicy, InlineStats};
 use crate::profile::json_string;
 
 /// Graph nodes one inliner invocation may add, unless configured.
-pub(crate) const DEFAULT_INVOCATION_NODES: usize = 4096;
+pub(crate) const DEFAULT_INVOCATION_NODES: usize = 65_536;
 /// Compiler-work units of the bottom-up preparation, unless configured.
 pub(crate) const DEFAULT_PREPARATION_WORK: usize = 1_000_000;
-/// Positive residual growth accepted by the calibrated production policy.
-const DEFAULT_RESIDUAL_GROWTH: u64 = 32;
+/// Positive residual growth accepted at ordinary production call sites.
+const DEFAULT_ORDINARY_GROWTH: u64 = 160;
+/// Preserve the explicit uniform-residual calibration contract.
+const UNIFORM_RESIDUAL_GROWTH: u64 = 32;
 const HOT_RESIDUAL_GROWTH: u64 = 256;
 /// Extra estimated growth shared by hot splices in one emission invocation.
 const TOTAL_HOT_RESIDUAL_GROWTH: u64 = 512;
@@ -31,7 +33,10 @@ pub(crate) struct Limits {
 impl Default for Limits {
     fn default() -> Self {
         Self {
-            budget: InlineBudget::default(),
+            budget: InlineBudget {
+                max_depth: 1,
+                ..InlineBudget::default()
+            },
             invocation_nodes: DEFAULT_INVOCATION_NODES,
             preparation_work: DEFAULT_PREPARATION_WORK,
         }
@@ -51,25 +56,26 @@ fn read_limits() -> Result<Limits, String> {
             .map_err(|_| format!("invalid {name}={text:?}; expected a non-negative integer")),
         Err(error) => Err(format!("invalid {name}: {error}")),
     };
-    let defaults = InlineBudget::default();
+    let defaults = Limits::default();
+    let budget = defaults.budget;
     Ok(Limits {
         budget: InlineBudget {
-            max_depth: number("KFRC_INLINE_DEPTH", defaults.max_depth)?,
-            max_nodes: number("KFRC_INLINE_NODES", defaults.max_nodes)?,
-            max_calls: number("KFRC_INLINE_CALLS", defaults.max_calls)?,
-            free_nodes: number("KFRC_INLINE_FREE_NODES", defaults.free_nodes)?,
-            max_callee_nodes: number("KFRC_INLINE_CALLEE_NODES", defaults.max_callee_nodes)?,
+            max_depth: number("KFRC_INLINE_DEPTH", budget.max_depth)?,
+            max_nodes: number("KFRC_INLINE_NODES", budget.max_nodes)?,
+            max_calls: number("KFRC_INLINE_CALLS", budget.max_calls)?,
+            free_nodes: number("KFRC_INLINE_FREE_NODES", budget.free_nodes)?,
+            max_callee_nodes: number("KFRC_INLINE_CALLEE_NODES", budget.max_callee_nodes)?,
             copy_anonymous_constants: number(
                 "KFRC_INLINE_COPY_CONSTANTS",
-                usize::from(defaults.copy_anonymous_constants),
+                usize::from(budget.copy_anonymous_constants),
             )? != 0,
             max_loop_constant_bytes: number(
                 "KFRC_INLINE_LOOP_CONSTANT_BYTES",
-                defaults.max_loop_constant_bytes,
+                budget.max_loop_constant_bytes,
             )?,
         },
-        invocation_nodes: number("KFRC_INLINE_INVOCATION_NODES", DEFAULT_INVOCATION_NODES)?,
-        preparation_work: number("KFRC_INLINE_PREPARATION_WORK", DEFAULT_PREPARATION_WORK)?,
+        invocation_nodes: number("KFRC_INLINE_INVOCATION_NODES", defaults.invocation_nodes)?,
+        preparation_work: number("KFRC_INLINE_PREPARATION_WORK", defaults.preparation_work)?,
     })
 }
 
@@ -119,12 +125,12 @@ fn residual_policy(callsite: bool) -> Result<InlineCostPolicy, String> {
                 )
             }),
         Err(std::env::VarError::NotPresent) if callsite => Ok(InlineCostPolicy::CallSiteResidual {
-            max_growth: growth("KFRC_INLINE_ORDINARY_GROWTH", DEFAULT_RESIDUAL_GROWTH)?,
+            max_growth: growth("KFRC_INLINE_ORDINARY_GROWTH", DEFAULT_ORDINARY_GROWTH)?,
             hot_growth: growth("KFRC_INLINE_HOT_GROWTH", HOT_RESIDUAL_GROWTH)?,
             total_hot_growth: growth("KFRC_INLINE_TOTAL_HOT_GROWTH", TOTAL_HOT_RESIDUAL_GROWTH)?,
         }),
         Err(std::env::VarError::NotPresent) => Ok(InlineCostPolicy::Residual {
-            max_growth: DEFAULT_RESIDUAL_GROWTH,
+            max_growth: UNIFORM_RESIDUAL_GROWTH,
         }),
         Err(error) => Err(format!("invalid KFRC_INLINE_RESIDUAL_UNITS: {error}")),
     }

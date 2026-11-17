@@ -12,6 +12,19 @@ use kfrc_son::{
 };
 use std::collections::BTreeSet;
 
+// These fixtures select the legacy policy and assert its preparation/depth
+// behavior. Bind both preparation and emission to that policy's original
+// limits, independently of the calibrated production shell defaults.
+const MAX_INLINE_NODES: usize = 4096;
+
+fn fixture_limits() -> crate::inline_cost::Limits {
+    crate::inline_cost::Limits {
+        budget: InlineBudget::default(),
+        invocation_nodes: MAX_INLINE_NODES,
+        preparation_work: MAX_WORK,
+    }
+}
+
 fn leaf(name: &str) -> FunctionGraph {
     let mut function = Function::new(name, 1);
     let one = function.constant(1);
@@ -55,14 +68,8 @@ fn optimize_with_policy(
 ) -> super::report::Summary {
     graphs.collect_references();
     let roots = roots.iter().map(|name| (*name).to_owned()).collect();
-    run_with_configuration(
-        graphs,
-        &roots,
-        budget,
-        policy,
-        &crate::inline_cost::Limits::default(),
-    )
-    .unwrap_or_else(|error| panic!("{}: {}", error.symbol, error.message))
+    run_with_configuration(graphs, &roots, budget, policy, &fixture_limits())
+        .unwrap_or_else(|error| panic!("{}: {}", error.symbol, error.message))
 }
 
 fn inline_emitted_copy(graphs: &CrateGraphs, symbol: &str) -> FunctionGraph {
@@ -84,7 +91,7 @@ fn inline_emitted_copy_with_policy(
         &mut emitted,
         &provider,
         InlineBudget {
-            max_nodes: super::MAX_INLINE_NODES,
+            max_nodes: MAX_INLINE_NODES,
             ..InlineBudget::default()
         },
         policy,
@@ -351,7 +358,7 @@ fn small_call_free_publication_preserves_depth_for_a_long_wrapper_chain() {
         &mut unprepared,
         &originals,
         InlineBudget {
-            max_nodes: super::MAX_INLINE_NODES,
+            max_nodes: MAX_INLINE_NODES,
             ..InlineBudget::default()
         },
     )

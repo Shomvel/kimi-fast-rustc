@@ -37,22 +37,22 @@ limits are independent of the estimate. Runtime instruction counts, code size,
 compile instructions and monotonicity must calibrate its threshold.
 
 The rustc backend defaults to `callsite` residual pricing. Ordinary, cold and
-unknown sites use a positive-growth threshold of 32; cyclic S control sites use
+unknown sites use a positive-growth threshold of 160; cyclic S control sites use
 256. An immutable CFG snapshot classifies cyclic SCCs and propagates coldness
 backward from Unreachable only when every successor is cold. Nested calls keep
 source/copy correspondence: a cold source path stays cold inside a hot caller;
 only classified non-cold paths may inherit the hot allowance. This is static
 profitability, not a trip-count or semantic fact. Classification uses a bounded
-weighted work account, cached by source/specialization, and falls back to 32 on
+weighted work account, cached by source/specialization, and falls back to 160 on
 exhaustion. Hot emission sites precede ordinary sites within strong inline
 intent. Scratch constant-argument preparation keeps the context-independent 32
 threshold and the same shared cache/work accounts.
 
-The current candidate also gives each emission invocation a shared account of
+Each emission invocation also has a shared account of
 512 extra growth units. Its effective hot threshold is the smaller of 256 and
-32 plus the remaining account. After a successful non-exempt hot splice, the
+160 plus the remaining account. After a successful non-exempt hot splice, the
 account pays only the source estimate minus the removed call and the ordinary
-32-unit allowance. It never refunds growth after cleanup. Nested splices use
+160-unit allowance. It never refunds growth after cleanup. Nested splices use
 the same account; they cannot reset it by inheriting hotness. Rejected plans,
 ordinary-sized/free splices, sole local references and strong inline intent
 do not consume this account. The latter two retain their existing profitability
@@ -64,8 +64,12 @@ Explicit `KFRC_INLINE_COST_MODEL=residual` retains uniform 32. Every explicit
 `KFRC_INLINE_RESIDUAL_UNITS` still selects exactly that uniform threshold,
 preserving historical calibration and ablation commands.
 The uniform 32 policy retains the measured 0/8/16/32 calibration arm. The
-call-site candidate changes no graph allocation, recursion, depth, costed-call
-or preparation-work limits and needs its own runtime/compile/size acceptance.
+production shell uses one costed inline level and an allocation cap of 65,536
+nodes per invocation. Recursion, costed-call and preparation-work limits remain
+independent. The standalone `InlineBudget` defaults are unchanged. Runtime,
+compile-work and size calibration, including the 96-unit alternative and
+transform ablations, are recorded in the
+[2026-11-17 validation](../../validation/runtime-1p1-20261117.md).
 `KFRC_INLINE_COST_MODEL=legacy|observe|size` retains the established alternatives;
 `observe` follows legacy decisions while recording the seed estimates. The
 standalone Son API retains its explicitly selected policy.

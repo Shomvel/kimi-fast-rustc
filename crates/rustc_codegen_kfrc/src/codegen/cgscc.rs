@@ -15,9 +15,6 @@ use std::collections::{BTreeMap, BTreeSet};
 //
 #[cfg(test)]
 const MAX_WORK: usize = inline_cost::DEFAULT_PREPARATION_WORK;
-#[cfg(test)]
-const MAX_INLINE_NODES: usize = inline_cost::DEFAULT_INVOCATION_NODES;
-
 impl CrateGraphs {
     pub(crate) fn prepare_callees(
         &mut self,

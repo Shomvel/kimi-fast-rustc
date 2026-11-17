@@ -37,9 +37,15 @@ for arm in ("llvm", "semantic-off", "semantic-on"):
         row["internal_symbols_omitted_after_optimization"] = sorted(marker.removesuffix(":") for marker in omitted)
         assert len(inputs) >= 13, "missing expected library functions"
         if arm == "semantic-on":
-            inlined = [int(n) for n in re.findall(r"calls_inlined: (\d+)", graph_log)]
-            assert inlined and sum(inlined) > 0, "eligible same-crate helper was not inlined"
-            row["calls_inlined"] = sum(inlined)
+            emission = [int(n) for n in re.findall(
+                r"^kfrc inlining [^\n]+: InlineStats \{ calls_inlined: (\d+)", graph_log, re.M)]
+            prepared = [json.loads(line.removeprefix("kfrc-cgscc "))["calls_inlined"]
+                        for line in graph_log.splitlines() if line.startswith("kfrc-cgscc ")]
+            assert all(type(value) is int and value >= 0 for value in prepared)
+            inlined = {"cgscc": sum(prepared), "emission": sum(emission)}
+            assert sum(inlined.values()) > 0, "eligible same-crate helper was not inlined"
+            row["calls_inlined_by_phase"] = inlined
+            row["calls_inlined"] = sum(inlined.values())
         row["semantic_functions"] = len(inputs)
         row["input_symbols"] = sorted(inputs)
         semantic_ops = {"Aggregate", "Field", "InsertField", "MakeVariant", "VariantOf", "VariantField", "WidePtr", "Discriminant"}

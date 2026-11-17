@@ -25,7 +25,14 @@ fn count(graph: &FunctionGraph, op: Opcode) -> usize {
 fn check(overlap: bool) -> FunctionGraph {
     let (semantic, lowered) = layout(&lanes_body(overlap));
     for selector in 0..8 {
-        for (a, bits) in [(0, 0), (0x1ff, 0x1_2345_6789), (77, 0xfffe_dcba)] {
+        for (a, bits) in [
+            (0, 0),
+            (0x1ff, 0x1_2345_6789),
+            (77, 0xfffe_dcba),
+            (u64::MAX, u64::MAX),
+            (0x80, 0x1_0000),
+            (0x101, 0xffff),
+        ] {
             let want = expected(selector, a, bits, overlap);
             assert_eq!(
                 Interpreter::new(&semantic)
@@ -68,10 +75,11 @@ fn shared_lanes_carry_constructor_loop_and_memory_values() {
 }
 
 #[test]
-fn overlapping_lanes_keep_guarded_per_variant_payloads() {
+fn overlapping_lanes_keep_physical_storage_and_variant_values() {
     let lowered = check(true);
-    // The u16 at 4 overlaps the u32 lane, so every u32 and u16 payload keeps
-    // its guarded per-variant access; the byte lane at 1 is still shared.
-    assert_eq!(count(&lowered, Opcode::Load), 6, "{}", lowered.dump());
+    // Overlapping u16/u32 representations retain their common physical slot.
+    // Redundant tag/byte reads may disappear after forwarding or threading;
+    // the S/L matrix above checks every resulting variant's payload value.
+    assert_eq!(count(&lowered, Opcode::StackSlot), 1, "{}", lowered.dump());
     assert_eq!(count(&lowered, Opcode::Store), 6, "{}", lowered.dump());
 }
