@@ -286,6 +286,15 @@ impl CodegenBackend for KfrcCodegenBackend {
             tcx.dcx()
                 .fatal(format!("kfrc: {}: {}", error.symbol, error.message))
         });
+        if codegen::scalar_clones::enabled() {
+            profile::measure("specialize_literal_calls_s", "crate", || {
+                graphs.specialize_literal_calls(&mut jobs)
+            })
+            .unwrap_or_else(|error| {
+                tcx.dcx()
+                    .fatal(format!("kfrc: {}: {}", error.symbol, error.message))
+            });
+        }
         profile::measure("conditional_return_summaries_s", "crate", || {
             graphs.infer_conditional_returns()
         });

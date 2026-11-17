@@ -5,6 +5,7 @@ use std::collections::{BTreeMap, BTreeSet};
 mod argument_promotion;
 mod cgscc;
 mod conditional_returns;
+pub(crate) mod scalar_clones;
 mod wrappers;
 
 #[derive(Debug)]
