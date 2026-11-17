@@ -266,6 +266,18 @@
 (rule -3 (lower (isub (fits_in_64 ty) x y))
       (x64_sub ty x y))
 
+;; A wrapping subtraction by a constant can use a non-destructive address
+;; calculation. In i32 every displacement bit pattern is exact, including
+;; MIN; i64 needs the sign-extended displacement to equal the full negation.
+(rule kfrc_isub_i32_const_displacement -2
+      (lower (isub $I32 x (i32_from_iconst c)))
+      (x64_lea $I32 (amode_imm_reg (mem_flags_trusted_data) x (i32_wrapping_neg c))))
+
+(rule kfrc_isub_i64_const_displacement -2
+      (lower (isub $I64 x (i64_from_iconst c)))
+      (if-let disp (i64_try_into_i32 (i64_wrapping_neg c)))
+      (x64_lea $I64 (amode_imm_reg (mem_flags_trusted_data) x disp)))
+
 ;; SSE.
 
 (rule (lower (isub (multi_lane 8 16) x y))
