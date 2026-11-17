@@ -11,6 +11,7 @@ use crate::graph::{ComparePredicate, FunctionGraph, NodeId, Opcode};
 mod bit_slices;
 mod calls;
 mod casts;
+mod clamped_compare;
 mod comparisons;
 mod demanded;
 mod narrow;
@@ -178,6 +179,7 @@ fn rewrite_exact(graph: &mut FunctionGraph, node: NodeId) -> Option<(NodeId, boo
         ))
     } else {
         identity(graph, node, ty, result)
+            .or_else(|| clamped_compare::combine(graph, node))
             .or_else(|| comparisons::combine(graph, node))
             .or_else(|| casts::combine(graph, node, ty, result))
             .or_else(|| combine(graph, node, ty, result))
