@@ -13,15 +13,19 @@ struct Fixture {
 
 impl Fixture {
     fn new(width: IntegerWidth, signed: bool) -> Self {
-        let mut types = RecordedTypes::new();
         let bytes = u64::from(width.bits(64) / 8);
-        let word = types.intern(
+        Self::with_shape(
             TypeShape::Int { width, signed },
-            Some(SizeAlign {
+            SizeAlign {
                 size: bytes,
                 align: bytes,
-            }),
-        );
+            },
+        )
+    }
+
+    fn with_shape(shape: TypeShape, layout: SizeAlign) -> Self {
+        let mut types = RecordedTypes::new();
+        let word = types.intern(shape, Some(layout));
         let boolean = types.intern(TypeShape::Bool, Some(SizeAlign { size: 1, align: 1 }));
         let mut graph = FunctionGraph::new(
             "range",
@@ -382,6 +386,44 @@ fn word_intervals_keep_modular_distance_at_sign_and_width_boundaries() {
                 t.finish(second[0], [first[1], second[1]], false);
                 let inputs = [0, 1, max, max - 1, sign, sign - 1, low ^ bias, high ^ bias];
                 differential(t.graph, inputs);
+            }
+        }
+    }
+}
+
+#[test]
+fn char_intervals_use_unicode_scalar_order_across_the_surrogate_gap() {
+    for (lower, upper) in [
+        ('0', '9'),
+        ('\u{3400}', '\u{4dbf}'),
+        ('\u{d7f8}', '\u{e008}'),
+        ('\u{10fffe}', char::MAX),
+    ] {
+        let [low, high] = [lower, upper].map(|value| u64::from(u32::from(value)));
+        for swapped in [false, true] {
+            for inverted in [false, true] {
+                for reversed in [false, true] {
+                    let mut t =
+                        Fixture::with_shape(TypeShape::Char, SizeAlign { size: 4, align: 4 });
+                    let (lower, upper) = if swapped {
+                        (P::UnsignedLessEqual, P::UnsignedGreaterEqual)
+                    } else {
+                        (P::UnsignedGreaterEqual, P::UnsignedLessEqual)
+                    };
+                    let a = t.compare(lower, low, swapped, inverted);
+                    let b = t.compare(upper, high, swapped, inverted);
+                    let pass = usize::from(inverted);
+                    let (a, b) = if reversed { (b, a) } else { (a, b) };
+                    let first = t.branch(t.control, a);
+                    let second = t.branch(first[pass], b);
+                    t.finish(second[pass], [first[1 - pass], second[1 - pass]], false);
+                    let cases = [0, 0xd7ff, 0xe000, 0x10ffff]
+                        .into_iter()
+                        .chain(low - 1..=low + 1)
+                        .chain(high - 1..=high + 1)
+                        .filter(|&value| char::from_u32(value as u32).is_some());
+                    differential(t.graph, cases);
+                }
             }
         }
     }

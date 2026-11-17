@@ -69,24 +69,28 @@ pub(super) fn run(graph: &mut FunctionGraph) -> usize {
     let mut count = 0;
     for plan in plans {
         let source_ty = graph.rust_type(plan.value).unwrap();
-        let TypeShape::Int { width, signed } = *graph.oracle.shape(source_ty) else {
-            unreachable!()
+        let (width, signed, is_char) = match *graph.oracle.shape(source_ty) {
+            TypeShape::Int { width, signed } => (width, signed, false),
+            TypeShape::Char => (IntegerWidth::W32, false, true),
+            _ => unreachable!("range plans use integers or char"),
         };
         let (mut value, mut ty, mut low) = (plan.value, source_ty, plan.low);
-        if width.bits(64) < 32 {
-            // A modular narrow SUB needs a destructive byte/word ALU op and
-            // usually a copy on x86. Extend to the comparison's signed order
-            // first, then measure distance in u32, where negative distances
-            // exceed every narrow interval and LEA can compute the offset.
-            if signed != plan.signed {
+        let bits = width.bits(64);
+        let widen = bits < 32;
+        if widen || is_char {
+            // Extend a narrow operand in the comparison's order first. Then
+            // LEA can compute the offset in a full register on x86. For char
+            // this is only a retype: do modular arithmetic on u32, since the
+            // resulting distance need not be a valid Unicode scalar value.
+            if widen && signed != plan.signed {
                 let narrow = graph.oracle.intern(
                     TypeShape::Int {
                         width,
                         signed: plan.signed,
                     },
                     Some(SizeAlign {
-                        size: u64::from(width.bits(64) / 8),
-                        align: u64::from(width.bits(64) / 8),
+                        size: u64::from(bits / 8),
+                        align: u64::from(bits / 8),
                     }),
                 );
                 if graph.oracle.scalar_validity(narrow).is_some() {
@@ -117,8 +121,8 @@ pub(super) fn run(graph: &mut FunctionGraph) -> usize {
                 0,
                 ValueType::Rust(ty),
             );
-            if plan.signed && low & (1u64 << (width.bits(64) - 1)) != 0 {
-                low |= u64::MAX << width.bits(64);
+            if widen && plan.signed && low & (1u64 << (bits - 1)) != 0 {
+                low |= u64::MAX << bits;
             }
             low &= u64::from(u32::MAX);
         }
@@ -353,16 +357,19 @@ fn comparison(graph: &FunctionGraph, branch: NodeId, pass: usize) -> Option<Comp
         inclusive = !inclusive;
     }
     let ty = graph.rust_type(value)?;
-    if graph.rust_type(constant) != Some(ty)
-        || graph.op(constant) != Opcode::Const
-        || graph.oracle.scalar_validity(ty).is_some()
-    {
+    if graph.rust_type(constant) != Some(ty) || graph.op(constant) != Opcode::Const {
         return None;
     }
-    let TypeShape::Int { width, .. } = graph.oracle.shape(ty) else {
-        return None;
+    let bits = match graph.oracle.shape(ty) {
+        TypeShape::Int { width, .. } if graph.oracle.scalar_validity(ty).is_none() => {
+            width.bits(64)
+        }
+        // Rust char ordering is code-point ordering. The modular range test
+        // holds on all u32 bit patterns; it does not use the surrogate gap as
+        // a validity proof or manufacture a char from an arithmetic result.
+        TypeShape::Char if !signed => 32,
+        _ => return None,
     };
-    let bits = width.bits(64);
     if !matches!(bits, 8 | 16 | 32 | 64) {
         return None;
     }
