@@ -3629,6 +3629,10 @@
 (rule (overflow_alu_branch ty cc op x y taken not_taken)
       (with_flags_reg (x64_produce_flags op ty x y) (jmp_cond cc taken not_taken)))
 
+(decl partial lower_carry_branch (Inst MachLabel MachLabel) Reg)
+(rule (lower_carry_branch (iadd (fits_in_64 ty) x y) taken not_taken)
+      (overflow_alu_branch ty (CC.B) (ProduceFlagsOp.Add) x y taken not_taken))
+
 (rule (lower_overflow_branch (uadd_overflow _ x y @ (value_type (fits_in_64 ty))) taken not_taken)
       (overflow_alu_branch ty (CC.B) (ProduceFlagsOp.Add) x y taken not_taken))
 (rule (lower_overflow_branch (sadd_overflow _ x y @ (value_type (fits_in_64 ty))) taken not_taken)

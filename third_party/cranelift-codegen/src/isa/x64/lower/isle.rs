@@ -283,20 +283,42 @@ pub(crate) fn lower_branch(
 ) -> Option<()> {
     if let [taken, not_taken] = targets
         && lower_ctx.data(branch).opcode() == Opcode::Brif
-        && super::overflow_branch_enabled()
-        && let Some(producer) = overflow_branch_producer(lower_ctx, branch)
+        && let Some(producer) = branch_producer(lower_ctx, branch)
     {
         let mut isle_ctx = IsleContext { lower_ctx, backend };
-        let result = generated_code::constructor_lower_overflow_branch(
-            &mut isle_ctx,
-            producer,
-            *taken,
-            *not_taken,
-        );
+        let (inst, flag, result) = match producer {
+            BranchProducer::Checked(inst) => {
+                let reg = generated_code::constructor_lower_overflow_branch(
+                    &mut isle_ctx,
+                    inst,
+                    *taken,
+                    *not_taken,
+                );
+                (inst, inst, reg)
+            }
+            BranchProducer::Carry {
+                add,
+                compare,
+                inverted,
+            } => {
+                let (taken, not_taken) = if inverted {
+                    (*not_taken, *taken)
+                } else {
+                    (*taken, *not_taken)
+                };
+                let reg = generated_code::constructor_lower_carry_branch(
+                    &mut isle_ctx,
+                    add,
+                    taken,
+                    not_taken,
+                );
+                (add, compare, reg)
+            }
+        };
         if let Some(reg) = result {
             isle_ctx
                 .lower_ctx
-                .finish_fused_branch_producer(producer, reg);
+                .finish_fused_branch_producer(inst, flag, reg);
             return Some(());
         }
     }
@@ -307,20 +329,102 @@ pub(crate) fn lower_branch(
     generated_code::constructor_lower_branch(&mut isle_ctx, branch, &targets)
 }
 
-fn overflow_branch_producer(ctx: &Lower<MInst>, branch: Inst) -> Option<Inst> {
+#[derive(Clone, Copy, Default)]
+struct BranchFusions {
+    checked: bool,
+    carry: bool,
+}
+
+fn branch_fusions() -> BranchFusions {
+    #[cfg(feature = "std")]
+    {
+        static ENABLED: std::sync::OnceLock<BranchFusions> = std::sync::OnceLock::new();
+        *ENABLED.get_or_init(|| BranchFusions {
+            checked: std::env::var_os("KFRC_CLIF_OVERFLOW_BRANCH").is_some_and(|v| v == "1"),
+            carry: std::env::var_os("KFRC_CLIF_CARRY_BRANCH").is_some_and(|v| v == "1"),
+        })
+    }
+    #[cfg(not(feature = "std"))]
+    {
+        BranchFusions::default()
+    }
+}
+
+enum BranchProducer {
+    Checked(Inst),
+    Carry {
+        add: Inst,
+        compare: Inst,
+        inverted: bool,
+    },
+}
+
+fn branch_producer(ctx: &Lower<MInst>, branch: Inst) -> Option<BranchProducer> {
+    let fusions = branch_fusions();
+    if !fusions.checked && !fusions.carry {
+        return None;
+    }
     let flag = ctx.input_as_value(branch, 0);
-    let ValueDef::Result(producer, 1) = ctx.dfg().value_def(flag) else {
+    let ValueDef::Result(producer, index) = ctx.dfg().value_def(flag) else {
         return None;
     };
     // Leave intervening instructions, debug observations and extra users of
     // the flag to ordinary lowering. In particular, a flag passed to a block
     // is counted as a separate use even when that block is a branch target.
-    (ctx.f.layout.prev_inst(branch) == Some(producer)
-        && ctx.value_has_one_use(flag)
-        && ctx.f.dfg.values_labels.is_none()
-        && ctx.f.debug_tags.get(producer).is_empty()
-        && ctx.f.dfg.user_stack_map_entries(producer).is_none())
-    .then_some(producer)
+    if ctx.f.layout.prev_inst(branch) != Some(producer)
+        || !ctx.value_has_one_use(flag)
+        || ctx.f.dfg.values_labels.is_some()
+        || !can_fuse(ctx, producer)
+    {
+        return None;
+    }
+    match index {
+        1 if fusions.checked => Some(BranchProducer::Checked(producer)),
+        0 if fusions.carry => carry_compare(ctx, producer),
+        _ => None,
+    }
+}
+
+fn can_fuse(ctx: &Lower<MInst>, inst: Inst) -> bool {
+    ctx.f.debug_tags.get(inst).is_empty() && ctx.f.dfg.user_stack_map_entries(inst).is_none()
+}
+
+/// The unsigned wrapped sum is below either input if and only if the
+/// full-width addition carries. Preserve the opposite predicate by swapping
+/// targets. No sign, extension or narrowing is inferred.
+fn carry_compare(ctx: &Lower<MInst>, compare: Inst) -> Option<BranchProducer> {
+    use IntCC::*;
+    let InstructionData::IntCompare {
+        opcode: Opcode::Icmp,
+        args: [a, b],
+        cond,
+    } = *ctx.data(compare)
+    else {
+        return None;
+    };
+    let (sum, operand, inverted) = match cond {
+        UnsignedLessThan => (a, b, false),
+        UnsignedGreaterThan => (b, a, false),
+        UnsignedGreaterThanOrEqual => (a, b, true),
+        UnsignedLessThanOrEqual => (b, a, true),
+        _ => return None,
+    };
+    let ValueDef::Result(add, 0) = ctx.dfg().value_def(sum) else {
+        return None;
+    };
+    if ctx.f.layout.prev_inst(compare) != Some(add)
+        || ctx.data(add).opcode() != Opcode::Iadd
+        || !matches!(ctx.value_ty(sum), I8 | I16 | I32 | I64)
+        || !ctx.dfg().inst_args(add).contains(&operand)
+        || !can_fuse(ctx, add)
+    {
+        return None;
+    }
+    Some(BranchProducer::Carry {
+        add,
+        compare,
+        inverted,
+    })
 }
 
 impl Context for IsleContext<'_, '_, MInst, X64Backend> {

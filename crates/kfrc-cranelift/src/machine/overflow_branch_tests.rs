@@ -1,6 +1,7 @@
 use super::*;
 use cranelift_codegen::Context;
 use cranelift_codegen::control::ControlPlane;
+use cranelift_codegen::ir::condcodes::IntCC;
 use cranelift_codegen::ir::{AbiParam, BlockArg, InstBuilder, MemFlagsData, Type, types};
 use cranelift_frontend::{FunctionBuilder, FunctionBuilderContext};
 
@@ -9,9 +10,20 @@ enum Shape {
     Adjacent,
     FlagAsEdgeArgument,
     InterveningStore,
+    StoreBeforeCompare,
 }
 
-fn compile(ty: Type, operation: usize, shape: Shape) -> String {
+#[derive(Clone, Copy)]
+enum Operation {
+    Checked(usize),
+    CompareSum {
+        cond: IntCC,
+        reversed: bool,
+        unrelated: bool,
+    },
+}
+
+fn compile(ty: Type, operation: Operation, shape: Shape) -> String {
     let machine = Machine::new(MachineOptions {
         optimization: Optimization::None,
         verify: true,
@@ -20,7 +32,7 @@ fn compile(ty: Type, operation: usize, shape: Shape) -> String {
     .unwrap();
     let mut context = Context::new();
     context.func.signature.call_conv = machine.isa.default_call_conv();
-    context.func.signature.params = [ty, ty, types::I64].map(AbiParam::new).to_vec();
+    context.func.signature.params = [ty, ty, types::I64, ty].map(AbiParam::new).to_vec();
     context.func.signature.returns.push(AbiParam::new(ty));
     let mut frontend = FunctionBuilderContext::new();
     let mut b = FunctionBuilder::new(&mut context.func, &mut frontend);
@@ -33,17 +45,40 @@ fn compile(ty: Type, operation: usize, shape: Shape) -> String {
     let taken_flag =
         matches!(shape, Shape::FlagAsEdgeArgument).then(|| b.append_block_param(taken, types::I8));
     b.switch_to_block(entry);
-    let [x, y, addr] = *b.block_params(entry) else {
+    let [x, y, addr, independent] = *b.block_params(entry) else {
         unreachable!()
     };
     let (result, flag) = match operation {
-        0 => b.ins().uadd_overflow(x, y),
-        1 => b.ins().sadd_overflow(x, y),
-        2 => b.ins().usub_overflow(x, y),
-        3 => b.ins().ssub_overflow(x, y),
-        4 => b.ins().umul_overflow(x, y),
-        5 => b.ins().smul_overflow(x, y),
-        _ => unreachable!(),
+        Operation::Checked(0) => b.ins().uadd_overflow(x, y),
+        Operation::Checked(1) => b.ins().sadd_overflow(x, y),
+        Operation::Checked(2) => b.ins().usub_overflow(x, y),
+        Operation::Checked(3) => b.ins().ssub_overflow(x, y),
+        Operation::Checked(4) => b.ins().umul_overflow(x, y),
+        Operation::Checked(5) => b.ins().smul_overflow(x, y),
+        Operation::Checked(_) => unreachable!(),
+        Operation::CompareSum {
+            cond,
+            reversed,
+            unrelated,
+        } => {
+            let operand = if unrelated {
+                independent
+            } else if reversed {
+                y
+            } else {
+                x
+            };
+            let sum = b.ins().iadd(x, y);
+            if matches!(shape, Shape::StoreBeforeCompare) {
+                b.ins().store(MemFlagsData::new(), sum, addr, 0);
+            }
+            let (a, b_value) = if reversed {
+                (operand, sum)
+            } else {
+                (sum, operand)
+            };
+            (sum, b.ins().icmp(cond, a, b_value))
+        }
     };
     if matches!(shape, Shape::InterveningStore) {
         b.ins().store(MemFlagsData::new(), x, addr, 0);
@@ -86,7 +121,7 @@ fn overflow_branch_keeps_the_arithmetic_result_on_both_edges() {
                 Shape::FlagAsEdgeArgument,
                 Shape::InterveningStore,
             ] {
-                let code = compile(ty, operation, shape);
+                let code = compile(ty, Operation::Checked(operation), shape);
                 let materialized = code
                     .lines()
                     .any(|line| line.trim_start().starts_with("set"));
@@ -96,6 +131,67 @@ fn overflow_branch_keeps_the_arithmetic_result_on_both_edges() {
                     "{ty}, op {operation}: {code}"
                 );
             }
+        }
+    }
+}
+
+#[test]
+fn carry_branch_replaces_only_an_adjacent_single_use_unsigned_comparison() {
+    use IntCC::*;
+    let enabled = std::env::var_os("KFRC_CLIF_CARRY_BRANCH").is_some_and(|v| v == "1");
+    for ty in [types::I8, types::I16, types::I32, types::I64, types::I128] {
+        for (cond, reversed, unrelated, shape, accepts) in [
+            (UnsignedLessThan, false, false, Shape::Adjacent, true),
+            (
+                UnsignedGreaterThanOrEqual,
+                false,
+                false,
+                Shape::Adjacent,
+                true,
+            ),
+            (UnsignedGreaterThan, true, false, Shape::Adjacent, true),
+            (UnsignedLessThanOrEqual, true, false, Shape::Adjacent, true),
+            (UnsignedLessThan, false, true, Shape::Adjacent, false),
+            (SignedLessThan, false, false, Shape::Adjacent, false),
+            (
+                UnsignedLessThan,
+                false,
+                false,
+                Shape::FlagAsEdgeArgument,
+                false,
+            ),
+            (
+                UnsignedLessThan,
+                false,
+                false,
+                Shape::InterveningStore,
+                false,
+            ),
+            (
+                UnsignedLessThan,
+                false,
+                false,
+                Shape::StoreBeforeCompare,
+                false,
+            ),
+        ] {
+            let code = compile(
+                ty,
+                Operation::CompareSum {
+                    cond,
+                    reversed,
+                    unrelated,
+                },
+                shape,
+            );
+            let has_compare = code
+                .lines()
+                .any(|line| line.trim_start().starts_with("cmp"));
+            assert_eq!(
+                has_compare,
+                !(enabled && accepts && ty != types::I128),
+                "{ty} {cond} {code}"
+            );
         }
     }
 }

@@ -1343,21 +1343,24 @@ impl<'func, I: VCodeInst> Lower<'func, I> {
         self.value_ir_uses[val] == ValueUseState::Once
     }
 
-    /// The branch lowering consumed the second result itself. Alias the
-    /// first result exactly as ordinary lowering would, including any uses
+    /// The branch lowering consumed the flag itself, either the second
+    /// result or the only result of an adjacent compare. Alias the arithmetic
+    /// result exactly as ordinary lowering would, including any uses
     /// on outgoing edges that haven't yet been lowered.
     #[cfg(feature = "x86")]
-    pub(crate) fn finish_fused_branch_producer(&mut self, inst: Inst, reg: Reg) {
+    pub(crate) fn finish_fused_branch_producer(&mut self, inst: Inst, flag_inst: Inst, reg: Reg) {
         debug_assert_eq!(
             self.cur_inst.and_then(|b| self.f.layout.prev_inst(b)),
-            Some(inst)
+            Some(flag_inst)
         );
         debug_assert!(!has_lowering_side_effect(self.f, inst));
-        let results = self.f.dfg.inst_results(inst);
-        debug_assert_eq!(results.len(), 2);
-        debug_assert!(self.value_has_one_use(results[1]));
-        debug_assert_eq!(self.value_lowered_uses[results[1]], 0);
-        let dst = self.value_regs[results[0]].only_reg().unwrap();
+        debug_assert!(!has_lowering_side_effect(self.f, flag_inst));
+        debug_assert!(inst == flag_inst || self.f.layout.prev_inst(flag_inst) == Some(inst));
+        let flag = *self.f.dfg.inst_results(flag_inst).last().unwrap();
+        debug_assert!(self.value_has_one_use(flag));
+        debug_assert_eq!(self.value_lowered_uses[flag], 0);
+        let result = self.f.dfg.first_result(inst);
+        let dst = self.value_regs[result].only_reg().unwrap();
         self.vregs.set_vreg_alias(dst, reg);
         debug_assert!(self.branch_fused_inst.is_none());
         self.branch_fused_inst = Some(inst);

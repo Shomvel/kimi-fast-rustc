@@ -318,20 +318,6 @@ fn lower_to_amode(ctx: &mut Lower<Inst>, spec: InsnInput, offset: i32) -> Amode 
 //=============================================================================
 // Lowering-backend trait implementation.
 
-fn overflow_branch_enabled() -> bool {
-    #[cfg(feature = "std")]
-    {
-        static ENABLED: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
-        *ENABLED.get_or_init(|| {
-            std::env::var_os("KFRC_CLIF_OVERFLOW_BRANCH").is_some_and(|value| value == "1")
-        })
-    }
-    #[cfg(not(feature = "std"))]
-    {
-        false
-    }
-}
-
 impl LowerBackend for X64Backend {
     type MInst = Inst;
 
