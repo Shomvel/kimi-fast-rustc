@@ -275,7 +275,10 @@ impl LayoutLowering<'_> {
             } => {
                 self.encode_repeat(element, *count, overrides, address, control, effect)?;
             }
-            Parts::VariantTag(_) | Parts::EncodedVariant(_) => {
+            Parts::EncodedVariant(raw) => {
+                self.encode_scalar_niche(value.ty, *raw, address, control, effect)?;
+            }
+            Parts::VariantTag(_) => {
                 return Err(LayoutError::Malformed(
                     "tag-only enum escaped its discriminant consumers".into(),
                 ));

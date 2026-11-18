@@ -1,6 +1,6 @@
 # kfrc：自有 Rust 编译器计划
 
-本页保留基于 commit `44c9d80b02ab140d7edf5348b6946d8122d842b6` 的长期设计计划；下文“现状”表格描述该历史基线。当前实现与支持范围见[项目说明](../README.md)，已交付改动、验证结果和未完成目标见[2026-11-16 验收记录](validation/parallel-semantics-20261116.md)。
+本页保留基于 commit `44c9d80b02ab140d7edf5348b6946d8122d842b6` 的长期设计计划；下文“现状”表格描述该历史基线。当前实现与支持范围见[项目说明](../README.md)，并行与语义验收见[2026-11-16 验收记录](validation/parallel-semantics-20261116.md)，向 1.1 × LLVM 靠近的运行性能改动见[2026-11-17 验收记录](validation/runtime-1p1-20261117.md)。
 
 ## 一句话
 

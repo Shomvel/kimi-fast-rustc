@@ -13,6 +13,7 @@ use kfrc_body::{TypeOracle, TypeShape};
 use super::thread_values::{Expression, Merge, Placement, Planner};
 use crate::analysis::cfg::ControlFlow;
 use crate::analysis::dominators::Dominators;
+use crate::analysis::refinement::PredicateFacts;
 use crate::analysis::uses::{UseKind, Uses};
 use crate::transforms::utils::cfg::CfgEditError;
 use crate::{ComparePredicate, FunctionGraph, NodeId, Opcode, ValueType};
@@ -41,6 +42,16 @@ pub fn run(graph: &mut FunctionGraph) -> Result<VariantThreadStats, CfgEditError
 fn run_with_analysis_policy(
     graph: &mut FunctionGraph,
     eager: bool,
+) -> Result<VariantThreadStats, CfgEditError> {
+    let edge_facts = graph.level == crate::GraphLevel::Layout
+        && std::env::var("KFRC_LAYOUT_EDGE_THREAD").as_deref() != Ok("0");
+    run_with_edge_facts(graph, eager, edge_facts)
+}
+
+fn run_with_edge_facts(
+    graph: &mut FunctionGraph,
+    eager: bool,
+    edge_facts: bool,
 ) -> Result<VariantThreadStats, CfgEditError> {
     let mut stats = VariantThreadStats::default();
     graph.resolve_edges();
@@ -77,7 +88,7 @@ fn run_with_analysis_policy(
             pending.push_front((region, depth));
             continue;
         }
-        let Some(plan) = Plan::new(graph, region, index, &mut stats) else {
+        let Some(plan) = Plan::new(graph, region, index, &mut stats, edge_facts) else {
             continue;
         };
         stats.predecessors_threaded += plan.slots.iter().map(Vec::len).sum::<usize>();
@@ -272,6 +283,7 @@ impl Plan {
         region: NodeId,
         analysis: &mut Analysis,
         stats: &mut VariantThreadStats,
+        edge_facts: bool,
     ) -> Option<Self> {
         let Analysis { uses, dominance } = analysis;
         let count = graph.inputs(region).len();
@@ -324,7 +336,24 @@ impl Plan {
                     .position(|&variant| variant == graph.payload(value))
                     .unwrap_or(cases.len())
             } else {
-                let Some(value @ 0..=1) = evaluate(graph, condition, region, slot, 0) else {
+                let value = evaluate(graph, condition, region, slot, 0).or_else(|| {
+                    if !edge_facts {
+                        return None;
+                    }
+                    let (cfg, dominators) = dominance.get_or_insert_with(|| {
+                        Analysis::build_dominance(graph, &mut stats.nodes_indexed)
+                    });
+                    predecessor_condition(
+                        graph,
+                        cfg,
+                        dominators,
+                        condition,
+                        graph.inputs(region)[slot],
+                        &mut stats.node_visits,
+                    )
+                    .map(u128::from)
+                });
+                let Some(value @ 0..=1) = value else {
                     residual.push(slot);
                     continue;
                 };
@@ -611,6 +640,42 @@ impl Plan {
     }
 }
 
+/// The incoming path may already have observed this condition before its
+/// fixed work. Reuse scoped predicate implication, then let the ordinary plan
+/// split every value/effect Phi and validate placements before changing CFG.
+fn predecessor_condition(
+    graph: &FunctionGraph,
+    cfg: &ControlFlow,
+    dominators: &Dominators,
+    condition: NodeId,
+    predecessor: NodeId,
+    visits: &mut usize,
+) -> Option<bool> {
+    let mut facts = PredicateFacts::new(graph, cfg, dominators);
+    let mut proof = predecessor;
+    for _ in 0..16 {
+        *visits += 1;
+        if let Some(truth) = facts.condition_at(condition, proof, predecessor) {
+            return Some(truth);
+        }
+        // Stop at joins/loops; do not search arbitrary predecessor paths.
+        if graph.op(proof) == Opcode::Region || proof == graph.start {
+            break;
+        }
+        proof = if graph.op(proof) == Opcode::Projection
+            && graph.value_type(proof) == &ValueType::Control
+        {
+            graph.resolve(graph.input(proof, 0))
+        } else {
+            graph.resolve(graph.control(proof))
+        };
+        if proof.is_none() {
+            break;
+        }
+    }
+    None
+}
+
 /// Materialize side translations and repaired expressions only when used.
 /// Repair Phis are allocated first so loop inputs can refer back to them.
 struct ValueRepair<'a> {
@@ -816,3 +881,7 @@ mod tests;
 #[cfg(test)]
 #[path = "thread_partial_tests.rs"]
 mod partial_tests;
+
+#[cfg(test)]
+#[path = "thread_edge_tests.rs"]
+mod edge_tests;

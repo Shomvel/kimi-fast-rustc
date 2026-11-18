@@ -18,6 +18,7 @@ mod maybe_uninit;
 mod memory;
 mod observation;
 mod owned_transport;
+mod peel;
 mod private_memory;
 mod projections;
 mod repeat;
@@ -111,6 +112,8 @@ pub struct LayoutStats {
     pub byte_ladder_nodes_retired: usize,
     pub byte_ladder_node_visits: usize,
     pub byte_ladder_budget_exhausted: bool,
+    pub loops_peeled: usize,
+    pub loop_peel_nodes_added: usize,
 }
 
 /// Target-dependent code size policy; this does not change Rust value semantics.
@@ -226,6 +229,14 @@ fn lower_validated(
     stats.layout_threading_node_visits = threaded.node_visits;
     if threaded.regions_threaded + threaded.control_spines_collapsed != 0 {
         cleanup::run(&mut candidate)?;
+    }
+    if std::env::var("KFRC_LOOP_PEEL").as_deref() != Ok("0") {
+        let peeled = peel::run(&mut candidate);
+        stats.loops_peeled = peeled.loops;
+        stats.loop_peel_nodes_added = peeled.nodes_added;
+        if peeled.loops != 0 {
+            cleanup::run(&mut candidate)?;
+        }
     }
     let ladders = crate::transforms::control::byte_ladders::run(&mut candidate);
     stats.byte_ladders_grouped = ladders.ladders_grouped;

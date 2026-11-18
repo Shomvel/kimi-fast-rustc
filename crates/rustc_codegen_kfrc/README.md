@@ -20,7 +20,7 @@ code of matching functions.
 
 Inlining prices the simplified call-site body against the ABI call sequence.
 The default is `KFRC_INLINE_COST_MODEL=callsite`: positive residual growth is
-32 relative units at ordinary/cold/unknown sites and 256 in cyclic S control
+160 relative units at ordinary/cold/unknown sites and 256 in cyclic S control
 components. Nested calls inherit a hot site only through classified non-cold
 source paths. Constant-argument scratch preparation stays at 32; all existing
 graph/depth/call/work limits still apply. These are bounded static hints, not
@@ -33,13 +33,23 @@ graph allocation and recursion checks while bypassing costed-call/depth limits.
 its limits. `KFRC_CGSCC_STATS=1` enables cost, preparation and seam diagnostics;
 `observe` always emits them.
 
-Compiler-work limits keep their existing defaults. Calibration switches include
+The shell defaults to one costed inline level and at most 65,536 added nodes
+per invocation. The library's standalone `InlineBudget` defaults are unchanged.
+Calibration switches include
 `KFRC_INLINE_DEPTH`, `KFRC_INLINE_CALLS`,
 `KFRC_INLINE_COPY_CONSTANTS`, `KFRC_INLINE_LOOP_CONSTANT_BYTES`,
 `KFRC_INLINE_INVOCATION_NODES`, `KFRC_INLINE_PREPARATION_WORK`.
 The legacy `KFRC_INLINE_FREE_NODES` and `KFRC_INLINE_CALLEE_NODES` profitability
 switches do not govern the residual policy. The shell uses
 `KFRC_INLINE_INVOCATION_NODES` for its node allocation limit.
+
+Layout lowering reuses predicates proved on incoming edges, peels one bounded
+first iteration of eligible checked-multiply loops, and preserves captured
+scalar niche representations when their exact layout permits copying them.
+Set `KFRC_LAYOUT_EDGE_THREAD=0`, `KFRC_LOOP_PEEL=0`, or
+`KFRC_SCALAR_NICHE_TRANSPORT=0` to disable each transformation for differential
+diagnosis. See the [runtime validation](../../docs/validation/runtime-1p1-20261117.md)
+for the original 13-workload comparison, ablations, and remaining LLVM gap.
 
 Rust semantic values are the sole production IR. Every function goes through
 `build_graph → verified semantic optimization → explicit layout lowering → machine layer`.

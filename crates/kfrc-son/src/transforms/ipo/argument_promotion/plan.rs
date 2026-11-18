@@ -7,10 +7,13 @@ use crate::analysis::{
 use crate::{FunctionGraph, GraphLevel, NodeId, Opcode, ValueType};
 use kfrc_body::{FunctionAbi, PassMode, TyId, TypeOracle, TypeShape};
 
+use super::snapshots;
+
 pub(super) struct Part {
     pub path: Vec<(u32, ValueType)>,
     pub ty: TyId,
     pub loads: Vec<NodeId>,
+    pub abi: PassMode,
 }
 
 pub(super) struct Argument {
@@ -18,6 +21,7 @@ pub(super) struct Argument {
     pub root: NodeId,
     pub addresses: Vec<NodeId>,
     pub parts: Vec<Part>,
+    pub protected: bool,
 }
 
 pub(super) struct Plan {
@@ -36,7 +40,7 @@ pub(super) fn build(graph: &FunctionGraph) -> Option<Plan> {
     }
     // No writes can change a snapshot between entry and any replacement.
     // Calls and barriers also stop this first version's whole-body proof.
-    if graph.ids().any(|n| {
+    let whole_body_readonly = !graph.ids().any(|n| {
         matches!(
             graph.op(n),
             Opcode::Call
@@ -50,7 +54,8 @@ pub(super) fn build(graph: &FunctionGraph) -> Option<Plan> {
                 | Opcode::TransmuteValue
                 | Opcode::ThreadLocalAddress
         )
-    }) {
+    });
+    if !whole_body_readonly && !snapshots::enabled() {
         return None;
     }
     let ValueType::Tuple(start) = graph.value_type(graph.start) else {
@@ -79,7 +84,12 @@ pub(super) fn build(graph: &FunctionGraph) -> Option<Plan> {
         if roots.len() != 1 {
             continue;
         }
-        if let Some(arg) = argument(graph, &uses, roots[0], index, &guaranteed) {
+        let protected =
+            snapshots::enabled() && snapshots::protected_carrier(graph, roots[0], index);
+        if !whole_body_readonly && !protected {
+            continue;
+        }
+        if let Some(arg) = argument(graph, &uses, roots[0], index, &guaranteed, protected) {
             arguments.push(arg);
         }
     }
@@ -93,7 +103,7 @@ pub(super) fn build(graph: &FunctionGraph) -> Option<Plan> {
         if let Some(arg) = arguments.iter().find(|arg| arg.index == index) {
             for part in &arg.parts {
                 parameters.push(ValueType::Rust(part.ty));
-                abi.args.push(PassMode::Direct);
+                abi.args.push(part.abi);
             }
         } else {
             parameters.push(ty.clone());
@@ -116,6 +126,7 @@ fn argument(
     root: NodeId,
     index: usize,
     guaranteed: &BTreeSet<NodeId>,
+    protected: bool,
 ) -> Option<Argument> {
     let mut parts: BTreeMap<Vec<u32>, Part> = BTreeMap::new();
     let mut addresses = Vec::new();
@@ -156,9 +167,11 @@ fn argument(
                     let ValueType::Rust(ty) = result[2] else {
                         return None;
                     };
-                    if !scalar(graph, ty) {
-                        return None;
-                    }
+                    let abi = if scalar(graph, ty) {
+                        PassMode::Direct
+                    } else {
+                        snapshots::transport(graph, ty)?
+                    };
                     if uses.of(user).iter().any(|u| {
                         u.kind() != UseKind::Operand(0) || graph.op(u.user) != Opcode::Projection
                     }) {
@@ -169,6 +182,7 @@ fn argument(
                         path: path.clone(),
                         ty,
                         loads: Vec::new(),
+                        abi,
                     });
                     if part.ty != ty {
                         return None;
@@ -195,11 +209,15 @@ fn argument(
     if paths.windows(2).any(|pair| pair[1].starts_with(pair[0])) {
         return None;
     }
+    if protected && !snapshots::valid_accesses(graph, root, parts.values()) {
+        return None;
+    }
     Some(Argument {
         index,
         root,
         addresses,
         parts: parts.into_values().collect(),
+        protected,
     })
 }
 
@@ -247,10 +265,23 @@ fn observed_entry_loads(graph: &FunctionGraph) -> Option<BTreeSet<NodeId>> {
                 control = graph.find_projection(*next, 0)?;
                 effect = graph.find_projection(*next, 1)?;
             }
-            Opcode::If | Opcode::Return | Opcode::RequireDefined | Opcode::Assume => {
-                let value = graph.input(*next, usize::from(graph.op(*next) != Opcode::If));
+            Opcode::If
+            | Opcode::Return
+            | Opcode::RequireDefined
+            | Opcode::Assume
+            | Opcode::Call
+                if graph.op(*next) != Opcode::Call || snapshots::enabled() =>
+            {
+                let values = if graph.op(*next) == Opcode::Call {
+                    // Every whole argument is observed before the call can
+                    // execute or fail. A field of a loaded aggregate does not
+                    // observe the rest, so Field/WidePtr are not walked below.
+                    graph.inputs(*next)[1..].to_vec()
+                } else {
+                    vec![graph.input(*next, usize::from(graph.op(*next) != Opcode::If))]
+                };
                 let mut seen = BTreeSet::new();
-                let mut stack = vec![value];
+                let mut stack = values;
                 while let Some(value) = stack.pop() {
                     if !seen.insert(value) {
                         continue;

@@ -2,6 +2,9 @@
 #[path = "semantic_inline_preparation/fixture.rs"]
 mod fixture;
 
+#[path = "semantic_argument_promotion/protected.rs"]
+mod protected;
+
 use fixture::{Function, projection};
 use kfrc_body::{
     AggregateLayout, FieldLayout, Mutability, SemanticAggregate, SizeAlign, TypeShape,
