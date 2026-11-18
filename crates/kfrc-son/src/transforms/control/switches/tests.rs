@@ -145,6 +145,121 @@ fn execute(graph: &FunctionGraph, input: u64) -> Outcome {
         .unwrap()
 }
 
+fn share_matches(fixture: &mut Fixture, count: usize) -> NodeId {
+    let graph = &mut fixture.graph;
+    let phi = graph
+        .ids()
+        .find(|&node| graph.op(node) == Opcode::Phi)
+        .unwrap();
+    let result = graph.input(phi, 1);
+    for slot in 2..=count {
+        graph.set_input(phi, slot, result);
+    }
+    graph.input(phi, 0)
+}
+
+#[test]
+fn compact_membership_matches_every_byte_including_wrapped_indices() {
+    for (cases, remaining_branches) in [
+        (&[1, 2, 7][..], 2),
+        (&[4, 3, 5][..], 1),
+        (&[255, 0, 254][..], 1),
+        (&[242, 248, 252, 255][..], 2),
+    ] {
+        for signed in [false, true] {
+            let mut fixture = chain(IntegerWidth::W8, signed, cases, true);
+            share_matches(&mut fixture, cases.len());
+            verify_graph(&mut fixture.graph).unwrap();
+            let original = fixture.graph.clone();
+            assert_eq!(
+                run_with_membership(&mut fixture.graph, true).switches_created,
+                0
+            );
+            verify_graph(&mut fixture.graph).unwrap();
+            assert_eq!(
+                fixture
+                    .graph
+                    .ids()
+                    .filter(|&n| fixture.graph.op(n) == Opcode::If)
+                    .count(),
+                remaining_branches
+            );
+            assert!(crate::schedule::Schedule::new(&fixture.graph).is_ok());
+            for input in 0..=255 {
+                assert_eq!(
+                    execute(&fixture.graph, input),
+                    execute(&original, input),
+                    "{cases:?} {input}"
+                );
+            }
+        }
+    }
+}
+
+#[test]
+fn compact_membership_does_not_truncate_the_guard_or_discard_the_residual_test() {
+    let mut fixture = chain(IntegerWidth::W64, true, &[1, 31, 7, 1u128 << 32], false);
+    share_matches(&mut fixture, 3);
+    verify_graph(&mut fixture.graph).unwrap();
+    let original = fixture.graph.clone();
+    let stats = run_with_membership(&mut fixture.graph, true);
+    assert_eq!(stats.bit_memberships, 1);
+    assert_eq!(stats.switches_created, 0);
+    verify_graph(&mut fixture.graph).unwrap();
+    for input in [
+        0,
+        1,
+        7,
+        31,
+        32,
+        33,
+        63,
+        1u64 << 32,
+        (1u64 << 32) + 1,
+        u64::MAX,
+    ] {
+        assert_eq!(execute(&fixture.graph, input), execute(&original, input));
+    }
+}
+
+#[test]
+fn membership_keeps_distinct_values_and_anchored_observations() {
+    let cases = [1, 2, 7];
+    let mut fixture = chain(IntegerWidth::W8, false, &cases, true);
+    assert_eq!(
+        run_with_membership(&mut fixture.graph, true).bit_memberships,
+        0
+    );
+    assert_eq!(
+        fixture
+            .graph
+            .ids()
+            .filter(|&n| fixture.graph.op(n) == Opcode::If)
+            .count(),
+        3
+    );
+
+    let region = share_matches(&mut fixture, cases.len());
+    let graph = &mut fixture.graph;
+    let hit_jump = graph.input(region, 1);
+    let hit = graph.control(hit_jump);
+    let one = graph.add_constant(1, fixture.word);
+    graph.add_node(
+        Opcode::DivUnsigned,
+        hit,
+        &[fixture.input, one],
+        0,
+        ValueType::Rust(fixture.word),
+    );
+    verify_graph(graph).unwrap();
+    assert_eq!(run_with_membership(graph, true).bit_memberships, 0);
+    assert_eq!(
+        graph.ids().filter(|&n| graph.op(n) == Opcode::If).count(),
+        3
+    );
+    verify_graph(graph).unwrap();
+}
+
 #[test]
 fn switch_matches_every_byte_and_preserves_shared_phi_slots() {
     for signed in [false, true] {

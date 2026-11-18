@@ -105,6 +105,8 @@ pub struct LayoutStats {
     pub integer_switches_created: usize,
     pub integer_switch_cases_merged: usize,
     pub integer_switch_nodes_visited: usize,
+    pub integer_range_memberships: usize,
+    pub integer_bit_memberships: usize,
     pub byte_ladders_grouped: usize,
     pub byte_ladder_cells_grouped: usize,
     pub byte_ladder_length_buckets: usize,
@@ -251,6 +253,8 @@ fn lower_validated(
     stats.integer_switches_created = switches.switches_created;
     stats.integer_switch_cases_merged = switches.cases_merged;
     stats.integer_switch_nodes_visited = switches.nodes_visited;
+    stats.integer_range_memberships = switches.range_memberships;
+    stats.integer_bit_memberships = switches.bit_memberships;
     // Permissions belong to S parameters and source calls (RS5.1 erasure
     // point). L parameters follow physical passing modes instead.
     candidate.arg_permissions.clear();

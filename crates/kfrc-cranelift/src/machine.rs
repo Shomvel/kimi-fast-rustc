@@ -6,6 +6,9 @@ use cranelift_codegen::isa::{self, TargetIsa};
 use cranelift_codegen::settings::{self, Configurable};
 
 #[cfg(test)]
+mod bit_test_tests;
+
+#[cfg(test)]
 mod narrow_load_tests;
 
 #[cfg(test)]
