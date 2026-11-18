@@ -12,6 +12,9 @@ mod bit_test_tests;
 mod narrow_load_tests;
 
 #[cfg(test)]
+mod overflow_branch_tests;
+
+#[cfg(test)]
 mod cold_call_tests;
 
 #[cfg(test)]

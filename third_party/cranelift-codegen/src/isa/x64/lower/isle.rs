@@ -11,7 +11,9 @@ use super::{MergeableLoadSize, is_int_or_ref_ty, is_mergeable_load, lower_to_amo
 use crate::ir::condcodes::{FloatCC, IntCC};
 use crate::ir::immediates::*;
 use crate::ir::types::*;
-use crate::ir::{BlockCall, Inst, InstructionData, LibCall, Opcode, TrapCode, Value, ValueList};
+use crate::ir::{
+    BlockCall, Inst, InstructionData, LibCall, Opcode, TrapCode, Value, ValueDef, ValueList,
+};
 use crate::isa::x64::X64Backend;
 use crate::isa::x64::inst::{ReturnCallInfo, args::*, regs};
 use crate::isa::x64::lower::{InsnInput, emit_vm_call};
@@ -279,10 +281,46 @@ pub(crate) fn lower_branch(
     branch: Inst,
     targets: &[MachLabel],
 ) -> Option<()> {
+    if let [taken, not_taken] = targets
+        && lower_ctx.data(branch).opcode() == Opcode::Brif
+        && super::overflow_branch_enabled()
+        && let Some(producer) = overflow_branch_producer(lower_ctx, branch)
+    {
+        let mut isle_ctx = IsleContext { lower_ctx, backend };
+        let result = generated_code::constructor_lower_overflow_branch(
+            &mut isle_ctx,
+            producer,
+            *taken,
+            *not_taken,
+        );
+        if let Some(reg) = result {
+            isle_ctx
+                .lower_ctx
+                .finish_fused_branch_producer(producer, reg);
+            return Some(());
+        }
+    }
+
     // TODO: reuse the ISLE context across lowerings so we can reuse its
     // internal heap allocations.
     let mut isle_ctx = IsleContext { lower_ctx, backend };
     generated_code::constructor_lower_branch(&mut isle_ctx, branch, &targets)
+}
+
+fn overflow_branch_producer(ctx: &Lower<MInst>, branch: Inst) -> Option<Inst> {
+    let flag = ctx.input_as_value(branch, 0);
+    let ValueDef::Result(producer, 1) = ctx.dfg().value_def(flag) else {
+        return None;
+    };
+    // Leave intervening instructions, debug observations and extra users of
+    // the flag to ordinary lowering. In particular, a flag passed to a block
+    // is counted as a separate use even when that block is a branch target.
+    (ctx.f.layout.prev_inst(branch) == Some(producer)
+        && ctx.value_has_one_use(flag)
+        && ctx.f.dfg.values_labels.is_none()
+        && ctx.f.debug_tags.get(producer).is_empty()
+        && ctx.f.dfg.user_stack_map_entries(producer).is_none())
+    .then_some(producer)
 }
 
 impl Context for IsleContext<'_, '_, MInst, X64Backend> {
