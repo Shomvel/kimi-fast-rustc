@@ -26,3 +26,7 @@ rustc_private = true
 
 # Built separately from the root workspace: it links rustc_private.
 [workspace]
+
+# This workspace does not inherit the root release profile.
+[profile.release]
+codegen-units = 1
