@@ -759,6 +759,12 @@ impl FunctionGraph {
             .clone()
     }
 
+    /// If false, live operand and control ids already denote their targets.
+    /// The forwarding table can still contain aliases for retired ids.
+    pub(crate) fn may_have_forwarded_edges(&self) -> bool {
+        self.unresolved_edges
+    }
+
     pub(crate) fn control_flow(&self) -> crate::analysis::cfg::ControlFlow {
         let cached = self
             .cached_control_flow
