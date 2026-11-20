@@ -18,6 +18,32 @@ switches: `KFRC_CRANELIFT_OPT=none|speed|speed_and_size` (default `speed`),
 `KFRC_DUMP_MACHINE=<symbol substring>` prints the Cranelift IR and machine
 code of matching functions.
 
+`KFRC_GAP_SURVEY=/absolute/report/directory` enables an opt-in capability
+survey. It attempts every collected function/static independently and writes
+one `<crate>-<pid>.jsonl` report. Each item reports its first error; separate
+`intrinsic` records inventory MIR call sites even when conversion fails earlier.
+An executable entry-contract error is recorded without skipping its functions.
+Owned graph pipeline panics are recorded and their graphs discarded; rustc
+query/conversion failures can still terminate a report, so require a final
+`summary` with `status=complete`. This mode skips crate-wide graph transforms
+and linking, emits no object, and always exits with an error, including when
+every item passes. Dependency metadata must already exist; replaying target
+invocations against LLVM-built dependencies avoids hiding downstream gaps.
+
+The Cranelift layer supports 8/16/32/64-bit integer atomic load/store/fetch-add/
+fetch-sub/exchange/compare-exchange, thin-pointer load/store/exchange/CAS, and atomic/compiler fences through crate-private
+runtime routines. Calls retain conservative read/write effects and routines
+use Cranelift's sequentially consistent atomic instructions. Weaker requested
+orders are strengthened, weak CAS uses strong CAS, and compiler fences use a hardware fence. Other atomic
+operations and 128-bit atomics remain unsupported. This initial implementation
+trades call overhead for correctness without changing semantic IR memory rules.
+The `x86` baseline layer rejects these routines explicitly. Native Linux gates:
+
+```sh
+python3 tests/gap-survey/run.py /absolute/backend.so /new/result/directory
+python3 tests/atomics/run.py /absolute/backend.so /another/new/result/directory
+```
+
 Inlining prices the simplified call-site body against the ABI call sequence.
 The default is `KFRC_INLINE_COST_MODEL=callsite`: positive residual growth is
 160 relative units at ordinary/cold/unknown sites and 256 in cyclic S control

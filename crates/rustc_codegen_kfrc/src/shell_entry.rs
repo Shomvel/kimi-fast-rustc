@@ -27,14 +27,20 @@ pub(crate) struct UnitEntryPlan<'tcx> {
 
 impl<'tcx> UnitEntryPlan<'tcx> {
     pub(crate) fn new(tcx: TyCtxt<'tcx>) -> Option<Self> {
-        let (main_def_id, _) = tcx.entry_fn(())?;
+        Self::try_new(tcx).unwrap_or_else(|error| tcx.dcx().fatal(error))
+    }
+
+    pub(crate) fn try_new(tcx: TyCtxt<'tcx>) -> Result<Option<Self>, String> {
+        let Some((main_def_id, _)) = tcx.entry_fn(()) else {
+            return Ok(None);
+        };
         let main_ret_ty = tcx.fn_sig(main_def_id).no_bound_vars().unwrap().output();
         let main_ret_ty = tcx.normalize_erasing_regions(
             TypingEnv::fully_monomorphized(),
             main_ret_ty.no_bound_vars().unwrap(),
         );
         if !main_ret_ty.is_unit() {
-            tcx.dcx().fatal("kfrc: the PoC executable adapter currently supports `fn main() -> ()`; other Termination return types are not supported yet");
+            return Err("kfrc: the PoC executable adapter currently supports `fn main() -> ()`; other Termination return types are not supported yet".into());
         }
         let start = Instance::expect_resolve(
             tcx,
@@ -86,40 +92,37 @@ impl<'tcx> UnitEntryPlan<'tcx> {
         }
         let (Some(closure_ty), Some(principal), Some(internal)) = (closure_ty, principal, internal)
         else {
-            tcx.dcx().fatal("kfrc: rustc's unit `lang_start` MIR does not match the supported runtime adapter contract");
+            return Err("kfrc: rustc's unit `lang_start` MIR does not match the supported runtime adapter contract".into());
         };
         let ty::Closure(closure, _) = *closure_ty.kind() else {
-            tcx.dcx()
-                .fatal("kfrc: `lang_start` capture is not a closure");
+            return Err("kfrc: `lang_start` capture is not a closure".into());
         };
         let layout = tcx
             .layout_of(TypingEnv::fully_monomorphized().as_query_input(closure_ty))
-            .unwrap_or_else(|error| {
-                tcx.dcx()
-                    .fatal(format!("kfrc: unit entry capture layout: {error:?}"))
-            });
+            .map_err(|error| format!("kfrc: unit entry capture layout: {error:?}"))?;
         if layout.size.bytes() != 8 || layout.align.abi.bytes() > 8 {
-            tcx.dcx()
-                .fatal("kfrc: unit `lang_start` capture must contain exactly one function pointer");
+            return Err(
+                "kfrc: unit `lang_start` capture must contain exactly one function pointer".into(),
+            );
         }
         let abi = crate::abi::instance_abi(tcx, internal)
-            .unwrap_or_else(|error| tcx.dcx().fatal(format!("kfrc: unit runtime ABI: {error}")));
+            .map_err(|error| format!("kfrc: unit runtime ABI: {error}"))?;
         if abi.args.len() != 4
             || !abi.args[0].is_pair()
             || !abi.args[1..].iter().all(|mode| mode.is_direct())
             || abi.ret != PassMode::Direct
         {
-            tcx.dcx().fatal(format!(
+            return Err(format!(
                 "kfrc: unsupported lang_start_internal ABI: {abi:?}"
             ));
         }
         let vtable = tcx.vtable_allocation((closure_ty, Some(principal)));
-        Some(Self {
+        Ok(Some(Self {
             start,
             internal,
             closure,
             vtable,
-        })
+        }))
     }
 
     pub(crate) fn compile(

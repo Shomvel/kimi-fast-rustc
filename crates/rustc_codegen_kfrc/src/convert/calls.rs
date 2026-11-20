@@ -145,6 +145,21 @@ impl<'tcx> Converter<'tcx> {
             // FnDef values are zero-sized even when held in a MIR local or
             // projected aggregate field. Their nominal type identifies the
             // direct target; reading their operand cannot supply an address.
+            // Like cg_clif, the baseline x86 spin-loop performance hint is a
+            // no-op. Synchronization remains in the actual atomic operations.
+            if self.tcx.symbol_name(instance).name == "llvm.x86.sse2.pause" {
+                let abi = crate::abi::instance_abi(self.tcx, instance)?;
+                if !converted.is_empty()
+                    || !abi.args.is_empty()
+                    || abi.ret != kfrc_body::PassMode::Ignore
+                {
+                    return Err("invalid llvm.x86.sse2.pause ABI".into());
+                }
+                return target
+                    .as_ref()
+                    .map(|target| Terminator::Goto(block(target)))
+                    .ok_or_else(|| "spin-loop hint has no successor".to_owned());
+            }
             let callee = self.function_callee(instance)?;
             let Callee::Function { abi, symbol } = &callee else {
                 unreachable!()

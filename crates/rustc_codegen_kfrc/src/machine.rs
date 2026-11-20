@@ -68,6 +68,19 @@ fn cranelift() -> Result<&'static kfrc_cranelift::Machine, String> {
         .map_err(Clone::clone)
 }
 
+pub(crate) fn atomic_runtime(
+    symbol: &str,
+    operation: kfrc_cranelift::AtomicOperation,
+    bits: u8,
+    signed: bool,
+) -> Result<EncodedFunction, String> {
+    if layer()? != MachineLayer::Cranelift {
+        return Err("atomic runtime requires the Cranelift machine layer".into());
+    }
+    kfrc_cranelift::lower_atomic_runtime(symbol, operation, bits, signed, cranelift()?)
+        .map_err(|error| error.to_string())
+}
+
 /// Lowers one verified Layout graph with the selected machine layer.
 pub(crate) fn lower(graph: &kfrc_son::FunctionGraph) -> Result<EncodedFunction, String> {
     match layer()? {
