@@ -1,0 +1,464 @@
+[
+  {
+    "capture": "1795179171480367567-3da7dddfc4eab9ab.json",
+    "crate": "log",
+    "source_label": "atomic-v5",
+    "source_directory": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/surveys/atomic-v5/ripgrep/log-3da7dddfc4eab9ab",
+    "cranelift_opt": "speed",
+    "env_corrected": false,
+    "reports": [
+      {
+        "path": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/surveys/atomic-v5/ripgrep/log-3da7dddfc4eab9ab/reports/log-14758.jsonl",
+        "sha256": "a4e2bb2ea9c8aaf337c54fcd26a231825d95c431db2779362546db44a2dd1ea8"
+      }
+    ]
+  },
+  {
+    "capture": "1795179171482202476-a7d9c3cc5e0d5e9f.json",
+    "crate": "memchr",
+    "source_label": "atomic-v5",
+    "source_directory": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/surveys/atomic-v5/ripgrep/memchr-a7d9c3cc5e0d5e9f",
+    "cranelift_opt": "speed",
+    "env_corrected": false,
+    "reports": [
+      {
+        "path": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/surveys/atomic-v5/ripgrep/memchr-a7d9c3cc5e0d5e9f/reports/memchr-14762.jsonl",
+        "sha256": "320c016c84441331f2a346787b84690259d7d2241cd35444b76fdfcabb35765a"
+      }
+    ]
+  },
+  {
+    "capture": "1795179171490847731-2120df846db3e069.json",
+    "crate": "regex_syntax",
+    "source_label": "atomic-v5",
+    "source_directory": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/surveys/atomic-v5/ripgrep/regex_syntax-2120df846db3e069",
+    "cranelift_opt": "speed",
+    "env_corrected": false,
+    "reports": [
+      {
+        "path": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/surveys/atomic-v5/ripgrep/regex_syntax-2120df846db3e069/reports/regex_syntax-14766.jsonl",
+        "sha256": "659257e8bf7dbd5f1262d9b69d01259f876de02da866e89523404597ac2fb339"
+      }
+    ]
+  },
+  {
+    "capture": "1795179174320534489-98835ef1656a5ae4.json",
+    "crate": "aho_corasick",
+    "source_label": "atomic-v5",
+    "source_directory": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/surveys/atomic-v5/ripgrep/aho_corasick-98835ef1656a5ae4",
+    "cranelift_opt": "speed",
+    "env_corrected": false,
+    "reports": [
+      {
+        "path": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/surveys/atomic-v5/ripgrep/aho_corasick-98835ef1656a5ae4/reports/aho_corasick-15094.jsonl",
+        "sha256": "8815c7426de4603dc9f1490a7cf93fd74b6756b71f1a7c91a9c95d9d2b112056"
+      }
+    ]
+  },
+  {
+    "capture": "1795179174662869244-a6aa556d7d7fe900.json",
+    "crate": "cfg_if",
+    "source_label": "atomic-v5",
+    "source_directory": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/surveys/atomic-v5/ripgrep/cfg_if-a6aa556d7d7fe900",
+    "cranelift_opt": "speed",
+    "env_corrected": false,
+    "reports": [
+      {
+        "path": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/surveys/atomic-v5/ripgrep/cfg_if-a6aa556d7d7fe900/reports/cfg_if-15302.jsonl",
+        "sha256": "64f4ed15623b78a6387387ee98586f375c3d1a859ac67e9fadce91d0297ae2c5"
+      }
+    ]
+  },
+  {
+    "capture": "1795179175502858367-905f19fa77a215c7.json",
+    "crate": "regex_automata",
+    "source_label": "atomic-v5",
+    "source_directory": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/surveys/atomic-v5/ripgrep/regex_automata-905f19fa77a215c7",
+    "cranelift_opt": "speed",
+    "env_corrected": false,
+    "reports": [
+      {
+        "path": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/surveys/atomic-v5/ripgrep/regex_automata-905f19fa77a215c7/reports/regex_automata-15325.jsonl",
+        "sha256": "e3a3d140c2303b03271feeabf7d78da85813276d25b62d93feb124a1dcef948d"
+      }
+    ]
+  },
+  {
+    "capture": "1795179176864078003-06e2d122a8f2ac68.json",
+    "crate": "encoding_rs",
+    "source_label": "atomic-v5",
+    "source_directory": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/surveys/atomic-v5/ripgrep/encoding_rs-06e2d122a8f2ac68",
+    "cranelift_opt": "speed",
+    "env_corrected": false,
+    "reports": [
+      {
+        "path": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/surveys/atomic-v5/ripgrep/encoding_rs-06e2d122a8f2ac68/reports/encoding_rs-18204.jsonl",
+        "sha256": "5c6aa75595120e7248f29f3b7ffc4623d3290a59bde42f3da12717984320f687"
+      }
+    ]
+  },
+  {
+    "capture": "1795179176868626462-4e0a48ea55cedb0a.json",
+    "crate": "libc",
+    "source_label": "atomic-v5",
+    "source_directory": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/surveys/atomic-v5/ripgrep/libc-4e0a48ea55cedb0a",
+    "cranelift_opt": "speed",
+    "env_corrected": false,
+    "reports": [
+      {
+        "path": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/surveys/atomic-v5/ripgrep/libc-4e0a48ea55cedb0a/reports/libc-18286.jsonl",
+        "sha256": "f6eb3119c09929e08b4a1832653d537581ed92b35d72c0b33992c76d9e69aa15"
+      }
+    ]
+  },
+  {
+    "capture": "1795179177083869328-92c37b94ff0b9cc1.json",
+    "crate": "grep_matcher",
+    "source_label": "atomic-v5",
+    "source_directory": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/surveys/atomic-v5/ripgrep/grep_matcher-92c37b94ff0b9cc1",
+    "cranelift_opt": "speed",
+    "env_corrected": false,
+    "reports": [
+      {
+        "path": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/surveys/atomic-v5/ripgrep/grep_matcher-92c37b94ff0b9cc1/reports/grep_matcher-18300.jsonl",
+        "sha256": "b6c47e03851e472406229d444799370a5d9bf83b4ed8685909a5e5021a518c15"
+      }
+    ]
+  },
+  {
+    "capture": "1795179177222828782-b78196097baf81e2.json",
+    "crate": "memmap2",
+    "source_label": "atomic-v5",
+    "source_directory": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/surveys/atomic-v5/ripgrep/memmap2-b78196097baf81e2",
+    "cranelift_opt": "speed",
+    "env_corrected": false,
+    "reports": [
+      {
+        "path": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/surveys/atomic-v5/ripgrep/memmap2-b78196097baf81e2/reports/memmap2-18308.jsonl",
+        "sha256": "8f402591722e9f87fc90a6c4c48d01ea71e3eea8706ccbdc0fabc5462ad1c421"
+      }
+    ]
+  },
+  {
+    "capture": "1795179177320541994-349e76891660765f.json",
+    "crate": "serde",
+    "source_label": "atomic-v5",
+    "source_directory": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/surveys/atomic-v5/ripgrep/serde-349e76891660765f",
+    "cranelift_opt": "speed",
+    "env_corrected": false,
+    "reports": [
+      {
+        "path": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/surveys/atomic-v5/ripgrep/serde-349e76891660765f/reports/serde-18320.jsonl",
+        "sha256": "084a96742a43a3dd4be97fa880cfc4139917c6d69b4b3891e9eb933bf790ec65"
+      }
+    ]
+  },
+  {
+    "capture": "1795179177414158591-2cb444912923bc0a.json",
+    "crate": "crossbeam_utils",
+    "source_label": "atomic-v5",
+    "source_directory": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/surveys/atomic-v5/ripgrep/crossbeam_utils-2cb444912923bc0a",
+    "cranelift_opt": "speed",
+    "env_corrected": false,
+    "reports": [
+      {
+        "path": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/surveys/atomic-v5/ripgrep/crossbeam_utils-2cb444912923bc0a/reports/crossbeam_utils-18553.jsonl",
+        "sha256": "b83b756dd165409bb5c343047b3c10b111205d052f0189aeb92a7c396734da6b"
+      }
+    ]
+  },
+  {
+    "capture": "1795179178061485936-2e5a17633b5ceb6f.json",
+    "crate": "bstr",
+    "source_label": "atomic-v5",
+    "source_directory": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/surveys/atomic-v5/ripgrep/bstr-2e5a17633b5ceb6f",
+    "cranelift_opt": "speed",
+    "env_corrected": false,
+    "reports": [
+      {
+        "path": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/surveys/atomic-v5/ripgrep/bstr-2e5a17633b5ceb6f/reports/bstr-18650.jsonl",
+        "sha256": "db509ee7c28bc12a7aaf1a799794c9c31c35eeda47aa75947f72f3ffeca3024e"
+      }
+    ]
+  },
+  {
+    "capture": "1795179178508229397-950acc8a24bd6d15.json",
+    "crate": "globset",
+    "source_label": "atomic-v5",
+    "source_directory": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/surveys/atomic-v5/ripgrep/globset-950acc8a24bd6d15",
+    "cranelift_opt": "speed",
+    "env_corrected": false,
+    "reports": [
+      {
+        "path": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/surveys/atomic-v5/ripgrep/globset-950acc8a24bd6d15/reports/globset-18706.jsonl",
+        "sha256": "5149ed676180ed2cda95622cb7bc6e6759552629d31f86c2e5ed5e0714daa3e2"
+      }
+    ]
+  },
+  {
+    "capture": "1795179179464942141-c4c30a305624f6a8.json",
+    "crate": "encoding_rs_io",
+    "source_label": "atomic-v5",
+    "source_directory": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/surveys/atomic-v5/ripgrep/encoding_rs_io-c4c30a305624f6a8",
+    "cranelift_opt": "speed",
+    "env_corrected": false,
+    "reports": [
+      {
+        "path": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/surveys/atomic-v5/ripgrep/encoding_rs_io-c4c30a305624f6a8/reports/encoding_rs_io-18842.jsonl",
+        "sha256": "e7d1d6e262ed521dc6eae9ba7df26017a4b347603edc854d989cfcb533452a3b"
+      }
+    ]
+  },
+  {
+    "capture": "1795179179585467968-913e03ba0969c295.json",
+    "crate": "ryu",
+    "source_label": "atomic-v5",
+    "source_directory": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/surveys/atomic-v5/ripgrep/ryu-913e03ba0969c295",
+    "cranelift_opt": "speed",
+    "env_corrected": false,
+    "reports": [
+      {
+        "path": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/surveys/atomic-v5/ripgrep/ryu-913e03ba0969c295/reports/ryu-18863.jsonl",
+        "sha256": "94b971a672415496c9b822059aa5ba51ec4883a2723848dd9614a1d310ff4e21"
+      }
+    ]
+  },
+  {
+    "capture": "1795179179607360077-6f96fc33626287cf.json",
+    "crate": "itoa",
+    "source_label": "atomic-v5",
+    "source_directory": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/surveys/atomic-v5/ripgrep/itoa-6f96fc33626287cf",
+    "cranelift_opt": "speed",
+    "env_corrected": false,
+    "reports": [
+      {
+        "path": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/surveys/atomic-v5/ripgrep/itoa-6f96fc33626287cf/reports/itoa-18873.jsonl",
+        "sha256": "699c7f3af58b61b5312e582d15a2bd65d93d22c422ed234b3f5411024c797bba"
+      }
+    ]
+  },
+  {
+    "capture": "1795179179690635267-cb8754d0addd118e.json",
+    "crate": "termcolor",
+    "source_label": "atomic-v5",
+    "source_directory": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/surveys/atomic-v5/ripgrep/termcolor-cb8754d0addd118e",
+    "cranelift_opt": "speed",
+    "env_corrected": false,
+    "reports": [
+      {
+        "path": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/surveys/atomic-v5/ripgrep/termcolor-cb8754d0addd118e/reports/termcolor-18879.jsonl",
+        "sha256": "3503ff371af5b5961d0634148fe6435595b4dc58af31c65b596679bd2bacb136"
+      }
+    ]
+  },
+  {
+    "capture": "1795179179721477267-52b0f10af810fd8f.json",
+    "crate": "serde_json",
+    "source_label": "atomic-v5",
+    "source_directory": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/surveys/atomic-v5/ripgrep/serde_json-52b0f10af810fd8f",
+    "cranelift_opt": "speed",
+    "env_corrected": false,
+    "reports": [
+      {
+        "path": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/surveys/atomic-v5/ripgrep/serde_json-52b0f10af810fd8f/reports/serde_json-18898.jsonl",
+        "sha256": "8cadeaf7eb0bb5124ebbee22b90cd92667af6059b0929a4ac8185573bd1dad17"
+      }
+    ]
+  },
+  {
+    "capture": "1795179179752706284-1e1b28c0e70925d3.json",
+    "crate": "grep_searcher",
+    "source_label": "atomic-v5",
+    "source_directory": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/surveys/atomic-v5/ripgrep/grep_searcher-1e1b28c0e70925d3",
+    "cranelift_opt": "speed",
+    "env_corrected": false,
+    "reports": [
+      {
+        "path": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/surveys/atomic-v5/ripgrep/grep_searcher-1e1b28c0e70925d3/reports/grep_searcher-18923.jsonl",
+        "sha256": "5f3e7e78137d70714eaedfa4d13e413ad1487f7b2c62389e49aaaa83ebb5dd4b"
+      }
+    ]
+  },
+  {
+    "capture": "1795179179966055563-d8b2f35468da2361.json",
+    "crate": "crossbeam_epoch",
+    "source_label": "atomic-v5",
+    "source_directory": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/surveys/atomic-v5/ripgrep/crossbeam_epoch-d8b2f35468da2361",
+    "cranelift_opt": "speed",
+    "env_corrected": false,
+    "reports": [
+      {
+        "path": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/surveys/atomic-v5/ripgrep/crossbeam_epoch-d8b2f35468da2361/reports/crossbeam_epoch-18927.jsonl",
+        "sha256": "42a35ea02bf8ecb1c012616cc10fc775ad5969ce43d410dec1c4ef5751ba0ca0"
+      }
+    ]
+  },
+  {
+    "capture": "1795179180018133022-03c93d5347f4e65f.json",
+    "crate": "same_file",
+    "source_label": "atomic-v5",
+    "source_directory": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/surveys/atomic-v5/ripgrep/same_file-03c93d5347f4e65f",
+    "cranelift_opt": "speed",
+    "env_corrected": false,
+    "reports": [
+      {
+        "path": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/surveys/atomic-v5/ripgrep/same_file-03c93d5347f4e65f/reports/same_file-18931.jsonl",
+        "sha256": "9a8659c3e9751bb88b0a2cfeab4644f909ed1164f80a7e1efd8bd1b83e0f0152"
+      }
+    ]
+  },
+  {
+    "capture": "1795179180115634940-fcbe7f50ffd303b9.json",
+    "crate": "crossbeam_deque",
+    "source_label": "atomic-v5",
+    "source_directory": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/surveys/atomic-v5/ripgrep/crossbeam_deque-fcbe7f50ffd303b9",
+    "cranelift_opt": "speed",
+    "env_corrected": false,
+    "reports": [
+      {
+        "path": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/surveys/atomic-v5/ripgrep/crossbeam_deque-fcbe7f50ffd303b9/reports/crossbeam_deque-18935.jsonl",
+        "sha256": "4852f96751bbb5f7595cfe2776fa07726d899135bb45a875583c6fb74465e020"
+      }
+    ]
+  },
+  {
+    "capture": "1795179180194040561-023ec94c7a86b9ad.json",
+    "crate": "grep_printer",
+    "source_label": "atomic-v5",
+    "source_directory": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/surveys/atomic-v5/ripgrep/grep_printer-023ec94c7a86b9ad",
+    "cranelift_opt": "speed",
+    "env_corrected": false,
+    "reports": [
+      {
+        "path": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/surveys/atomic-v5/ripgrep/grep_printer-023ec94c7a86b9ad/reports/grep_printer-18939.jsonl",
+        "sha256": "5822fcd0fe87d85d3dc035cac6a180960b730b68774c94dd738321d4b5c15ca6"
+      }
+    ]
+  },
+  {
+    "capture": "1795179180246180272-7b6f40fec2d87fe4.json",
+    "crate": "walkdir",
+    "source_label": "atomic-v5",
+    "source_directory": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/surveys/atomic-v5/ripgrep/walkdir-7b6f40fec2d87fe4",
+    "cranelift_opt": "speed",
+    "env_corrected": false,
+    "reports": [
+      {
+        "path": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/surveys/atomic-v5/ripgrep/walkdir-7b6f40fec2d87fe4/reports/walkdir-18943.jsonl",
+        "sha256": "898fe9bda5b79d712c107cbd64e715c84bfad596d66aeaada99a2d8a848621b6"
+      }
+    ]
+  },
+  {
+    "capture": "1795179180467113614-7c6c2f8e394897ba.json",
+    "crate": "grep_cli",
+    "source_label": "atomic-v5",
+    "source_directory": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/surveys/atomic-v5/ripgrep/grep_cli-7c6c2f8e394897ba",
+    "cranelift_opt": "speed",
+    "env_corrected": false,
+    "reports": [
+      {
+        "path": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/surveys/atomic-v5/ripgrep/grep_cli-7c6c2f8e394897ba/reports/grep_cli-18947.jsonl",
+        "sha256": "265450e9bcf5fef41a909a9ec08c08c6c59acc56265432e8666d924264540879"
+      }
+    ]
+  },
+  {
+    "capture": "1795179180596058897-6c40bf9044ba1216.json",
+    "crate": "grep_regex",
+    "source_label": "atomic-v5",
+    "source_directory": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/surveys/atomic-v5/ripgrep/grep_regex-6c40bf9044ba1216",
+    "cranelift_opt": "speed",
+    "env_corrected": false,
+    "reports": [
+      {
+        "path": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/surveys/atomic-v5/ripgrep/grep_regex-6c40bf9044ba1216/reports/grep_regex-18951.jsonl",
+        "sha256": "f6d34ddddbc85d9c0a5c737e7e133c24c304928fdcd06c8ea627bc444ec6d0c5"
+      }
+    ]
+  },
+  {
+    "capture": "1795179180845906361-18a931bebb0ef4bc.json",
+    "crate": "grep",
+    "source_label": "atomic-v5",
+    "source_directory": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/surveys/atomic-v5/ripgrep/grep-18a931bebb0ef4bc",
+    "cranelift_opt": "speed",
+    "env_corrected": false,
+    "reports": [
+      {
+        "path": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/surveys/atomic-v5/ripgrep/grep-18a931bebb0ef4bc/reports/grep-18982.jsonl",
+        "sha256": "1dee3c99261c0c32bca505af5f5b9c5a883eede0041612a6ec3578a50e01078e"
+      }
+    ]
+  },
+  {
+    "capture": "1795179180904861286-c7ca983765a243ba.json",
+    "crate": "ignore",
+    "source_label": "atomic-v5",
+    "source_directory": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/surveys/atomic-v5/ripgrep/ignore-c7ca983765a243ba",
+    "cranelift_opt": "speed",
+    "env_corrected": false,
+    "reports": [
+      {
+        "path": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/surveys/atomic-v5/ripgrep/ignore-c7ca983765a243ba/reports/ignore-18986.jsonl",
+        "sha256": "8cf1b2057f90d9ca19c8f9290ce170af8bffcd092d3875296e84bcb7ac352e07"
+      }
+    ]
+  },
+  {
+    "capture": "1795179180955044808-0b99b2253134340f.json",
+    "crate": "lexopt",
+    "source_label": "atomic-v5",
+    "source_directory": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/surveys/atomic-v5/ripgrep/lexopt-0b99b2253134340f",
+    "cranelift_opt": "speed",
+    "env_corrected": false,
+    "reports": [
+      {
+        "path": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/surveys/atomic-v5/ripgrep/lexopt-0b99b2253134340f/reports/lexopt-19022.jsonl",
+        "sha256": "1fd200a9cd6b43c19f38f0e8b6c2dbe8ece63589d45e45937a881d6bab9ba7de"
+      }
+    ]
+  },
+  {
+    "capture": "1795179181016106659-dbd05f4ea8b6a277.json",
+    "crate": "textwrap",
+    "source_label": "atomic-v5",
+    "source_directory": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/surveys/atomic-v5/ripgrep/textwrap-dbd05f4ea8b6a277",
+    "cranelift_opt": "speed",
+    "env_corrected": false,
+    "reports": [
+      {
+        "path": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/surveys/atomic-v5/ripgrep/textwrap-dbd05f4ea8b6a277/reports/textwrap-19026.jsonl",
+        "sha256": "78750e485e4e78d8b83f05dfa543d330b6109fbc670ed252fa5836b695160b86"
+      }
+    ]
+  },
+  {
+    "capture": "1795179181310836930-954e4d9ac1584354.json",
+    "crate": "anyhow",
+    "source_label": "atomic-v5",
+    "source_directory": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/surveys/atomic-v5/ripgrep/anyhow-954e4d9ac1584354",
+    "cranelift_opt": "speed",
+    "env_corrected": false,
+    "reports": [
+      {
+        "path": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/surveys/atomic-v5/ripgrep/anyhow-954e4d9ac1584354/reports/anyhow-19030.jsonl",
+        "sha256": "cbaf3b8a0d7190fc08168c0399081b9a933da7e6ab2fb84725ea247446d5fe8b"
+      }
+    ]
+  },
+  {
+    "capture": "1795179181878105527-fff994d2644fff41.json",
+    "crate": "rg",
+    "source_label": "atomic-v5-env-corrected",
+    "source_directory": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/surveys/atomic-v5-env-corrected/ripgrep/rg-fff994d2644fff41",
+    "cranelift_opt": "speed",
+    "env_corrected": true,
+    "reports": [
+      {
+        "path": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/surveys/atomic-v5-env-corrected/ripgrep/rg-fff994d2644fff41/reports/rg-37551.jsonl",
+        "sha256": "f953235973e1ce9ec626a0adf327caefc2deabd6dc9f1d785bdd4e2e9017d53e"
+      }
+    ]
+  }
+]

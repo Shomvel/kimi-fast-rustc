@@ -1,0 +1,407 @@
+{
+  "project": "ripgrep",
+  "formal_target_units": 33,
+  "items": 35422,
+  "survey_complete": 33,
+  "baseline_errors": 1694,
+  "candidate_errors": 1369,
+  "default_baseline_success": 10,
+  "default_candidate_success": 12,
+  "unlocked": [
+    "log@0.4.22",
+    "walkdir@2.5.0"
+  ],
+  "regressed": [],
+  "first_error_categories": {
+    "C-variadic": {
+      "baseline": 1,
+      "candidate": 1,
+      "baseline_units": 1,
+      "crates": [
+        "memmap2@0.9.4"
+      ],
+      "representative_function": "os::MmapInner::remap"
+    },
+    "DST-size_of_val": {
+      "baseline": 11,
+      "candidate": 11,
+      "baseline_units": 3,
+      "crates": [
+        "aho-corasick@1.1.3",
+        "ignore@0.4.23",
+        "regex-automata@0.4.7"
+      ],
+      "representative_function": "<alloc::sync::Weak<dyn ahocorasick::AcAutomaton, &alloc::alloc::Global> as core::ops::Drop>::drop"
+    },
+    "DST-tail": {
+      "baseline": 30,
+      "candidate": 30,
+      "baseline_units": 7,
+      "crates": [
+        "aho-corasick@1.1.3",
+        "bstr@1.10.0",
+        "globset@0.4.15",
+        "grep-regex@0.1.13",
+        "ignore@0.4.23",
+        "regex-automata@0.4.7",
+        "ripgrep@14.1.1"
+      ],
+      "representative_function": "alloc::sync::Arc::<dyn ahocorasick::AcAutomaton>::drop_slow"
+    },
+    "LLVM-intrinsic": {
+      "baseline": 7,
+      "candidate": 2,
+      "baseline_units": 4,
+      "crates": [
+        "aho-corasick@1.1.3",
+        "ignore@0.4.23",
+        "log@0.4.22",
+        "ripgrep@14.1.1"
+      ],
+      "representative_function": "core::arch::x86_64::_mm256_shuffle_epi8"
+    },
+    "SIMD": {
+      "baseline": 548,
+      "candidate": 548,
+      "baseline_units": 13,
+      "crates": [
+        "aho-corasick@1.1.3",
+        "bstr@1.10.0",
+        "crossbeam-utils@0.8.20",
+        "globset@0.4.15",
+        "grep-cli@0.1.11",
+        "grep-regex@0.1.13",
+        "ignore@0.4.23",
+        "memchr@2.7.4",
+        "regex-automata@0.4.7",
+        "regex-syntax@0.8.4",
+        "ripgrep@14.1.1",
+        "serde@1.0.210",
+        "termcolor@1.4.1"
+      ],
+      "representative_function": "packed::teddy::generic::Teddy::<8>::verify::<core::arch::x86_64::__m128i>"
+    },
+    "TLS": {
+      "baseline": 10,
+      "candidate": 10,
+      "baseline_units": 5,
+      "crates": [
+        "crossbeam-utils@0.8.20",
+        "globset@0.4.15",
+        "ignore@0.4.23",
+        "regex-automata@0.4.7",
+        "ripgrep@14.1.1"
+      ],
+      "representative_function": "std::hash::RandomState::new::KEYS::{constant#0}::{closure#1}"
+    },
+    "aggregate-constant": {
+      "baseline": 31,
+      "candidate": 31,
+      "baseline_units": 9,
+      "crates": [
+        "grep-cli@0.1.11",
+        "grep-printer@0.2.2",
+        "grep-searcher@0.1.14",
+        "ignore@0.4.23",
+        "regex-automata@0.4.7",
+        "regex-syntax@0.8.4",
+        "ripgrep@14.1.1",
+        "serde_json@1.0.128",
+        "termcolor@1.4.1"
+      ],
+      "representative_function": "<std::sys::stdio::unix::Stderr as std::io::Write>::write_all"
+    },
+    "atomic_cxchg": {
+      "baseline": 15,
+      "candidate": 0,
+      "baseline_units": 8,
+      "crates": [
+        "bstr@1.10.0",
+        "crossbeam-epoch@0.9.18",
+        "crossbeam-utils@0.8.20",
+        "globset@0.4.15",
+        "grep-cli@0.1.11",
+        "ignore@0.4.23",
+        "log@0.4.22",
+        "ripgrep@14.1.1"
+      ],
+      "representative_function": "core::sync::atomic::atomic_compare_exchange::<*mut regex_automata::dfa::dense::DFA<&[u32]>>"
+    },
+    "atomic_cxchgweak": {
+      "baseline": 5,
+      "candidate": 0,
+      "baseline_units": 3,
+      "crates": [
+        "crossbeam-epoch@0.9.18",
+        "ignore@0.4.23",
+        "ripgrep@14.1.1"
+      ],
+      "representative_function": "std::sync::atomic::atomic_compare_exchange_weak::<usize>"
+    },
+    "atomic_fence": {
+      "baseline": 12,
+      "candidate": 0,
+      "baseline_units": 12,
+      "crates": [
+        "aho-corasick@1.1.3",
+        "bstr@1.10.0",
+        "crossbeam-epoch@0.9.18",
+        "crossbeam-utils@0.8.20",
+        "globset@0.4.15",
+        "grep-cli@0.1.11",
+        "grep-printer@0.2.2",
+        "grep-regex@0.1.13",
+        "ignore@0.4.23",
+        "regex-automata@0.4.7",
+        "ripgrep@14.1.1",
+        "walkdir@2.5.0"
+      ],
+      "representative_function": "core::sync::atomic::fence"
+    },
+    "atomic_load": {
+      "baseline": 39,
+      "candidate": 0,
+      "baseline_units": 17,
+      "crates": [
+        "aho-corasick@1.1.3",
+        "bstr@1.10.0",
+        "crossbeam-epoch@0.9.18",
+        "crossbeam-utils@0.8.20",
+        "globset@0.4.15",
+        "grep-cli@0.1.11",
+        "grep-printer@0.2.2",
+        "grep-regex@0.1.13",
+        "grep-searcher@0.1.14",
+        "ignore@0.4.23",
+        "log@0.4.22",
+        "memchr@2.7.4",
+        "memmap2@0.9.4",
+        "regex-automata@0.4.7",
+        "ripgrep@14.1.1",
+        "serde_json@1.0.128",
+        "termcolor@1.4.1"
+      ],
+      "representative_function": "core::sync::atomic::atomic_load::<*mut ()>"
+    },
+    "atomic_or": {
+      "baseline": 8,
+      "candidate": 8,
+      "baseline_units": 2,
+      "crates": [
+        "crossbeam-epoch@0.9.18",
+        "ripgrep@14.1.1"
+      ],
+      "representative_function": "std::sync::atomic::AtomicUsize::fetch_or"
+    },
+    "atomic_singlethreadfence": {
+      "baseline": 2,
+      "candidate": 0,
+      "baseline_units": 2,
+      "crates": [
+        "crossbeam-epoch@0.9.18",
+        "ignore@0.4.23"
+      ],
+      "representative_function": "std::sync::atomic::compiler_fence"
+    },
+    "atomic_store": {
+      "baseline": 19,
+      "candidate": 0,
+      "baseline_units": 10,
+      "crates": [
+        "crossbeam-epoch@0.9.18",
+        "crossbeam-utils@0.8.20",
+        "globset@0.4.15",
+        "grep-cli@0.1.11",
+        "ignore@0.4.23",
+        "log@0.4.22",
+        "memchr@2.7.4",
+        "memmap2@0.9.4",
+        "ripgrep@14.1.1",
+        "termcolor@1.4.1"
+      ],
+      "representative_function": "std::sync::atomic::atomic_store::<usize>"
+    },
+    "atomic_xadd": {
+      "baseline": 58,
+      "candidate": 0,
+      "baseline_units": 9,
+      "crates": [
+        "aho-corasick@1.1.3",
+        "crossbeam-epoch@0.9.18",
+        "crossbeam-utils@0.8.20",
+        "globset@0.4.15",
+        "grep-cli@0.1.11",
+        "grep-printer@0.2.2",
+        "ignore@0.4.23",
+        "regex-automata@0.4.7",
+        "ripgrep@14.1.1"
+      ],
+      "representative_function": "<alloc::sync::Arc<dyn util::prefilter::PrefilterI> as core::clone::Clone>::clone"
+    },
+    "atomic_xchg": {
+      "baseline": 25,
+      "candidate": 0,
+      "baseline_units": 6,
+      "crates": [
+        "crossbeam-utils@0.8.20",
+        "globset@0.4.15",
+        "grep-cli@0.1.11",
+        "ignore@0.4.23",
+        "ripgrep@14.1.1",
+        "termcolor@1.4.1"
+      ],
+      "representative_function": "<std::sync::MutexGuard<'_, sync::sharded_lock::ThreadIndices> as core::ops::Drop>::drop"
+    },
+    "atomic_xsub": {
+      "baseline": 145,
+      "candidate": 0,
+      "baseline_units": 12,
+      "crates": [
+        "aho-corasick@1.1.3",
+        "bstr@1.10.0",
+        "crossbeam-epoch@0.9.18",
+        "crossbeam-utils@0.8.20",
+        "globset@0.4.15",
+        "grep-cli@0.1.11",
+        "grep-printer@0.2.2",
+        "grep-regex@0.1.13",
+        "ignore@0.4.23",
+        "regex-automata@0.4.7",
+        "ripgrep@14.1.1",
+        "walkdir@2.5.0"
+      ],
+      "representative_function": "<alloc::sync::Arc<dyn ahocorasick::AcAutomaton> as core::ops::Drop>::drop"
+    },
+    "compiler-panic": {
+      "baseline": 4,
+      "candidate": 4,
+      "baseline_units": 1,
+      "crates": [
+        "regex-automata@0.4.7"
+      ],
+      "representative_function": "meta::strategy::ReverseSuffix::try_search_half_start"
+    },
+    "float-ABI": {
+      "baseline": 83,
+      "candidate": 83,
+      "baseline_units": 6,
+      "crates": [
+        "grep-printer@0.2.2",
+        "ripgrep@14.1.1",
+        "ryu@1.0.18",
+        "serde@1.0.210",
+        "serde_json@1.0.128",
+        "textwrap@0.16.1"
+      ],
+      "representative_function": "util::NiceDuration::fractional_seconds"
+    },
+    "float-other": {
+      "baseline": 171,
+      "candidate": 171,
+      "baseline_units": 4,
+      "crates": [
+        "ripgrep@14.1.1",
+        "serde@1.0.210",
+        "serde_json@1.0.128",
+        "textwrap@0.16.1"
+      ],
+      "representative_function": "alloc::collections::btree::node::Handle::<alloc::collections::btree::node::NodeRef<alloc::collections::btree::node::marker::Mut<'_>, std::string::String, serde_json::Value, alloc::collections::btree::node::marker::Leaf>, alloc::collections::btree::node::marker::Edge>::insert::<std::alloc::Global>"
+    },
+    "i128-u128": {
+      "baseline": 241,
+      "candidate": 241,
+      "baseline_units": 10,
+      "crates": [
+        "aho-corasick@1.1.3",
+        "anyhow@1.0.87",
+        "bstr@1.10.0",
+        "globset@0.4.15",
+        "memchr@2.7.4",
+        "regex-automata@0.4.7",
+        "ripgrep@14.1.1",
+        "ryu@1.0.18",
+        "serde@1.0.210",
+        "serde_json@1.0.128"
+      ],
+      "representative_function": "util::prefilter::Builder::ascii_case_insensitive"
+    },
+    "runtime-entry": {
+      "baseline": 1,
+      "candidate": 1,
+      "baseline_units": 1,
+      "crates": [
+        "ripgrep@14.1.1"
+      ],
+      "representative_function": "executable runtime adapter"
+    },
+    "uninhabited-value": {
+      "baseline": 5,
+      "candidate": 5,
+      "baseline_units": 3,
+      "crates": [
+        "grep-regex@0.1.13",
+        "ignore@0.4.23",
+        "ripgrep@14.1.1"
+      ],
+      "representative_function": "<std::result::Result<std::vec::in_place_drop::InPlaceDrop<regex_syntax::hir::Hir>, !> as std::ops::FromResidual<std::result::Result<std::convert::Infallible, !>>>::from_residual"
+    },
+    "union": {
+      "baseline": 134,
+      "candidate": 134,
+      "baseline_units": 8,
+      "crates": [
+        "aho-corasick@1.1.3",
+        "anyhow@1.0.87",
+        "bstr@1.10.0",
+        "globset@0.4.15",
+        "grep-regex@0.1.13",
+        "regex-automata@0.4.7",
+        "regex-syntax@0.8.4",
+        "ripgrep@14.1.1"
+      ],
+      "representative_function": "memchr::memmem::searcher::Searcher::new::<memchr::arch::all::packedpair::DefaultFrequencyRank>"
+    },
+    "unreachable-control": {
+      "baseline": 71,
+      "candidate": 71,
+      "baseline_units": 4,
+      "crates": [
+        "aho-corasick@1.1.3",
+        "regex-automata@0.4.7",
+        "ripgrep@14.1.1",
+        "serde_json@1.0.128"
+      ],
+      "representative_function": "alloc::collections::btree::search::<impl alloc::collections::btree::node::NodeRef<alloc::collections::btree::node::marker::Mut<'_>, alloc::boxed::Box<[u8]>, usize, alloc::collections::btree::node::marker::LeafOrInternal>>::search_tree::<alloc::boxed::Box<[u8]>>"
+    },
+    "unwind": {
+      "baseline": 7,
+      "candidate": 7,
+      "baseline_units": 3,
+      "crates": [
+        "grep-cli@0.1.11",
+        "ignore@0.4.23",
+        "ripgrep@14.1.1"
+      ],
+      "representative_function": "std::thread::lifecycle::spawn_unchecked::<'_, {closure@crates/cli/src/process.rs:282:32: 282:39}, process::CommandError>::{closure#1}"
+    },
+    "verification-other": {
+      "baseline": 9,
+      "candidate": 9,
+      "baseline_units": 2,
+      "crates": [
+        "aho-corasick@1.1.3",
+        "memchr@2.7.4"
+      ],
+      "representative_function": "core::arch::x86_64::_mm256_permute2x128_si256::<33>"
+    },
+    "volatile-memory": {
+      "baseline": 2,
+      "candidate": 2,
+      "baseline_units": 1,
+      "crates": [
+        "ignore@0.4.23"
+      ],
+      "representative_function": "std::ptr::read_volatile::<std::mem::MaybeUninit<walk::Message>>"
+    }
+  }
+}

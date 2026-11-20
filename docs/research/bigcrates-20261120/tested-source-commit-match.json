@@ -1,0 +1,114 @@
+{
+  "commit": "e653303",
+  "files": [
+    {
+      "path": "crates/kfrc-cranelift/src/atomic.rs",
+      "sha256": "d2bc6e900eba7a9937cdf677e802b6e75a71b51074a29411c355b77eb4ebcd46",
+      "commit_sha256": "d2bc6e900eba7a9937cdf677e802b6e75a71b51074a29411c355b77eb4ebcd46",
+      "equal": true
+    },
+    {
+      "path": "crates/kfrc-cranelift/src/lib.rs",
+      "sha256": "d85663d2f68a497de73632f6285234e1aa7352e14f98927b1b2be69fcad1c5c2",
+      "commit_sha256": "d85663d2f68a497de73632f6285234e1aa7352e14f98927b1b2be69fcad1c5c2",
+      "equal": true
+    },
+    {
+      "path": "crates/kfrc-son/src/build/semantic.rs",
+      "sha256": "bf958fb019a50bd4e05432a7c02b8e3f35b9369cdad543e8c0d33e0fa808f010",
+      "commit_sha256": "bf958fb019a50bd4e05432a7c02b8e3f35b9369cdad543e8c0d33e0fa808f010",
+      "equal": true
+    },
+    {
+      "path": "crates/rustc_codegen_kfrc/src/atomic.rs",
+      "sha256": "8c2ee19bd8623921994691431a2dac8183f3bf42c53d956530bc9ca3f3cda248",
+      "commit_sha256": "8c2ee19bd8623921994691431a2dac8183f3bf42c53d956530bc9ca3f3cda248",
+      "equal": true
+    },
+    {
+      "path": "crates/rustc_codegen_kfrc/src/convert/calls.rs",
+      "sha256": "d81bb75ba75936bb8183fe915318b9c3105c2ea880532b009c0d2b9e0e274efb",
+      "commit_sha256": "d81bb75ba75936bb8183fe915318b9c3105c2ea880532b009c0d2b9e0e274efb",
+      "equal": true
+    },
+    {
+      "path": "crates/rustc_codegen_kfrc/src/convert/intrinsics.rs",
+      "sha256": "84796c71cae3286cc3b517daa98dbaf3888f0d197a06e979cf0ae307b2b8f366",
+      "commit_sha256": "84796c71cae3286cc3b517daa98dbaf3888f0d197a06e979cf0ae307b2b8f366",
+      "equal": true
+    },
+    {
+      "path": "crates/rustc_codegen_kfrc/src/convert/intrinsics/atomic.rs",
+      "sha256": "2997e3a7f0bd576059941c7cd9ac6fd60e37668b9bc5a4460690bab8ad479182",
+      "commit_sha256": "2997e3a7f0bd576059941c7cd9ac6fd60e37668b9bc5a4460690bab8ad479182",
+      "equal": true
+    },
+    {
+      "path": "crates/rustc_codegen_kfrc/src/lib.rs",
+      "sha256": "f812356ecce759ce33586ca3a655fadd3f921dee6d6cfabc2d3b020bb328934c",
+      "commit_sha256": "f812356ecce759ce33586ca3a655fadd3f921dee6d6cfabc2d3b020bb328934c",
+      "equal": true
+    },
+    {
+      "path": "crates/rustc_codegen_kfrc/src/machine.rs",
+      "sha256": "19a369c5dd24e20ba495ec7c994c7a663be8aa8fe4d76aecaa70c2aa9e2646ab",
+      "commit_sha256": "19a369c5dd24e20ba495ec7c994c7a663be8aa8fe4d76aecaa70c2aa9e2646ab",
+      "equal": true
+    },
+    {
+      "path": "crates/rustc_codegen_kfrc/src/shell_entry.rs",
+      "sha256": "229feebec751889909a80eb0159e74c49d12486d9f80977752d0597b0e2cd9b7",
+      "commit_sha256": "229feebec751889909a80eb0159e74c49d12486d9f80977752d0597b0e2cd9b7",
+      "equal": true
+    },
+    {
+      "path": "crates/rustc_codegen_kfrc/src/survey.rs",
+      "sha256": "973e39eeac70fb2ebc99f9519d0edd2f64acd487026bf60bc2dc0e06c86b1acd",
+      "commit_sha256": "973e39eeac70fb2ebc99f9519d0edd2f64acd487026bf60bc2dc0e06c86b1acd",
+      "equal": true
+    },
+    {
+      "path": "crates/rustc_codegen_kfrc/tests/atomics/driver.rs",
+      "sha256": "addb51c22b77c15ad2260a5972b87ee06c6fdb3f4f19b11562b995d8345add88",
+      "commit_sha256": "addb51c22b77c15ad2260a5972b87ee06c6fdb3f4f19b11562b995d8345add88",
+      "equal": true
+    },
+    {
+      "path": "crates/rustc_codegen_kfrc/tests/atomics/library.rs",
+      "sha256": "03b71309feade053a60f23d1c2b0ef63c48a80322cd3e7f5e1e1131d2ad2e6b5",
+      "commit_sha256": "03b71309feade053a60f23d1c2b0ef63c48a80322cd3e7f5e1e1131d2ad2e6b5",
+      "equal": true
+    },
+    {
+      "path": "crates/rustc_codegen_kfrc/tests/atomics/run.py",
+      "sha256": "b51d8b6d2fb47c6ab16e810b48406fa3d049ff4e40d5c9d2c5642e78293eb5d2",
+      "commit_sha256": "b51d8b6d2fb47c6ab16e810b48406fa3d049ff4e40d5c9d2c5642e78293eb5d2",
+      "equal": true
+    },
+    {
+      "path": "crates/rustc_codegen_kfrc/tests/gap-survey/mixed.rs",
+      "sha256": "1db7ad8d8ca8a31df696bb1895e34ffeb59ebae52e0c4967d56170b9411ba88b",
+      "commit_sha256": "1db7ad8d8ca8a31df696bb1895e34ffeb59ebae52e0c4967d56170b9411ba88b",
+      "equal": true
+    },
+    {
+      "path": "crates/rustc_codegen_kfrc/tests/gap-survey/nonunit.rs",
+      "sha256": "f49d503ef8988f454b0c25dd38c80bef12b8ad79c33986767dfde19eb0dc7468",
+      "commit_sha256": "f49d503ef8988f454b0c25dd38c80bef12b8ad79c33986767dfde19eb0dc7468",
+      "equal": true
+    },
+    {
+      "path": "crates/rustc_codegen_kfrc/tests/gap-survey/run.py",
+      "sha256": "a0efe270aee3951b291166db7d76e1c4b73515c77ce9183b751acb0902318510",
+      "commit_sha256": "a0efe270aee3951b291166db7d76e1c4b73515c77ce9183b751acb0902318510",
+      "equal": true
+    },
+    {
+      "path": "crates/rustc_codegen_kfrc/tests/gap-survey/supported.rs",
+      "sha256": "ee5936e2f4a3e239a738fbcd812b1cb4c109391855d6b729eeaf7d21bc053e30",
+      "commit_sha256": "ee5936e2f4a3e239a738fbcd812b1cb4c109391855d6b729eeaf7d21bc053e30",
+      "equal": true
+    }
+  ],
+  "all_equal": true
+}

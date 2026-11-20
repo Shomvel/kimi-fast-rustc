@@ -1,0 +1,2658 @@
+[
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179247425596728-6f751cab62f058bd.json",
+    "project": "cargo",
+    "crate": "cfg_if",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179247485142326-5aa85669fd2a13fc.json",
+    "project": "cargo",
+    "crate": "memchr",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179247505479996-6edbfb16bd716f46.json",
+    "project": "cargo",
+    "crate": "regex_syntax",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179247546342864-188b16c5311aadfa.json",
+    "project": "cargo",
+    "crate": "libc",
+    "declared": {},
+    "missing": {},
+    "mismatch": {},
+    "build_output": "/workspace/bigcrates/targets/cargo-llvm/x86_64-unknown-linux-gnu/release/build/libc-9402665e0d3fe067/output",
+    "build_output_sha256": "6fd4ca9c0e81d164a136a64fa0a4d3f2d923b56b0ac2a37bcdfd6e53751aa1e1"
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179248321822360-aa0daa0a4cd980b3.json",
+    "project": "cargo",
+    "crate": "aho_corasick",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179249223345589-34962b5ac2cc5b01.json",
+    "project": "cargo",
+    "crate": "regex_automata",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179250072695165-65ac6a043406136c.json",
+    "project": "cargo",
+    "crate": "smallvec",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179250530920886-8f6049bf20bd2e88.json",
+    "project": "cargo",
+    "crate": "serde_core",
+    "declared": {},
+    "missing": {},
+    "mismatch": {},
+    "build_output": "/workspace/bigcrates/targets/cargo-llvm/x86_64-unknown-linux-gnu/release/build/serde_core-9cf249831d35df95/output",
+    "build_output_sha256": "b05731ace603d330b9a7aaf76b8433df15c3e1b2a3a95f4c644d5f5ed0c82f84"
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179250977011304-00fa35264eb3f74c.json",
+    "project": "cargo",
+    "crate": "zeroize",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179251134911650-ebe26e720fa6e543.json",
+    "project": "cargo",
+    "crate": "typenum",
+    "declared": {},
+    "missing": {},
+    "mismatch": {},
+    "build_output": "/workspace/bigcrates/targets/cargo-llvm/x86_64-unknown-linux-gnu/release/build/typenum-fec09507cb08f5ac/output",
+    "build_output_sha256": "7a428326ee000ef6286c61befa6cfa6e77fcf9b94415d8c78ce552a0e8a763d0"
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179251697527071-dd1e0516700c90e7.json",
+    "project": "cargo",
+    "crate": "bstr",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179252070382956-8feef75ba095e661.json",
+    "project": "cargo",
+    "crate": "stable_deref_trait",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179252192539847-8ece110754633a90.json",
+    "project": "cargo",
+    "crate": "thiserror",
+    "declared": {},
+    "missing": {},
+    "mismatch": {},
+    "build_output": "/workspace/bigcrates/targets/cargo-llvm/x86_64-unknown-linux-gnu/release/build/thiserror-a35a465591a38225/output",
+    "build_output_sha256": "ad1113b8ebb2db3d94ee5eba7241acecc46a9052ec86efc92e377871671a6e49"
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179252449787066-f4fcac1f0be2ff8c.json",
+    "project": "cargo",
+    "crate": "once_cell",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179252647962004-6913284d3c836a5d.json",
+    "project": "cargo",
+    "crate": "subtle",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179252959038707-225a6d8cf9d5baca.json",
+    "project": "cargo",
+    "crate": "generic_array",
+    "declared": {},
+    "missing": {},
+    "mismatch": {},
+    "build_output": "/workspace/bigcrates/targets/cargo-llvm/x86_64-unknown-linux-gnu/release/build/generic-array-f331f6c97aa92f10/output",
+    "build_output_sha256": "728ed3558e77726a99b8d4db0825e424cd99543ac81da7d80f84a5e04cf74869"
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179252966364713-de09304b7cc36c1e.json",
+    "project": "cargo",
+    "crate": "const_oid",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179253013233276-8397821ad82c9528.json",
+    "project": "cargo",
+    "crate": "tinyvec_macros",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179253074832920-d82e8ff3a0efdaee.json",
+    "project": "cargo",
+    "crate": "fastrand",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179253155187540-3c417448f88edcd3.json",
+    "project": "cargo",
+    "crate": "tinyvec",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179253255995803-df9ed02d29edbf95.json",
+    "project": "cargo",
+    "crate": "crossbeam_utils",
+    "declared": {},
+    "missing": {},
+    "mismatch": {},
+    "build_output": "/workspace/bigcrates/targets/cargo-llvm/x86_64-unknown-linux-gnu/release/build/crossbeam-utils-e68a036251a10c27/output",
+    "build_output_sha256": "cb6814e09e64fb079e8defed607f9407cb5ef09b64fd8a31d4c581164f39bac5"
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179253309117921-7c70e50bdd3bf392.json",
+    "project": "cargo",
+    "crate": "bitflags",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179253524443551-c273df03c4920d3b.json",
+    "project": "cargo",
+    "crate": "unicode_normalization",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179253580958735-0890e38c6985c342.json",
+    "project": "cargo",
+    "crate": "scopeguard",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179253608112959-5ff85ad65a3c7114.json",
+    "project": "cargo",
+    "crate": "gix_trace",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179253653374063-7b7d34fe24577b22.json",
+    "project": "cargo",
+    "crate": "lock_api",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179253702132718-8aa8a61ef069c6bf.json",
+    "project": "cargo",
+    "crate": "parking_lot_core",
+    "declared": {},
+    "missing": {},
+    "mismatch": {},
+    "build_output": "/workspace/bigcrates/targets/cargo-llvm/x86_64-unknown-linux-gnu/release/build/parking_lot_core-f3d42df10d804f20/output",
+    "build_output_sha256": "f6dc58a2d4ce160182484eba215b3ef517436c90653f38b7b05ff641ea59e2a4"
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179253823846578-95c123e62c4351a4.json",
+    "project": "cargo",
+    "crate": "gix_utils",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179253928048257-55bc854649bba93f.json",
+    "project": "cargo",
+    "crate": "block_buffer",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179253930302551-44b7b84dddf12456.json",
+    "project": "cargo",
+    "crate": "gix_validate",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179254031730069-732b5f2be1248a2a.json",
+    "project": "cargo",
+    "crate": "crypto_common",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179254137228944-e698047255f7a6bc.json",
+    "project": "cargo",
+    "crate": "same_file",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179254224406028-eb6d00be53814d3c.json",
+    "project": "cargo",
+    "crate": "gix_path",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179254247103180-3ed36032c995b2fc.json",
+    "project": "cargo",
+    "crate": "walkdir",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179254316757387-12a3c40ebc0fdaa4.json",
+    "project": "cargo",
+    "crate": "digest",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179254324381428-01ca6d6829dcac12.json",
+    "project": "cargo",
+    "crate": "parking_lot",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179254526734753-2a8067a1469a30dd.json",
+    "project": "cargo",
+    "crate": "zlib_rs",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179254543140203-2d55c3632805a830.json",
+    "project": "cargo",
+    "crate": "crc32fast",
+    "declared": {},
+    "missing": {},
+    "mismatch": {},
+    "build_output": "/workspace/bigcrates/targets/cargo-llvm/x86_64-unknown-linux-gnu/release/build/crc32fast-ea9e8b35c617419e/output",
+    "build_output_sha256": "16a16fe27e731e0110496467a5a7d53642695cadd71fd326f0caef961381f8a0"
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179254566089280-6e2e01836d348cb6.json",
+    "project": "cargo",
+    "crate": "prodash",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179254818688961-dc38d956033d3365.json",
+    "project": "cargo",
+    "crate": "crossbeam_channel",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179255095793752-2222cb3bc5a34725.json",
+    "project": "cargo",
+    "crate": "bytes",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179255232496487-246f08a861b3bbed.json",
+    "project": "cargo",
+    "crate": "itoa",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179255327556549-d10ccf991ad60c78.json",
+    "project": "cargo",
+    "crate": "cpufeatures",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179255537433586-1b201c8383bc26b8.json",
+    "project": "cargo",
+    "crate": "byteorder",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179255662752916-ff4512856701b486.json",
+    "project": "cargo",
+    "crate": "hash32",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179255896540455-775134ef404f1501.json",
+    "project": "cargo",
+    "crate": "foldhash",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179256027228221-945aeaa07f54a1f9.json",
+    "project": "cargo",
+    "crate": "equivalent",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179256096502011-a9b4d7ef94f6c965.json",
+    "project": "cargo",
+    "crate": "allocator_api2",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179256166062167-d66d55e3cd57bd22.json",
+    "project": "cargo",
+    "crate": "heapless",
+    "declared": {},
+    "missing": {},
+    "mismatch": {},
+    "build_output": "/workspace/bigcrates/targets/cargo-llvm/x86_64-unknown-linux-gnu/release/build/heapless-f9a3514109ab7d83/output",
+    "build_output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179256349091156-6cccc646fe8fb8b3.json",
+    "project": "cargo",
+    "crate": "hashbrown",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179256515086868-83701af1ae8a6e58.json",
+    "project": "cargo",
+    "crate": "gix_features",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179256528531287-c4b493acee757880.json",
+    "project": "cargo",
+    "crate": "faster_hex",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179256812284453-fef2248b8caa533a.json",
+    "project": "cargo",
+    "crate": "linux_raw_sys",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179256827196864-f8b84c4a694d4c06.json",
+    "project": "cargo",
+    "crate": "sha1",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179256922218709-b46c55a4bf595363.json",
+    "project": "cargo",
+    "crate": "jiff",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179257007839520-d55661b40e56cbf2.json",
+    "project": "cargo",
+    "crate": "winnow",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179257065057212-4ec8600b7a5d3eec.json",
+    "project": "cargo",
+    "crate": "rustix",
+    "declared": {},
+    "missing": {},
+    "mismatch": {},
+    "build_output": "/workspace/bigcrates/targets/cargo-llvm/x86_64-unknown-linux-gnu/release/build/rustix-be743927e3c27dfb/output",
+    "build_output_sha256": "7d847dfd34d215f2ce35bd48a35e35a5430fa50280de8a9b13dad50e39817064"
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179257543577178-cbf175c860239987.json",
+    "project": "cargo",
+    "crate": "sha1_checked",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179257924869568-b79c95ff83fa7d30.json",
+    "project": "cargo",
+    "crate": "gix_hash",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179258172632629-9bed398bf38dd12a.json",
+    "project": "cargo",
+    "crate": "getrandom",
+    "declared": {},
+    "missing": {},
+    "mismatch": {},
+    "build_output": "/workspace/bigcrates/targets/cargo-llvm/x86_64-unknown-linux-gnu/release/build/getrandom-205a562fb596e156/output",
+    "build_output_sha256": "dd454a92dee8a02b053b2cf6f15c04b2ff982baaa108229e76ba230456bca222"
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179258238042359-d800d5db67fdaae5.json",
+    "project": "cargo",
+    "crate": "gix_hashtable",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179258368835653-516233a51487781f.json",
+    "project": "cargo",
+    "crate": "memmap2",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179258544605374-6a84ea40c6519349.json",
+    "project": "cargo",
+    "crate": "tempfile",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179259164573088-30785a4c30d7c7f2.json",
+    "project": "cargo",
+    "crate": "zerofrom",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179259169162479-a88f7f3da2b31b75.json",
+    "project": "cargo",
+    "crate": "hashbrown",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179259248324660-e515908a8afc5630.json",
+    "project": "cargo",
+    "crate": "gix_date",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179259676320876-e0a79e379551a3b7.json",
+    "project": "cargo",
+    "crate": "gix_actor",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179259935568491-d2564d16a63756db.json",
+    "project": "cargo",
+    "crate": "gix_object",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179260228379218-319e6e379d7c24d6.json",
+    "project": "cargo",
+    "crate": "dashmap",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179260272792315-fcaf0f2fb5e19a85.json",
+    "project": "cargo",
+    "crate": "yoke",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179260661581275-0cecab710355710f.json",
+    "project": "cargo",
+    "crate": "gix_fs",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179260672485231-97666c6294b9c4c7.json",
+    "project": "cargo",
+    "crate": "gix_chunk",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179260675291802-ff81d4fff2c379f2.json",
+    "project": "cargo",
+    "crate": "gix_quote",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179260908141580-524e30dd4390b47b.json",
+    "project": "cargo",
+    "crate": "gix_tempfile",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179261269662725-e01333d17c0c24fd.json",
+    "project": "cargo",
+    "crate": "gix_commitgraph",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179261346089081-46bceff1eb1bdc14.json",
+    "project": "cargo",
+    "crate": "gix_glob",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179261411708114-6099836856e61aef.json",
+    "project": "cargo",
+    "crate": "zerovec",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179261520236201-3077efcefe4281b2.json",
+    "project": "cargo",
+    "crate": "gix_revwalk",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179261631659449-e482db14df98b236.json",
+    "project": "cargo",
+    "crate": "gix_lock",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179261880171869-5370e43404331404.json",
+    "project": "cargo",
+    "crate": "getrandom",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179261889069742-4ea9d317fbed6962.json",
+    "project": "cargo",
+    "crate": "percent_encoding",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179262052464571-13b6e53c3fdc9b4f.json",
+    "project": "cargo",
+    "crate": "rand_core",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179262149717606-f465bc19648fb761.json",
+    "project": "cargo",
+    "crate": "tinystr",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179262232191961-97a68e44970bf6af.json",
+    "project": "cargo",
+    "crate": "gix_config_value",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179262405356975-8fb63688632526df.json",
+    "project": "cargo",
+    "crate": "unicode_bom",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179262520568668-f162ef4ec7af25fe.json",
+    "project": "cargo",
+    "crate": "writeable",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179262563842625-9e5f8e8fe4357c3d.json",
+    "project": "cargo",
+    "crate": "litemap",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179262662264175-a5ac51badf085650.json",
+    "project": "cargo",
+    "crate": "potential_utf",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179262691478305-fdd771c37eafcd74.json",
+    "project": "cargo",
+    "crate": "icu_locale_core",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179262776063000-c6931db5a0c80d4d.json",
+    "project": "cargo",
+    "crate": "zerotrie",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179263020086348-be0a2d01995cc587.json",
+    "project": "cargo",
+    "crate": "serde",
+    "declared": {},
+    "missing": {},
+    "mismatch": {},
+    "build_output": "/workspace/bigcrates/targets/cargo-llvm/x86_64-unknown-linux-gnu/release/build/serde-60279a4e1466df57/output",
+    "build_output_sha256": "fbefaabcc65c2512e804f217336578c3751a411d58efabf3d24b8a74e2072fbb"
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179263048612482-0a3b8131d6008250.json",
+    "project": "cargo",
+    "crate": "openssl_sys",
+    "declared": {},
+    "missing": {},
+    "mismatch": {},
+    "build_output": "/workspace/bigcrates/targets/cargo-llvm/x86_64-unknown-linux-gnu/release/build/openssl-sys-1fe3e8de469b3ce4/output",
+    "build_output_sha256": "655d47c6c853296c3a6a52ff7c33a995918b0d96189893e6916bcdc01bcfd5c9"
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179263404916037-4a7fc9e3353fede6.json",
+    "project": "cargo",
+    "crate": "libz_sys",
+    "declared": {},
+    "missing": {},
+    "mismatch": {},
+    "build_output": "/workspace/bigcrates/targets/cargo-llvm/x86_64-unknown-linux-gnu/release/build/libz-sys-722d59e96ab52fd9/output",
+    "build_output_sha256": "dd72988b9f27237b669101ddff133f670f639fd28ff8ce88ae32f6838629a86d"
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179263481557205-57afc410b260a9ab.json",
+    "project": "cargo",
+    "crate": "base64ct",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179263669444916-13d97bd53e63f029.json",
+    "project": "cargo",
+    "crate": "static_assertions",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179263728333712-e7e741c27f818101.json",
+    "project": "cargo",
+    "crate": "kstring",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179263761867471-9242f9093cdd412c.json",
+    "project": "cargo",
+    "crate": "pem_rfc7468",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179263788327559-0013370f8a79d16c.json",
+    "project": "cargo",
+    "crate": "icu_provider",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179263866434304-41c2d309c63376ef.json",
+    "project": "cargo",
+    "crate": "icu_collections",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179264019038616-bfb673b94105d0d8.json",
+    "project": "cargo",
+    "crate": "gix_sec",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179264208680556-3e9ba5e85af9a2f8.json",
+    "project": "cargo",
+    "crate": "log",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179264221823085-87f60e2598235a13.json",
+    "project": "cargo",
+    "crate": "shell_words",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179264274265519-a1ab47675a99a916.json",
+    "project": "cargo",
+    "crate": "der",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179264356266207-10c7eeaf3b00e5e6.json",
+    "project": "cargo",
+    "crate": "gix_command",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179264375060602-f0bdf38bbc1175b8.json",
+    "project": "cargo",
+    "crate": "gix_attributes",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179264576710837-d94fd592ce5b0138.json",
+    "project": "cargo",
+    "crate": "icu_normalizer_data",
+    "declared": {},
+    "missing": {},
+    "mismatch": {},
+    "build_output": "/workspace/bigcrates/targets/cargo-llvm/x86_64-unknown-linux-gnu/release/build/icu_normalizer_data-990ba6d98fa358cb/output",
+    "build_output_sha256": "ece878c98bc1889e08fb1fc6fcec4b5a0c5e411de88c231a3c36c736b8d813c9"
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179264659903694-e8c1b9ff155311d0.json",
+    "project": "cargo",
+    "crate": "icu_properties_data",
+    "declared": {},
+    "missing": {},
+    "mismatch": {},
+    "build_output": "/workspace/bigcrates/targets/cargo-llvm/x86_64-unknown-linux-gnu/release/build/icu_properties_data-889c3cac096bac6b/output",
+    "build_output_sha256": "ece878c98bc1889e08fb1fc6fcec4b5a0c5e411de88c231a3c36c736b8d813c9"
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179264805417121-292df43f908bb3a8.json",
+    "project": "cargo",
+    "crate": "filetime",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179264996652751-420f1d2f54c586f7.json",
+    "project": "cargo",
+    "crate": "spki",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179265182897129-724a20a31feb8760.json",
+    "project": "cargo",
+    "crate": "icu_normalizer",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179265192403770-ba8e8fbc886ec692.json",
+    "project": "cargo",
+    "crate": "icu_properties",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179265309876438-c3da896ff0e08dda.json",
+    "project": "cargo",
+    "crate": "zmij",
+    "declared": {},
+    "missing": {},
+    "mismatch": {},
+    "build_output": "/workspace/bigcrates/targets/cargo-llvm/x86_64-unknown-linux-gnu/release/build/zmij-7689a447f37ebf5a/output",
+    "build_output_sha256": "08dbd2575c25f2d26463d6bf1fdb873ec20e7ce1094628705acfecbfed4590df"
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179265478405582-3ab7e42ce51b827a.json",
+    "project": "cargo",
+    "crate": "gix_ref",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179266028089850-d5cb2d8f9db1c9fc.json",
+    "project": "cargo",
+    "crate": "hmac",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179266139730773-08e3fe65d5139ee4.json",
+    "project": "cargo",
+    "crate": "openssl_probe",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179266385746676-1eed747e1eafe91c.json",
+    "project": "cargo",
+    "crate": "idna_adapter",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179266492131053-38edffb81d56246f.json",
+    "project": "cargo",
+    "crate": "serde_json",
+    "declared": {},
+    "missing": {},
+    "mismatch": {},
+    "build_output": "/workspace/bigcrates/targets/cargo-llvm/x86_64-unknown-linux-gnu/release/build/serde_json-ef3643ab0d2247d2/output",
+    "build_output_sha256": "6bb524834a0c0657c682dbb81bc6eeb23ac92c48da502f17ce4455240e5d062b"
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179266980627391-60fa28e64732c288.json",
+    "project": "cargo",
+    "crate": "pkcs8",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179267268631712-1216fb25c47851ca.json",
+    "project": "cargo",
+    "crate": "ff",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179267400730364-59606b29eec0bf16.json",
+    "project": "cargo",
+    "crate": "gix_traverse",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179267504999463-3f5449732ea07dc5.json",
+    "project": "cargo",
+    "crate": "gix_packetline",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179267758789121-1d05893af3294980.json",
+    "project": "cargo",
+    "crate": "tracing_core",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179267766165401-3914d70daad003c8.json",
+    "project": "cargo",
+    "crate": "gix_bitmap",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179267892204337-89505e7c454b2184.json",
+    "project": "cargo",
+    "crate": "socket2",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179268280139342-d390278cb449cb43.json",
+    "project": "cargo",
+    "crate": "fnv",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179268376806763-f2ef07c684e6c300.json",
+    "project": "cargo",
+    "crate": "base16ct",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179268455705470-729bd915cd89d906.json",
+    "project": "cargo",
+    "crate": "utf8_iter",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179268528838481-9a89136bae02862c.json",
+    "project": "cargo",
+    "crate": "sec1",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179268603394675-773098ca291c2c8b.json",
+    "project": "cargo",
+    "crate": "idna",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179268835408416-ae345c1bfce08ae3.json",
+    "project": "cargo",
+    "crate": "gix_index",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179269539629580-3266472c9477120c.json",
+    "project": "cargo",
+    "crate": "group",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179269704325181-ec26b82ad11f4672.json",
+    "project": "cargo",
+    "crate": "hkdf",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179269851766756-86f5e2feec5c34ca.json",
+    "project": "cargo",
+    "crate": "libnghttp2_sys",
+    "declared": {},
+    "missing": {},
+    "mismatch": {},
+    "build_output": "/workspace/bigcrates/targets/cargo-llvm/x86_64-unknown-linux-gnu/release/build/libnghttp2-sys-fdcd55db08e2bb8f/output",
+    "build_output_sha256": "444d0ca144beb25cb8ede712dd013cf67e1028a16e9bf76e74049655a5a90f24"
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179269936680021-cc5d45a846c39b5e.json",
+    "project": "cargo",
+    "crate": "gix_pathspec",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179270015896322-bfb3dc726d05db58.json",
+    "project": "cargo",
+    "crate": "curl_sys",
+    "declared": {},
+    "missing": {},
+    "mismatch": {},
+    "build_output": "/workspace/bigcrates/targets/cargo-llvm/x86_64-unknown-linux-gnu/release/build/curl-sys-a12ad33e45e71398/output",
+    "build_output_sha256": "736c319e709eac492b92be28e32da8dbc160037f5c180d890992daf257900116"
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179270104945011-b51ee78698d8bb01.json",
+    "project": "cargo",
+    "crate": "curl",
+    "declared": {},
+    "missing": {},
+    "mismatch": {},
+    "build_output": "/workspace/bigcrates/targets/cargo-llvm/x86_64-unknown-linux-gnu/release/build/curl-9578db41e6849be6/output",
+    "build_output_sha256": "308a586d4a122c20e480a464fea29111c84c037f57cd490118f2f6b1d024cfbb"
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179270117019845-1226ba733392aae7.json",
+    "project": "cargo",
+    "crate": "gix_ignore",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179270347661578-71232f077af41371.json",
+    "project": "cargo",
+    "crate": "crypto_bigint",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179270553260749-8fa33ce5dbbb5a4f.json",
+    "project": "cargo",
+    "crate": "gix_url",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179270873723123-38150d82aebbbd15.json",
+    "project": "cargo",
+    "crate": "form_urlencoded",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179271560829338-45acc52afc97bcd8.json",
+    "project": "cargo",
+    "crate": "pin_project_lite",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179271576302325-0615403b92c82bb2.json",
+    "project": "cargo",
+    "crate": "utf8parse",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179271637931673-24f02e0a746732b0.json",
+    "project": "cargo",
+    "crate": "foldhash",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179271646367827-02f7f8f946f45634.json",
+    "project": "cargo",
+    "crate": "powerfmt",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179271657665491-4609973d3377bc06.json",
+    "project": "cargo",
+    "crate": "anstyle",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179271778571024-02ef683862e3cbc2.json",
+    "project": "cargo",
+    "crate": "deranged",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179271807722010-9fe2e99e957d6d1b.json",
+    "project": "cargo",
+    "crate": "hashbrown",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179271862747780-3440d154901e08ab.json",
+    "project": "cargo",
+    "crate": "anstyle_parse",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179271997340425-0d4ab0f4be868899.json",
+    "project": "cargo",
+    "crate": "tracing",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179272231117689-ae98ed7d21401a82.json",
+    "project": "cargo",
+    "crate": "elliptic_curve",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179272318364527-a64c7861624d5cd9.json",
+    "project": "cargo",
+    "crate": "url",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179272466288463-fddcd44125070ad5.json",
+    "project": "cargo",
+    "crate": "gix_worktree",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179272738461702-0c6de757f6b8b4d9.json",
+    "project": "cargo",
+    "crate": "gix_prompt",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179272804338511-1cb14912bc31ce88.json",
+    "project": "cargo",
+    "crate": "gix_revision",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179273014531168-542d6c5e49a55d96.json",
+    "project": "cargo",
+    "crate": "encoding_rs",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179273211265545-6d4060fc43a8f198.json",
+    "project": "cargo",
+    "crate": "time_core",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179273316948255-12cd00ba3cfd0f4f.json",
+    "project": "cargo",
+    "crate": "anstyle_query",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179273386072921-c68fee69cd6b6065.json",
+    "project": "cargo",
+    "crate": "num_conv",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179273472056484-b53ebd9618428a92.json",
+    "project": "cargo",
+    "crate": "colorchoice",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179273686217315-511c14dab099c05b.json",
+    "project": "cargo",
+    "crate": "is_terminal_polyfill",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179274170882865-176416ae4cc5be66.json",
+    "project": "cargo",
+    "crate": "anstream",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179274282109660-b8e75f442a7b6f20.json",
+    "project": "cargo",
+    "crate": "gix_filter",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179274448170188-e5e1edfe093ce1c4.json",
+    "project": "cargo",
+    "crate": "time",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179275214533726-1166ca8fec4d786c.json",
+    "project": "cargo",
+    "crate": "gix_refspec",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179275613730351-111fc1471d634cff.json",
+    "project": "cargo",
+    "crate": "gix_credentials",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179275808794866-4ab4981ed64f33cb.json",
+    "project": "cargo",
+    "crate": "num_traits",
+    "declared": {},
+    "missing": {},
+    "mismatch": {},
+    "build_output": "/workspace/bigcrates/targets/cargo-llvm/x86_64-unknown-linux-gnu/release/build/num-traits-deee4ed57bc24bb7/output",
+    "build_output_sha256": "b3381c2f8957591e2f83be8bc409d3b9785a8a220c4373dc1ddc455b725153f9"
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179276055773117-59cc6c581a86ad7e.json",
+    "project": "cargo",
+    "crate": "anyhow",
+    "declared": {},
+    "missing": {},
+    "mismatch": {},
+    "build_output": "/workspace/bigcrates/targets/cargo-llvm/x86_64-unknown-linux-gnu/release/build/anyhow-6dccb20ab31f02a6/output",
+    "build_output_sha256": "8354243510e5d419f073ca0f9efc8c8279a0322161d41063dfda2aea33269a98"
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179276187557740-dd9e399c4118e8c9.json",
+    "project": "cargo",
+    "crate": "typeid",
+    "declared": {},
+    "missing": {},
+    "mismatch": {},
+    "build_output": "/workspace/bigcrates/targets/cargo-llvm/x86_64-unknown-linux-gnu/release/build/typeid-1b97cebf20b701da/output",
+    "build_output_sha256": "23844256b94608261c9bebe9321801540fb1bb1540cfe8d7e37efb6c5f371ce7"
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179276260108360-52a0fcbbb1915889.json",
+    "project": "cargo",
+    "crate": "imara_diff",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179276320202446-74c7503e50acf314.json",
+    "project": "cargo",
+    "crate": "zerocopy",
+    "declared": {},
+    "missing": {},
+    "mismatch": {},
+    "build_output": "/workspace/bigcrates/targets/cargo-llvm/x86_64-unknown-linux-gnu/release/build/zerocopy-611246d5049fff83/output",
+    "build_output_sha256": "9ab8550163d9894c422ec19f18fd46abc7068ec7cf8020340e09af14c5d35cc5"
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179276435701408-1dd14c4be37d13ac.json",
+    "project": "cargo",
+    "crate": "gix_discover",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179276542443348-9c1613906af3578d.json",
+    "project": "cargo",
+    "crate": "libssh2_sys",
+    "declared": {},
+    "missing": {},
+    "mismatch": {},
+    "build_output": "/workspace/bigcrates/targets/cargo-llvm/x86_64-unknown-linux-gnu/release/build/libssh2-sys-dcbc135546aee52d/output",
+    "build_output_sha256": "4e63ac5c0e0de91ef1a6ca6913b8b7fb1a25fefa9f4859e0774779ef9c1090fd"
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179276636842203-ca65674aec8089ac.json",
+    "project": "cargo",
+    "crate": "rfc6979",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179276713736498-a3f23cfc3aa89a21.json",
+    "project": "cargo",
+    "crate": "signature",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179276808840296-e395799fdce6c7e4.json",
+    "project": "cargo",
+    "crate": "terminal_size",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179276817195799-14d274869ff2acad.json",
+    "project": "cargo",
+    "crate": "toml_parser",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179277099520142-76d2b190cff064e0.json",
+    "project": "cargo",
+    "crate": "indexmap",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179277303530450-d1b7f7d55425f721.json",
+    "project": "cargo",
+    "crate": "sha2",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179277422471020-41f6893e761706dd.json",
+    "project": "cargo",
+    "crate": "crossbeam_epoch",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179277551074305-32c0fa746cd55799.json",
+    "project": "cargo",
+    "crate": "toml_datetime",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179277680020570-123aed30299bb774.json",
+    "project": "cargo",
+    "crate": "serde_spanned",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179277781217022-3dddf8ae54a0bc6d.json",
+    "project": "cargo",
+    "crate": "strsim",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179277893658430-b70828e7cd49d5fe.json",
+    "project": "cargo",
+    "crate": "base64",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179278139002190-1951b432de00dd0c.json",
+    "project": "cargo",
+    "crate": "clap_lex",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179278165984709-081bd1f9e362e3ba.json",
+    "project": "cargo",
+    "crate": "clru",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179278331746983-cd72c9eb386784e7.json",
+    "project": "cargo",
+    "crate": "toml_writer",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179278339903578-e8897b90c4702e30.json",
+    "project": "cargo",
+    "crate": "lazy_static",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179278407856275-0a07e5645839d5f4.json",
+    "project": "cargo",
+    "crate": "sharded_slab",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179278481734939-baa638f07a5762ea.json",
+    "project": "cargo",
+    "crate": "gix_pack",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179278765200044-82f51ed57cbd33b0.json",
+    "project": "cargo",
+    "crate": "clap_builder",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179279385476539-a06051e68c454cae.json",
+    "project": "cargo",
+    "crate": "gix_transport",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179280347669623-9a09a4f5d64be035.json",
+    "project": "cargo",
+    "crate": "crossbeam_deque",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179280596616662-2d237cb384d915c1.json",
+    "project": "cargo",
+    "crate": "ppv_lite86",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179281283009262-083aecc185fe116b.json",
+    "project": "cargo",
+    "crate": "ecdsa",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179281641047417-08f48ae5996e01eb.json",
+    "project": "cargo",
+    "crate": "gix_dir",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179281674446115-1e901a1346031655.json",
+    "project": "cargo",
+    "crate": "gix_diff",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179282661576474-b12a8609bbfd8124.json",
+    "project": "cargo",
+    "crate": "erased_serde",
+    "declared": {},
+    "missing": {},
+    "mismatch": {},
+    "build_output": "/workspace/bigcrates/targets/cargo-llvm/x86_64-unknown-linux-gnu/release/build/erased-serde-bf0a9bfcfd4d2f0c/output",
+    "build_output_sha256": "e18aa0a6d8bc038d8be01c064d207eaefa1412edd991b27eb123b0664c53fecc"
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179282671204787-1e32ed6b3b96226e.json",
+    "project": "cargo",
+    "crate": "ordered_float",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179283059355683-0006d867d499403d.json",
+    "project": "cargo",
+    "crate": "primeorder",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179283106892935-c7c172a359f83049.json",
+    "project": "cargo",
+    "crate": "tracing_log",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179283238890306-cb59d36f53e8a256.json",
+    "project": "cargo",
+    "crate": "gix_config",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179283294461210-6803f221cf2b6a51.json",
+    "project": "cargo",
+    "crate": "globset",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179284061903998-c9cc297f9060c12f.json",
+    "project": "cargo",
+    "crate": "gix_shallow",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179284422127396-98147404c88c68e9.json",
+    "project": "cargo",
+    "crate": "gix_negotiate",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179284779804263-ff41599a3e29ba2b.json",
+    "project": "cargo",
+    "crate": "rand_core",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179284962938989-fc8b2bc886e9d38e.json",
+    "project": "cargo",
+    "crate": "bitmaps",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179285329611243-a081a6cc853ccecd.json",
+    "project": "cargo",
+    "crate": "matchers",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179285450407763-0d4624bf3532af3c.json",
+    "project": "cargo",
+    "crate": "thread_local",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179285543542672-82a6a5356893f03c.json",
+    "project": "cargo",
+    "crate": "arc_swap",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179285617049409-9bc875fe5cb158f3.json",
+    "project": "cargo",
+    "crate": "nu_ansi_term",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179285759010253-73147c19cb4fb10e.json",
+    "project": "cargo",
+    "crate": "fiat_crypto",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179285877865325-b7787d24606f37ae.json",
+    "project": "cargo",
+    "crate": "tracing_subscriber",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179287712652965-94c3ee03a7d00b26.json",
+    "project": "cargo",
+    "crate": "gix_odb",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179289045868197-049bfc3e53a52fd5.json",
+    "project": "cargo",
+    "crate": "gix_protocol",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179290076243561-c3941c4dda78678d.json",
+    "project": "cargo",
+    "crate": "sized_chunks",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179290709328425-101f3fa7868661cd.json",
+    "project": "cargo",
+    "crate": "orion",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179290777250306-da0372134baa1d52.json",
+    "project": "cargo",
+    "crate": "rand_chacha",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179291181586334-357295d68a35db17.json",
+    "project": "cargo",
+    "crate": "gix_submodule",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179291783603130-d49b017410c7f073.json",
+    "project": "cargo",
+    "crate": "ignore",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179292502283078-a58e58727dc7a7f7.json",
+    "project": "cargo",
+    "crate": "p384",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179293126700594-9ce442415865d06b.json",
+    "project": "cargo",
+    "crate": "nix",
+    "declared": {},
+    "missing": {},
+    "mismatch": {},
+    "build_output": "/workspace/bigcrates/targets/cargo-llvm/x86_64-unknown-linux-gnu/release/build/nix-a67fd76b87c18941/output",
+    "build_output_sha256": "8dffe6abb224d5a55443f0c194e029aee9cf6c3c1a03699ff209fde55e0d09b8"
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179293362115071-e0303b738f4ef367.json",
+    "project": "cargo",
+    "crate": "serde_untagged",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179293362673936-c61f665dbcd37149.json",
+    "project": "cargo",
+    "crate": "serde_value",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179293574404389-9dfe0d3f978c6020.json",
+    "project": "cargo",
+    "crate": "gix_status",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179293639919547-ebfe10cb03fbac63.json",
+    "project": "cargo",
+    "crate": "clap",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179294120732366-9e8e3a5cadc92384.json",
+    "project": "cargo",
+    "crate": "toml",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179294148335982-70bc00438cccc7b3.json",
+    "project": "cargo",
+    "crate": "cargo_credential",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179295294188796-dc4ee89951ec8165.json",
+    "project": "cargo",
+    "crate": "rand_xoshiro",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179295304198519-b9270015f41aa7ed.json",
+    "project": "cargo",
+    "crate": "ed25519_compact",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179295697525672-06ddf6df0d34ebde.json",
+    "project": "cargo",
+    "crate": "hashlink",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179295887027402-e6e756fab8223d0f.json",
+    "project": "cargo",
+    "crate": "libz_rs_sys",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179296040021125-2bff232bc6a307e9.json",
+    "project": "cargo",
+    "crate": "semver",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179296106019646-ec2426f0068d0f4e.json",
+    "project": "cargo",
+    "crate": "regex",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179296328051356-ae9f068b08e3bcd8.json",
+    "project": "cargo",
+    "crate": "jobserver",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179296537601104-c272cea25185660c.json",
+    "project": "cargo",
+    "crate": "libloading",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179296713136857-e9a738d3b2cecec5.json",
+    "project": "cargo",
+    "crate": "either",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179296722658340-c749b29ceaaa025a.json",
+    "project": "cargo",
+    "crate": "constant_time_eq",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179296819873319-f86302b4d1ccb548.json",
+    "project": "cargo",
+    "crate": "shlex",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179296873655943-a704f4bd3d1bfb7c.json",
+    "project": "cargo",
+    "crate": "unicode_ident",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179296987697610-fba3b9176c562eb6.json",
+    "project": "cargo",
+    "crate": "unicode_width",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179297040469186-7070c87ec532242b.json",
+    "project": "cargo",
+    "crate": "shell_escape",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179297200027368-84a55149322c4a7e.json",
+    "project": "cargo",
+    "crate": "ct_codecs",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179297203536496-d871a82e829784e6.json",
+    "project": "cargo",
+    "crate": "arrayref",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179297266415239-3f4d52a697092917.json",
+    "project": "cargo",
+    "crate": "hex",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179297368360309-ca7d1958698db670.json",
+    "project": "cargo",
+    "crate": "fallible_iterator",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179297444141553-c5fb09d4c6c78553.json",
+    "project": "cargo",
+    "crate": "fallible_streaming_iterator",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179297545758543-0e2adede75611054.json",
+    "project": "cargo",
+    "crate": "arrayvec",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179297590469505-d03f1664b911dff5.json",
+    "project": "cargo",
+    "crate": "is_executable",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179297668866644-fb9a503673aab791.json",
+    "project": "cargo",
+    "crate": "blake3",
+    "declared": {},
+    "missing": {},
+    "mismatch": {},
+    "build_output": "/workspace/bigcrates/targets/cargo-llvm/x86_64-unknown-linux-gnu/release/build/blake3-65f1fa4afd337206/output",
+    "build_output_sha256": "7ad709d9e7b5420cafb732f560c25a300bb1df0a0aafa1c0e9ae6068a61d91b0"
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179297682171294-46b77e4c12c1e7ac.json",
+    "project": "cargo",
+    "crate": "clap_complete",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179298017026704-6f2cf1acec5a6121.json",
+    "project": "cargo",
+    "crate": "cargo_util",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179298905769145-40f8bf592ab1fea5.json",
+    "project": "cargo",
+    "crate": "pasetors",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179298951054986-198773b63fbf0f1e.json",
+    "project": "cargo",
+    "crate": "annotate_snippets",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179300082947501-749d059024c9dbd6.json",
+    "project": "cargo",
+    "crate": "cargo_util_schemas",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179300793572124-b018bc273dd30fbb.json",
+    "project": "cargo",
+    "crate": "itertools",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179301425673611-7acd19a5aaf20d45.json",
+    "project": "cargo",
+    "crate": "cargo_credential_libsecret",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179301617072815-944f06da685aecdb.json",
+    "project": "cargo",
+    "crate": "flate2",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179301840258247-3080e05899eadd6f.json",
+    "project": "cargo",
+    "crate": "im_rc",
+    "declared": {},
+    "missing": {},
+    "mismatch": {},
+    "build_output": "/workspace/bigcrates/targets/cargo-llvm/x86_64-unknown-linux-gnu/release/build/im-rc-7a85305e02a8acb6/output",
+    "build_output_sha256": "dd454a92dee8a02b053b2cf6f15c04b2ff982baaa108229e76ba230456bca222"
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179301948578804-6be40c3474dda8b5.json",
+    "project": "cargo",
+    "crate": "color_print",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179302018364668-08b6481388efc966.json",
+    "project": "cargo",
+    "crate": "gix",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179302629839793-1bd36d04c469d653.json",
+    "project": "cargo",
+    "crate": "os_info",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179302970257105-e685551d5c2c877d.json",
+    "project": "cargo",
+    "crate": "rand",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179303379999353-34425c35518fa6c5.json",
+    "project": "cargo",
+    "crate": "tracing_chrome",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179303663731968-89f054ed9364bd58.json",
+    "project": "cargo",
+    "crate": "toml_edit",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179305039696044-d6ce7521dfc69ff0.json",
+    "project": "cargo",
+    "crate": "crates_io",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179306690982100-84bd69d3157d8728.json",
+    "project": "cargo",
+    "crate": "rustfix",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179307209183451-e4c2e63ce35ced5a.json",
+    "project": "cargo",
+    "crate": "tar",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179308349319122-b82b7a0f6d9108ab.json",
+    "project": "cargo",
+    "crate": "opener",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179309046426787-946531caf7abb55c.json",
+    "project": "cargo",
+    "crate": "cargo_platform",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179309723317583-1161936d1ccf289c.json",
+    "project": "cargo",
+    "crate": "serde_ignored",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179309989487181-cf045a82e9035816.json",
+    "project": "cargo",
+    "crate": "http_auth",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179310198063877-fcf6520a1dfe9107.json",
+    "project": "cargo",
+    "crate": "rustc_hash",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179310284010063-5776b3d474c2ab15.json",
+    "project": "cargo",
+    "crate": "glob",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179310313767154-fc3b2b6090572b77.json",
+    "project": "cargo",
+    "crate": "pathdiff",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179310386850360-6ff870b942c267e8.json",
+    "project": "cargo",
+    "crate": "unicase",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179310576958375-5e8683092804e8a5.json",
+    "project": "cargo",
+    "crate": "home",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179310653747734-8ac83cc5c110d300.json",
+    "project": "cargo",
+    "crate": "supports_hyperlinks",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179310679847775-da8143d5df9545f5.json",
+    "project": "cargo",
+    "crate": "rustc_stable_hash",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179310795125156-dd067c557aaf5b6f.json",
+    "project": "cargo",
+    "crate": "supports_unicode",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179319121276702-ac68749fbb8eb7e0.json",
+    "project": "cargo",
+    "crate": "libgit2_sys",
+    "declared": {},
+    "missing": {},
+    "mismatch": {},
+    "build_output": "/workspace/bigcrates/targets/cargo-llvm/x86_64-unknown-linux-gnu/release/build/libgit2-sys-1f6d27a19d9f98be/output",
+    "build_output_sha256": "2e1bf37cb07cd7888c265af3cd74db5273ca5c313c374a92ff3e267fe450a438"
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179319294531681-f92ab70e2717d6e4.json",
+    "project": "cargo",
+    "crate": "git2",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179321010418200-cde6c0e0d5a6e3b8.json",
+    "project": "cargo",
+    "crate": "git2_curl",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179321148584498-e51622d517071a9f.json",
+    "project": "cargo",
+    "crate": "libsqlite3_sys",
+    "declared": {},
+    "missing": {},
+    "mismatch": {},
+    "build_output": "/workspace/bigcrates/targets/cargo-llvm/x86_64-unknown-linux-gnu/release/build/libsqlite3-sys-8474b1e2396a57f3/output",
+    "build_output_sha256": "efc04f13e624878bbfbea52ad62ceeec077a32ad43efa652d7d5d4026a87b069"
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179321338040541-2c6d1c13fd9f4b34.json",
+    "project": "cargo",
+    "crate": "rusqlite",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179321963665640-9c7e1539aa9119db.json",
+    "project": "cargo",
+    "crate": "cargo",
+    "declared": {
+      "CARGO_COMMIT_HASH": "85eff7c80277b57f78b11e28d14154ab12fcf643",
+      "CARGO_COMMIT_SHORT_HASH": "85eff7c80",
+      "CARGO_COMMIT_DATE": "2026-01-15",
+      "RUST_HOST_TARGET": "x86_64-unknown-linux-gnu"
+    },
+    "missing": {
+      "CARGO_COMMIT_HASH": "85eff7c80277b57f78b11e28d14154ab12fcf643",
+      "CARGO_COMMIT_SHORT_HASH": "85eff7c80",
+      "CARGO_COMMIT_DATE": "2026-01-15",
+      "RUST_HOST_TARGET": "x86_64-unknown-linux-gnu"
+    },
+    "mismatch": {},
+    "build_output": "/workspace/bigcrates/targets/cargo-llvm/x86_64-unknown-linux-gnu/release/build/cargo-e231d9200f753f45/output",
+    "build_output_sha256": "812fb1e893d1ba2ab8fe6d869356d70d73e5444cea7c3a0af31de23abd86f43d"
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/cargo/1795179362472478224-a5779d6fa13aa50e.json",
+    "project": "cargo",
+    "crate": "cargo",
+    "declared": {
+      "CARGO_COMMIT_HASH": "85eff7c80277b57f78b11e28d14154ab12fcf643",
+      "CARGO_COMMIT_SHORT_HASH": "85eff7c80",
+      "CARGO_COMMIT_DATE": "2026-01-15",
+      "RUST_HOST_TARGET": "x86_64-unknown-linux-gnu"
+    },
+    "missing": {
+      "CARGO_COMMIT_HASH": "85eff7c80277b57f78b11e28d14154ab12fcf643",
+      "CARGO_COMMIT_SHORT_HASH": "85eff7c80",
+      "CARGO_COMMIT_DATE": "2026-01-15",
+      "RUST_HOST_TARGET": "x86_64-unknown-linux-gnu"
+    },
+    "mismatch": {},
+    "build_output": "/workspace/bigcrates/targets/cargo-llvm/x86_64-unknown-linux-gnu/release/build/cargo-e231d9200f753f45/output",
+    "build_output_sha256": "812fb1e893d1ba2ab8fe6d869356d70d73e5444cea7c3a0af31de23abd86f43d"
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/ripgrep/1795179171480367567-3da7dddfc4eab9ab.json",
+    "project": "ripgrep",
+    "crate": "log",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/ripgrep/1795179171482202476-a7d9c3cc5e0d5e9f.json",
+    "project": "ripgrep",
+    "crate": "memchr",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/ripgrep/1795179171490847731-2120df846db3e069.json",
+    "project": "ripgrep",
+    "crate": "regex_syntax",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/ripgrep/1795179174320534489-98835ef1656a5ae4.json",
+    "project": "ripgrep",
+    "crate": "aho_corasick",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/ripgrep/1795179174662869244-a6aa556d7d7fe900.json",
+    "project": "ripgrep",
+    "crate": "cfg_if",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/ripgrep/1795179175502858367-905f19fa77a215c7.json",
+    "project": "ripgrep",
+    "crate": "regex_automata",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/ripgrep/1795179176864078003-06e2d122a8f2ac68.json",
+    "project": "ripgrep",
+    "crate": "encoding_rs",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/ripgrep/1795179176868626462-4e0a48ea55cedb0a.json",
+    "project": "ripgrep",
+    "crate": "libc",
+    "declared": {},
+    "missing": {},
+    "mismatch": {},
+    "build_output": "/workspace/bigcrates/targets/ripgrep-llvm/x86_64-unknown-linux-gnu/release/build/libc-923b2dd4e2f66082/output",
+    "build_output_sha256": "84c94742454932106dd5a080833897d01fed5d105f021773ef5ae5a19ec3abb5"
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/ripgrep/1795179177083869328-92c37b94ff0b9cc1.json",
+    "project": "ripgrep",
+    "crate": "grep_matcher",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/ripgrep/1795179177222828782-b78196097baf81e2.json",
+    "project": "ripgrep",
+    "crate": "memmap2",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/ripgrep/1795179177320541994-349e76891660765f.json",
+    "project": "ripgrep",
+    "crate": "serde",
+    "declared": {},
+    "missing": {},
+    "mismatch": {},
+    "build_output": "/workspace/bigcrates/targets/ripgrep-llvm/x86_64-unknown-linux-gnu/release/build/serde-f84fd4cd4197bfec/output",
+    "build_output_sha256": "53e556c4092748dfee9a8440525645fccfddcb687cbc9a13e687da5ec709c8cc"
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/ripgrep/1795179177414158591-2cb444912923bc0a.json",
+    "project": "ripgrep",
+    "crate": "crossbeam_utils",
+    "declared": {},
+    "missing": {},
+    "mismatch": {},
+    "build_output": "/workspace/bigcrates/targets/ripgrep-llvm/x86_64-unknown-linux-gnu/release/build/crossbeam-utils-246ecfc16138e0c9/output",
+    "build_output_sha256": "cb6814e09e64fb079e8defed607f9407cb5ef09b64fd8a31d4c581164f39bac5"
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/ripgrep/1795179178061485936-2e5a17633b5ceb6f.json",
+    "project": "ripgrep",
+    "crate": "bstr",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/ripgrep/1795179178508229397-950acc8a24bd6d15.json",
+    "project": "ripgrep",
+    "crate": "globset",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/ripgrep/1795179179464942141-c4c30a305624f6a8.json",
+    "project": "ripgrep",
+    "crate": "encoding_rs_io",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/ripgrep/1795179179585467968-913e03ba0969c295.json",
+    "project": "ripgrep",
+    "crate": "ryu",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/ripgrep/1795179179607360077-6f96fc33626287cf.json",
+    "project": "ripgrep",
+    "crate": "itoa",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/ripgrep/1795179179690635267-cb8754d0addd118e.json",
+    "project": "ripgrep",
+    "crate": "termcolor",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/ripgrep/1795179179721477267-52b0f10af810fd8f.json",
+    "project": "ripgrep",
+    "crate": "serde_json",
+    "declared": {},
+    "missing": {},
+    "mismatch": {},
+    "build_output": "/workspace/bigcrates/targets/ripgrep-llvm/x86_64-unknown-linux-gnu/release/build/serde_json-b368fd63ab372a04/output",
+    "build_output_sha256": "6bb524834a0c0657c682dbb81bc6eeb23ac92c48da502f17ce4455240e5d062b"
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/ripgrep/1795179179752706284-1e1b28c0e70925d3.json",
+    "project": "ripgrep",
+    "crate": "grep_searcher",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/ripgrep/1795179179966055563-d8b2f35468da2361.json",
+    "project": "ripgrep",
+    "crate": "crossbeam_epoch",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/ripgrep/1795179180018133022-03c93d5347f4e65f.json",
+    "project": "ripgrep",
+    "crate": "same_file",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/ripgrep/1795179180115634940-fcbe7f50ffd303b9.json",
+    "project": "ripgrep",
+    "crate": "crossbeam_deque",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/ripgrep/1795179180194040561-023ec94c7a86b9ad.json",
+    "project": "ripgrep",
+    "crate": "grep_printer",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/ripgrep/1795179180246180272-7b6f40fec2d87fe4.json",
+    "project": "ripgrep",
+    "crate": "walkdir",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/ripgrep/1795179180467113614-7c6c2f8e394897ba.json",
+    "project": "ripgrep",
+    "crate": "grep_cli",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/ripgrep/1795179180596058897-6c40bf9044ba1216.json",
+    "project": "ripgrep",
+    "crate": "grep_regex",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/ripgrep/1795179180845906361-18a931bebb0ef4bc.json",
+    "project": "ripgrep",
+    "crate": "grep",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/ripgrep/1795179180904861286-c7ca983765a243ba.json",
+    "project": "ripgrep",
+    "crate": "ignore",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/ripgrep/1795179180955044808-0b99b2253134340f.json",
+    "project": "ripgrep",
+    "crate": "lexopt",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/ripgrep/1795179181016106659-dbd05f4ea8b6a277.json",
+    "project": "ripgrep",
+    "crate": "textwrap",
+    "declared": {},
+    "missing": {},
+    "mismatch": {}
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/ripgrep/1795179181310836930-954e4d9ac1584354.json",
+    "project": "ripgrep",
+    "crate": "anyhow",
+    "declared": {},
+    "missing": {},
+    "mismatch": {},
+    "build_output": "/workspace/bigcrates/targets/ripgrep-llvm/x86_64-unknown-linux-gnu/release/build/anyhow-640e2c42865b5ff2/output",
+    "build_output_sha256": "0e6de7dcc7f77f8bc8f3275620616e14aebdbf8bc81fe2aff823b463ae8b903f"
+  },
+  {
+    "capture": "/workspace/bigcrates/captures/ripgrep/1795179181878105527-fff994d2644fff41.json",
+    "project": "ripgrep",
+    "crate": "rg",
+    "declared": {
+      "RIPGREP_BUILD_GIT_HASH": "4649aa9700"
+    },
+    "missing": {
+      "RIPGREP_BUILD_GIT_HASH": "4649aa9700"
+    },
+    "mismatch": {},
+    "build_output": "/workspace/bigcrates/targets/ripgrep-llvm/x86_64-unknown-linux-gnu/release/build/ripgrep-5d2a934693c7fcaf/output",
+    "build_output_sha256": "aa4bf7138b99b24b3d0f80b8b2565b39f537c222c1ce8a10c48c68637c56ba85"
+  }
+]

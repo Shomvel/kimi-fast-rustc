@@ -1,0 +1,20 @@
+{
+  "kfrc": {
+    "commit": "4ccaa863a3cabaa8c87b127a715d34118f35e604",
+    "Cargo.lock_sha256": "44080e9279f497e52fc674bc80a51839da382053f94571015ec9cc84ed070164",
+    "Cargo.toml_sha256": "326f5332d1c7949740d5fcfa88098f0c48bbffb0652058780741f9b25a5bce8e"
+  },
+  "ripgrep": {
+    "commit": "4649aa9700619f94cf9c66876e9549d83420e16c",
+    "Cargo.lock_sha256": "1a99f2f04d96411238379485e36623a19b0158d9446796e6d85d58746023f441",
+    "Cargo.toml_sha256": "ebdf51de971758dad9515a54da04ecce611fc8a3affc85b89ed439036fe7f994"
+  },
+  "cargo": {
+    "commit": "85eff7c80277b57f78b11e28d14154ab12fcf643",
+    "Cargo.lock_sha256": "84beb1cbe7c03e9c8649fee19a45733d8a99101a07548ccc762d7345b6131a31",
+    "Cargo.toml_sha256": "16a81ce3c8bc8a5316d55bc76bbf3e437435d40e6f8acf281a625127e322249b"
+  },
+  "rustc_vV": "rustc 1.94.1 (e408947bf 2026-03-25)\nbinary: rustc\ncommit-hash: e408947bfd200af42db322daf0fadfe7e26d3bd1\ncommit-date: 2026-03-25\nhost: x86_64-unknown-linux-gnu\nrelease: 1.94.1\nLLVM version: 21.1.8\n",
+  "sysroot": "/opt/rustup/toolchains/1.94.1-x86_64-unknown-linux-gnu",
+  "cargo_version": "cargo 1.94.1 (29ea6fb6a 2026-03-24)"
+}

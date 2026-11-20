@@ -1,0 +1,148 @@
+{
+  "scope": "targeted cargo units with only U1 first errors in baseline survey; not a full cargo candidate build",
+  "targeted_units": 14,
+  "baseline_success": 0,
+  "candidate_success": 14,
+  "units": [
+    {
+      "crate": "anstream",
+      "baseline_first_error": "kfrc: cannot compile `std::sync::atomic::atomic_store::<u64>` (_RINvNtNtCs8nPosuWgJFh_4core4sync6atomic12atomic_storeyECsaGoeM7tVsMh_8anstream): MIR conversion: intrinsic `atomic_store` is not implemented",
+      "candidate_objects": [
+        {
+          "bytes": 57136,
+          "sha256": "e28200d0778ca48616a24231e9f16b24c4f99cdbfb435814e6f70ba3e58a50bd"
+        }
+      ]
+    },
+    {
+      "crate": "arc_swap",
+      "baseline_first_error": "kfrc: cannot compile `std::sync::atomic::atomic_load::<*mut debt::list::Node>` (_RINvNtNtCs8nPosuWgJFh_4core4sync6atomic11atomic_loadONtNtNtCs6uQ31IzLSFd_8arc_swap4debt4list4NodeEBV_): MIR conversion: intrinsic `atomic_load` is not implemented",
+      "candidate_objects": [
+        {
+          "bytes": 10640,
+          "sha256": "ebdd1931f279439e7d8b0e857be936e1ac82f6ca9a5134b09cc4a64613157b83"
+        }
+      ]
+    },
+    {
+      "crate": "bytes",
+      "baseline_first_error": "kfrc: cannot compile `core::sync::atomic::atomic_load::<*mut ()>` (_RINvNtNtCs8nPosuWgJFh_4core4sync6atomic11atomic_loadOuECsky7yDqRwcmD_5bytes): MIR conversion: intrinsic `atomic_load` is not implemented",
+      "candidate_objects": [
+        {
+          "bytes": 123432,
+          "sha256": "0c2a03c8d09b4f945d7f4040a1a8f118c71f00c3d6fb11b39da5f738acea994e"
+        }
+      ]
+    },
+    {
+      "crate": "colorchoice",
+      "baseline_first_error": "kfrc: cannot compile `core::sync::atomic::atomic_load::<usize>` (_RINvNtNtCs8nPosuWgJFh_4core4sync6atomic11atomic_loadjECsajZZtbMurZX_11colorchoice): MIR conversion: intrinsic `atomic_load` is not implemented",
+      "candidate_objects": [
+        {
+          "bytes": 3240,
+          "sha256": "44602ff434befe93a41df524be8f5ba1b1edcfdf1f5de5db148192dfaac84b51"
+        }
+      ]
+    },
+    {
+      "crate": "gix_actor",
+      "baseline_first_error": "kfrc: cannot compile `std::sync::atomic::atomic_load::<*mut ()>` (_RINvNtNtCs8nPosuWgJFh_4core4sync6atomic11atomic_loadOuECs8qt1Dx851ka_9gix_actor): MIR conversion: intrinsic `atomic_load` is not implemented",
+      "candidate_objects": [
+        {
+          "bytes": 36832,
+          "sha256": "3b6a2f348098cf6966c002b8482dfb4dadd3e9a6af574998770bb2c25856befa"
+        }
+      ]
+    },
+    {
+      "crate": "gix_glob",
+      "baseline_first_error": "kfrc: cannot compile `std::sync::atomic::atomic_load::<*mut ()>` (_RINvNtNtCs8nPosuWgJFh_4core4sync6atomic11atomic_loadOuECsgGALzNGKXC3_8gix_glob): MIR conversion: intrinsic `atomic_load` is not implemented",
+      "candidate_objects": [
+        {
+          "bytes": 86400,
+          "sha256": "0ce46581830e0cd7e2d2ee2f8e5d07c715fe6c32bceb93ea6c041f12327de2b1"
+        }
+      ]
+    },
+    {
+      "crate": "gix_ignore",
+      "baseline_first_error": "kfrc: cannot compile `std::sync::atomic::atomic_load::<*mut ()>` (_RINvNtNtCs8nPosuWgJFh_4core4sync6atomic11atomic_loadOuECs1OmGmk5RaZ2_10gix_ignore): MIR conversion: intrinsic `atomic_load` is not implemented",
+      "candidate_objects": [
+        {
+          "bytes": 41096,
+          "sha256": "cd3acb00042c33241ce5c0b662b8b408a791d672346446504c2119093d9390e8"
+        }
+      ]
+    },
+    {
+      "crate": "gix_traverse",
+      "baseline_first_error": "kfrc: cannot compile `std::sync::atomic::atomic_load::<*mut ()>` (_RINvNtNtCs8nPosuWgJFh_4core4sync6atomic11atomic_loadOuECs2L5KpNqRPQU_12gix_traverse): MIR conversion: intrinsic `atomic_load` is not implemented",
+      "candidate_objects": [
+        {
+          "bytes": 137520,
+          "sha256": "5564144f1fb4a825423d5b6c4dc005ce214521c4650df9de97f66117bcfeac96"
+        }
+      ]
+    },
+    {
+      "crate": "libssh2_sys",
+      "baseline_first_error": "kfrc: cannot compile `std::sync::atomic::atomic_load::<u32>` (_RINvNtNtCs8nPosuWgJFh_4core4sync6atomic11atomic_loadmECsaRuAxEBapJv_11libssh2_sys): MIR conversion: intrinsic `atomic_load` is not implemented",
+      "candidate_objects": [
+        {
+          "bytes": 6496,
+          "sha256": "0cc86f933da29b7b63e9c5625257d9c5ecaab8ecf51f06f2f684393868f5baeb"
+        }
+      ]
+    },
+    {
+      "crate": "log",
+      "baseline_first_error": "kfrc: cannot compile `std::sync::atomic::atomic_load::<usize>` (_RINvNtNtCs8nPosuWgJFh_4core4sync6atomic11atomic_loadjECsefkPXiNusMi_3log): MIR conversion: intrinsic `atomic_load` is not implemented",
+      "candidate_objects": [
+        {
+          "bytes": 18232,
+          "sha256": "11ba2a64386d101ab07e40677720e0c7091ff1c75b026a8e6a83c0eba8d4659b"
+        }
+      ]
+    },
+    {
+      "crate": "nix",
+      "baseline_first_error": "kfrc: cannot compile `std::sync::atomic::atomic_load::<usize>` (_RINvNtNtCs8nPosuWgJFh_4core4sync6atomic11atomic_loadjECs9AYZHWf52bJ_3nix): MIR conversion: intrinsic `atomic_load` is not implemented",
+      "candidate_objects": [
+        {
+          "bytes": 140344,
+          "sha256": "39953247f4f747d99df97a6ad78131e422fbabaa5c291af2eef8230f0a889bbb"
+        }
+      ]
+    },
+    {
+      "crate": "once_cell",
+      "baseline_first_error": "kfrc: cannot compile `std::sync::atomic::atomic_load::<*mut imp::Waiter>` (_RINvNtNtCs8nPosuWgJFh_4core4sync6atomic11atomic_loadONtNtCs1EpzbJaeV7q_9once_cell3imp6WaiterEBT_): MIR conversion: intrinsic `atomic_load` is not implemented",
+      "candidate_objects": [
+        {
+          "bytes": 8128,
+          "sha256": "d83855737b2077afbddd50f54a868d0cb8b8b6981b0862e9f7af5924755a36ff"
+        }
+      ]
+    },
+    {
+      "crate": "sharded_slab",
+      "baseline_first_error": "kfrc: cannot compile `std::sync::atomic::atomic_load::<u8>` (_RINvNtNtCs8nPosuWgJFh_4core4sync6atomic11atomic_loadhECs7SI3Wo98nU7_12sharded_slab): MIR conversion: intrinsic `atomic_load` is not implemented",
+      "candidate_objects": [
+        {
+          "bytes": 19536,
+          "sha256": "3eaa2ca5c348e71663ba5b4414bbb5bfb6237e347ef4537c1a27010839a2ab7d"
+        }
+      ]
+    },
+    {
+      "crate": "walkdir",
+      "baseline_first_error": "kfrc: cannot compile `<std::sync::Arc<std::sys::fs::unix::InnerReadDir> as std::ops::Drop>::drop` (_RNvXsE_NtCsj0gLuUEfogP_5alloc4syncINtB5_3ArcNtNtNtNtCsicaZO8UCM9y_3std3sys2fs4unix12InnerReadDirENtNtNtCs8nPosuWgJFh_4core3ops4drop4Drop4dropCs8t5HvZCYt5i_7walkdir): MIR conversion: intrinsic `atomic_xsub` is not implemented",
+      "candidate_objects": [
+        {
+          "bytes": 128008,
+          "sha256": "80c993395642d34866e81f25ccbe60a74b23bfc82c759106cc2a4698113f6b45"
+        }
+      ]
+    }
+  ]
+}
