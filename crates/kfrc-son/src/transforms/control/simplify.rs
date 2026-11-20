@@ -182,15 +182,18 @@ pub fn run(graph: &mut FunctionGraph) -> Result<ControlStats, CfgEditError> {
     run_impl(graph, true, false)
 }
 
-/// `run`, then repeatedly fold branches into Unreachable (see
+/// Repeatedly fold branches into Unreachable (see
 /// `fold_unreachable_branches`). A branch into Unreachable still carries its
 /// condition as a fact for condition and variant threading, so only the final
 /// cleanup, after those consumers, trades it for shorter control flow.
 pub(crate) fn run_final(graph: &mut FunctionGraph) -> Result<ControlStats, CfgEditError> {
-    let mut total = run_impl(graph, true, false)?;
-    // Each round can expose one more branch level upstream; the bound keeps
-    // the cleanup linear in practice.
+    let mut total = ControlStats::default();
+    // Each round can expose one more branch level upstream. Most graphs have
+    // no branch into Unreachable at all; check that before paying for a pass.
     for _ in 0..8 {
+        if !has_unreachable_branch(graph) {
+            break;
+        }
         let stats = run_impl(graph, true, true)?;
         total.branches_folded += stats.branches_folded;
         total.predecessor_edges_removed += stats.predecessor_edges_removed;
@@ -201,6 +204,17 @@ pub(crate) fn run_final(graph: &mut FunctionGraph) -> Result<ControlStats, CfgEd
         }
     }
     Ok(total)
+}
+
+fn has_unreachable_branch(graph: &FunctionGraph) -> bool {
+    graph.ids().any(|node| {
+        graph.op(node) == Opcode::Unreachable && {
+            let edge = graph.resolve(graph.control(node));
+            !edge.is_none()
+                && graph.op(edge) == Opcode::Projection
+                && graph.op(graph.resolve(graph.input(edge, 0))) == Opcode::If
+        }
+    })
 }
 
 /// Reachability/Region/Phi repair without creating any new graph records.
