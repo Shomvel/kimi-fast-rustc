@@ -13,10 +13,16 @@ struct Fixture {
 
 impl Fixture {
     fn new(width: IntegerWidth, signed: bool) -> Self {
-        let mut types = RecordedTypes::new();
-        let bytes = u64::from(width.bits(64) / 8);
-        let word = types.intern(
+        Self::with_shape(
             TypeShape::Int { width, signed },
+            u64::from(width.bits(64) / 8),
+        )
+    }
+
+    fn with_shape(shape: TypeShape, bytes: u64) -> Self {
+        let mut types = RecordedTypes::new();
+        let word = types.intern(
+            shape,
             Some(SizeAlign {
                 size: bytes,
                 align: bytes,
@@ -194,6 +200,9 @@ impl Fixture {
         );
     }
 }
+
+#[path = "char_range_tests.rs"]
+mod characters;
 
 fn differential(mut graph: FunctionGraph, inputs: impl IntoIterator<Item = u64>) {
     verify_graph(&mut graph).unwrap();
