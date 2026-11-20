@@ -794,3 +794,93 @@ fn redundant_merges_of_one_value_fold_to_that_value() {
             .any(|node| test.graph.op(node) == Opcode::Phi)
     );
 }
+
+/// `assume(false)` guarding a precondition call (as `assume(ub_checks())` does
+/// once UB checks are off) makes its path unreachable: the call and the
+/// Assume disappear, the live path and its observable call stay, and a
+/// non-literal assumption on the live path is retained.
+#[test]
+fn literal_false_assumption_terminates_its_path() {
+    use kfrc_son::ComparePredicate;
+    for guarded_call in [false, true] {
+        let mut test = TestGraph::new();
+        let (probe_ctl, probe_effect, probe) = test.call(test.control, "left");
+        let expected = test.graph.add_constant(37, test.integer);
+        let matches = test.graph.add_node(
+            Opcode::Compare,
+            NodeId::NONE,
+            &[probe, expected],
+            ComparePredicate::Equal as u32,
+            ValueType::Rust(test.boolean),
+        );
+        test.control = probe_ctl;
+        let (live, dead) = test.branch(matches);
+        let assumption = |test: &mut TestGraph, control, effect, predicate| {
+            let assume = test.graph.add_node(
+                Opcode::Assume,
+                control,
+                &[effect, predicate],
+                0,
+                ValueType::Tuple(vec![ValueType::Control, ValueType::Effect]),
+            );
+            let control = test.graph.add_node(
+                Opcode::Projection,
+                NodeId::NONE,
+                &[assume],
+                0,
+                ValueType::Control,
+            );
+            let effect = test.graph.add_node(
+                Opcode::Projection,
+                NodeId::NONE,
+                &[assume],
+                1,
+                ValueType::Effect,
+            );
+            (control, effect)
+        };
+        // Live path: a data-dependent assumption that must survive.
+        let (live, live_effect) = assumption(&mut test, live, probe_effect, matches);
+        test.return_value(live, live_effect, probe);
+        // Dead path: assume(false), optionally followed by a check call.
+        let never = test.graph.add_constant(0, test.boolean);
+        let (mut dead, dead_effect) = assumption(&mut test, dead, probe_effect, never);
+        if guarded_call {
+            test.effect = dead_effect;
+            let (after, _, _) = test.call(dead, "precondition_check");
+            dead = after;
+        }
+        test.graph
+            .add_node(Opcode::Unreachable, dead, &[], 0, ValueType::Control);
+        verify_graph(&mut test.graph).unwrap_or_else(|e| panic!("{e}\n{}", test.graph.dump()));
+        let before = run(&test.graph);
+        assert_eq!(before.0, Ok(SemanticOutcome::Return(Value::Scalar(37))));
+
+        optimize_specialized_graph(&mut test.graph).unwrap();
+        let g = &test.graph;
+        let ops: Vec<_> = g.ids().map(|n| g.op(n)).collect();
+        let assumptions = g
+            .ids()
+            .filter(|&n| g.op(n) == Opcode::Assume)
+            .map(|n| g.op(g.resolve(g.input(n, 1))))
+            .collect::<Vec<_>>();
+        assert!(
+            !assumptions.contains(&Opcode::Const),
+            "literal assumption left behind:\n{}",
+            g.dump()
+        );
+        assert_eq!(
+            assumptions.len(),
+            1,
+            "live assumption must stay:\n{}",
+            g.dump()
+        );
+        assert_eq!(
+            ops.iter().filter(|&&op| op == Opcode::Call).count(),
+            1,
+            "only the live call remains:\n{}",
+            g.dump()
+        );
+        assert_eq!(run(g), before);
+    }
+}
