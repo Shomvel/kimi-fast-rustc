@@ -22,6 +22,7 @@ fn fixture_limits() -> crate::inline_cost::Limits {
         budget: InlineBudget::default(),
         invocation_nodes: MAX_INLINE_NODES,
         preparation_work: MAX_WORK,
+        preparation_work_per_node: 0,
     }
 }
 
