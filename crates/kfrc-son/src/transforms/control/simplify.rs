@@ -4,9 +4,10 @@
 //! operations on retained control paths, including unused Div/Rem, are roots.
 
 use kfrc_body::TypeShape;
-use kfrc_body::fx_hash::HashMap;
+use kfrc_body::fx_hash::{HashMap, HashSet};
 
 use crate::analysis::cfg::{ControlFlow, is_anchored_value, is_control_flow};
+use crate::transforms::scalar::instcombine;
 use crate::transforms::utils::cfg::{CfgEditError, CfgEditor};
 use crate::{FunctionGraph, NodeId, Opcode, ValueType};
 
@@ -113,17 +114,110 @@ fn terminate_false_assumptions(graph: &mut FunctionGraph) -> usize {
     assumptions.len()
 }
 
+/// Select the live edge of every `If` whose other successor immediately
+/// reaches Unreachable, as LLVM's SimplifyCFG does for a branch into an
+/// `unreachable` block: taking that successor is undefined behavior.
+///
+/// When the If directly follows a Region and its condition is decided by
+/// constant Phi inputs, entering the Region along such an edge already commits
+/// to the undefined successor, so that edge's Jump also becomes Unreachable.
+/// The next round then folds the branch that chose that edge. Paths with any
+/// operation before Unreachable (a diverging call, a store) are kept.
+fn fold_unreachable_branches(graph: &mut FunctionGraph, folds: &mut Vec<(NodeId, u32)>) {
+    let mut seen: HashSet<NodeId> = folds.iter().map(|&(branch, _)| branch).collect();
+    let terminals: Vec<_> = graph
+        .ids()
+        .filter(|&node| graph.op(node) == Opcode::Unreachable)
+        .collect();
+    let mut undefined_entries = Vec::new();
+    for terminal in terminals {
+        let edge = graph.resolve(graph.control(terminal));
+        if edge.is_none() || graph.op(edge) != Opcode::Projection {
+            continue;
+        }
+        let branch = graph.resolve(graph.input(edge, 0));
+        if graph.op(branch) != Opcode::If || !seen.insert(branch) {
+            continue;
+        }
+        let dead = graph.payload(edge);
+        // Projection 0 is taken for a true condition, 1 for false.
+        let undefined_condition = u64::from(dead == 0);
+        let region = graph.resolve(graph.control(branch));
+        if graph.op(region) == Opcode::Region {
+            let condition = graph.resolve(graph.input(branch, 0));
+            for (slot, &jump) in graph.inputs(region).iter().enumerate() {
+                let incoming = |node: NodeId| {
+                    let node = graph.resolve(node);
+                    match graph.op(node) {
+                        Opcode::Const => instcombine::constant(graph, node),
+                        Opcode::Phi if graph.resolve(graph.input(node, 0)) == region => {
+                            let value = graph.resolve(graph.input(node, slot + 1));
+                            (graph.op(value) == Opcode::Const)
+                                .then(|| instcombine::constant(graph, value))
+                                .flatten()
+                        }
+                        _ => None,
+                    }
+                };
+                let decided = if graph.op(condition) == Opcode::Phi {
+                    incoming(condition)
+                } else if instcombine::supports_evaluation(graph.op(condition)) {
+                    instcombine::evaluate(graph, condition, incoming)
+                } else {
+                    None
+                };
+                let jump = graph.resolve(jump);
+                if decided == Some(undefined_condition) && graph.op(jump) == Opcode::Jump {
+                    undefined_entries.push(jump);
+                }
+            }
+        }
+        folds.push((branch, 1 - dead));
+    }
+    for jump in undefined_entries {
+        let control = graph.resolve(graph.control(jump));
+        graph.add_node(Opcode::Unreachable, control, &[], 0, ValueType::Control);
+        // The Region slot fed by this Jump is trimmed by the sweep below.
+        graph.remove_node(jump);
+    }
+}
+
 pub fn run(graph: &mut FunctionGraph) -> Result<ControlStats, CfgEditError> {
-    run_impl(graph, true)
+    run_impl(graph, true, false)
+}
+
+/// `run`, then repeatedly fold branches into Unreachable (see
+/// `fold_unreachable_branches`). A branch into Unreachable still carries its
+/// condition as a fact for condition and variant threading, so only the final
+/// cleanup, after those consumers, trades it for shorter control flow.
+pub(crate) fn run_final(graph: &mut FunctionGraph) -> Result<ControlStats, CfgEditError> {
+    let mut total = run_impl(graph, true, false)?;
+    // Each round can expose one more branch level upstream; the bound keeps
+    // the cleanup linear in practice.
+    for _ in 0..8 {
+        let stats = run_impl(graph, true, true)?;
+        total.branches_folded += stats.branches_folded;
+        total.predecessor_edges_removed += stats.predecessor_edges_removed;
+        total.nodes_removed += stats.nodes_removed;
+        total.phis_folded += stats.phis_folded;
+        if stats.branches_folded == 0 {
+            break;
+        }
+    }
+    Ok(total)
 }
 
 /// Reachability/Region/Phi repair without creating any new graph records.
 /// Inliner growth accounts can be exhausted when this repair is mandatory.
 pub(crate) fn prune(graph: &mut FunctionGraph) -> Result<ControlStats, CfgEditError> {
-    run_impl(graph, false)
+    run_impl(graph, false, false)
 }
 
-fn run_impl(graph: &mut FunctionGraph, fold_diamonds: bool) -> Result<ControlStats, CfgEditError> {
+fn run_impl(
+    graph: &mut FunctionGraph,
+    fold_diamonds: bool,
+    unreachable_branches: bool,
+) -> Result<ControlStats, CfgEditError> {
     graph.resolve_edges();
     let before = graph.live_count();
     let mut stats = ControlStats::default();
@@ -166,6 +260,9 @@ fn run_impl(graph: &mut FunctionGraph, fold_diamonds: bool) -> Result<ControlSta
             _ => continue,
         };
         folds.push((branch, taken));
+    }
+    if unreachable_branches {
+        fold_unreachable_branches(graph, &mut folds);
     }
     // Branch folding only forwards/removes existing nodes, so one immutable
     // projection index remains valid through this loop. Avoid rescanning the
@@ -236,3 +333,7 @@ fn run_impl(graph: &mut FunctionGraph, fold_diamonds: bool) -> Result<ControlSta
     stats.nodes_removed = before - graph.live_count();
     Ok(stats)
 }
+
+#[cfg(test)]
+#[path = "simplify_unreachable_tests.rs"]
+mod unreachable_tests;
