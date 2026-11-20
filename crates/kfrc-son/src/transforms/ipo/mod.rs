@@ -12,11 +12,13 @@ mod driver;
 mod identity;
 mod loop_constants;
 mod plan;
+mod scalar_clone;
 mod splice;
 mod tail_recursion;
 mod types;
 
 pub use argument_promotion::{ArgumentPromotionError, ArgumentPromotionStats, promote_arguments};
+pub use scalar_clone::specialize_literal_argument;
 pub use tail_recursion::{TailRecursionStats, eliminate_tail_recursion};
 
 use crate::analysis::cost::{CostModel, GenericCostModel};

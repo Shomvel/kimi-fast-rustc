@@ -262,8 +262,7 @@ impl LayoutLowering<'_> {
         let tag = layout
             .tag
             .ok_or_else(|| LayoutError::Malformed("enum encoding lacks tag".into()))?;
-        let pointer = self.field_address(address, tag.offset, tag.ty);
-        let raw = self.load(pointer, tag.ty, control, effect);
+        let raw = self.load_enum_tag(address, ty, tag, control, effect);
         self.decode_variant_scalar(raw, ty)
     }
 

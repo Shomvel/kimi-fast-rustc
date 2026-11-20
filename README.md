@@ -32,6 +32,9 @@ export KFRC_CODEGEN_BACKEND="$PWD/crates/rustc_codegen_kfrc/target/debug/librust
 matching rustc binary. Other arguments use rustc syntax, for example
 `--crate-type rlib --crate-name example -Copt-level=3`.
 `KFRC_OPTIMIZE=0` disables graph optimization; `KFRC_INLINE=0` disables inlining.
+`KFRC_SHARED_LITERAL_CALLS=1` enables experimental shared specialization of
+repeated direct calls with the same scalar literal. The specialized body keeps
+the original ABI. This experiment is off by default.
 
 The old handwritten subset frontend and `.kfr` execution entry have been removed;
 examples now have ordinary Rust `main` functions. `native-batch` is no longer an

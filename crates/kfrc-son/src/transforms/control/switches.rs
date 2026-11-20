@@ -8,6 +8,8 @@ use kfrc_body::TypeOracle;
 use kfrc_body::TypeShape;
 use kfrc_body::fx_hash::HashSet;
 
+mod membership;
+
 const MIN_CASES: usize = 4;
 const MAX_CASES: usize = 128;
 const MAX_WRAPPERS: usize = 16;
@@ -16,6 +18,9 @@ const MAX_WRAPPERS: usize = 16;
 pub(crate) struct SwitchStats {
     pub switches_created: usize,
     pub cases_merged: usize,
+    pub range_memberships: usize,
+    pub bit_memberships: usize,
+    pub unguarded_bit_memberships: usize,
     pub nodes_visited: usize,
 }
 
@@ -30,9 +35,10 @@ fn equality(graph: &FunctionGraph, branch: NodeId, uses: &Uses) -> Option<Test> 
     let mut condition = graph.resolve(graph.input(branch, 0));
     let mut inverted = false;
     for _ in 0..8 {
-        if !graph
-            .rust_type(condition)
-            .is_some_and(|ty| matches!(graph.oracle.shape(ty), TypeShape::Bool))
+        if !graph.control(condition).is_none()
+            || !graph
+                .rust_type(condition)
+                .is_some_and(|ty| matches!(graph.oracle.shape(ty), TypeShape::Bool))
         {
             return None;
         }
@@ -100,6 +106,17 @@ fn equality(graph: &FunctionGraph, branch: NodeId, uses: &Uses) -> Option<Test> 
 
 /// The only consumer of each traversed control must be its next event.
 /// In particular a Phi or anchored division makes a wrapper nontransparent.
+fn jump_target(graph: &FunctionGraph, uses: &Uses, jump: NodeId) -> Option<(NodeId, usize)> {
+    if graph.op(jump) != Opcode::Jump || !graph.inputs(jump).is_empty() {
+        return None;
+    }
+    let [usage] = uses.of(jump) else { return None };
+    let UseKind::Operand(slot) = usage.kind() else {
+        return None;
+    };
+    (graph.op(usage.user) == Opcode::Region).then_some((usage.user, slot))
+}
+
 fn continuation(
     graph: &FunctionGraph,
     uses: &Uses,
@@ -119,17 +136,8 @@ fn continuation(
         if graph.op(next) == Opcode::If {
             return Some((next, wrappers));
         }
-        if graph.op(next) != Opcode::Jump || !graph.inputs(next).is_empty() {
-            return None;
-        }
-        let [usage] = uses.of(next) else {
-            return None;
-        };
-        let region = usage.user;
-        if usage.kind() != UseKind::Operand(0)
-            || graph.op(region) != Opcode::Region
-            || graph.inputs(region) != [next]
-        {
+        let (region, _) = jump_target(graph, uses, next)?;
+        if graph.inputs(region).len() != 1 {
             return None;
         }
         wrappers.extend([next, region]);
@@ -138,12 +146,17 @@ fn continuation(
     None
 }
 
+struct Case {
+    branch: NodeId,
+    test: Test,
+    retired_through: usize,
+}
+
 struct Plan {
     control: NodeId,
     value: NodeId,
-    branches: Vec<NodeId>,
-    cases: Vec<u128>,
-    exits: Vec<NodeId>,
+    cases: Vec<Case>,
+    // Exclusive miss projections and wrappers between tests.
     retired: Vec<NodeId>,
 }
 
@@ -160,9 +173,11 @@ impl Plan {
         let mut plan = Self {
             control: graph.control(root),
             value: first.value,
-            branches: vec![root],
-            cases: vec![first.bits],
-            exits: vec![first.yes],
+            cases: vec![Case {
+                branch: root,
+                test: first,
+                retired_through: 0,
+            }],
             retired: Vec::new(),
         };
         let mut seen = HashSet::default();
@@ -178,24 +193,28 @@ impl Plan {
             let Some(test) = equality(graph, branch, uses) else {
                 break;
             };
-            if test.value != plan.value || plan.cases.contains(&test.bits) {
+            if test.value != plan.value || plan.cases.iter().any(|case| case.test.bits == test.bits)
+            {
                 break;
             }
             plan.retired.push(no);
             plan.retired.extend(wrappers);
-            plan.branches.push(branch);
-            plan.cases.push(test.bits);
-            plan.exits.push(test.yes);
             no = test.no;
+            plan.cases.push(Case {
+                branch,
+                test,
+                retired_through: plan.retired.len(),
+            });
         }
-        plan.exits.push(no);
-        (plan.cases.len() >= MIN_CASES).then_some(plan)
+        Some(plan)
     }
 
-    fn apply(self, graph: &mut FunctionGraph) {
+    fn apply_switch(self, graph: &mut FunctionGraph) {
         let payload = graph.integer_switches.len() as u32;
         let count = self.cases.len() + 1;
-        graph.integer_switches.push(self.cases);
+        graph
+            .integer_switches
+            .push(self.cases.iter().map(|case| case.test.bits).collect());
         let switch = graph.add_node(
             Opcode::Switch,
             self.control,
@@ -203,7 +222,9 @@ impl Plan {
             payload,
             ValueType::Tuple(vec![ValueType::Control; count]),
         );
-        for (slot, old) in self.exits.into_iter().enumerate() {
+        let hits = self.cases.iter().map(|case| case.test.yes);
+        let miss = self.cases.last().unwrap().test.no;
+        for (slot, old) in hits.chain(std::iter::once(miss)).enumerate() {
             let projection = graph.add_node(
                 Opcode::Projection,
                 NodeId::NONE,
@@ -213,13 +234,43 @@ impl Plan {
             );
             graph.replace(old, projection);
         }
-        for node in self.branches.into_iter().chain(self.retired) {
+        self.retire_chain(graph);
+    }
+
+    fn retire_chain(self, graph: &mut FunctionGraph) {
+        let end = self.cases.last().unwrap().retired_through;
+        for node in self
+            .cases
+            .into_iter()
+            .map(|case| case.branch)
+            .chain(self.retired.into_iter().take(end))
+        {
             graph.remove_node(node);
         }
     }
 }
 
-pub(crate) fn run(graph: &mut FunctionGraph) -> SwitchStats {
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub(crate) enum Membership {
+    Off,
+    Guarded,
+    Typed,
+}
+
+pub(crate) fn membership_policy() -> Membership {
+    static MEMBERSHIP: std::sync::OnceLock<Membership> = std::sync::OnceLock::new();
+    // A bitmap can reduce retired instructions while making a hot branch
+    // slower on the target. Keep the transformation available for comparison.
+    *MEMBERSHIP.get_or_init(
+        || match std::env::var("KFRC_COMPACT_MEMBERSHIP").as_deref() {
+            Ok("1") => Membership::Guarded,
+            Ok("typed") => Membership::Typed,
+            _ => Membership::Off,
+        },
+    )
+}
+
+pub(crate) fn run(graph: &mut FunctionGraph, policy: Membership) -> SwitchStats {
     debug_assert_eq!(graph.level, GraphLevel::Layout);
     graph.resolve_edges();
     let mut stats = SwitchStats::default();
@@ -227,7 +278,13 @@ pub(crate) fn run(graph: &mut FunctionGraph) -> SwitchStats {
         .ids()
         .filter(|node| graph.op(*node) == Opcode::If)
         .collect();
-    if candidates.len() < MIN_CASES {
+    if candidates.len()
+        < if policy == Membership::Off {
+            MIN_CASES
+        } else {
+            membership::MIN_CASES
+        }
+    {
         return stats;
     }
     let uses = Uses::new(graph);
@@ -238,19 +295,41 @@ pub(crate) fn run(graph: &mut FunctionGraph) -> SwitchStats {
         if claimed.contains(&root) {
             continue;
         }
-        if let Some(plan) = Plan::collect(graph, &uses, root, &claimed, &mut stats.nodes_visited) {
-            claimed.extend(plan.branches.iter().copied());
+        let Some(mut plan) = Plan::collect(graph, &uses, root, &claimed, &mut stats.nodes_visited)
+        else {
+            continue;
+        };
+        let membership =
+            membership::Plan::collect(graph, &uses, &plan, policy, &mut stats.nodes_visited);
+        if let Some(membership) = &membership {
+            plan.cases.truncate(membership.len());
+            match membership.test {
+                membership::Test::Range { .. } => stats.range_memberships += 1,
+                membership::Test::Bits { limit, .. } => {
+                    stats.bit_memberships += 1;
+                    stats.unguarded_bit_memberships += usize::from(limit.is_none());
+                }
+            }
+        } else if plan.cases.len() >= MIN_CASES {
+            stats.switches_created += 1;
             stats.cases_merged += plan.cases.len();
-            plans.push(plan);
+        } else {
+            continue;
+        }
+        claimed.extend(plan.cases.iter().map(|case| case.branch));
+        plans.push((plan, membership));
+    }
+    if plans.is_empty() {
+        return stats;
+    }
+    for (plan, membership) in plans {
+        if let Some(membership) = membership {
+            membership.apply(graph, plan);
+        } else {
+            plan.apply_switch(graph);
         }
     }
-    stats.switches_created = plans.len();
-    for plan in plans {
-        plan.apply(graph);
-    }
-    if stats.switches_created != 0 {
-        graph.compact();
-    }
+    graph.compact();
     stats
 }
 

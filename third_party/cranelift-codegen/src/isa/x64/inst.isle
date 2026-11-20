@@ -3897,6 +3897,13 @@
 (rule 1 (is_nonzero_band (ty_32_or_64 ty) a (ishl _ (u64_from_iconst 1) b))
   (CondResult.CC (x64_bt ty (put_in_gpr a) b) (CC.B)))
 
+;; The optimizer puts a constant bitmap on the right of `band`. Prefer
+;; materializing that constant and testing it with BT to materializing 1,
+;; shifting by CL, and testing the result with an immediate.
+(rule 3 (is_nonzero_band (ty_32_or_64 ty) (ishl _ (u64_from_iconst 1) index)
+                        bitmap @ (u64_from_iconst _))
+  (CondResult.CC (x64_bt ty (put_in_gpr bitmap) index) (CC.B)))
+
 ;; If a value is and'd one shifted by a variable value that matches `bt` as
 ;; well.
 (rule 1 (is_nonzero_band $I64 a (u64_from_iconst (bt_imm n)))

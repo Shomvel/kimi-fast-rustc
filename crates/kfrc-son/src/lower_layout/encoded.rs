@@ -156,8 +156,7 @@ impl LayoutLowering<'_> {
         let tag = self.graph.oracle.enums[&ty]
             .tag
             .ok_or_else(|| LayoutError::Malformed("encoded enum lacks tag".into()))?;
-        let pointer = self.field_address(address, tag.offset, tag.ty);
-        let raw = self.load(pointer, tag.ty, control, effect);
+        let raw = self.load_enum_tag(address, ty, tag, control, effect);
         Ok(Value {
             ty,
             parts: Parts::EncodedVariant(raw),

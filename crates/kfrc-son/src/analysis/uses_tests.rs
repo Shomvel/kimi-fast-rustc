@@ -160,6 +160,43 @@ fn resolving_forwarded_edges_keeps_the_already_resolved_snapshot() {
 }
 
 #[test]
+fn editing_a_resolved_graph_can_reintroduce_old_aliases() {
+    for edit in 0..4 {
+        let (mut graph, word) = graph();
+        let old = graph.add_constant(10, word);
+        let value = graph.add_constant(20, word);
+        let user = graph.add_node(
+            Opcode::Add,
+            NodeId::NONE,
+            &[old, value],
+            0,
+            ValueType::Rust(word),
+        );
+        graph.replace(old, value);
+        graph.resolve_edges();
+        assert!(check(&graph).of(old).is_empty());
+        match edit {
+            0 => graph.set_input(user, 0, old),
+            1 => graph.set_inputs(user, &[old, value, old]),
+            2 => graph.set_control(user, old),
+            _ => {
+                graph.add_node(
+                    Opcode::Negate,
+                    NodeId::NONE,
+                    &[old],
+                    0,
+                    ValueType::Rust(word),
+                );
+            }
+        }
+        let dirty = check(&graph);
+        assert!(dirty.of(old).is_empty());
+        graph.resolve_edges();
+        assert!(Arc::ptr_eq(&dirty.index, &check(&graph).index));
+    }
+}
+
+#[test]
 fn pooled_operand_slots_above_u16_stay_distinct_from_control() {
     let (mut graph, word) = graph();
     let value = graph.add_constant(7, word);

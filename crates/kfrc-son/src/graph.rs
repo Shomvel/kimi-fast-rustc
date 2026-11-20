@@ -603,6 +603,11 @@ pub struct FunctionGraph {
     /// L-level physical slot index -> source LocalSlot identity. ABI temporary
     /// slots are absent; lowering preserves this evidence for Local partitions.
     pub stack_slot_locals: kfrc_body::fx_hash::HashMap<u32, u32>,
+    /// Temporary Layout proofs for individual physical loads made by typed
+    /// enum decoding. Keyed by the original load, never transferred by SSA
+    /// forwarding, and discarded before publishing the finished graph.
+    pub(crate) enum_tag_load_ranges:
+        Option<Box<kfrc_body::fx_hash::HashMap<NodeId, kfrc_body::ScalarValidRange>>>,
     pub symbols: Vec<(String, i64)>,
     pub data_objects: Vec<kfrc_body::DataObject>,
     /// Crate-owned definitions shared by all bodies. `data_objects` contains
@@ -666,6 +671,7 @@ impl FunctionGraph {
             call_abis: Vec::new(),
             stack_slots: Vec::new(),
             stack_slot_locals: kfrc_body::fx_hash::HashMap::default(),
+            enum_tag_load_ranges: None,
             symbols: Vec::new(),
             data_objects: Vec::new(),
             program_data: std::sync::Arc::default(),
@@ -757,6 +763,12 @@ impl FunctionGraph {
         self.cached_uses
             .get_or_init(|| crate::analysis::uses::Uses::build(self))
             .clone()
+    }
+
+    /// If false, live operand and control ids already denote their targets.
+    /// The forwarding table can still contain aliases for retired ids.
+    pub(crate) fn may_have_forwarded_edges(&self) -> bool {
+        self.unresolved_edges
     }
 
     pub(crate) fn control_flow(&self) -> crate::analysis::cfg::ControlFlow {
@@ -1335,6 +1347,15 @@ impl FunctionGraph {
             types.push(self.types[index]);
         }
         self.start = remap(self.start);
+        if let Some(ranges) = &mut self.enum_tag_load_ranges {
+            **ranges = ranges
+                .iter()
+                .filter_map(|(&load, &range)| {
+                    let load = remap(load);
+                    (!load.is_none()).then_some((load, range))
+                })
+                .collect();
+        }
         self.forward = vec![NodeId::NONE; records.len()];
         self.unresolved_edges = false;
         self.dead_nodes = 0;

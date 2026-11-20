@@ -266,6 +266,18 @@
 (rule -3 (lower (isub (fits_in_64 ty) x y))
       (x64_sub ty x y))
 
+;; A wrapping subtraction by a constant can use a non-destructive address
+;; calculation. In i32 every displacement bit pattern is exact, including
+;; MIN; i64 needs the sign-extended displacement to equal the full negation.
+(rule kfrc_isub_i32_const_displacement -2
+      (lower (isub $I32 x (i32_from_iconst c)))
+      (x64_lea $I32 (amode_imm_reg (mem_flags_trusted_data) x (i32_wrapping_neg c))))
+
+(rule kfrc_isub_i64_const_displacement -2
+      (lower (isub $I64 x (i64_from_iconst c)))
+      (if-let disp (i64_try_into_i32 (i64_wrapping_neg c)))
+      (x64_lea $I64 (amode_imm_reg (mem_flags_trusted_data) x disp)))
+
 ;; SSE.
 
 (rule (lower (isub (multi_lane 8 16) x y))
@@ -3609,6 +3621,34 @@
 
 (rule (lower_branch (brif val _ _) (two_targets then else))
       (emit_side_effect (jmp_cond_result (is_nonzero_cmp val) then else)))
+
+;; A checked producer immediately before a branch can feed EFLAGS directly.
+;; Return the low arithmetic result for the original SSA users.
+(decl partial lower_overflow_branch (Inst MachLabel MachLabel) Reg)
+(decl overflow_alu_branch (Type CC ProduceFlagsOp Gpr GprMemImm MachLabel MachLabel) Reg)
+(rule (overflow_alu_branch ty cc op x y taken not_taken)
+      (with_flags_reg (x64_produce_flags op ty x y) (jmp_cond cc taken not_taken)))
+
+(decl partial lower_carry_branch (Inst MachLabel MachLabel) Reg)
+(rule (lower_carry_branch (iadd (fits_in_64 ty) x y) taken not_taken)
+      (overflow_alu_branch ty (CC.B) (ProduceFlagsOp.Add) x y taken not_taken))
+
+(rule (lower_overflow_branch (uadd_overflow _ x y @ (value_type (fits_in_64 ty))) taken not_taken)
+      (overflow_alu_branch ty (CC.B) (ProduceFlagsOp.Add) x y taken not_taken))
+(rule (lower_overflow_branch (sadd_overflow _ x y @ (value_type (fits_in_64 ty))) taken not_taken)
+      (overflow_alu_branch ty (CC.O) (ProduceFlagsOp.Add) x y taken not_taken))
+(rule (lower_overflow_branch (usub_overflow _ x y @ (value_type (fits_in_64 ty))) taken not_taken)
+      (overflow_alu_branch ty (CC.B) (ProduceFlagsOp.Sub) x y taken not_taken))
+(rule (lower_overflow_branch (ssub_overflow _ x y @ (value_type (fits_in_64 ty))) taken not_taken)
+      (overflow_alu_branch ty (CC.O) (ProduceFlagsOp.Sub) x y taken not_taken))
+(rule 2 (lower_overflow_branch (umul_overflow _ x y @ (value_type $I8)) taken not_taken)
+      (with_flags_reg (x64_mul8_with_flags_paired false x y) (jmp_cond (CC.O) taken not_taken)))
+(rule 2 (lower_overflow_branch (smul_overflow _ x y @ (value_type $I8)) taken not_taken)
+      (with_flags_reg (x64_mul8_with_flags_paired true x y) (jmp_cond (CC.O) taken not_taken)))
+(rule 3 (lower_overflow_branch (umul_overflow _ x y @ (value_type (ty_int_ref_16_to_64 ty))) taken not_taken)
+      (with_flags_reg (x64_mul_lo_with_flags_paired ty false x y) (jmp_cond (CC.O) taken not_taken)))
+(rule 3 (lower_overflow_branch (smul_overflow _ x y @ (value_type (ty_int_ref_16_to_64 ty))) taken not_taken)
+      (with_flags_reg (x64_mul_lo_with_flags_paired ty true x y) (jmp_cond (CC.O) taken not_taken)))
 
 ;; Rules for `br_table` ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

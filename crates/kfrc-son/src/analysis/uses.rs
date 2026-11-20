@@ -60,6 +60,14 @@ impl Uses {
     }
 
     pub(crate) fn build(graph: &FunctionGraph) -> Self {
+        if graph.may_have_forwarded_edges() {
+            Self::build_with_edges::<true>(graph)
+        } else {
+            Self::build_with_edges::<false>(graph)
+        }
+    }
+
+    fn build_with_edges<const RESOLVE: bool>(graph: &FunctionGraph) -> Self {
         // One walk records each edge as (used, user, slot) in the order of the
         // per-node lists (users by id, operand slots, then control); a counting
         // sort by used node then places the uses.
@@ -67,12 +75,17 @@ impl Uses {
         let mut edges: Vec<[u32; 3]> = Vec::with_capacity(graph.len() * 2);
         for user in graph.ids() {
             for (slot, &input) in graph.inputs(user).iter().enumerate() {
-                let used = graph.resolve(input);
+                let used = if RESOLVE { graph.resolve(input) } else { input };
                 starts[used.index() + 1] += 1;
                 edges.push([used.0, user.0, slot as u32]);
             }
-            let control = graph.resolve(graph.control(user));
+            let control = graph.control(user);
             if !control.is_none() {
+                let control = if RESOLVE {
+                    graph.resolve(control)
+                } else {
+                    control
+                };
                 starts[control.index() + 1] += 1;
                 edges.push([control.0, user.0, CONTROL]);
             }

@@ -43,6 +43,7 @@ pub use transforms::ipo::{
     GraphProvider, IdentityFoldStats, InlineBudget, InlineCostPolicy, InlineDecision, InlineError,
     InlineSkip, InlineStats, InlineTemperature, TailRecursionStats, eliminate_tail_recursion,
     fold_identity_calls, inline_calls, inline_calls_with_cost, promote_arguments,
+    specialize_literal_argument,
 };
 pub use transforms::scalar::ranges::{RangeFoldStats, run as fold_scalar_ranges};
 pub use verify::{VerifyError, verify_graph};

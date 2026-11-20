@@ -258,6 +258,10 @@ pub struct Lower<'func, I: VCodeInst> {
     /// their original locations.
     inst_sunk: FxHashSet<Inst>,
 
+    /// A pure instruction already emitted with this block's terminator.
+    #[cfg(feature = "x86")]
+    branch_fused_inst: Option<Inst>,
+
     /// Instructions collected for the CLIF inst in progress, in forward order.
     ir_insts: Vec<I>,
 
@@ -560,6 +564,8 @@ impl<'func, I: VCodeInst> Lower<'func, I> {
             value_ir_uses,
             value_lowered_uses: SecondaryMap::default(),
             inst_sunk: FxHashSet::default(),
+            #[cfg(feature = "x86")]
+            branch_fused_inst: None,
             cur_scan_entry_color: None,
             cur_inst: None,
             ir_insts: vec![],
@@ -826,6 +832,8 @@ impl<'func, I: VCodeInst> Lower<'func, I> {
         ctrl_plane: &mut ControlPlane,
     ) -> CodegenResult<()> {
         self.cur_scan_entry_color = Some(self.block_end_colors[block]);
+        #[cfg(feature = "x86")]
+        let branch_fused_inst = self.branch_fused_inst.take();
         // Lowering loop:
         // - For each non-branch instruction, in reverse order:
         //   - If side-effecting (load, store, branch/call/return,
@@ -846,6 +854,10 @@ impl<'func, I: VCodeInst> Lower<'func, I> {
         // then reverse these and append to the VCode at the end of
         // each IR instruction.
         for inst in self.f.layout.block_insts(block).rev() {
+            #[cfg(feature = "x86")]
+            if branch_fused_inst == Some(inst) {
+                continue;
+            }
             let data = &self.f.dfg.insts[inst];
             let has_side_effect = has_lowering_side_effect(self.f, inst);
             // If  inst has been sunk to another location, skip it.
@@ -1324,6 +1336,34 @@ impl<'func, I: VCodeInst> Lower<'func, I> {
             ValueUseState::Unused => true,
             _ => false,
         }
+    }
+
+    #[cfg(feature = "x86")]
+    pub(crate) fn value_has_one_use(&self, val: Value) -> bool {
+        self.value_ir_uses[val] == ValueUseState::Once
+    }
+
+    /// The branch lowering consumed the flag itself, either the second
+    /// result or the only result of an adjacent compare. Alias the arithmetic
+    /// result exactly as ordinary lowering would, including any uses
+    /// on outgoing edges that haven't yet been lowered.
+    #[cfg(feature = "x86")]
+    pub(crate) fn finish_fused_branch_producer(&mut self, inst: Inst, flag_inst: Inst, reg: Reg) {
+        debug_assert_eq!(
+            self.cur_inst.and_then(|b| self.f.layout.prev_inst(b)),
+            Some(flag_inst)
+        );
+        debug_assert!(!has_lowering_side_effect(self.f, inst));
+        debug_assert!(!has_lowering_side_effect(self.f, flag_inst));
+        debug_assert!(inst == flag_inst || self.f.layout.prev_inst(flag_inst) == Some(inst));
+        let flag = *self.f.dfg.inst_results(flag_inst).last().unwrap();
+        debug_assert!(self.value_has_one_use(flag));
+        debug_assert_eq!(self.value_lowered_uses[flag], 0);
+        let result = self.f.dfg.first_result(inst);
+        let dst = self.value_regs[result].only_reg().unwrap();
+        self.vregs.set_vreg_alias(dst, reg);
+        debug_assert!(self.branch_fused_inst.is_none());
+        self.branch_fused_inst = Some(inst);
     }
 
     pub fn block_successor_label(&self, block: Block, succ: usize) -> MachLabel {
