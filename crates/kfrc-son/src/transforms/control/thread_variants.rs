@@ -21,6 +21,7 @@ use crate::{ComparePredicate, FunctionGraph, NodeId, Opcode, ValueType};
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct VariantThreadStats {
     pub control_spines_collapsed: usize,
+    pub checks_hoisted: usize,
     pub regions_threaded: usize,
     pub branches_removed: usize,
     pub predecessors_threaded: usize,
@@ -75,6 +76,14 @@ fn run_with_edge_facts(
             analysis = Some(Analysis::new(graph, eager, &mut stats.nodes_indexed));
         }
         let index = analysis.as_mut().unwrap();
+        if let Some(check) = MergeCheck::new(graph, region, &index.uses) {
+            stats.dirty_nodes.push(check.check());
+            check.apply(graph, region);
+            stats.checks_hoisted += 1;
+            analysis = None;
+            pending.push_front((region, depth));
+            continue;
+        }
         if let Some(spine) = TransparentSpine::new(graph, region, &index.uses) {
             stats.dirty_nodes.extend(
                 spine
@@ -157,6 +166,182 @@ impl Analysis {
 fn simplify_once() -> bool {
     static ONCE: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
     *ONCE.get_or_init(|| std::env::var("KFRC_THREAD_SIMPLIFY").as_deref() != Ok("each"))
+}
+
+fn hoist_merge_checks() -> bool {
+    static ENABLED: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+    *ENABLED.get_or_init(|| std::env::var("KFRC_HOIST_MERGE_CHECKS").as_deref() != Ok("0"))
+}
+
+/// Fixed operations that produce only control and effect, placed directly
+/// after a Region (the `RequireDefined` and storage-lifetime markers that a
+/// `match` on an inlined callee's returned enum leaves behind), hide the merge
+/// from the branch they lead to. Running a copy of the whole chain at the end
+/// of each predecessor, with that predecessor's Phi inputs, executes the same
+/// operations on exactly the same paths at the same point in program order;
+/// the merge's effect Phi then joins the copies' effects. Afterwards the
+/// Region is followed directly by its branch and can be threaded.
+struct MergeCheck {
+    chain: Vec<NodeId>,
+}
+
+fn hoistable(op: Opcode) -> bool {
+    matches!(
+        op,
+        Opcode::RequireDefined | Opcode::SlotDead | Opcode::SlotLive | Opcode::Assume
+    )
+}
+
+impl MergeCheck {
+    fn new(graph: &FunctionGraph, region: NodeId, uses: &Uses) -> Option<Self> {
+        if !hoist_merge_checks() {
+            return None;
+        }
+        let merged = |node: NodeId| {
+            graph.op(node) == Opcode::Phi && graph.resolve(graph.input(node, 0)) == region
+        };
+        let mut first = None;
+        for usage in uses.of(region) {
+            let user = usage.user;
+            match (usage.kind(), graph.op(user)) {
+                (UseKind::Operand(0), Opcode::Phi) => {}
+                (UseKind::Control, op) if hoistable(op) && first.is_none() => first = Some(user),
+                _ => return None,
+            }
+        }
+        if !graph
+            .inputs(region)
+            .iter()
+            .all(|&jump| graph.op(graph.resolve(jump)) == Opcode::Jump)
+        {
+            return None;
+        }
+        let mut chain = Vec::new();
+        let mut node = first?;
+        let branch = loop {
+            if chain.len() == 8 {
+                return None;
+            }
+            // Operands: the chain's own effect, or values available at the
+            // end of every predecessor (merged by this Region or defined
+            // before it, never by an earlier link of the chain).
+            let effect = graph.resolve(graph.input(node, 0));
+            let expected_effect = match chain.last() {
+                None => merged(effect) || graph.value_type(effect) == &ValueType::Effect,
+                Some(&previous) => Some(effect) == graph.find_projection(previous, 1),
+            };
+            if !expected_effect || graph.find_projection(node, 2).is_some() {
+                return None;
+            }
+            for &input in &graph.inputs(node)[1..] {
+                let input = graph.resolve(input);
+                if graph.op(input) == Opcode::Projection
+                    && chain.contains(&graph.resolve(graph.input(input, 0)))
+                {
+                    return None;
+                }
+            }
+            chain.push(node);
+            let continuation = graph.find_projection(node, 0)?;
+            let [next] = uses.of(continuation) else {
+                return None;
+            };
+            if next.kind() != UseKind::Control {
+                return None;
+            }
+            if hoistable(graph.op(next.user)) {
+                node = next.user;
+                continue;
+            }
+            break next.user;
+        };
+        // Intermediate effects feed only the next link; the last one is
+        // replaced by the merged effect.
+        for pair in chain.windows(2) {
+            let effect = graph.find_projection(pair[0], 1)?;
+            if uses.of(effect).iter().any(|usage| usage.user != pair[1]) {
+                return None;
+            }
+        }
+        // Only worth it when the chain leads to a branch on a merged value.
+        if !matches!(graph.op(branch), Opcode::VariantSwitch | Opcode::If)
+            || !merged(graph.resolve(graph.input(branch, 0)))
+        {
+            return None;
+        }
+        Some(Self { chain })
+    }
+
+    fn check(&self) -> NodeId {
+        self.chain[0]
+    }
+
+    fn apply(self, graph: &mut FunctionGraph, region: NodeId) {
+        let incoming = |graph: &FunctionGraph, node: NodeId, slot: usize| {
+            let node = graph.resolve(node);
+            if graph.op(node) == Opcode::Phi && graph.resolve(graph.input(node, 0)) == region {
+                graph.resolve(graph.input(node, slot + 1))
+            } else {
+                node
+            }
+        };
+        let first_effect = graph.resolve(graph.input(self.chain[0], 0));
+        let merged_effect = if graph.op(first_effect) == Opcode::Phi
+            && graph.resolve(graph.input(first_effect, 0)) == region
+        {
+            first_effect
+        } else {
+            let mut inputs = vec![region];
+            inputs.resize(graph.inputs(region).len() + 1, first_effect);
+            graph.add_node(Opcode::Phi, NodeId::NONE, &inputs, 0, ValueType::Effect)
+        };
+        let jumps: Vec<_> = graph.inputs(region).to_vec();
+        for (slot, jump) in jumps.into_iter().enumerate() {
+            let jump = graph.resolve(jump);
+            let mut control = graph.resolve(graph.control(jump));
+            let mut effect = incoming(graph, first_effect, slot);
+            for &link in &self.chain {
+                let mut inputs = vec![effect];
+                for &input in &graph.inputs(link)[1..].to_vec() {
+                    inputs.push(incoming(graph, input, slot));
+                }
+                let copy = graph.add_node(
+                    graph.op(link),
+                    control,
+                    &inputs,
+                    graph.payload(link),
+                    graph.value_type(link).clone(),
+                );
+                control = graph.add_node(
+                    Opcode::Projection,
+                    NodeId::NONE,
+                    &[copy],
+                    0,
+                    ValueType::Control,
+                );
+                effect = graph.add_node(
+                    Opcode::Projection,
+                    NodeId::NONE,
+                    &[copy],
+                    1,
+                    ValueType::Effect,
+                );
+            }
+            graph.set_control(jump, control);
+            graph.set_input(merged_effect, slot + 1, effect);
+        }
+        let last = *self.chain.last().unwrap();
+        if let Some(continuation) = graph.find_projection(last, 0) {
+            graph.replace(continuation, region);
+        }
+        if let Some(effect) = graph.find_projection(last, 1) {
+            graph.replace(effect, merged_effect);
+        }
+        for link in self.chain {
+            graph.remove_node(link);
+        }
+        graph.resolve_edges();
+    }
 }
 
 // Inlining leaves Jump -> single-entry Region wrappers between a merge and

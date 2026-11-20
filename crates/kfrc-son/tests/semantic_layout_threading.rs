@@ -256,13 +256,16 @@ fn publishing_releases_enum_dispatch_while_preserving_snapshots_payloads_and_eff
             for poison in [false, true] {
                 let mut source = source(reverse, overwrite, poison);
                 optimize_specialized_graph(&mut source).unwrap();
-                assert_eq!(
+                // Either the merged check stays and Layout publishing threads
+                // the dispatch, or (KFRC_HOIST_MERGE_CHECKS, default on) the
+                // check runs at the end of each predecessor and the dispatch
+                // is already threaded before Layout. Both must lower to the
+                // same single residual test with identical behavior.
+                let shape = (
                     count(&source, Opcode::RequireDefined),
-                    1,
-                    "{}",
-                    source.dump()
+                    count(&source, Opcode::VariantSwitch),
                 );
-                assert_eq!(count(&source, Opcode::VariantSwitch), 1);
+                assert!(matches!(shape, (1, 1) | (2, 0)), "{shape:?}\n{}", source.dump());
                 let target = lower(&source);
                 assert_eq!(count(&target, Opcode::If), 1, "{}", target.dump());
                 assert_eq!(count(&target, Opcode::Call), 5);
