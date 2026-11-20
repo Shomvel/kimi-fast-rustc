@@ -1,25 +1,83 @@
 //! A chain with one observable hit destination can use a range or a bitmap.
 //! The miss stays in place, including when it starts another dispatch.
-use super::{MAX_WRAPPERS, Plan as Chain, jump_target};
+use super::{MAX_WRAPPERS, Membership, Plan as Chain, jump_target};
 use crate::analysis::uses::{UseKind, Uses};
 use crate::transforms::utils::cfg::CfgEditor;
 use crate::{ComparePredicate as P, FunctionGraph, NodeId, Opcode, ValueType};
-use kfrc_body::{IntegerWidth, SizeAlign, TyId, TypeOracle, TypeShape};
+use kfrc_body::{IntegerWidth, ScalarValidRange, SizeAlign, TyId, TypeOracle, TypeShape};
 
 pub(super) const MIN_CASES: usize = 3;
 
 #[derive(Clone, Copy)]
 pub(super) enum Test {
-    Range { low: u128, span: u128 },
-    Bits { low: u128, span: u128, mask: u64 },
+    Range {
+        low: u128,
+        span: u128,
+    },
+    Bits {
+        low: u128,
+        limit: Option<u128>,
+        mask: u64,
+        width: u8,
+    },
+}
+
+#[derive(Clone, Copy)]
+enum Bounds {
+    Guarded(u128),
+    Typed(ScalarValidRange),
+}
+
+fn bitmap_width(mask: u64) -> u8 {
+    if u32::try_from(mask).is_ok() { 32 } else { 64 }
+}
+
+fn range_fits_index(range: ScalarValidRange, low: u128, width: u8) -> bool {
+    let distance = |bits: u128| bits.wrapping_sub(low) & range.mask();
+    let start = distance(range.start());
+    let end = distance(range.end());
+    // Subtraction rotates the interval in the input width. When the rotated
+    // range wraps, some index reaches the maximum (at least 255), regardless
+    // of whether both endpoints appear small in another representation.
+    !range.is_full() && start <= end && end < u128::from(width)
 }
 
 impl Test {
-    fn select(cases: &[super::Case], domain: u128) -> Option<Self> {
+    fn select(cases: &[super::Case], bounds: Bounds) -> Option<Self> {
         let values = || cases.iter().map(|case| case.test.bits);
         let (low, high) = (values().min()?, values().max()?);
         let span = high - low;
         let count = cases.len() as u128;
+        if let Bounds::Typed(range) = bounds {
+            if span + 1 == count {
+                // Keep this experiment focused on non-contiguous tests.
+                return None;
+            }
+            for low in [0, low, range.start()] {
+                let indices = values().map(|bits| bits.wrapping_sub(low) & range.mask());
+                if indices.clone().any(|index| index >= 64) {
+                    continue;
+                }
+                let mask = indices.fold(0, |mask, index| mask | (1u64 << index));
+                for width in [bitmap_width(mask), 64] {
+                    // A wide test or a bias may cost an extra instruction.
+                    if cases.len() >= MIN_CASES + usize::from(width > 32 || low != 0)
+                        && range_fits_index(range, low, width)
+                    {
+                        return Some(Self::Bits {
+                            low,
+                            limit: None,
+                            mask,
+                            width,
+                        });
+                    }
+                }
+            }
+            return None;
+        }
+        let Bounds::Guarded(domain) = bounds else {
+            unreachable!()
+        };
         if span + 1 == count {
             return Some(Self::Range { low, span });
         }
@@ -42,8 +100,30 @@ impl Test {
             _ => return None,
         };
         let mask = values().fold(0, |mask, bits| mask | (1u64 << (bits - low)));
-        Some(Self::Bits { low, span, mask })
+        Some(Self::Bits {
+            low,
+            limit: Some(span),
+            mask,
+            width: bitmap_width(mask),
+        })
     }
+}
+
+/// Read only a bound of this exact typed load. Rewrites that forward the
+/// observed value, clone the load or combine reads don't acquire this fact.
+fn certified_load(graph: &FunctionGraph, value: NodeId, width: u8) -> Option<ScalarValidRange> {
+    let ranges = graph.enum_tag_load_ranges.as_deref()?;
+    if graph.op(value) != Opcode::Projection || graph.payload(value) != 2 {
+        return None;
+    }
+    let load = graph.input(value, 0);
+    if graph.op(load) != Opcode::Load {
+        return None;
+    }
+    ranges
+        .get(&load)
+        .copied()
+        .filter(|range| range.bits() == width)
 }
 
 struct Path {
@@ -95,9 +175,10 @@ impl Plan {
         graph: &FunctionGraph,
         uses: &Uses,
         chain: &Chain,
+        policy: Membership,
         visits: &mut usize,
     ) -> Option<Self> {
-        if chain.cases.len() < MIN_CASES {
+        if policy == Membership::Off || chain.cases.len() < MIN_CASES {
             return None;
         }
         let ty = graph.rust_type(chain.value)?;
@@ -107,7 +188,12 @@ impl Plan {
         if graph.oracle.scalar_validity(ty).is_some() {
             return None;
         }
-        let domain = (1u128 << width.bits(64)) - 1;
+        let width = width.bits(64);
+        let bounds = if policy == Membership::Typed {
+            Bounds::Typed(certified_load(graph, chain.value, width)?)
+        } else {
+            Bounds::Guarded((1u128 << width) - 1)
+        };
         let first = Path::collect(graph, uses, chain.cases[0].test.yes, visits)?;
         let mut phis = Vec::new();
         for usage in uses.of(first.region) {
@@ -142,7 +228,7 @@ impl Plan {
         }
         let (len, test) = (MIN_CASES..=1 + redundant.len())
             .rev()
-            .find_map(|len| Test::select(&chain.cases[..len], domain).map(|test| (len, test)))?;
+            .find_map(|len| Test::select(&chain.cases[..len], bounds).map(|test| (len, test)))?;
         redundant.truncate(len - 1);
         Some(Self {
             test,
@@ -160,8 +246,9 @@ impl Plan {
         let boolean = graph
             .rust_type(graph.input(chain.cases[0].branch, 0))
             .unwrap();
-        let (low, span) = match self.test {
-            Test::Range { low, span } | Test::Bits { low, span, .. } => (low, span),
+        let (low, limit) = match self.test {
+            Test::Range { low, span } => (low, Some(span)),
+            Test::Bits { low, limit, .. } => (low, limit),
         };
         // Keep the subtraction and guard in the original width. In particular,
         // a larger word must not alias a set bit when narrowed for the shift.
@@ -171,19 +258,21 @@ impl Plan {
             let low = graph.add_constant(low, ty);
             pure(graph, Opcode::Sub, &[chain.value, low], 0, ty)
         };
-        let limit = graph.add_constant(span, ty);
-        let in_range = pure(
-            graph,
-            Opcode::Compare,
-            &[offset, limit],
-            P::UnsignedLessEqual as u32,
-            boolean,
-        );
-        let [inside, outside] = branch(graph, chain.control, in_range);
-        let (hit, miss) = match self.test {
-            Test::Range { .. } => (inside, outside),
-            Test::Bits { mask, .. } => {
-                let (width, bytes) = if u32::try_from(mask).is_ok() {
+        let check = limit.map(|limit| {
+            let limit = graph.add_constant(limit, ty);
+            let in_range = pure(
+                graph,
+                Opcode::Compare,
+                &[offset, limit],
+                P::UnsignedLessEqual as u32,
+                boolean,
+            );
+            branch(graph, chain.control, in_range)
+        });
+        let [hit, miss] = match self.test {
+            Test::Range { .. } => check.unwrap(),
+            Test::Bits { mask, width, .. } => {
+                let (width, bytes) = if width == 32 {
                     (IntegerWidth::W32, 4)
                 } else {
                     (IntegerWidth::W64, 8)
@@ -198,9 +287,9 @@ impl Plan {
                         align: bytes,
                     }),
                 );
-                // Here the guard establishes offset <= 63, so extension of
-                // a signed narrow operand and truncation of a wide operand
-                // both preserve its value. The shift alone would wrap indices.
+                // The guard or typed range establishes offset <= 63, so
+                // extension of a signed narrow operand and truncation of a
+                // wide operand both preserve its value.
                 let index = if word == ty {
                     offset
                 } else {
@@ -218,17 +307,21 @@ impl Plan {
                     P::NotEqual as u32,
                     boolean,
                 );
-                let [hit, unset] = branch(graph, inside, contains);
-                let outside = graph.add_node(Opcode::Jump, outside, &[], 0, ValueType::Control);
-                let unset = graph.add_node(Opcode::Jump, unset, &[], 0, ValueType::Control);
-                let miss = graph.add_node(
-                    Opcode::Region,
-                    NodeId::NONE,
-                    &[outside, unset],
-                    0,
-                    ValueType::Control,
-                );
-                (hit, miss)
+                if let Some([inside, outside]) = check {
+                    let [hit, unset] = branch(graph, inside, contains);
+                    let outside = graph.add_node(Opcode::Jump, outside, &[], 0, ValueType::Control);
+                    let unset = graph.add_node(Opcode::Jump, unset, &[], 0, ValueType::Control);
+                    let miss = graph.add_node(
+                        Opcode::Region,
+                        NodeId::NONE,
+                        &[outside, unset],
+                        0,
+                        ValueType::Control,
+                    );
+                    [hit, miss]
+                } else {
+                    branch(graph, chain.control, contains)
+                }
             }
         };
         graph.replace(chain.cases[0].test.yes, hit);
@@ -284,4 +377,93 @@ fn branch(graph: &mut FunctionGraph, control: NodeId, condition: NodeId) -> [Nod
             ValueType::Control,
         )
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn modular_range_proof_agrees_with_every_byte() {
+        for (start, end) in [
+            (0, 16),
+            (4, 63),
+            (0, 64),
+            (245, 5),
+            (245, 244),
+            (255, 0),
+            (255, 255),
+        ] {
+            let range = ScalarValidRange::new(8, start, end).unwrap();
+            for low in 0..=255 {
+                for width in [32, 64] {
+                    let expected = (0u128..=255)
+                        .filter(|&bits| range.contains(bits))
+                        .all(|bits| bits.wrapping_sub(low) & 255 < u128::from(width));
+                    assert_eq!(
+                        range_fits_index(range, low, width),
+                        expected,
+                        "{start}..{end}, bias {low}, word {width}"
+                    );
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn fact_survives_renumbering_but_cannot_follow_an_alias() {
+        use crate::GraphLevel;
+        use kfrc_body::{FunctionAbi, PassMode, RecordedTypes};
+
+        let mut graph = FunctionGraph::new(
+            "tags",
+            FunctionAbi {
+                args: vec![],
+                ret: PassMode::Ignore,
+                c_variadic: false,
+            },
+            RecordedTypes::new(),
+        );
+        graph.level = GraphLevel::Layout;
+        let ty = graph.oracle.intern(
+            TypeShape::Int {
+                width: IntegerWidth::W8,
+                signed: false,
+            },
+            None,
+        );
+        graph.add_constant(0, ty); // Retired by compaction, moving every subsequent id.
+        let load = graph.add_node(Opcode::Load, NodeId::NONE, &[], 0, ValueType::Control);
+        let other = graph.add_node(Opcode::Load, NodeId::NONE, &[], 0, ValueType::Control);
+        let result = graph.add_node(
+            Opcode::Projection,
+            NodeId::NONE,
+            &[load],
+            2,
+            ValueType::Rust(ty),
+        );
+        let ret = graph.add_node(
+            Opcode::Return,
+            NodeId::NONE,
+            &[result],
+            0,
+            ValueType::Control,
+        );
+        let range = ScalarValidRange::new(8, 0, 16).unwrap();
+        graph
+            .enum_tag_load_ranges
+            .get_or_insert_with(Default::default)
+            .insert(load, range);
+        graph.compact();
+        let result = graph.input(NodeId(ret.0 - 1), 0);
+        assert_eq!(certified_load(&graph, result, 8), Some(range));
+        let load = graph.input(result, 0);
+        graph.replace(load, NodeId(other.0 - 1));
+        graph.compact();
+        let ret = graph
+            .ids()
+            .find(|&node| graph.op(node) == Opcode::Return)
+            .unwrap();
+        assert_eq!(certified_load(&graph, graph.input(ret, 0), 8), None);
+    }
 }

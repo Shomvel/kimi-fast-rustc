@@ -39,6 +39,7 @@ use std::collections::BTreeMap;
 
 use kfrc_body::{IntegerWidth, SizeAlign, TyId, TypeOracle, TypeShape};
 
+use crate::transforms::control::switches::{self, Membership};
 use crate::{FunctionGraph, GraphLevel, GraphState, NodeId, Opcode, ValueType};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -107,6 +108,7 @@ pub struct LayoutStats {
     pub integer_switch_nodes_visited: usize,
     pub integer_range_memberships: usize,
     pub integer_bit_memberships: usize,
+    pub integer_unguarded_bit_memberships: usize,
     pub byte_ladders_grouped: usize,
     pub byte_ladder_cells_grouped: usize,
     pub byte_ladder_length_buckets: usize,
@@ -186,6 +188,7 @@ fn lower_validated(
     let boundary_transport =
         boundary_transport::select(&candidate, &demands, &owned_transport, &encoded_values);
     let whole_transport = transport::select(&candidate);
+    let membership = switches::membership_policy();
     let mut lowering = LayoutLowering {
         graph: &mut candidate,
         projections,
@@ -195,6 +198,7 @@ fn lower_validated(
         array_transport,
         boundary_transport,
         whole_transport,
+        track_enum_tag_ranges: membership == Membership::Typed,
         owned_phis: Vec::new(),
         stats: LayoutStats::default(),
         retired: Vec::new(),
@@ -249,12 +253,14 @@ fn lower_validated(
     stats.byte_ladder_node_visits = ladders.node_visits;
     stats.byte_ladder_budget_exhausted = ladders.budget_exhausted;
     // Form machine dispatch only after the final proof-driven If rewrites.
-    let switches = crate::transforms::control::switches::run(&mut candidate);
+    let switches = switches::run(&mut candidate, membership);
+    candidate.enum_tag_load_ranges = None;
     stats.integer_switches_created = switches.switches_created;
     stats.integer_switch_cases_merged = switches.cases_merged;
     stats.integer_switch_nodes_visited = switches.nodes_visited;
     stats.integer_range_memberships = switches.range_memberships;
     stats.integer_bit_memberships = switches.bit_memberships;
+    stats.integer_unguarded_bit_memberships = switches.unguarded_bit_memberships;
     // Permissions belong to S parameters and source calls (RS5.1 erasure
     // point). L parameters follow physical passing modes instead.
     candidate.arg_permissions.clear();
@@ -336,6 +342,7 @@ struct LayoutLowering<'a> {
     array_transport: HashSet<TyId>,
     boundary_transport: boundary_transport::Certificates,
     whole_transport: HashSet<NodeId>,
+    track_enum_tag_ranges: bool,
     owned_phis: Vec<owned_transport::OwnedPhiInit>,
     stats: LayoutStats,
     retired: Vec<NodeId>,

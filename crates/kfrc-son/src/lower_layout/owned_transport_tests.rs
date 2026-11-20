@@ -92,6 +92,7 @@ fn typed_snapshot_captures_old_raw_bytes_before_same_edge_overwrite() {
         array_transport: HashSet::default(),
         boundary_transport: HashMap::default(),
         whole_transport: HashSet::default(),
+        track_enum_tag_ranges: false,
         owned_phis: Vec::new(),
         stats: LayoutStats::default(),
         retired: Vec::new(),

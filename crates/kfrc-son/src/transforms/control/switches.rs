@@ -20,6 +20,7 @@ pub(crate) struct SwitchStats {
     pub cases_merged: usize,
     pub range_memberships: usize,
     pub bit_memberships: usize,
+    pub unguarded_bit_memberships: usize,
     pub nodes_visited: usize,
 }
 
@@ -249,16 +250,27 @@ impl Plan {
     }
 }
 
-pub(crate) fn run(graph: &mut FunctionGraph) -> SwitchStats {
-    static MEMBERSHIP: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
-    // A bitmap can reduce retired instructions while making a hot branch
-    // slower on the target. Keep the transformation available for comparison.
-    let membership =
-        *MEMBERSHIP.get_or_init(|| std::env::var("KFRC_COMPACT_MEMBERSHIP").as_deref() == Ok("1"));
-    run_with_membership(graph, membership)
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub(crate) enum Membership {
+    Off,
+    Guarded,
+    Typed,
 }
 
-fn run_with_membership(graph: &mut FunctionGraph, membership_enabled: bool) -> SwitchStats {
+pub(crate) fn membership_policy() -> Membership {
+    static MEMBERSHIP: std::sync::OnceLock<Membership> = std::sync::OnceLock::new();
+    // A bitmap can reduce retired instructions while making a hot branch
+    // slower on the target. Keep the transformation available for comparison.
+    *MEMBERSHIP.get_or_init(
+        || match std::env::var("KFRC_COMPACT_MEMBERSHIP").as_deref() {
+            Ok("1") => Membership::Guarded,
+            Ok("typed") => Membership::Typed,
+            _ => Membership::Off,
+        },
+    )
+}
+
+pub(crate) fn run(graph: &mut FunctionGraph, policy: Membership) -> SwitchStats {
     debug_assert_eq!(graph.level, GraphLevel::Layout);
     graph.resolve_edges();
     let mut stats = SwitchStats::default();
@@ -266,7 +278,13 @@ fn run_with_membership(graph: &mut FunctionGraph, membership_enabled: bool) -> S
         .ids()
         .filter(|node| graph.op(*node) == Opcode::If)
         .collect();
-    if candidates.len() < if membership_enabled { 3 } else { MIN_CASES } {
+    if candidates.len()
+        < if policy == Membership::Off {
+            MIN_CASES
+        } else {
+            membership::MIN_CASES
+        }
+    {
         return stats;
     }
     let uses = Uses::new(graph);
@@ -281,14 +299,16 @@ fn run_with_membership(graph: &mut FunctionGraph, membership_enabled: bool) -> S
         else {
             continue;
         };
-        let membership = membership_enabled
-            .then(|| membership::Plan::collect(graph, &uses, &plan, &mut stats.nodes_visited))
-            .flatten();
+        let membership =
+            membership::Plan::collect(graph, &uses, &plan, policy, &mut stats.nodes_visited);
         if let Some(membership) = &membership {
             plan.cases.truncate(membership.len());
             match membership.test {
                 membership::Test::Range { .. } => stats.range_memberships += 1,
-                membership::Test::Bits { .. } => stats.bit_memberships += 1,
+                membership::Test::Bits { limit, .. } => {
+                    stats.bit_memberships += 1;
+                    stats.unguarded_bit_memberships += usize::from(limit.is_none());
+                }
             }
         } else if plan.cases.len() >= MIN_CASES {
             stats.switches_created += 1;

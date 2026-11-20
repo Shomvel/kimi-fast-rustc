@@ -172,7 +172,7 @@ fn compact_membership_matches_every_byte_including_wrapped_indices() {
             verify_graph(&mut fixture.graph).unwrap();
             let original = fixture.graph.clone();
             assert_eq!(
-                run_with_membership(&mut fixture.graph, true).switches_created,
+                run(&mut fixture.graph, Membership::Guarded).switches_created,
                 0
             );
             verify_graph(&mut fixture.graph).unwrap();
@@ -202,7 +202,7 @@ fn compact_membership_does_not_truncate_the_guard_or_discard_the_residual_test()
     share_matches(&mut fixture, 3);
     verify_graph(&mut fixture.graph).unwrap();
     let original = fixture.graph.clone();
-    let stats = run_with_membership(&mut fixture.graph, true);
+    let stats = run(&mut fixture.graph, Membership::Guarded);
     assert_eq!(stats.bit_memberships, 1);
     assert_eq!(stats.switches_created, 0);
     verify_graph(&mut fixture.graph).unwrap();
@@ -227,7 +227,7 @@ fn membership_keeps_distinct_values_and_anchored_observations() {
     let cases = [1, 2, 7];
     let mut fixture = chain(IntegerWidth::W8, false, &cases, true);
     assert_eq!(
-        run_with_membership(&mut fixture.graph, true).bit_memberships,
+        run(&mut fixture.graph, Membership::Guarded).bit_memberships,
         0
     );
     assert_eq!(
@@ -252,7 +252,7 @@ fn membership_keeps_distinct_values_and_anchored_observations() {
         ValueType::Rust(fixture.word),
     );
     verify_graph(graph).unwrap();
-    assert_eq!(run_with_membership(graph, true).bit_memberships, 0);
+    assert_eq!(run(graph, Membership::Guarded).bit_memberships, 0);
     assert_eq!(
         graph.ids().filter(|&n| graph.op(n) == Opcode::If).count(),
         3
@@ -268,7 +268,7 @@ fn switch_matches_every_byte_and_preserves_shared_phi_slots() {
             let mut fixture = chain(IntegerWidth::W8, signed, &cases, wrapped);
             verify_graph(&mut fixture.graph).unwrap();
             let original = fixture.graph.clone();
-            let stats = run(&mut fixture.graph);
+            let stats = run(&mut fixture.graph, Membership::Off);
             assert_eq!(stats.switches_created, 1);
             assert_eq!(stats.cases_merged, cases.len());
             verify_graph(&mut fixture.graph).unwrap();
@@ -312,7 +312,7 @@ fn wide_and_nonzero_based_cases_keep_all_discriminant_bits() {
         let mut fixture = chain(width, false, &cases, true);
         verify_graph(&mut fixture.graph).unwrap();
         let original = fixture.graph.clone();
-        assert_eq!(run(&mut fixture.graph).switches_created, 1);
+        assert_eq!(run(&mut fixture.graph, Membership::Off).switches_created, 1);
         verify_graph(&mut fixture.graph).unwrap();
         for input in samples {
             assert_eq!(execute(&fixture.graph, input), execute(&original, input));
@@ -326,7 +326,7 @@ fn bounded_chunks_preserve_nested_dispatch_and_residual_default() {
     let mut fixture = chain(IntegerWidth::W16, false, &cases, true);
     verify_graph(&mut fixture.graph).unwrap();
     let original = fixture.graph.clone();
-    let stats = run(&mut fixture.graph);
+    let stats = run(&mut fixture.graph, Membership::Off);
     assert_eq!(stats.switches_created, 3);
     assert_eq!(stats.cases_merged, 260);
     verify_graph(&mut fixture.graph).unwrap();
@@ -425,7 +425,11 @@ fn fixed_events_and_phi_consumers_stop_transparent_collection() {
             graph.set_control(fixture.branches[2], after);
         }
         verify_graph(&mut fixture.graph).unwrap();
-        assert_eq!(run(&mut fixture.graph).switches_created, 0, "{barrier:?}");
+        assert_eq!(
+            run(&mut fixture.graph, Membership::Off).switches_created,
+            0,
+            "{barrier:?}"
+        );
         verify_graph(&mut fixture.graph).unwrap();
     }
     let mut fixture = chain(IntegerWidth::W64, false, &[1, 2, 3, 4], true);
@@ -438,7 +442,7 @@ fn fixed_events_and_phi_consumers_stop_transparent_collection() {
         ValueType::Rust(fixture.word),
     );
     verify_graph(&mut fixture.graph).unwrap();
-    assert_eq!(run(&mut fixture.graph).switches_created, 0);
+    assert_eq!(run(&mut fixture.graph, Membership::Off).switches_created, 0);
 }
 
 #[test]
@@ -447,14 +451,14 @@ fn extra_control_uses_changed_values_and_duplicate_cases_are_not_absorbed() {
     fixture
         .graph
         .add_node(Opcode::Jump, fixture.no[1], &[], 0, ValueType::Control);
-    assert_eq!(run(&mut fixture.graph).switches_created, 0);
+    assert_eq!(run(&mut fixture.graph, Membership::Off).switches_created, 0);
     let mut fixture = chain(IntegerWidth::W64, false, &[1, 2, 3, 4], false);
     let condition = fixture.graph.input(fixture.branches[2], 0);
     let other = fixture.graph.add_constant(99, fixture.word);
     fixture.graph.set_input(condition, 0, other);
-    assert_eq!(run(&mut fixture.graph).switches_created, 0);
+    assert_eq!(run(&mut fixture.graph, Membership::Off).switches_created, 0);
     let mut fixture = chain(IntegerWidth::W64, false, &[1, 2, 1, 4], false);
-    assert_eq!(run(&mut fixture.graph).switches_created, 0);
+    assert_eq!(run(&mut fixture.graph, Membership::Off).switches_created, 0);
 }
 
 #[test]
@@ -468,7 +472,7 @@ fn switch_observes_poison_at_the_dispatch() {
         ValueType::Rust(fixture.word),
     );
     fixture.graph.replace(fixture.input, poison);
-    assert_eq!(run(&mut fixture.graph).switches_created, 1);
+    assert_eq!(run(&mut fixture.graph, Membership::Off).switches_created, 1);
     verify_graph(&mut fixture.graph).unwrap();
     assert!(matches!(
         Interpreter::new(&fixture.graph).run(&[0], &mut |_: &str, _: &[u64]| Ok(0)),
@@ -479,7 +483,7 @@ fn switch_observes_poison_at_the_dispatch() {
 #[test]
 fn verifier_rejects_bad_switch_contracts() {
     let mut fixture = chain(IntegerWidth::W8, false, &[1, 2, 3, 4], false);
-    assert_eq!(run(&mut fixture.graph).switches_created, 1);
+    assert_eq!(run(&mut fixture.graph, Membership::Off).switches_created, 1);
     let baseline = fixture.graph;
     for defect in 0..11 {
         let mut graph = baseline.clone();

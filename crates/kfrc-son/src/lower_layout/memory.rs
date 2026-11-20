@@ -79,6 +79,35 @@ impl LayoutLowering<'_> {
         self.projection(load, 2, ValueType::Rust(ty))
     }
 
+    /// Read the tag of a typed (not representation-only) enum value. The
+    /// enclosing nominal type supplies the validity, not the tag's primitive
+    /// integer type. This also handles a niche tag sharing a payload lane.
+    pub(super) fn load_enum_tag(
+        &mut self,
+        address: NodeId,
+        enum_ty: TyId,
+        tag: FieldLayout,
+        control: &mut NodeId,
+        effect: &mut NodeId,
+    ) -> NodeId {
+        let pointer = self.field_address(address, tag.offset, tag.ty);
+        let value = self.load(pointer, tag.ty, control, effect);
+        if self.track_enum_tag_ranges
+            && let TypeShape::Int { width, .. } = self.graph.oracle.shape(tag.ty)
+            && let Some(validity) = self.graph.oracle.scalar_validity(enum_ty)
+            && let Some((_, range)) = validity
+                .lanes()
+                .find(|&(offset, range)| offset == tag.offset && range.bits() == width.bits(64))
+        {
+            let load = self.graph.input(value, 0);
+            self.graph
+                .enum_tag_load_ranges
+                .get_or_insert_with(Default::default)
+                .insert(load, range);
+        }
+        value
+    }
+
     pub(super) fn store(
         &mut self,
         address: NodeId,
