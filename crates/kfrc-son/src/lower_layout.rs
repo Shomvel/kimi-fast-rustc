@@ -227,7 +227,8 @@ fn lower_validated(
     stats.layout_values_cloned = threaded.values_cloned;
     stats.layout_threading_nodes_indexed = threaded.nodes_indexed;
     stats.layout_threading_node_visits = threaded.node_visits;
-    if threaded.regions_threaded + threaded.control_spines_collapsed != 0 {
+    if threaded.regions_threaded + threaded.control_spines_collapsed + threaded.checks_hoisted != 0
+    {
         cleanup::run(&mut candidate)?;
     }
     if std::env::var("KFRC_LOOP_PEEL").as_deref() != Ok("0") {
