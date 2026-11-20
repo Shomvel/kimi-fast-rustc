@@ -51,3 +51,17 @@ pub fn update(value: [u8; 64], index: usize, byte: u8) -> [u8; 64] {
 
 #[inline(never)]
 pub fn observe(value: [u8; 64]) -> u8 { value[7] ^ value[61] }
+
+// The successful branch captures the entire array before changing its source.
+// The other branch returns only a scalar, without reading the success payload.
+#[inline(never)]
+pub fn enum_snapshot(source: &mut [u8; 64], keep: bool) -> Result<Packet, u8> {
+    if keep {
+        let table = *source;
+        source[0] = 251;
+        source[63] = 197;
+        Ok(Packet { head: source[0], table, tail: 0x1234_5678_9abc_def0 })
+    } else {
+        Err(source[13])
+    }
+}

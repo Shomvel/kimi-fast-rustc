@@ -180,7 +180,7 @@ fn lower_validated(
     let encoded_values = encoded::encoded_demands(&candidate);
     let demands = demand::analyze(&candidate);
     let owned_transport = owned_transport::select(&candidate, &demands);
-    let array_transport = array_transport::select(&candidate);
+    let array_transport = array_transport::select(&candidate, &owned_transport);
     let boundary_transport =
         boundary_transport::select(&candidate, &demands, &owned_transport, &encoded_values);
     let whole_transport = transport::select(&candidate);

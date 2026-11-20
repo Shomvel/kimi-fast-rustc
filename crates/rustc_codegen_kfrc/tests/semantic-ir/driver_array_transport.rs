@@ -15,6 +15,17 @@ pub fn check() {
         assert_eq!(packet.tail, 0x1234_5678_9abc_def0);
         assert_eq!(packet.table, expected);
         assert_eq!(observe(packet.table), expected[7] ^ expected[61]);
+        let mut source = expected;
+        assert!(matches!(enum_snapshot(&mut source, false), Err(byte) if byte == expected[13]));
+        assert_eq!(source, expected);
+        let snapshot = enum_snapshot(&mut source, true).unwrap();
+        assert_eq!(snapshot.head, 251);
+        assert_eq!(snapshot.table, expected);
+        assert_eq!(snapshot.tail, 0x1234_5678_9abc_def0);
+        let mut changed = expected;
+        changed[0] = 251;
+        changed[63] = 197;
+        assert_eq!(source, changed);
         for count in 0..5 {
             assert_eq!(array_phi(packet.table, count), if count % 2 == 0 { expected } else { [17; 64] });
         }
