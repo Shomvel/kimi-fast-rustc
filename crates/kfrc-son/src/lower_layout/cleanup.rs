@@ -116,6 +116,8 @@ pub(super) fn run(graph: &mut FunctionGraph) -> Result<(), LayoutError> {
             break;
         }
     }
+    // Branches into Unreachable have served as facts above; drop them now.
+    simplify::run_final(graph).map_err(|e| LayoutError::Malformed(e.to_string()))?;
     // SimplifyCFG can introduce boolean inversions when collapsing diamonds.
     // Fold those before publishing the final scalar graph.
     instcombine::run(graph);
