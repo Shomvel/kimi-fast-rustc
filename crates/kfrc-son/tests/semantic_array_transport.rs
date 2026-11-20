@@ -1,5 +1,8 @@
 //! Whole-array transport stays compact while observations and Phis keep leaves.
-use kfrc_body::{FunctionAbi, IntegerWidth, PassMode, RecordedTypes, SizeAlign, TypeShape};
+use kfrc_body::{
+    AggregateLayout, EnumLayout, FieldLayout, FunctionAbi, IntegerWidth, PassMode, RecordedTypes,
+    SizeAlign, TagEncoding, TypeOracle, TypeShape,
+};
 use kfrc_son::{FunctionGraph, GraphLevel, NodeId, Opcode, ValueType, lower_layout, verify_graph};
 
 fn fixture(observe: bool, phi: bool, length: u64) -> FunctionGraph {
@@ -129,6 +132,84 @@ fn phi_transport_does_not_carry_reusable_snapshot_addresses() {
     let stats = lower_layout(&mut graph).unwrap();
     verify_graph(&mut graph).unwrap();
     assert_eq!(stats.transported_arrays, 0);
+}
+
+#[test]
+fn whole_array_can_feed_an_owned_enum_phi() {
+    let mut graph = fixture(false, false, 64);
+    let ret = graph
+        .ids()
+        .find(|&node| graph.op(node) == Opcode::Return)
+        .unwrap();
+    let array_value = graph.input(ret, 1);
+    let array = graph.rust_type(array_value).unwrap();
+    let &TypeShape::Array { element: byte, .. } = graph.oracle.shape(array) else {
+        unreachable!();
+    };
+    let enumeration = graph.oracle.intern(
+        TypeShape::Adt {
+            name: "ArrayOrEmpty".into(),
+        },
+        Some(SizeAlign { size: 65, align: 1 }),
+    );
+    graph.oracle.record_aggregate(
+        enumeration,
+        AggregateLayout {
+            fields: vec![],
+            variants: vec![
+                vec![FieldLayout {
+                    ty: array,
+                    offset: 1,
+                }],
+                vec![],
+            ],
+        },
+    );
+    let discriminants = vec![0, 1];
+    graph
+        .oracle
+        .record_semantic_enum(enumeration, discriminants.clone());
+    graph.oracle.enums.insert(
+        enumeration,
+        EnumLayout {
+            tag: Some(FieldLayout {
+                ty: byte,
+                offset: 0,
+            }),
+            encoding: TagEncoding::Direct { discriminants },
+        },
+    );
+    let variant = graph.add_node(
+        Opcode::MakeVariant,
+        NodeId::NONE,
+        &[array_value],
+        0,
+        ValueType::Rust(enumeration),
+    );
+    let entry = graph.add_node(Opcode::Jump, graph.control(ret), &[], 0, ValueType::Control);
+    let region = graph.add_node(
+        Opcode::Region,
+        NodeId::NONE,
+        &[entry],
+        0,
+        ValueType::Control,
+    );
+    let result = graph.add_node(
+        Opcode::Phi,
+        NodeId::NONE,
+        &[region, variant],
+        0,
+        ValueType::Rust(enumeration),
+    );
+    graph.set_control(ret, region);
+    graph.set_input(ret, 1, result);
+    verify_graph(&mut graph).unwrap();
+
+    let stats = lower_layout(&mut graph).unwrap();
+    verify_graph(&mut graph).unwrap();
+    assert_eq!(stats.owned_transport_phis, 1);
+    assert_eq!(stats.transported_arrays, 1);
+    assert_eq!(stats.field_loads, 0, "the payload stays a whole array");
 }
 
 #[test]

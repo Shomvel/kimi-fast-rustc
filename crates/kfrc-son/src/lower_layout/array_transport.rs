@@ -1,9 +1,8 @@
 //! Keep dense, whole arrays in private storage at their original read point.
 //!
-//! This first transport representation deliberately excludes element observers,
-//! updates and aggregate Phis. Those continue to use scalar leaves. In
-//! particular, a loop cannot carry an address to storage overwritten by the
-//! next execution of its defining load.
+//! Element observers, updates and scalarized aggregate Phis still need leaves.
+//! Whole-value enum Phis already snapshot their inputs on acyclic edges, so
+//! their constructors can materialize an array from a private snapshot too.
 use super::*;
 
 fn dense_array(graph: &FunctionGraph, ty: TyId) -> bool {
@@ -62,7 +61,7 @@ fn contains(graph: &FunctionGraph, owner: TyId, needle: TyId, seen: &mut HashSet
     }
 }
 
-pub(super) fn select(graph: &FunctionGraph) -> HashSet<TyId> {
+pub(super) fn select(graph: &FunctionGraph, owned_phis: &HashSet<NodeId>) -> HashSet<TyId> {
     let candidates: HashSet<_> = graph
         .ids()
         .filter_map(|node| graph.rust_type(node))
@@ -75,7 +74,7 @@ pub(super) fn select(graph: &FunctionGraph) -> HashSet<TyId> {
                 Opcode::Field | Opcode::InsertField => {
                     graph.rust_type(graph.input(node, 0)) == Some(array)
                 }
-                Opcode::Phi => graph
+                Opcode::Phi if !owned_phis.contains(&node) => graph
                     .rust_type(node)
                     .is_some_and(|ty| contains(graph, ty, array, &mut HashSet::default())),
                 _ => false,
