@@ -45,7 +45,7 @@ impl CrateGraphs {
             symbol: "crate".into(),
             message,
         })?;
-        run(self, &roots, limits.preparation_work).map(|_| ())
+        run(self, &roots, limits).map(|_| ())
     }
 }
 
@@ -231,16 +231,17 @@ fn emission_needs_retry(
 fn run(
     graphs: &mut CrateGraphs,
     roots: &BTreeSet<String>,
-    limit: usize,
+    limits: inline_cost::Limits,
 ) -> Result<report::Summary, CompileError> {
     let policy = inline_cost::policy().map_err(|message| CompileError {
         symbol: "crate".into(),
         message,
     })?;
-    let limits = inline_cost::limits().map_err(|message| CompileError {
-        symbol: "crate".into(),
-        message,
-    })?;
+    let reachable_nodes: usize = reachable(graphs, roots)
+        .iter()
+        .map(|symbol| graphs.bodies[symbol].len())
+        .sum();
+    let limit = limits.preparation_account(reachable_nodes);
     run_with_configuration(graphs, roots, limit, policy, &limits)
 }
 

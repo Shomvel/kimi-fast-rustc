@@ -10,6 +10,11 @@ use crate::profile::json_string;
 pub(crate) const DEFAULT_INVOCATION_NODES: usize = 65_536;
 /// Compiler-work units of the bottom-up preparation, unless configured.
 pub(crate) const DEFAULT_PREPARATION_WORK: usize = 1_000_000;
+/// Preparation work allowed per reachable source node. Unconstrained
+/// preparation of the four original crates spends 45-89 units per node, so a
+/// fixed 1M account cut off the largest (semver) after 73 functions; scaling
+/// keeps the account linear in crate size instead.
+pub(crate) const DEFAULT_PREPARATION_WORK_PER_NODE: usize = 128;
 /// Positive residual growth accepted at ordinary production call sites.
 const DEFAULT_ORDINARY_GROWTH: u64 = 160;
 /// Preserve the explicit uniform-residual calibration contract.
@@ -26,8 +31,19 @@ pub(crate) struct Limits {
     pub budget: InlineBudget,
     /// Graph nodes one inliner invocation may add.
     pub invocation_nodes: usize,
-    /// Compiler-work units of the crate's bottom-up preparation.
+    /// Minimum compiler-work units of the crate's bottom-up preparation.
     pub preparation_work: usize,
+    /// Additional work units per reachable source node; the account is the
+    /// larger of the two. Zero restores the fixed account.
+    pub preparation_work_per_node: usize,
+}
+
+impl Limits {
+    /// The preparation account for a crate with `source_nodes` reachable nodes.
+    pub(crate) fn preparation_account(&self, source_nodes: usize) -> usize {
+        self.preparation_work
+            .max(self.preparation_work_per_node.saturating_mul(source_nodes))
+    }
 }
 
 impl Default for Limits {
@@ -39,6 +55,7 @@ impl Default for Limits {
             },
             invocation_nodes: DEFAULT_INVOCATION_NODES,
             preparation_work: DEFAULT_PREPARATION_WORK,
+            preparation_work_per_node: DEFAULT_PREPARATION_WORK_PER_NODE,
         }
     }
 }
@@ -76,6 +93,10 @@ fn read_limits() -> Result<Limits, String> {
         },
         invocation_nodes: number("KFRC_INLINE_INVOCATION_NODES", defaults.invocation_nodes)?,
         preparation_work: number("KFRC_INLINE_PREPARATION_WORK", defaults.preparation_work)?,
+        preparation_work_per_node: number(
+            "KFRC_INLINE_PREPARATION_WORK_PER_NODE",
+            defaults.preparation_work_per_node,
+        )?,
     })
 }
 
@@ -312,6 +333,29 @@ pub(crate) fn report(caller: &str, stats: &InlineStats, policy: InlineCostPolicy
             stats.specializations_prepared,
             stats.specialization_nodes_cloned,
             stats.specialization_cache_hits,
+        );
+    }
+}
+
+#[cfg(test)]
+mod preparation_account_tests {
+    use super::*;
+
+    #[test]
+    fn preparation_account_scales_with_reachable_source_nodes() {
+        let limits = Limits::default();
+        // Small crates keep the fixed minimum.
+        assert_eq!(limits.preparation_account(5_000), DEFAULT_PREPARATION_WORK);
+        // semver 1.0.28 (18,297 reachable nodes) needs ~1.63M units unconstrained.
+        assert!(limits.preparation_account(18_297) >= 1_700_000);
+        // A zero per-node rate restores the fixed account.
+        let fixed = Limits {
+            preparation_work_per_node: 0,
+            ..limits
+        };
+        assert_eq!(
+            fixed.preparation_account(1_000_000),
+            DEFAULT_PREPARATION_WORK
         );
     }
 }
