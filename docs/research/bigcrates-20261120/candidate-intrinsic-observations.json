@@ -1,0 +1,911 @@
+[
+  {
+    "project": "ripgrep",
+    "intrinsic": "abort",
+    "observed_calls": 142,
+    "units": 13,
+    "crates": [
+      "aho-corasick@1.1.3",
+      "crossbeam-epoch@0.9.18",
+      "crossbeam-utils@0.8.20",
+      "globset@0.4.15",
+      "grep-cli@0.1.11",
+      "grep-printer@0.2.2",
+      "grep-regex@0.1.13",
+      "ignore@0.4.23",
+      "regex-automata@0.4.7",
+      "regex-syntax@0.8.4",
+      "ripgrep@14.1.1",
+      "serde_json@1.0.128",
+      "walkdir@2.5.0"
+    ]
+  },
+  {
+    "project": "ripgrep",
+    "intrinsic": "align_of_val",
+    "observed_calls": 299,
+    "units": 19,
+    "crates": [
+      "aho-corasick@1.1.3",
+      "anyhow@1.0.87",
+      "bstr@1.10.0",
+      "crossbeam-epoch@0.9.18",
+      "crossbeam-utils@0.8.20",
+      "globset@0.4.15",
+      "grep-cli@0.1.11",
+      "grep-printer@0.2.2",
+      "grep-regex@0.1.13",
+      "grep-searcher@0.1.14",
+      "ignore@0.4.23",
+      "regex-automata@0.4.7",
+      "regex-syntax@0.8.4",
+      "ripgrep@14.1.1",
+      "serde@1.0.210",
+      "serde_json@1.0.128",
+      "termcolor@1.4.1",
+      "textwrap@0.16.1",
+      "walkdir@2.5.0"
+    ]
+  },
+  {
+    "project": "ripgrep",
+    "intrinsic": "arith_offset",
+    "observed_calls": 166,
+    "units": 18,
+    "crates": [
+      "aho-corasick@1.1.3",
+      "anyhow@1.0.87",
+      "encoding_rs@0.8.34",
+      "globset@0.4.15",
+      "grep-cli@0.1.11",
+      "grep-printer@0.2.2",
+      "grep-regex@0.1.13",
+      "grep-searcher@0.1.14",
+      "ignore@0.4.23",
+      "lexopt@0.3.0",
+      "memchr@2.7.4",
+      "regex-automata@0.4.7",
+      "regex-syntax@0.8.4",
+      "ripgrep@14.1.1",
+      "serde_json@1.0.128",
+      "termcolor@1.4.1",
+      "textwrap@0.16.1",
+      "walkdir@2.5.0"
+    ]
+  },
+  {
+    "project": "ripgrep",
+    "intrinsic": "assert_inhabited",
+    "observed_calls": 353,
+    "units": 18,
+    "crates": [
+      "aho-corasick@1.1.3",
+      "bstr@1.10.0",
+      "crossbeam-epoch@0.9.18",
+      "encoding_rs@0.8.34",
+      "globset@0.4.15",
+      "grep-cli@0.1.11",
+      "grep-printer@0.2.2",
+      "grep-regex@0.1.13",
+      "ignore@0.4.23",
+      "memchr@2.7.4",
+      "regex-automata@0.4.7",
+      "regex-syntax@0.8.4",
+      "ripgrep@14.1.1",
+      "ryu@1.0.18",
+      "serde@1.0.210",
+      "serde_json@1.0.128",
+      "termcolor@1.4.1",
+      "walkdir@2.5.0"
+    ]
+  },
+  {
+    "project": "ripgrep",
+    "intrinsic": "atomic_cxchg",
+    "observed_calls": 225,
+    "units": 8,
+    "crates": [
+      "bstr@1.10.0",
+      "crossbeam-epoch@0.9.18",
+      "crossbeam-utils@0.8.20",
+      "globset@0.4.15",
+      "grep-cli@0.1.11",
+      "ignore@0.4.23",
+      "log@0.4.22",
+      "ripgrep@14.1.1"
+    ]
+  },
+  {
+    "project": "ripgrep",
+    "intrinsic": "atomic_cxchgweak",
+    "observed_calls": 75,
+    "units": 3,
+    "crates": [
+      "crossbeam-epoch@0.9.18",
+      "ignore@0.4.23",
+      "ripgrep@14.1.1"
+    ]
+  },
+  {
+    "project": "ripgrep",
+    "intrinsic": "atomic_fence",
+    "observed_calls": 48,
+    "units": 12,
+    "crates": [
+      "aho-corasick@1.1.3",
+      "bstr@1.10.0",
+      "crossbeam-epoch@0.9.18",
+      "crossbeam-utils@0.8.20",
+      "globset@0.4.15",
+      "grep-cli@0.1.11",
+      "grep-printer@0.2.2",
+      "grep-regex@0.1.13",
+      "ignore@0.4.23",
+      "regex-automata@0.4.7",
+      "ripgrep@14.1.1",
+      "walkdir@2.5.0"
+    ]
+  },
+  {
+    "project": "ripgrep",
+    "intrinsic": "atomic_load",
+    "observed_calls": 117,
+    "units": 17,
+    "crates": [
+      "aho-corasick@1.1.3",
+      "bstr@1.10.0",
+      "crossbeam-epoch@0.9.18",
+      "crossbeam-utils@0.8.20",
+      "globset@0.4.15",
+      "grep-cli@0.1.11",
+      "grep-printer@0.2.2",
+      "grep-regex@0.1.13",
+      "grep-searcher@0.1.14",
+      "ignore@0.4.23",
+      "log@0.4.22",
+      "memchr@2.7.4",
+      "memmap2@0.9.4",
+      "regex-automata@0.4.7",
+      "ripgrep@14.1.1",
+      "serde_json@1.0.128",
+      "termcolor@1.4.1"
+    ]
+  },
+  {
+    "project": "ripgrep",
+    "intrinsic": "atomic_or",
+    "observed_calls": 12,
+    "units": 2,
+    "crates": [
+      "crossbeam-epoch@0.9.18",
+      "ripgrep@14.1.1"
+    ]
+  },
+  {
+    "project": "ripgrep",
+    "intrinsic": "atomic_singlethreadfence",
+    "observed_calls": 8,
+    "units": 2,
+    "crates": [
+      "crossbeam-epoch@0.9.18",
+      "ignore@0.4.23"
+    ]
+  },
+  {
+    "project": "ripgrep",
+    "intrinsic": "atomic_store",
+    "observed_calls": 57,
+    "units": 10,
+    "crates": [
+      "crossbeam-epoch@0.9.18",
+      "crossbeam-utils@0.8.20",
+      "globset@0.4.15",
+      "grep-cli@0.1.11",
+      "ignore@0.4.23",
+      "log@0.4.22",
+      "memchr@2.7.4",
+      "memmap2@0.9.4",
+      "ripgrep@14.1.1",
+      "termcolor@1.4.1"
+    ]
+  },
+  {
+    "project": "ripgrep",
+    "intrinsic": "atomic_xadd",
+    "observed_calls": 77,
+    "units": 9,
+    "crates": [
+      "aho-corasick@1.1.3",
+      "crossbeam-epoch@0.9.18",
+      "crossbeam-utils@0.8.20",
+      "globset@0.4.15",
+      "grep-cli@0.1.11",
+      "grep-printer@0.2.2",
+      "ignore@0.4.23",
+      "regex-automata@0.4.7",
+      "ripgrep@14.1.1"
+    ]
+  },
+  {
+    "project": "ripgrep",
+    "intrinsic": "atomic_xchg",
+    "observed_calls": 40,
+    "units": 6,
+    "crates": [
+      "crossbeam-utils@0.8.20",
+      "globset@0.4.15",
+      "grep-cli@0.1.11",
+      "ignore@0.4.23",
+      "ripgrep@14.1.1",
+      "termcolor@1.4.1"
+    ]
+  },
+  {
+    "project": "ripgrep",
+    "intrinsic": "atomic_xsub",
+    "observed_calls": 160,
+    "units": 12,
+    "crates": [
+      "aho-corasick@1.1.3",
+      "bstr@1.10.0",
+      "crossbeam-epoch@0.9.18",
+      "crossbeam-utils@0.8.20",
+      "globset@0.4.15",
+      "grep-cli@0.1.11",
+      "grep-printer@0.2.2",
+      "grep-regex@0.1.13",
+      "ignore@0.4.23",
+      "regex-automata@0.4.7",
+      "ripgrep@14.1.1",
+      "walkdir@2.5.0"
+    ]
+  },
+  {
+    "project": "ripgrep",
+    "intrinsic": "black_box",
+    "observed_calls": 7,
+    "units": 3,
+    "crates": [
+      "grep-cli@0.1.11",
+      "ignore@0.4.23",
+      "ripgrep@14.1.1"
+    ]
+  },
+  {
+    "project": "ripgrep",
+    "intrinsic": "bswap",
+    "observed_calls": 4,
+    "units": 2,
+    "crates": [
+      "encoding_rs@0.8.34",
+      "regex-automata@0.4.7"
+    ]
+  },
+  {
+    "project": "ripgrep",
+    "intrinsic": "caller_location",
+    "observed_calls": 1,
+    "units": 1,
+    "crates": [
+      "log@0.4.22"
+    ]
+  },
+  {
+    "project": "ripgrep",
+    "intrinsic": "catch_unwind",
+    "observed_calls": 7,
+    "units": 3,
+    "crates": [
+      "grep-cli@0.1.11",
+      "ignore@0.4.23",
+      "ripgrep@14.1.1"
+    ]
+  },
+  {
+    "project": "ripgrep",
+    "intrinsic": "cold_path",
+    "observed_calls": 304,
+    "units": 22,
+    "crates": [
+      "aho-corasick@1.1.3",
+      "anyhow@1.0.87",
+      "bstr@1.10.0",
+      "crossbeam-epoch@0.9.18",
+      "crossbeam-utils@0.8.20",
+      "encoding_rs@0.8.34",
+      "globset@0.4.15",
+      "grep-cli@0.1.11",
+      "grep-printer@0.2.2",
+      "grep-regex@0.1.13",
+      "grep-searcher@0.1.14",
+      "ignore@0.4.23",
+      "lexopt@0.3.0",
+      "memchr@2.7.4",
+      "regex-automata@0.4.7",
+      "regex-syntax@0.8.4",
+      "ripgrep@14.1.1",
+      "ryu@1.0.18",
+      "serde_json@1.0.128",
+      "termcolor@1.4.1",
+      "textwrap@0.16.1",
+      "walkdir@2.5.0"
+    ]
+  },
+  {
+    "project": "ripgrep",
+    "intrinsic": "compare_bytes",
+    "observed_calls": 27,
+    "units": 18,
+    "crates": [
+      "aho-corasick@1.1.3",
+      "anyhow@1.0.87",
+      "encoding_rs_io@0.1.7",
+      "globset@0.4.15",
+      "grep-cli@0.1.11",
+      "grep-printer@0.2.2",
+      "grep-regex@0.1.13",
+      "grep-searcher@0.1.14",
+      "ignore@0.4.23",
+      "lexopt@0.3.0",
+      "regex-automata@0.4.7",
+      "regex-syntax@0.8.4",
+      "ripgrep@14.1.1",
+      "serde@1.0.210",
+      "serde_json@1.0.128",
+      "termcolor@1.4.1",
+      "textwrap@0.16.1",
+      "walkdir@2.5.0"
+    ]
+  },
+  {
+    "project": "ripgrep",
+    "intrinsic": "copy",
+    "observed_calls": 106,
+    "units": 13,
+    "crates": [
+      "aho-corasick@1.1.3",
+      "anyhow@1.0.87",
+      "globset@0.4.15",
+      "grep-regex@0.1.13",
+      "grep-searcher@0.1.14",
+      "ignore@0.4.23",
+      "lexopt@0.3.0",
+      "regex-automata@0.4.7",
+      "regex-syntax@0.8.4",
+      "ripgrep@14.1.1",
+      "ryu@1.0.18",
+      "serde_json@1.0.128",
+      "textwrap@0.16.1"
+    ]
+  },
+  {
+    "project": "ripgrep",
+    "intrinsic": "ctlz",
+    "observed_calls": 28,
+    "units": 10,
+    "crates": [
+      "aho-corasick@1.1.3",
+      "crossbeam-utils@0.8.20",
+      "globset@0.4.15",
+      "grep-regex@0.1.13",
+      "ignore@0.4.23",
+      "memchr@2.7.4",
+      "regex-automata@0.4.7",
+      "regex-syntax@0.8.4",
+      "ripgrep@14.1.1",
+      "walkdir@2.5.0"
+    ]
+  },
+  {
+    "project": "ripgrep",
+    "intrinsic": "ctlz_nonzero",
+    "observed_calls": 23,
+    "units": 8,
+    "crates": [
+      "aho-corasick@1.1.3",
+      "encoding_rs@0.8.34",
+      "globset@0.4.15",
+      "ignore@0.4.23",
+      "regex-automata@0.4.7",
+      "regex-syntax@0.8.4",
+      "ripgrep@14.1.1",
+      "walkdir@2.5.0"
+    ]
+  },
+  {
+    "project": "ripgrep",
+    "intrinsic": "ctpop",
+    "observed_calls": 5,
+    "units": 4,
+    "crates": [
+      "crossbeam-utils@0.8.20",
+      "memchr@2.7.4",
+      "regex-automata@0.4.7",
+      "regex-syntax@0.8.4"
+    ]
+  },
+  {
+    "project": "ripgrep",
+    "intrinsic": "cttz",
+    "observed_calls": 17,
+    "units": 13,
+    "crates": [
+      "aho-corasick@1.1.3",
+      "bstr@1.10.0",
+      "crossbeam-epoch@0.9.18",
+      "crossbeam-utils@0.8.20",
+      "encoding_rs@0.8.34",
+      "ignore@0.4.23",
+      "memchr@2.7.4",
+      "regex-automata@0.4.7",
+      "regex-syntax@0.8.4",
+      "ripgrep@14.1.1",
+      "serde@1.0.210",
+      "serde_json@1.0.128",
+      "termcolor@1.4.1"
+    ]
+  },
+  {
+    "project": "ripgrep",
+    "intrinsic": "cttz_nonzero",
+    "observed_calls": 43,
+    "units": 7,
+    "crates": [
+      "crossbeam-utils@0.8.20",
+      "globset@0.4.15",
+      "grep-cli@0.1.11",
+      "grep-regex@0.1.13",
+      "ignore@0.4.23",
+      "regex-automata@0.4.7",
+      "ripgrep@14.1.1"
+    ]
+  },
+  {
+    "project": "ripgrep",
+    "intrinsic": "disjoint_bitor",
+    "observed_calls": 4,
+    "units": 4,
+    "crates": [
+      "crossbeam-utils@0.8.20",
+      "ignore@0.4.23",
+      "regex-automata@0.4.7",
+      "ripgrep@14.1.1"
+    ]
+  },
+  {
+    "project": "ripgrep",
+    "intrinsic": "exact_div",
+    "observed_calls": 1,
+    "units": 1,
+    "crates": [
+      "ignore@0.4.23"
+    ]
+  },
+  {
+    "project": "ripgrep",
+    "intrinsic": "fabsf32",
+    "observed_calls": 1,
+    "units": 1,
+    "crates": [
+      "serde_json@1.0.128"
+    ]
+  },
+  {
+    "project": "ripgrep",
+    "intrinsic": "fabsf64",
+    "observed_calls": 2,
+    "units": 2,
+    "crates": [
+      "serde@1.0.210",
+      "serde_json@1.0.128"
+    ]
+  },
+  {
+    "project": "ripgrep",
+    "intrinsic": "is_val_statically_known",
+    "observed_calls": 18,
+    "units": 17,
+    "crates": [
+      "aho-corasick@1.1.3",
+      "anyhow@1.0.87",
+      "bstr@1.10.0",
+      "globset@0.4.15",
+      "grep-cli@0.1.11",
+      "grep-printer@0.2.2",
+      "grep-regex@0.1.13",
+      "grep-searcher@0.1.14",
+      "ignore@0.4.23",
+      "lexopt@0.3.0",
+      "regex-automata@0.4.7",
+      "regex-syntax@0.8.4",
+      "ripgrep@14.1.1",
+      "serde@1.0.210",
+      "serde_json@1.0.128",
+      "termcolor@1.4.1",
+      "walkdir@2.5.0"
+    ]
+  },
+  {
+    "project": "ripgrep",
+    "intrinsic": "ptr_offset_from",
+    "observed_calls": 19,
+    "units": 12,
+    "crates": [
+      "aho-corasick@1.1.3",
+      "bstr@1.10.0",
+      "crossbeam-utils@0.8.20",
+      "globset@0.4.15",
+      "grep-cli@0.1.11",
+      "grep-printer@0.2.2",
+      "grep-searcher@0.1.14",
+      "ignore@0.4.23",
+      "memchr@2.7.4",
+      "regex-automata@0.4.7",
+      "ripgrep@14.1.1",
+      "serde_json@1.0.128"
+    ]
+  },
+  {
+    "project": "ripgrep",
+    "intrinsic": "ptr_offset_from_unsigned",
+    "observed_calls": 309,
+    "units": 20,
+    "crates": [
+      "aho-corasick@1.1.3",
+      "anyhow@1.0.87",
+      "bstr@1.10.0",
+      "encoding_rs@0.8.34",
+      "encoding_rs_io@0.1.7",
+      "globset@0.4.15",
+      "grep-cli@0.1.11",
+      "grep-printer@0.2.2",
+      "grep-regex@0.1.13",
+      "ignore@0.4.23",
+      "lexopt@0.3.0",
+      "log@0.4.22",
+      "regex-automata@0.4.7",
+      "regex-syntax@0.8.4",
+      "ripgrep@14.1.1",
+      "serde@1.0.210",
+      "serde_json@1.0.128",
+      "termcolor@1.4.1",
+      "textwrap@0.16.1",
+      "walkdir@2.5.0"
+    ]
+  },
+  {
+    "project": "ripgrep",
+    "intrinsic": "raw_eq",
+    "observed_calls": 8,
+    "units": 7,
+    "crates": [
+      "aho-corasick@1.1.3",
+      "bstr@1.10.0",
+      "encoding_rs_io@0.1.7",
+      "globset@0.4.15",
+      "grep-regex@0.1.13",
+      "regex-automata@0.4.7",
+      "ripgrep@14.1.1"
+    ]
+  },
+  {
+    "project": "ripgrep",
+    "intrinsic": "rotate_left",
+    "observed_calls": 96,
+    "units": 4,
+    "crates": [
+      "crossbeam-utils@0.8.20",
+      "ignore@0.4.23",
+      "regex-automata@0.4.7",
+      "ripgrep@14.1.1"
+    ]
+  },
+  {
+    "project": "ripgrep",
+    "intrinsic": "saturating_add",
+    "observed_calls": 62,
+    "units": 15,
+    "crates": [
+      "aho-corasick@1.1.3",
+      "bstr@1.10.0",
+      "grep-cli@0.1.11",
+      "grep-printer@0.2.2",
+      "grep-regex@0.1.13",
+      "ignore@0.4.23",
+      "lexopt@0.3.0",
+      "memchr@2.7.4",
+      "regex-automata@0.4.7",
+      "regex-syntax@0.8.4",
+      "ripgrep@14.1.1",
+      "serde_json@1.0.128",
+      "termcolor@1.4.1",
+      "textwrap@0.16.1",
+      "walkdir@2.5.0"
+    ]
+  },
+  {
+    "project": "ripgrep",
+    "intrinsic": "saturating_sub",
+    "observed_calls": 55,
+    "units": 15,
+    "crates": [
+      "aho-corasick@1.1.3",
+      "bstr@1.10.0",
+      "globset@0.4.15",
+      "grep-cli@0.1.11",
+      "grep-regex@0.1.13",
+      "ignore@0.4.23",
+      "memchr@2.7.4",
+      "regex-automata@0.4.7",
+      "regex-syntax@0.8.4",
+      "ripgrep@14.1.1",
+      "serde@1.0.210",
+      "serde_json@1.0.128",
+      "termcolor@1.4.1",
+      "textwrap@0.16.1",
+      "walkdir@2.5.0"
+    ]
+  },
+  {
+    "project": "ripgrep",
+    "intrinsic": "select_unpredictable",
+    "observed_calls": 51,
+    "units": 9,
+    "crates": [
+      "aho-corasick@1.1.3",
+      "encoding_rs@0.8.34",
+      "globset@0.4.15",
+      "grep-printer@0.2.2",
+      "ignore@0.4.23",
+      "regex-automata@0.4.7",
+      "regex-syntax@0.8.4",
+      "ripgrep@14.1.1",
+      "walkdir@2.5.0"
+    ]
+  },
+  {
+    "project": "ripgrep",
+    "intrinsic": "simd_and",
+    "observed_calls": 8,
+    "units": 6,
+    "crates": [
+      "aho-corasick@1.1.3",
+      "memchr@2.7.4",
+      "regex-syntax@0.8.4",
+      "ripgrep@14.1.1",
+      "serde@1.0.210",
+      "termcolor@1.4.1"
+    ]
+  },
+  {
+    "project": "ripgrep",
+    "intrinsic": "simd_bitmask",
+    "observed_calls": 28,
+    "units": 13,
+    "crates": [
+      "aho-corasick@1.1.3",
+      "bstr@1.10.0",
+      "crossbeam-utils@0.8.20",
+      "globset@0.4.15",
+      "grep-cli@0.1.11",
+      "grep-regex@0.1.13",
+      "ignore@0.4.23",
+      "memchr@2.7.4",
+      "regex-automata@0.4.7",
+      "regex-syntax@0.8.4",
+      "ripgrep@14.1.1",
+      "serde@1.0.210",
+      "termcolor@1.4.1"
+    ]
+  },
+  {
+    "project": "ripgrep",
+    "intrinsic": "simd_eq",
+    "observed_calls": 33,
+    "units": 10,
+    "crates": [
+      "aho-corasick@1.1.3",
+      "crossbeam-utils@0.8.20",
+      "globset@0.4.15",
+      "ignore@0.4.23",
+      "memchr@2.7.4",
+      "regex-automata@0.4.7",
+      "regex-syntax@0.8.4",
+      "ripgrep@14.1.1",
+      "serde@1.0.210",
+      "termcolor@1.4.1"
+    ]
+  },
+  {
+    "project": "ripgrep",
+    "intrinsic": "simd_extract",
+    "observed_calls": 4,
+    "units": 1,
+    "crates": [
+      "aho-corasick@1.1.3"
+    ]
+  },
+  {
+    "project": "ripgrep",
+    "intrinsic": "simd_gt",
+    "observed_calls": 4,
+    "units": 4,
+    "crates": [
+      "globset@0.4.15",
+      "ignore@0.4.23",
+      "regex-automata@0.4.7",
+      "ripgrep@14.1.1"
+    ]
+  },
+  {
+    "project": "ripgrep",
+    "intrinsic": "simd_lt",
+    "observed_calls": 12,
+    "units": 10,
+    "crates": [
+      "aho-corasick@1.1.3",
+      "bstr@1.10.0",
+      "crossbeam-utils@0.8.20",
+      "globset@0.4.15",
+      "grep-cli@0.1.11",
+      "grep-regex@0.1.13",
+      "ignore@0.4.23",
+      "memchr@2.7.4",
+      "regex-automata@0.4.7",
+      "ripgrep@14.1.1"
+    ]
+  },
+  {
+    "project": "ripgrep",
+    "intrinsic": "simd_or",
+    "observed_calls": 15,
+    "units": 9,
+    "crates": [
+      "bstr@1.10.0",
+      "globset@0.4.15",
+      "ignore@0.4.23",
+      "memchr@2.7.4",
+      "regex-automata@0.4.7",
+      "regex-syntax@0.8.4",
+      "ripgrep@14.1.1",
+      "serde@1.0.210",
+      "termcolor@1.4.1"
+    ]
+  },
+  {
+    "project": "ripgrep",
+    "intrinsic": "simd_reduce_all",
+    "observed_calls": 8,
+    "units": 4,
+    "crates": [
+      "regex-syntax@0.8.4",
+      "ripgrep@14.1.1",
+      "serde@1.0.210",
+      "termcolor@1.4.1"
+    ]
+  },
+  {
+    "project": "ripgrep",
+    "intrinsic": "simd_shr",
+    "observed_calls": 2,
+    "units": 1,
+    "crates": [
+      "aho-corasick@1.1.3"
+    ]
+  },
+  {
+    "project": "ripgrep",
+    "intrinsic": "simd_shuffle",
+    "observed_calls": 38,
+    "units": 5,
+    "crates": [
+      "aho-corasick@1.1.3",
+      "regex-syntax@0.8.4",
+      "ripgrep@14.1.1",
+      "serde@1.0.210",
+      "termcolor@1.4.1"
+    ]
+  },
+  {
+    "project": "ripgrep",
+    "intrinsic": "size_of_val",
+    "observed_calls": 352,
+    "units": 21,
+    "crates": [
+      "aho-corasick@1.1.3",
+      "anyhow@1.0.87",
+      "bstr@1.10.0",
+      "crossbeam-epoch@0.9.18",
+      "crossbeam-utils@0.8.20",
+      "encoding_rs_io@0.1.7",
+      "globset@0.4.15",
+      "grep-cli@0.1.11",
+      "grep-printer@0.2.2",
+      "grep-regex@0.1.13",
+      "grep-searcher@0.1.14",
+      "ignore@0.4.23",
+      "lexopt@0.3.0",
+      "regex-automata@0.4.7",
+      "regex-syntax@0.8.4",
+      "ripgrep@14.1.1",
+      "serde@1.0.210",
+      "serde_json@1.0.128",
+      "termcolor@1.4.1",
+      "textwrap@0.16.1",
+      "walkdir@2.5.0"
+    ]
+  },
+  {
+    "project": "ripgrep",
+    "intrinsic": "typed_swap_nonoverlapping",
+    "observed_calls": 31,
+    "units": 9,
+    "crates": [
+      "aho-corasick@1.1.3",
+      "bstr@1.10.0",
+      "globset@0.4.15",
+      "grep-regex@0.1.13",
+      "ignore@0.4.23",
+      "regex-automata@0.4.7",
+      "regex-syntax@0.8.4",
+      "ripgrep@14.1.1",
+      "walkdir@2.5.0"
+    ]
+  },
+  {
+    "project": "ripgrep",
+    "intrinsic": "unchecked_funnel_shl",
+    "observed_calls": 4,
+    "units": 4,
+    "crates": [
+      "crossbeam-utils@0.8.20",
+      "ignore@0.4.23",
+      "regex-automata@0.4.7",
+      "ripgrep@14.1.1"
+    ]
+  },
+  {
+    "project": "ripgrep",
+    "intrinsic": "volatile_load",
+    "observed_calls": 1,
+    "units": 1,
+    "crates": [
+      "ignore@0.4.23"
+    ]
+  },
+  {
+    "project": "ripgrep",
+    "intrinsic": "volatile_store",
+    "observed_calls": 1,
+    "units": 1,
+    "crates": [
+      "ignore@0.4.23"
+    ]
+  },
+  {
+    "project": "ripgrep",
+    "intrinsic": "write_bytes",
+    "observed_calls": 29,
+    "units": 18,
+    "crates": [
+      "aho-corasick@1.1.3",
+      "anyhow@1.0.87",
+      "crossbeam-utils@0.8.20",
+      "encoding_rs@0.8.34",
+      "globset@0.4.15",
+      "grep-cli@0.1.11",
+      "grep-printer@0.2.2",
+      "grep-regex@0.1.13",
+      "grep-searcher@0.1.14",
+      "ignore@0.4.23",
+      "lexopt@0.3.0",
+      "regex-automata@0.4.7",
+      "regex-syntax@0.8.4",
+      "ripgrep@14.1.1",
+      "serde_json@1.0.128",
+      "termcolor@1.4.1",
+      "textwrap@0.16.1",
+      "walkdir@2.5.0"
+    ]
+  }
+]

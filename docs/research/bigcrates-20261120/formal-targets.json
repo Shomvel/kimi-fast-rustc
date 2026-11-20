@@ -1,0 +1,2873 @@
+[
+  {
+    "project": "ripgrep",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/ripgrep/1795179171480367567-3da7dddfc4eab9ab.json",
+    "sha256": "49aec9fe00af6954593e7644f522f00793fab8281c6d20de363d19c7737502fe",
+    "package": "log",
+    "version": "0.4.22",
+    "exit": 0,
+    "crate": "log"
+  },
+  {
+    "project": "ripgrep",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/ripgrep/1795179171482202476-a7d9c3cc5e0d5e9f.json",
+    "sha256": "002268dbc60687ac4767977ce5694cf9bb72822ede4135c22b8ca7bd18cb39f8",
+    "package": "memchr",
+    "version": "2.7.4",
+    "exit": 0,
+    "crate": "memchr"
+  },
+  {
+    "project": "ripgrep",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/ripgrep/1795179171490847731-2120df846db3e069.json",
+    "sha256": "2108ec6114afaf90bf26d35c09f819c1917e59a1163f5589240fcbba3b48c987",
+    "package": "regex-syntax",
+    "version": "0.8.4",
+    "exit": 0,
+    "crate": "regex_syntax"
+  },
+  {
+    "project": "ripgrep",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/ripgrep/1795179174320534489-98835ef1656a5ae4.json",
+    "sha256": "42005b390d27f0999fe1af914e6fc81dc382dd99781d824d96b7aeea66524fd0",
+    "package": "aho-corasick",
+    "version": "1.1.3",
+    "exit": 0,
+    "crate": "aho_corasick"
+  },
+  {
+    "project": "ripgrep",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/ripgrep/1795179174662869244-a6aa556d7d7fe900.json",
+    "sha256": "a9f55a0c245fff7b0e468ed79e59bea65502caba8c2b028b9861c2e85f9b396f",
+    "package": "cfg-if",
+    "version": "1.0.0",
+    "exit": 0,
+    "crate": "cfg_if"
+  },
+  {
+    "project": "ripgrep",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/ripgrep/1795179175502858367-905f19fa77a215c7.json",
+    "sha256": "8ab9088c082f3213688c93958263ff06007a58d88a425506ad2724dc394ba4a6",
+    "package": "regex-automata",
+    "version": "0.4.7",
+    "exit": 0,
+    "crate": "regex_automata"
+  },
+  {
+    "project": "ripgrep",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/ripgrep/1795179176864078003-06e2d122a8f2ac68.json",
+    "sha256": "bab81468d3068177507f131d4980420fd9891e6ef997b405f2dc14d1e872376b",
+    "package": "encoding_rs",
+    "version": "0.8.34",
+    "exit": 0,
+    "crate": "encoding_rs"
+  },
+  {
+    "project": "ripgrep",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/ripgrep/1795179176868626462-4e0a48ea55cedb0a.json",
+    "sha256": "f3a787df86d4c8fbb33f92792c61a4f8decd484e439cd17f78e9bab4df0df08f",
+    "package": "libc",
+    "version": "0.2.158",
+    "exit": 0,
+    "crate": "libc"
+  },
+  {
+    "project": "ripgrep",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/ripgrep/1795179177083869328-92c37b94ff0b9cc1.json",
+    "sha256": "b7b5d09324ac1756397953292c3e180fb9b0777572c56ec729b5af12ae1248a0",
+    "package": "grep-matcher",
+    "version": "0.1.7",
+    "exit": 0,
+    "crate": "grep_matcher"
+  },
+  {
+    "project": "ripgrep",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/ripgrep/1795179177222828782-b78196097baf81e2.json",
+    "sha256": "accf967ba0a46d4f6af004a34a04cd0fe8bf25ecba3e2a7ae0ce52bbb500ae49",
+    "package": "memmap2",
+    "version": "0.9.4",
+    "exit": 0,
+    "crate": "memmap2"
+  },
+  {
+    "project": "ripgrep",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/ripgrep/1795179177320541994-349e76891660765f.json",
+    "sha256": "19e3c9a78c597185dc2fb2a553d38fc86c8665ae8e13f6797645b52dbd67a44c",
+    "package": "serde",
+    "version": "1.0.210",
+    "exit": 0,
+    "crate": "serde"
+  },
+  {
+    "project": "ripgrep",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/ripgrep/1795179177414158591-2cb444912923bc0a.json",
+    "sha256": "1d1448628d0a937f629d4c705479be7dd812c54de0e62aa3ddd4354d3491ae6a",
+    "package": "crossbeam-utils",
+    "version": "0.8.20",
+    "exit": 0,
+    "crate": "crossbeam_utils"
+  },
+  {
+    "project": "ripgrep",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/ripgrep/1795179178061485936-2e5a17633b5ceb6f.json",
+    "sha256": "90202d8c8dec16614616bc3411bc99601ca573ec9a618795598078a36f1d8659",
+    "package": "bstr",
+    "version": "1.10.0",
+    "exit": 0,
+    "crate": "bstr"
+  },
+  {
+    "project": "ripgrep",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/ripgrep/1795179178508229397-950acc8a24bd6d15.json",
+    "sha256": "7ac0f40b273c4c33c5e1a210acdabd5c0258b94e9c9dab68c23101d4a88a66c6",
+    "package": "globset",
+    "version": "0.4.15",
+    "exit": 0,
+    "crate": "globset"
+  },
+  {
+    "project": "ripgrep",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/ripgrep/1795179179464942141-c4c30a305624f6a8.json",
+    "sha256": "7b61fdd000565370ffc3078b2e84b255d11d124f7eb6e3c5bcef70b655f99347",
+    "package": "encoding_rs_io",
+    "version": "0.1.7",
+    "exit": 0,
+    "crate": "encoding_rs_io"
+  },
+  {
+    "project": "ripgrep",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/ripgrep/1795179179585467968-913e03ba0969c295.json",
+    "sha256": "8c8b8ab898d18e58ec7474b45838d4934b8a1065af2c5ba47bba2614a41e6fb3",
+    "package": "ryu",
+    "version": "1.0.18",
+    "exit": 0,
+    "crate": "ryu"
+  },
+  {
+    "project": "ripgrep",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/ripgrep/1795179179607360077-6f96fc33626287cf.json",
+    "sha256": "b93ca69ab621deafb1561d9374a10ab411a87589779cc71d61c74e88e170b8e0",
+    "package": "itoa",
+    "version": "1.0.11",
+    "exit": 0,
+    "crate": "itoa"
+  },
+  {
+    "project": "ripgrep",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/ripgrep/1795179179690635267-cb8754d0addd118e.json",
+    "sha256": "3bb6c8ae39ce75e91c28cebe6b87eeb981efb8a7fdabc9037bc6f94d8ab5429d",
+    "package": "termcolor",
+    "version": "1.4.1",
+    "exit": 0,
+    "crate": "termcolor"
+  },
+  {
+    "project": "ripgrep",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/ripgrep/1795179179721477267-52b0f10af810fd8f.json",
+    "sha256": "e193154cd3fa6ece4177165c9ae1ff058c584b09265170cb0cede1222ffeced0",
+    "package": "serde_json",
+    "version": "1.0.128",
+    "exit": 0,
+    "crate": "serde_json"
+  },
+  {
+    "project": "ripgrep",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/ripgrep/1795179179752706284-1e1b28c0e70925d3.json",
+    "sha256": "1fa032dabfdef96498985944e17132b3558ff1dbe381be68ddb0a0962006f917",
+    "package": "grep-searcher",
+    "version": "0.1.14",
+    "exit": 0,
+    "crate": "grep_searcher"
+  },
+  {
+    "project": "ripgrep",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/ripgrep/1795179179966055563-d8b2f35468da2361.json",
+    "sha256": "78f0f9c739d0508db31e5c1554be8aed668008130c1796684f3e9fa75d06fe41",
+    "package": "crossbeam-epoch",
+    "version": "0.9.18",
+    "exit": 0,
+    "crate": "crossbeam_epoch"
+  },
+  {
+    "project": "ripgrep",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/ripgrep/1795179180018133022-03c93d5347f4e65f.json",
+    "sha256": "b3923168c6e9253591a6142a52caf6ce06548203419400749e9402b4684ce56e",
+    "package": "same-file",
+    "version": "1.0.6",
+    "exit": 0,
+    "crate": "same_file"
+  },
+  {
+    "project": "ripgrep",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/ripgrep/1795179180115634940-fcbe7f50ffd303b9.json",
+    "sha256": "9f3a5c362926c0a7eca845f61d6685a28c5c93cb5c7dcbf50c5218a384e75141",
+    "package": "crossbeam-deque",
+    "version": "0.8.5",
+    "exit": 0,
+    "crate": "crossbeam_deque"
+  },
+  {
+    "project": "ripgrep",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/ripgrep/1795179180194040561-023ec94c7a86b9ad.json",
+    "sha256": "3eb33db48f7fee31f004a10adf11a41afc22e1f5dae45b73f6f7daddf7bece40",
+    "package": "grep-printer",
+    "version": "0.2.2",
+    "exit": 0,
+    "crate": "grep_printer"
+  },
+  {
+    "project": "ripgrep",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/ripgrep/1795179180246180272-7b6f40fec2d87fe4.json",
+    "sha256": "ab71fedf105e4033df7e73c57201812f798e01d6051c24ccde4809ca879acde0",
+    "package": "walkdir",
+    "version": "2.5.0",
+    "exit": 0,
+    "crate": "walkdir"
+  },
+  {
+    "project": "ripgrep",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/ripgrep/1795179180467113614-7c6c2f8e394897ba.json",
+    "sha256": "b5c892a7dfbcfe16afef5c2afc3e08970c959312ed145743d53c8bc32fce6ee1",
+    "package": "grep-cli",
+    "version": "0.1.11",
+    "exit": 0,
+    "crate": "grep_cli"
+  },
+  {
+    "project": "ripgrep",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/ripgrep/1795179180596058897-6c40bf9044ba1216.json",
+    "sha256": "6767da7a4e77c580e8d5850ebfe5cd7bed1052a4a28bfa7a6addd822909db46c",
+    "package": "grep-regex",
+    "version": "0.1.13",
+    "exit": 0,
+    "crate": "grep_regex"
+  },
+  {
+    "project": "ripgrep",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/ripgrep/1795179180845906361-18a931bebb0ef4bc.json",
+    "sha256": "cd925daf8b79b8f509d0ed7d83ef90243d69fb9a2dc353435d253ec848ed98ef",
+    "package": "grep",
+    "version": "0.3.2",
+    "exit": 0,
+    "crate": "grep"
+  },
+  {
+    "project": "ripgrep",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/ripgrep/1795179180904861286-c7ca983765a243ba.json",
+    "sha256": "c5c8ad4d4a60c7e7fa99874bf62325f656b196f315530d44a5ef0f6174b76bd2",
+    "package": "ignore",
+    "version": "0.4.23",
+    "exit": 0,
+    "crate": "ignore"
+  },
+  {
+    "project": "ripgrep",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/ripgrep/1795179180955044808-0b99b2253134340f.json",
+    "sha256": "93f02022aa1946f12ce319a2e6c3018df2a2e6aa20fe026dcb12bbce4d63a548",
+    "package": "lexopt",
+    "version": "0.3.0",
+    "exit": 0,
+    "crate": "lexopt"
+  },
+  {
+    "project": "ripgrep",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/ripgrep/1795179181016106659-dbd05f4ea8b6a277.json",
+    "sha256": "92ffbaf999d4725b232f9c30d9ed7836089e6ea71ed7dacae3ff3d28506fe01c",
+    "package": "textwrap",
+    "version": "0.16.1",
+    "exit": 0,
+    "crate": "textwrap"
+  },
+  {
+    "project": "ripgrep",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/ripgrep/1795179181310836930-954e4d9ac1584354.json",
+    "sha256": "b47c7823e8a16667c3939eb71329f23395c643a5cd22a2d33c46d1bb80b9079d",
+    "package": "anyhow",
+    "version": "1.0.87",
+    "exit": 0,
+    "crate": "anyhow"
+  },
+  {
+    "project": "ripgrep",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/ripgrep/1795179181878105527-fff994d2644fff41.json",
+    "sha256": "7db4015fc58e82a974cb14b372907d0f0fb36d06c8d3bf7e15a2d327b150c338",
+    "package": "ripgrep",
+    "version": "14.1.1",
+    "exit": 0,
+    "crate": "rg"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179247425596728-6f751cab62f058bd.json",
+    "sha256": "e1cd51047be5357d745dca4e68a6799c70fef1322457ab19a5f51e83127d873e",
+    "package": "cfg-if",
+    "version": "1.0.4",
+    "exit": 0,
+    "crate": "cfg_if"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179247485142326-5aa85669fd2a13fc.json",
+    "sha256": "f089c704c16cb4df25b835ffe16bed3fbdb29c2f938035e73582797ea8fd97ee",
+    "package": "memchr",
+    "version": "2.7.6",
+    "exit": 0,
+    "crate": "memchr"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179247505479996-6edbfb16bd716f46.json",
+    "sha256": "121523836f168c67e832fb073c9bea5650ea13e4a2b35ee59ec705cfe335a0af",
+    "package": "regex-syntax",
+    "version": "0.8.8",
+    "exit": 0,
+    "crate": "regex_syntax"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179247546342864-188b16c5311aadfa.json",
+    "sha256": "d31f4cd9089381008dd068d4eb53e3ddeb8214c21333d4e497e6126acd02456d",
+    "package": "libc",
+    "version": "0.2.178",
+    "exit": 0,
+    "crate": "libc"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179248321822360-aa0daa0a4cd980b3.json",
+    "sha256": "f0debd7c4f5f3e5e48d057975556dab67b02b75dab3407aed695cda22f916817",
+    "package": "aho-corasick",
+    "version": "1.1.4",
+    "exit": 0,
+    "crate": "aho_corasick"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179249223345589-34962b5ac2cc5b01.json",
+    "sha256": "c380c90f762cc29121a9ae5a7ecb78351a21040485be5eedfdaaf1a5652cb1aa",
+    "package": "regex-automata",
+    "version": "0.4.13",
+    "exit": 0,
+    "crate": "regex_automata"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179250072695165-65ac6a043406136c.json",
+    "sha256": "5daf59a78544c6795c40dd5d1e24e92701549789f44759a9894e601682c97f90",
+    "package": "smallvec",
+    "version": "1.15.1",
+    "exit": 0,
+    "crate": "smallvec"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179250530920886-8f6049bf20bd2e88.json",
+    "sha256": "95dfe148a741baf22a92efb15d62934b7403926b3c2a5a708b2f4e5bff3262fd",
+    "package": "serde_core",
+    "version": "1.0.228",
+    "exit": 0,
+    "crate": "serde_core"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179250977011304-00fa35264eb3f74c.json",
+    "sha256": "5005842240652ce38d8060fa645e369d81f6fc688e22882e0675ec1a4f1eddba",
+    "package": "zeroize",
+    "version": "1.8.2",
+    "exit": 0,
+    "crate": "zeroize"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179251134911650-ebe26e720fa6e543.json",
+    "sha256": "cee4d97696b0259bd4b885e54d50729c8b61d7bc6b8d535edd6d2f7ed25d49db",
+    "package": "typenum",
+    "version": "1.19.0",
+    "exit": 0,
+    "crate": "typenum"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179251697527071-dd1e0516700c90e7.json",
+    "sha256": "968447f7ba1daee4432d365f5674184430fa98f728cb96a8202d324371d675c7",
+    "package": "bstr",
+    "version": "1.12.1",
+    "exit": 0,
+    "crate": "bstr"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179252070382956-8feef75ba095e661.json",
+    "sha256": "54575e6bf09c5fbdce5ac0c19bbf4605178fc61aeef80c46b9354f2972e7d722",
+    "package": "stable_deref_trait",
+    "version": "1.2.1",
+    "exit": 0,
+    "crate": "stable_deref_trait"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179252192539847-8ece110754633a90.json",
+    "sha256": "ab9162b3e21ea16a1f7351deb9ea50127ef34be34fb460addf069408e87fbabf",
+    "package": "thiserror",
+    "version": "2.0.17",
+    "exit": 0,
+    "crate": "thiserror"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179252449787066-f4fcac1f0be2ff8c.json",
+    "sha256": "df9e04c2abfd64ba8856a65bde31e6213ccf96af20dd24427c19809b9ebf06f6",
+    "package": "once_cell",
+    "version": "1.21.3",
+    "exit": 0,
+    "crate": "once_cell"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179252647962004-6913284d3c836a5d.json",
+    "sha256": "7e4d9c5fb9703e0e6711a69ab541d006fcc26f1dedb10528f09426b35f12dd4e",
+    "package": "subtle",
+    "version": "2.6.1",
+    "exit": 0,
+    "crate": "subtle"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179252959038707-225a6d8cf9d5baca.json",
+    "sha256": "40f136b4c69ed1f4d0f2992cfdd2f49863d982b5144df9163a05fb2d2d3c8a66",
+    "package": "generic-array",
+    "version": "0.14.7",
+    "exit": 0,
+    "crate": "generic_array"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179252966364713-de09304b7cc36c1e.json",
+    "sha256": "ffe4f321c2b972ba97a49fb38e4b59b31acbe78f1a9d4d501c82263f15e542b2",
+    "package": "const-oid",
+    "version": "0.9.6",
+    "exit": 0,
+    "crate": "const_oid"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179253013233276-8397821ad82c9528.json",
+    "sha256": "a8bce6aee2bab2213b965d2b9ddb00f076dcec5f4077b31fd5cfe7f87208c9e6",
+    "package": "tinyvec_macros",
+    "version": "0.1.1",
+    "exit": 0,
+    "crate": "tinyvec_macros"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179253074832920-d82e8ff3a0efdaee.json",
+    "sha256": "161acbf3258c45c3120d69ca0b83fe4fd142dd98843a173c73064d056dbb0c51",
+    "package": "fastrand",
+    "version": "2.3.0",
+    "exit": 0,
+    "crate": "fastrand"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179253155187540-3c417448f88edcd3.json",
+    "sha256": "56564d5e34ddd997c8075790e7db6205eca28b9056c17593d049beb6b375c8ff",
+    "package": "tinyvec",
+    "version": "1.10.0",
+    "exit": 0,
+    "crate": "tinyvec"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179253255995803-df9ed02d29edbf95.json",
+    "sha256": "71d64bde06d53956d3b0d9cfee51744fd5528c48fb40f619029573a930c1ad88",
+    "package": "crossbeam-utils",
+    "version": "0.8.21",
+    "exit": 0,
+    "crate": "crossbeam_utils"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179253309117921-7c70e50bdd3bf392.json",
+    "sha256": "b5fb763d8175fb8558485ff8d56ba87a43ec8b3c41d1affce35098efa8f99f5a",
+    "package": "bitflags",
+    "version": "2.10.0",
+    "exit": 0,
+    "crate": "bitflags"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179253524443551-c273df03c4920d3b.json",
+    "sha256": "309d0512f093ded17dd8a3069dd08e3d7f549c085118816bb6b226792a6ae130",
+    "package": "unicode-normalization",
+    "version": "0.1.25",
+    "exit": 0,
+    "crate": "unicode_normalization"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179253580958735-0890e38c6985c342.json",
+    "sha256": "9beb41dc23369638667bb59be83544a6f6810cfa39bf8803ba928749abccb695",
+    "package": "scopeguard",
+    "version": "1.2.0",
+    "exit": 0,
+    "crate": "scopeguard"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179253608112959-5ff85ad65a3c7114.json",
+    "sha256": "2e42b23185dfda6bd7281edc9dc993c1bc88ea612ba726e88691588710d34cbf",
+    "package": "gix-trace",
+    "version": "0.1.16",
+    "exit": 0,
+    "crate": "gix_trace"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179253653374063-7b7d34fe24577b22.json",
+    "sha256": "ddd12b5b50610ad1f8e868e29e5a72b902155122d4cfdb3cfa5c4782639dc836",
+    "package": "lock_api",
+    "version": "0.4.14",
+    "exit": 0,
+    "crate": "lock_api"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179253702132718-8aa8a61ef069c6bf.json",
+    "sha256": "a28cb361d5d258980406d725490aebcfd5cdb6ca45f802259f8cfcfec9369f3b",
+    "package": "parking_lot_core",
+    "version": "0.9.12",
+    "exit": 0,
+    "crate": "parking_lot_core"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179253823846578-95c123e62c4351a4.json",
+    "sha256": "c26901197b8d31ded5ee80ce138768c18a7afefb56fbff2f4c742358c0d5075b",
+    "package": "gix-utils",
+    "version": "0.3.1",
+    "exit": 0,
+    "crate": "gix_utils"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179253928048257-55bc854649bba93f.json",
+    "sha256": "044bf517ff336217521bf661bc42dd3ac85fc86f806bcb5fb8c3cc20cc6c5bc5",
+    "package": "block-buffer",
+    "version": "0.10.4",
+    "exit": 0,
+    "crate": "block_buffer"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179253930302551-44b7b84dddf12456.json",
+    "sha256": "843cea38339feaba7b25812b924e11f47350453ed445f902961828fe48cd02f8",
+    "package": "gix-validate",
+    "version": "0.10.1",
+    "exit": 0,
+    "crate": "gix_validate"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179254031730069-732b5f2be1248a2a.json",
+    "sha256": "2fc640e2778b71e3a08d49c63df291353cf396df04dcc54e36d3b66947e0764e",
+    "package": "crypto-common",
+    "version": "0.1.7",
+    "exit": 0,
+    "crate": "crypto_common"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179254137228944-e698047255f7a6bc.json",
+    "sha256": "b64e568c9ab6be56ded83a84c698f1b810943d942d0ae988a3c2ff33e8752af0",
+    "package": "same-file",
+    "version": "1.0.6",
+    "exit": 0,
+    "crate": "same_file"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179254224406028-eb6d00be53814d3c.json",
+    "sha256": "9a3d64272d835ca87f76a8350275b945b6cf695de1d9ad896824ee20d8e592ae",
+    "package": "gix-path",
+    "version": "0.10.22",
+    "exit": 0,
+    "crate": "gix_path"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179254247103180-3ed36032c995b2fc.json",
+    "sha256": "8832e70a1c440adb4bf9d8059c2d8c6520a84b8bcc1f5757fc6657ca77c7ff1c",
+    "package": "walkdir",
+    "version": "2.5.0",
+    "exit": 0,
+    "crate": "walkdir"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179254316757387-12a3c40ebc0fdaa4.json",
+    "sha256": "a197a76cb73b000a647ff7c0d2e69794df4554a32be6ac7065efc372bcef3658",
+    "package": "digest",
+    "version": "0.10.7",
+    "exit": 0,
+    "crate": "digest"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179254324381428-01ca6d6829dcac12.json",
+    "sha256": "1e6ee00185e2e0390f66d4db61598bbf459d379fa6481e8085718e2d1109eeca",
+    "package": "parking_lot",
+    "version": "0.12.5",
+    "exit": 0,
+    "crate": "parking_lot"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179254526734753-2a8067a1469a30dd.json",
+    "sha256": "7b261e8a2026052721eb6db36394f21a2305297ea24957a545662a79a81ec784",
+    "package": "zlib-rs",
+    "version": "0.5.5",
+    "exit": 0,
+    "crate": "zlib_rs"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179254543140203-2d55c3632805a830.json",
+    "sha256": "fca1a5eae0e3f32ec1853408565cfcbcad04102668981e29d1a5c2ddb547afa8",
+    "package": "crc32fast",
+    "version": "1.5.0",
+    "exit": 0,
+    "crate": "crc32fast"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179254566089280-6e2e01836d348cb6.json",
+    "sha256": "9bcea1b5a9806a865a624101f54874f755d00babd020f4f61e065d7277973fbf",
+    "package": "prodash",
+    "version": "30.0.1",
+    "exit": 0,
+    "crate": "prodash"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179254818688961-dc38d956033d3365.json",
+    "sha256": "c87c74a13908aad0504087f362725b67b7053d433f2e9a5fe8ec69dcc75f1dc1",
+    "package": "crossbeam-channel",
+    "version": "0.5.15",
+    "exit": 0,
+    "crate": "crossbeam_channel"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179255095793752-2222cb3bc5a34725.json",
+    "sha256": "4a0698c7b608979b46cb0fd22e0181289ffd83ca30073df8c26f1715e94c4749",
+    "package": "bytes",
+    "version": "1.11.0",
+    "exit": 0,
+    "crate": "bytes"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179255232496487-246f08a861b3bbed.json",
+    "sha256": "63fd4a0a73cf9a0b215040c69a0d86e7d2a1be5f81b19b8948f0a4eb67b1fc8a",
+    "package": "itoa",
+    "version": "1.0.15",
+    "exit": 0,
+    "crate": "itoa"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179255327556549-d10ccf991ad60c78.json",
+    "sha256": "3e92761f7dbaf71908874b8d3c0dc81744cc14a317da1882c09f7e18d4fc04cf",
+    "package": "cpufeatures",
+    "version": "0.2.17",
+    "exit": 0,
+    "crate": "cpufeatures"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179255537433586-1b201c8383bc26b8.json",
+    "sha256": "e70c05a26d0f8e4c3acbe4ce3132b6fae2a0610ff3487f9808b7372003de124a",
+    "package": "byteorder",
+    "version": "1.5.0",
+    "exit": 0,
+    "crate": "byteorder"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179255662752916-ff4512856701b486.json",
+    "sha256": "27b310e43412d752114d76567fc922b0dfecf2d0d1116136e5cd57982f895534",
+    "package": "hash32",
+    "version": "0.3.1",
+    "exit": 0,
+    "crate": "hash32"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179255896540455-775134ef404f1501.json",
+    "sha256": "35c979aab5626c0fce5dd4935de9c39b67038e3b31f01771335a30ab2cc9873f",
+    "package": "foldhash",
+    "version": "0.2.0",
+    "exit": 0,
+    "crate": "foldhash"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179256027228221-945aeaa07f54a1f9.json",
+    "sha256": "15fc39217983dd31e3b9f6070ad0f9c6d52b25e982a176c0227e83dd73df7587",
+    "package": "equivalent",
+    "version": "1.0.2",
+    "exit": 0,
+    "crate": "equivalent"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179256096502011-a9b4d7ef94f6c965.json",
+    "sha256": "a304e1c3a7a097eb2ee19014f573f7a2dc248c6d844e5ce24e7e17e0f5b68b95",
+    "package": "allocator-api2",
+    "version": "0.2.21",
+    "exit": 0,
+    "crate": "allocator_api2"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179256166062167-d66d55e3cd57bd22.json",
+    "sha256": "b8bbe008f20522abf6c553110b697b30f9c485455572944a887b73ba4c16190e",
+    "package": "heapless",
+    "version": "0.8.0",
+    "exit": 0,
+    "crate": "heapless"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179256349091156-6cccc646fe8fb8b3.json",
+    "sha256": "7a67976191d8a2cefa9eb60415e92818e15688e7b3320b096ea688dae6bc8d48",
+    "package": "hashbrown",
+    "version": "0.16.1",
+    "exit": 0,
+    "crate": "hashbrown"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179256515086868-83701af1ae8a6e58.json",
+    "sha256": "f9ea6ec7b3daaa92065d17fa021861dfc0fd286f418ae40c0ea726b458deed6d",
+    "package": "gix-features",
+    "version": "0.45.1",
+    "exit": 0,
+    "crate": "gix_features"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179256528531287-c4b493acee757880.json",
+    "sha256": "83cd19d7eb70108f94929c59bfd481bcdde1ef82e0c807fb18d39e8830ce10f2",
+    "package": "faster-hex",
+    "version": "0.10.0",
+    "exit": 0,
+    "crate": "faster_hex"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179256812284453-fef2248b8caa533a.json",
+    "sha256": "b96f3924ad37655f8c421629a23c022fb3b89a37f5a1f8b899c12a1cb1ad9588",
+    "package": "linux-raw-sys",
+    "version": "0.11.0",
+    "exit": 0,
+    "crate": "linux_raw_sys"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179256827196864-f8b84c4a694d4c06.json",
+    "sha256": "25601296137f7b81c8ae5e3139e4924e16e8bdf2a470e4f6075822f03177b0cf",
+    "package": "sha1",
+    "version": "0.10.6",
+    "exit": 0,
+    "crate": "sha1"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179256922218709-b46c55a4bf595363.json",
+    "sha256": "8f1c5128f713561532747b7539fad225a60d84d5f2b2f7b3adbf5db0c3093a23",
+    "package": "jiff",
+    "version": "0.2.17",
+    "exit": 0,
+    "crate": "jiff"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179257007839520-d55661b40e56cbf2.json",
+    "sha256": "420d7f6531c6948056b3e7378e90f5199894b9564dc9ea5515c0203f6219b0b9",
+    "package": "winnow",
+    "version": "0.7.14",
+    "exit": 0,
+    "crate": "winnow"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179257065057212-4ec8600b7a5d3eec.json",
+    "sha256": "54f5ca44e57430d868c4eb0f82c0be39c47af9e8586d29a45bff06ff5017ac44",
+    "package": "rustix",
+    "version": "1.1.3",
+    "exit": 0,
+    "crate": "rustix"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179257543577178-cbf175c860239987.json",
+    "sha256": "e4ec3fa6917606acc43ed41e8449c8f5aa8c0671328f8c4b265cdefd6f276d43",
+    "package": "sha1-checked",
+    "version": "0.10.0",
+    "exit": 0,
+    "crate": "sha1_checked"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179257924869568-b79c95ff83fa7d30.json",
+    "sha256": "40701651dc363a377f741843eaac21ee8c0cb02600a7e3f7a69c5efe73291c56",
+    "package": "gix-hash",
+    "version": "0.21.1",
+    "exit": 0,
+    "crate": "gix_hash"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179258172632629-9bed398bf38dd12a.json",
+    "sha256": "699add5e3c6e9b8877ae7ff781c3a8babfa319e5747ee23a8d0a38c7d502a27c",
+    "package": "getrandom",
+    "version": "0.3.4",
+    "exit": 0,
+    "crate": "getrandom"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179258238042359-d800d5db67fdaae5.json",
+    "sha256": "7a9120bf82ec63a21905d234d68fc95b563b29fa69cfb8cdb6ec4dde9a1217cb",
+    "package": "gix-hashtable",
+    "version": "0.11.0",
+    "exit": 0,
+    "crate": "gix_hashtable"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179258368835653-516233a51487781f.json",
+    "sha256": "ae9aa64236b826a6de96ca744d7248e1126637a0aec6568de3814e71bf07327e",
+    "package": "memmap2",
+    "version": "0.9.9",
+    "exit": 0,
+    "crate": "memmap2"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179258544605374-6a84ea40c6519349.json",
+    "sha256": "b2e7e6a1d460a9711130e01d1490456c9325e13bddbcb8d506b21721be6adb94",
+    "package": "tempfile",
+    "version": "3.24.0",
+    "exit": 0,
+    "crate": "tempfile"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179259164573088-30785a4c30d7c7f2.json",
+    "sha256": "a2d0cf08adbde61994bcb516abdda2fad09de5a01b8720ee2892f0014bc1f91e",
+    "package": "zerofrom",
+    "version": "0.1.6",
+    "exit": 0,
+    "crate": "zerofrom"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179259169162479-a88f7f3da2b31b75.json",
+    "sha256": "9dfafe491d3d9fe890be7d1f3e4f13b52840dbe955077332e7aac4ad7e6dc408",
+    "package": "hashbrown",
+    "version": "0.14.5",
+    "exit": 0,
+    "crate": "hashbrown"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179259248324660-e515908a8afc5630.json",
+    "sha256": "b6f5d870ad3eb3361ecf9083a1714fb3f1dc51ef71245ecf7b365f0e28a330fd",
+    "package": "gix-date",
+    "version": "0.12.0",
+    "exit": 0,
+    "crate": "gix_date"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179259676320876-e0a79e379551a3b7.json",
+    "sha256": "7cd4239813bcff6ae33ff530a01d2df9a79aa2b81dfecb7e74cb53e971bb9a2b",
+    "package": "gix-actor",
+    "version": "0.37.0",
+    "exit": 0,
+    "crate": "gix_actor"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179259935568491-d2564d16a63756db.json",
+    "sha256": "c5f2176b4eabb1048863a3a28ec738a9fc3a502e96792562fdbee87f83e25b4e",
+    "package": "gix-object",
+    "version": "0.54.0",
+    "exit": 0,
+    "crate": "gix_object"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179260228379218-319e6e379d7c24d6.json",
+    "sha256": "d974e6f7b1073c43943c5971ff23857971892a00affa3dd2a0afcdfe3063c749",
+    "package": "dashmap",
+    "version": "6.1.0",
+    "exit": 0,
+    "crate": "dashmap"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179260272792315-fcaf0f2fb5e19a85.json",
+    "sha256": "dee1079af2c5f330b97cba5c4f6329396815f29bbbaa958f2840102e5d00a434",
+    "package": "yoke",
+    "version": "0.8.1",
+    "exit": 0,
+    "crate": "yoke"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179260661581275-0cecab710355710f.json",
+    "sha256": "c1c03ca547dc1b0ff0d50365ec5882da1542d2e875adee5b1a364fac34fa94de",
+    "package": "gix-fs",
+    "version": "0.18.1",
+    "exit": 0,
+    "crate": "gix_fs"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179260672485231-97666c6294b9c4c7.json",
+    "sha256": "76f4862900ac6df74ef1fdbb7e2a1e37abb57d2950e69ab8b3a43c5017455ee8",
+    "package": "gix-chunk",
+    "version": "0.4.12",
+    "exit": 0,
+    "crate": "gix_chunk"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179260675291802-ff81d4fff2c379f2.json",
+    "sha256": "227f88e64c98bd009159469fe6119b0aba23eacec4633850f31193ce42070d1e",
+    "package": "gix-quote",
+    "version": "0.6.1",
+    "exit": 0,
+    "crate": "gix_quote"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179260908141580-524e30dd4390b47b.json",
+    "sha256": "3e5660ad00a950e9afac915a4b8a87064fed7560a2aa4221a40fcad2392c125a",
+    "package": "gix-tempfile",
+    "version": "20.0.0",
+    "exit": 0,
+    "crate": "gix_tempfile"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179261269662725-e01333d17c0c24fd.json",
+    "sha256": "9423901742c74b05ceb8c41cc4f6d27cf5b4f32dc7de176d01a9682134e8a136",
+    "package": "gix-commitgraph",
+    "version": "0.31.0",
+    "exit": 0,
+    "crate": "gix_commitgraph"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179261346089081-46bceff1eb1bdc14.json",
+    "sha256": "84f29cb3819826c2d0e984b671c29138ea0a73e296825d0316516f0b5633d807",
+    "package": "gix-glob",
+    "version": "0.23.0",
+    "exit": 0,
+    "crate": "gix_glob"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179261411708114-6099836856e61aef.json",
+    "sha256": "64ac3e4f088853f3b00cb714e9e1ad71785cc6a5998c42a49e2125932caec1ad",
+    "package": "zerovec",
+    "version": "0.11.5",
+    "exit": 0,
+    "crate": "zerovec"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179261520236201-3077efcefe4281b2.json",
+    "sha256": "1fd55716ceac563c5ce8bfdd4dcf737c1652ebfa0e7229e603fa8d15efe4f598",
+    "package": "gix-revwalk",
+    "version": "0.25.0",
+    "exit": 0,
+    "crate": "gix_revwalk"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179261631659449-e482db14df98b236.json",
+    "sha256": "84fa1afd9467fea10cd51190f24789890a10db105fdfe63211a3ab3c3da18896",
+    "package": "gix-lock",
+    "version": "20.0.0",
+    "exit": 0,
+    "crate": "gix_lock"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179261880171869-5370e43404331404.json",
+    "sha256": "9d8bae7be3d220cc7e243d44a27353039568f92ddf20ac86029d63736ea17d9c",
+    "package": "getrandom",
+    "version": "0.2.16",
+    "exit": 0,
+    "crate": "getrandom"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179261889069742-4ea9d317fbed6962.json",
+    "sha256": "05e72c7b0916fa451258f2d73f280615d020c19244c4d8357543bfffe079f7f6",
+    "package": "percent-encoding",
+    "version": "2.3.2",
+    "exit": 0,
+    "crate": "percent_encoding"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179262052464571-13b6e53c3fdc9b4f.json",
+    "sha256": "3f677d02f7b38cb9f2c30d0fca0aab9c18d10f7dbd8c3b9b4d967ae485b04186",
+    "package": "rand_core",
+    "version": "0.6.4",
+    "exit": 0,
+    "crate": "rand_core"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179262149717606-f465bc19648fb761.json",
+    "sha256": "bc601ea7f7c461f35a4f799836187e192eb6c0f278d8d52b8fd174ed8806ab51",
+    "package": "tinystr",
+    "version": "0.8.2",
+    "exit": 0,
+    "crate": "tinystr"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179262232191961-97a68e44970bf6af.json",
+    "sha256": "71879e24b894e7d6dbd6a5ae4fe4bad7f8f77ce8cc9a6874efb8b815102fe014",
+    "package": "gix-config-value",
+    "version": "0.16.0",
+    "exit": 0,
+    "crate": "gix_config_value"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179262405356975-8fb63688632526df.json",
+    "sha256": "d4ec464fdda12d35fa7cd440c8eab7b1382d8c8e765b2ce412e08b01d2616c01",
+    "package": "unicode-bom",
+    "version": "2.0.3",
+    "exit": 0,
+    "crate": "unicode_bom"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179262520568668-f162ef4ec7af25fe.json",
+    "sha256": "643bb37a9ab0a1532dc085d463a1d72820942e8f597f89053fce528cea5d178b",
+    "package": "writeable",
+    "version": "0.6.2",
+    "exit": 0,
+    "crate": "writeable"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179262563842625-9e5f8e8fe4357c3d.json",
+    "sha256": "f666d1d83bdfc88be33ba6d24c231777abf3cfac25e72d1f8755db9327c4560c",
+    "package": "litemap",
+    "version": "0.8.1",
+    "exit": 0,
+    "crate": "litemap"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179262662264175-a5ac51badf085650.json",
+    "sha256": "321d5879bd2021ca966ee13071450587fc94cff0eec17f6ddf6456043be11147",
+    "package": "potential_utf",
+    "version": "0.1.4",
+    "exit": 0,
+    "crate": "potential_utf"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179262691478305-fdd771c37eafcd74.json",
+    "sha256": "7443b16cd5ada498ec80ccccefd15aae69ed1f25597437e8486cce086066deac",
+    "package": "icu_locale_core",
+    "version": "2.1.1",
+    "exit": 0,
+    "crate": "icu_locale_core"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179262776063000-c6931db5a0c80d4d.json",
+    "sha256": "28b553c845c69b7dd746db44f3114e592d7c942d1a01d70a3e9966fadbc0ecc5",
+    "package": "zerotrie",
+    "version": "0.2.3",
+    "exit": 0,
+    "crate": "zerotrie"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179263020086348-be0a2d01995cc587.json",
+    "sha256": "b7c28c6d02d29d08dcff9f16d94ff9dd051cb8ed582704adf4039e021626f743",
+    "package": "serde",
+    "version": "1.0.228",
+    "exit": 0,
+    "crate": "serde"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179263048612482-0a3b8131d6008250.json",
+    "sha256": "7fd1c6d9982fe0c8cedb672d88aa36f316a2ffd71d4a55e71a8cd45cfd395a79",
+    "package": "openssl-sys",
+    "version": "0.9.111",
+    "exit": 0,
+    "crate": "openssl_sys"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179263404916037-4a7fc9e3353fede6.json",
+    "sha256": "eefc389b461cabcc5e35e3fbb53b5e6a90a05d590658576fb298ee6712b9a730",
+    "package": "libz-sys",
+    "version": "1.1.23",
+    "exit": 0,
+    "crate": "libz_sys"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179263481557205-57afc410b260a9ab.json",
+    "sha256": "36e2bba1f9f914cf4fec8e075a6738698d2a2d61350c5febefe9f71bd3810be2",
+    "package": "base64ct",
+    "version": "1.8.0",
+    "exit": 0,
+    "crate": "base64ct"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179263669444916-13d97bd53e63f029.json",
+    "sha256": "e614bc8c116996d8c6d31a4ab93fd6ff83ac0bff7e61b2bd7464f415bc2c00c4",
+    "package": "static_assertions",
+    "version": "1.1.0",
+    "exit": 0,
+    "crate": "static_assertions"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179263728333712-e7e741c27f818101.json",
+    "sha256": "dfa9c508c61c94e04396a976accaaac6aac0296a95d777b53b981ba6c60a7ab2",
+    "package": "kstring",
+    "version": "2.0.2",
+    "exit": 0,
+    "crate": "kstring"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179263761867471-9242f9093cdd412c.json",
+    "sha256": "5fbf90b7c5470dcedbcb468ca919697b8a4f7d8f28e03ae14e302f6f03589744",
+    "package": "pem-rfc7468",
+    "version": "0.7.0",
+    "exit": 0,
+    "crate": "pem_rfc7468"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179263788327559-0013370f8a79d16c.json",
+    "sha256": "33c792e1a9478d31aed378f0a34eeb4135ea99f1cc0703adccc6fcd1c8fa3ae7",
+    "package": "icu_provider",
+    "version": "2.1.1",
+    "exit": 0,
+    "crate": "icu_provider"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179263866434304-41c2d309c63376ef.json",
+    "sha256": "33460556efef8e427090dfbf3a34b35e39051314873b5d4fc8337d0624667452",
+    "package": "icu_collections",
+    "version": "2.1.1",
+    "exit": 0,
+    "crate": "icu_collections"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179264019038616-bfb673b94105d0d8.json",
+    "sha256": "c935ad763c51393a666743f2500f6e5625b0211d68fd5e633dac6671e4ea8103",
+    "package": "gix-sec",
+    "version": "0.12.2",
+    "exit": 0,
+    "crate": "gix_sec"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179264208680556-3e9ba5e85af9a2f8.json",
+    "sha256": "7ba5dcb73b2f3314afba7f909abc71747f3abc9a1c220604f27c3bebda7aedb9",
+    "package": "log",
+    "version": "0.4.29",
+    "exit": 0,
+    "crate": "log"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179264221823085-87f60e2598235a13.json",
+    "sha256": "90351f65fc4313752c1343ce41224ad511e6c82f9540f56e2898c0c68573d833",
+    "package": "shell-words",
+    "version": "1.1.0",
+    "exit": 0,
+    "crate": "shell_words"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179264274265519-a1ab47675a99a916.json",
+    "sha256": "651550cbab92ca2a22533ded79bbf14b38b93a8cd5a0bb8f49b1047c7be02f4d",
+    "package": "der",
+    "version": "0.7.10",
+    "exit": 0,
+    "crate": "der"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179264356266207-10c7eeaf3b00e5e6.json",
+    "sha256": "dd06e502d6df396d5f7bb408e55a4df386e79c5f39790cb70556b2b9bb10adf8",
+    "package": "gix-command",
+    "version": "0.6.4",
+    "exit": 0,
+    "crate": "gix_command"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179264375060602-f0bdf38bbc1175b8.json",
+    "sha256": "0709b37cdcec32b486deef470c62eb927a5818277d35f16c30af45d6f59d4306",
+    "package": "gix-attributes",
+    "version": "0.29.0",
+    "exit": 0,
+    "crate": "gix_attributes"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179264576710837-d94fd592ce5b0138.json",
+    "sha256": "f93f81a95e8a94d8eecab33ec47dac6e45bcbb0709e6b10a87429096811f5269",
+    "package": "icu_normalizer_data",
+    "version": "2.1.1",
+    "exit": 0,
+    "crate": "icu_normalizer_data"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179264659903694-e8c1b9ff155311d0.json",
+    "sha256": "fc0973499adf2b4ca8a3730673d9aa232698910d64d4d31df77b694aa5e6d9fa",
+    "package": "icu_properties_data",
+    "version": "2.1.2",
+    "exit": 0,
+    "crate": "icu_properties_data"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179264805417121-292df43f908bb3a8.json",
+    "sha256": "2a1fef27438e35698e54f56df1de5402c82c9c5959d395cccd7d8e0dd153021c",
+    "package": "filetime",
+    "version": "0.2.26",
+    "exit": 0,
+    "crate": "filetime"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179264996652751-420f1d2f54c586f7.json",
+    "sha256": "38a10d4cee17eee6f3d07a41745923922e003a9fc15ae2cc900b5e39cea73a4d",
+    "package": "spki",
+    "version": "0.7.3",
+    "exit": 0,
+    "crate": "spki"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179265182897129-724a20a31feb8760.json",
+    "sha256": "870854995d171fe1024f186fd0f05a21fc7a58a1f2d7644ada074d96ad1ed390",
+    "package": "icu_normalizer",
+    "version": "2.1.1",
+    "exit": 0,
+    "crate": "icu_normalizer"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179265192403770-ba8e8fbc886ec692.json",
+    "sha256": "6be1c54c8d2d08f970ac1defc9ec1fdc90c5a809021f14838372ed7f9713ca3b",
+    "package": "icu_properties",
+    "version": "2.1.2",
+    "exit": 0,
+    "crate": "icu_properties"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179265309876438-c3da896ff0e08dda.json",
+    "sha256": "d123d195af6cf3e388f870777d66a18facfbe5e7c577a1f7f513061612286696",
+    "package": "zmij",
+    "version": "1.0.8",
+    "exit": 0,
+    "crate": "zmij"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179265478405582-3ab7e42ce51b827a.json",
+    "sha256": "630280073169949f41bd9fc945bf861b1434332383f22d6644275b5db5957ea2",
+    "package": "gix-ref",
+    "version": "0.57.0",
+    "exit": 0,
+    "crate": "gix_ref"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179266028089850-d5cb2d8f9db1c9fc.json",
+    "sha256": "3cb971d41777c80e7ad9a27a61b6bf90b6159b397097e7844591c4f759b3efc1",
+    "package": "hmac",
+    "version": "0.12.1",
+    "exit": 0,
+    "crate": "hmac"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179266139730773-08e3fe65d5139ee4.json",
+    "sha256": "92b4a7f768cd962130962fa1caa28d62c443c05288ffcda7024dd30f34eb7a4e",
+    "package": "openssl-probe",
+    "version": "0.1.6",
+    "exit": 0,
+    "crate": "openssl_probe"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179266385746676-1eed747e1eafe91c.json",
+    "sha256": "de2266fcbcc6d3ed064f4e32b580ce7abab4d8748d2c0c5f067b97a31c140247",
+    "package": "idna_adapter",
+    "version": "1.2.1",
+    "exit": 0,
+    "crate": "idna_adapter"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179266492131053-38edffb81d56246f.json",
+    "sha256": "c0f1d7e837989a3769983cc80c14e0b91406c1892ea5eba585853fb58edab8a4",
+    "package": "serde_json",
+    "version": "1.0.148",
+    "exit": 0,
+    "crate": "serde_json"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179266980627391-60fa28e64732c288.json",
+    "sha256": "1d1dc093c04581823d9ae81d0efc3e6a2a3cfc16830ab31a33b514909fc688b9",
+    "package": "pkcs8",
+    "version": "0.10.2",
+    "exit": 0,
+    "crate": "pkcs8"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179267268631712-1216fb25c47851ca.json",
+    "sha256": "dfbc39c68c96f9a1fa45f98f55c9772e1aa53ee09062af62bd8e4b4420783bb5",
+    "package": "ff",
+    "version": "0.13.1",
+    "exit": 0,
+    "crate": "ff"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179267400730364-59606b29eec0bf16.json",
+    "sha256": "44ff64695c8a00a50b349ce5bee998d39f2329f694a076e61d99609f39572104",
+    "package": "gix-traverse",
+    "version": "0.51.0",
+    "exit": 0,
+    "crate": "gix_traverse"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179267504999463-3f5449732ea07dc5.json",
+    "sha256": "f116bc447b738f144a29b70d9f6fb1eecf6c7653b0adcd8314bdf41ce26210de",
+    "package": "gix-packetline",
+    "version": "0.20.0",
+    "exit": 0,
+    "crate": "gix_packetline"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179267758789121-1d05893af3294980.json",
+    "sha256": "99b17f749e0caf2a34ba0f4ec658c908ce58bfb500efd0eec2fd74be22524cc9",
+    "package": "tracing-core",
+    "version": "0.1.36",
+    "exit": 0,
+    "crate": "tracing_core"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179267766165401-3914d70daad003c8.json",
+    "sha256": "69a09d7b442c67ea4fdc02cedae19cc910e361e966bcd50e2a10d515949501ac",
+    "package": "gix-bitmap",
+    "version": "0.2.15",
+    "exit": 0,
+    "crate": "gix_bitmap"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179267892204337-89505e7c454b2184.json",
+    "sha256": "86ec0f9f836b05d210d2da3dc10e4fbad9a012ac32465f6dd9846152113aa053",
+    "package": "socket2",
+    "version": "0.6.1",
+    "exit": 0,
+    "crate": "socket2"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179268280139342-d390278cb449cb43.json",
+    "sha256": "ea275c52557312377a221b4d4f6ffd0cdc876890fc839e16c13069293d7d1aa7",
+    "package": "fnv",
+    "version": "1.0.7",
+    "exit": 0,
+    "crate": "fnv"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179268376806763-f2ef07c684e6c300.json",
+    "sha256": "e0f33fe0c47a45511ec3375643d30294fd411a23b65b66bece41fa5309c51269",
+    "package": "base16ct",
+    "version": "0.2.0",
+    "exit": 0,
+    "crate": "base16ct"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179268455705470-729bd915cd89d906.json",
+    "sha256": "b437deb02d529a976a8375251acd306e58be5c8994b086939e83060c692054bd",
+    "package": "utf8_iter",
+    "version": "1.0.4",
+    "exit": 0,
+    "crate": "utf8_iter"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179268528838481-9a89136bae02862c.json",
+    "sha256": "82ebfdba9a2516912a1ed1c115fa3f896de4914efaddde6c38927403c20a7626",
+    "package": "sec1",
+    "version": "0.7.3",
+    "exit": 0,
+    "crate": "sec1"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179268603394675-773098ca291c2c8b.json",
+    "sha256": "7d030b02cbd0abe7cee90b19acca7d6a65f7c9898e981eae43e8e3c61f9e67d3",
+    "package": "idna",
+    "version": "1.1.0",
+    "exit": 0,
+    "crate": "idna"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179268835408416-ae345c1bfce08ae3.json",
+    "sha256": "f8a1868c4045a782ebd9335502af05d088d3099aef4e6b701fcec54701a3c595",
+    "package": "gix-index",
+    "version": "0.45.0",
+    "exit": 0,
+    "crate": "gix_index"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179269539629580-3266472c9477120c.json",
+    "sha256": "d7794b75b8ce56ce8d7e178e3b4e4d473b1f8459f89c7f060067af28c469d6d0",
+    "package": "group",
+    "version": "0.13.0",
+    "exit": 0,
+    "crate": "group"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179269704325181-ec26b82ad11f4672.json",
+    "sha256": "3781aae823a3994a878ae5915b70e1864232e245a91e36bc803b01b812a1404f",
+    "package": "hkdf",
+    "version": "0.12.4",
+    "exit": 0,
+    "crate": "hkdf"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179269851766756-86f5e2feec5c34ca.json",
+    "sha256": "65f36c1e4bf1c084ae81d1329f9816c6638545a8daf6c8faa0ed64917bd945ca",
+    "package": "libnghttp2-sys",
+    "version": "0.1.11+1.64.0",
+    "exit": 0,
+    "crate": "libnghttp2_sys"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179269936680021-cc5d45a846c39b5e.json",
+    "sha256": "a6c86a215f06487de428b88ab5f20000ddedfdb68a030fe2b1c94ef795543640",
+    "package": "gix-pathspec",
+    "version": "0.14.0",
+    "exit": 0,
+    "crate": "gix_pathspec"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179270015896322-bfb3dc726d05db58.json",
+    "sha256": "97f833d37a070bfaca8fbef0db7f065a160ddbb1107f53ebed55697d87d996f4",
+    "package": "curl-sys",
+    "version": "0.4.84+curl-8.17.0",
+    "exit": 0,
+    "crate": "curl_sys"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179270104945011-b51ee78698d8bb01.json",
+    "sha256": "c92d354e5f9b575ef0eb804e521b26ebc1823bd9bb30fcf1be5a05ff086f4824",
+    "package": "curl",
+    "version": "0.4.49",
+    "exit": 0,
+    "crate": "curl"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179270117019845-1226ba733392aae7.json",
+    "sha256": "c605d1f29b4f89d8409171fd136e2711d84c0ea4918976344e0d016add40d7db",
+    "package": "gix-ignore",
+    "version": "0.18.0",
+    "exit": 0,
+    "crate": "gix_ignore"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179270347661578-71232f077af41371.json",
+    "sha256": "035455487ebaa8db67fbe498ce29c2c6c04d148ef4fece68337d599ee0781d11",
+    "package": "crypto-bigint",
+    "version": "0.5.5",
+    "exit": 0,
+    "crate": "crypto_bigint"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179270553260749-8fa33ce5dbbb5a4f.json",
+    "sha256": "e677fbfe39e413c64438597104f14d0870b4ce2607b38fb3ea0dceecf000f176",
+    "package": "gix-url",
+    "version": "0.34.0",
+    "exit": 0,
+    "crate": "gix_url"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179270873723123-38150d82aebbbd15.json",
+    "sha256": "20832263892c02581d9922391f0149bab9ebe37c5a06666d3f8a07458779e7e2",
+    "package": "form_urlencoded",
+    "version": "1.2.2",
+    "exit": 0,
+    "crate": "form_urlencoded"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179271560829338-45acc52afc97bcd8.json",
+    "sha256": "60e2cf78054cf0be3b1a8db264c941fac448433a83d9ea40efeb93ba2980f522",
+    "package": "pin-project-lite",
+    "version": "0.2.16",
+    "exit": 0,
+    "crate": "pin_project_lite"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179271576302325-0615403b92c82bb2.json",
+    "sha256": "194769afed387e38bcf58649d9cf85b7d41cfe3c8345e109185921bda48e8f15",
+    "package": "utf8parse",
+    "version": "0.2.2",
+    "exit": 0,
+    "crate": "utf8parse"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179271637931673-24f02e0a746732b0.json",
+    "sha256": "0cfce4329b1f351b6dd1ce69138abe9e6c3ce1521fc048476f9c10bd24d68376",
+    "package": "foldhash",
+    "version": "0.1.5",
+    "exit": 0,
+    "crate": "foldhash"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179271646367827-02f7f8f946f45634.json",
+    "sha256": "e92bd2e0d6d58da66b21ee8e2e141327005e539ce818c59eaf0be851c026fa48",
+    "package": "powerfmt",
+    "version": "0.2.0",
+    "exit": 0,
+    "crate": "powerfmt"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179271657665491-4609973d3377bc06.json",
+    "sha256": "6057ee6cc3459e55fe7555c30842eef05483584dcad55b792c3fe74c9980140d",
+    "package": "anstyle",
+    "version": "1.0.13",
+    "exit": 0,
+    "crate": "anstyle"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179271778571024-02ef683862e3cbc2.json",
+    "sha256": "2ba2b5e4918ad424d9cebc5427c0f443c88783907e17b9a069677795aab4a964",
+    "package": "deranged",
+    "version": "0.5.5",
+    "exit": 0,
+    "crate": "deranged"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179271807722010-9fe2e99e957d6d1b.json",
+    "sha256": "0cf3ee2486aeccb11891bd26da58e4ecb15e1e1a6615c61d82eb870e0b1493d1",
+    "package": "hashbrown",
+    "version": "0.15.5",
+    "exit": 0,
+    "crate": "hashbrown"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179271862747780-3440d154901e08ab.json",
+    "sha256": "889fe11b6ba7b8a8d231ec151a86e5ea1d844b1fd91751ac4cd53b475abdb8fe",
+    "package": "anstyle-parse",
+    "version": "0.2.7",
+    "exit": 0,
+    "crate": "anstyle_parse"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179271997340425-0d4ab0f4be868899.json",
+    "sha256": "c8f38ecc8d33b17cbce1dc9805602cb4016255dfa205c55b1cb6c3dccb39da4f",
+    "package": "tracing",
+    "version": "0.1.44",
+    "exit": 0,
+    "crate": "tracing"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179272231117689-ae98ed7d21401a82.json",
+    "sha256": "0fea229349906a75a1a8897e0911b1b78fe1b36aa3d7bf1860650f28838802c6",
+    "package": "elliptic-curve",
+    "version": "0.13.8",
+    "exit": 0,
+    "crate": "elliptic_curve"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179272318364527-a64c7861624d5cd9.json",
+    "sha256": "0ba71df27caa1b7f652e8b16d0785e399ab44d2192b4bb914979ef5f78cd5996",
+    "package": "url",
+    "version": "2.5.7",
+    "exit": 0,
+    "crate": "url"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179272466288463-fddcd44125070ad5.json",
+    "sha256": "2f0de64199d51a491139dce58be03ef56e830321443127f792b3bae6d38bd61b",
+    "package": "gix-worktree",
+    "version": "0.46.0",
+    "exit": 0,
+    "crate": "gix_worktree"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179272738461702-0c6de757f6b8b4d9.json",
+    "sha256": "d4c9d334bd7afe9034beb70ce2fedb9bf9bf19dc3c00b71b52d35b2a0ddf7e77",
+    "package": "gix-prompt",
+    "version": "0.12.0",
+    "exit": 0,
+    "crate": "gix_prompt"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179272804338511-1cb14912bc31ce88.json",
+    "sha256": "4a4a1f621a03169be881d5b17b8fd6c0650efb45f1ddb9a394313e821d207bc4",
+    "package": "gix-revision",
+    "version": "0.39.0",
+    "exit": 0,
+    "crate": "gix_revision"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179273014531168-542d6c5e49a55d96.json",
+    "sha256": "577fd52bb979f221f6cb361f07166a24b4b15ae50f37884e49ffe409f20b3dc0",
+    "package": "encoding_rs",
+    "version": "0.8.35",
+    "exit": 0,
+    "crate": "encoding_rs"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179273211265545-6d4060fc43a8f198.json",
+    "sha256": "2c792f3434a9a09a31dc046ad65374079bcb1f2e8ad9c6229cf5ff14931a5732",
+    "package": "time-core",
+    "version": "0.1.6",
+    "exit": 0,
+    "crate": "time_core"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179273316948255-12cd00ba3cfd0f4f.json",
+    "sha256": "0f1a4c6db2ca0b88ad90f2625c45c99b01ca63625004907c4c6bfbad0de5412f",
+    "package": "anstyle-query",
+    "version": "1.1.5",
+    "exit": 0,
+    "crate": "anstyle_query"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179273386072921-c68fee69cd6b6065.json",
+    "sha256": "48fc5fa6042c5d5b2a5a0911ae1026d767859974375a77a9aab204ef68e9e458",
+    "package": "num-conv",
+    "version": "0.1.0",
+    "exit": 0,
+    "crate": "num_conv"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179273472056484-b53ebd9618428a92.json",
+    "sha256": "134f3c8ce103e8cbefb153d2be93d736bcab36812e584a1a938bc2d53c1f8249",
+    "package": "colorchoice",
+    "version": "1.0.4",
+    "exit": 0,
+    "crate": "colorchoice"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179273686217315-511c14dab099c05b.json",
+    "sha256": "7da8f39d866ae21359bb42b717d6e06b8bd2d3600435614904da213bbfcc325f",
+    "package": "is_terminal_polyfill",
+    "version": "1.70.2",
+    "exit": 0,
+    "crate": "is_terminal_polyfill"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179274170882865-176416ae4cc5be66.json",
+    "sha256": "e63879717b6fa4d8d1c3fb73753c4eaedb26a47e2a8354e3d1eee7eae34b771a",
+    "package": "anstream",
+    "version": "0.6.21",
+    "exit": 0,
+    "crate": "anstream"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179274282109660-b8e75f442a7b6f20.json",
+    "sha256": "1a7f8cd86d1afae4dbb1314588b223a740fe04c6273fade433e3543b405c3aaa",
+    "package": "gix-filter",
+    "version": "0.24.0",
+    "exit": 0,
+    "crate": "gix_filter"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179274448170188-e5e1edfe093ce1c4.json",
+    "sha256": "c82d475b8bdbb2c98b8c233493556af4c22cf5226c9543c77756377e1d5df1d5",
+    "package": "time",
+    "version": "0.3.44",
+    "exit": 0,
+    "crate": "time"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179275214533726-1166ca8fec4d786c.json",
+    "sha256": "103503c1923ba8b16d7d457c831c3886215ab554ee31cdd2a0856b7dfe613cec",
+    "package": "gix-refspec",
+    "version": "0.35.0",
+    "exit": 0,
+    "crate": "gix_refspec"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179275613730351-111fc1471d634cff.json",
+    "sha256": "2cba4de08763ae475ec48cb2195f9507921e65b8ce52f1e2ee5b22a9e6192e38",
+    "package": "gix-credentials",
+    "version": "0.34.1",
+    "exit": 0,
+    "crate": "gix_credentials"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179275808794866-4ab4981ed64f33cb.json",
+    "sha256": "304dffb909bdd9ade1d93155b2e80842b1ad5a8df807e0f7db95ba208343dfb6",
+    "package": "num-traits",
+    "version": "0.2.19",
+    "exit": 0,
+    "crate": "num_traits"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179276055773117-59cc6c581a86ad7e.json",
+    "sha256": "221763488d16e4be6dea35c2b4716f3da49da91c75d1e7707794e96c0185ce02",
+    "package": "anyhow",
+    "version": "1.0.100",
+    "exit": 0,
+    "crate": "anyhow"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179276187557740-dd9e399c4118e8c9.json",
+    "sha256": "584a8f16987e620461ea27228d1eb8f5e63014ffc8ec84f0fc1a528d2d5acde3",
+    "package": "typeid",
+    "version": "1.0.3",
+    "exit": 0,
+    "crate": "typeid"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179276260108360-52a0fcbbb1915889.json",
+    "sha256": "2f4c5925565ded392ba748a15138048f8d5861645bd4253d6e2dc38ecb77ec71",
+    "package": "imara-diff",
+    "version": "0.1.8",
+    "exit": 0,
+    "crate": "imara_diff"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179276320202446-74c7503e50acf314.json",
+    "sha256": "3da39ce7d0c45692716d76c8f8c3710f65a515f2aea9299a7edbbcc31996a342",
+    "package": "zerocopy",
+    "version": "0.8.31",
+    "exit": 0,
+    "crate": "zerocopy"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179276435701408-1dd14c4be37d13ac.json",
+    "sha256": "fc5f38988a4ad33012e3934d8bb2eca63ce0d4c49bb2ff52d41f99c1912f4bb8",
+    "package": "gix-discover",
+    "version": "0.45.0",
+    "exit": 0,
+    "crate": "gix_discover"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179276542443348-9c1613906af3578d.json",
+    "sha256": "2149db7881d117a385a0c16bcb84d56c87f98be44f8205813f5eac4c1f084a07",
+    "package": "libssh2-sys",
+    "version": "0.3.1",
+    "exit": 0,
+    "crate": "libssh2_sys"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179276636842203-ca65674aec8089ac.json",
+    "sha256": "18d1555683a8fff44cc752f7b2f8ba4f77c0ad8fa11f5e791bb24a94f4047474",
+    "package": "rfc6979",
+    "version": "0.4.0",
+    "exit": 0,
+    "crate": "rfc6979"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179276713736498-a3f23cfc3aa89a21.json",
+    "sha256": "4f0cae4a327b6b305300ad22eba96a9493fe1f31a05e0960e5d21f4be145a6d7",
+    "package": "signature",
+    "version": "2.2.0",
+    "exit": 0,
+    "crate": "signature"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179276808840296-e395799fdce6c7e4.json",
+    "sha256": "3ae5ea06eaa3cce1fc3de978a7d401a4039921b5fbd694446e6cf2ff18205606",
+    "package": "terminal_size",
+    "version": "0.4.3",
+    "exit": 0,
+    "crate": "terminal_size"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179276817195799-14d274869ff2acad.json",
+    "sha256": "3bf585372edd97b5f1e70e4be75ba2535c30fb94c114a970dabc947b777f0c4e",
+    "package": "toml_parser",
+    "version": "1.0.6+spec-1.1.0",
+    "exit": 0,
+    "crate": "toml_parser"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179277099520142-76d2b190cff064e0.json",
+    "sha256": "8fd66cef33eee1a2303cceb8fdd77b9533be0918dd0e5b4bcbe69af0d5eb0376",
+    "package": "indexmap",
+    "version": "2.12.1",
+    "exit": 0,
+    "crate": "indexmap"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179277303530450-d1b7f7d55425f721.json",
+    "sha256": "1afa472e60bca3a2ddc738f79c3fac22b70d118b304570c7fdf088c226929c11",
+    "package": "sha2",
+    "version": "0.10.9",
+    "exit": 0,
+    "crate": "sha2"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179277422471020-41f6893e761706dd.json",
+    "sha256": "5bf1f6d27afa1dbd618a53e5630fedee60fe192c89e5470c721ec2bc841f56df",
+    "package": "crossbeam-epoch",
+    "version": "0.9.18",
+    "exit": 0,
+    "crate": "crossbeam_epoch"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179277551074305-32c0fa746cd55799.json",
+    "sha256": "0ba0a9569794434ebe254eb161016a308af7cdf5cc99c7addf6531a0b4033737",
+    "package": "toml_datetime",
+    "version": "0.7.5+spec-1.1.0",
+    "exit": 0,
+    "crate": "toml_datetime"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179277680020570-123aed30299bb774.json",
+    "sha256": "495fba305ec5c9c7e831f77ab43700293a748d00d34efb9e92199f1518495f5e",
+    "package": "serde_spanned",
+    "version": "1.0.4",
+    "exit": 0,
+    "crate": "serde_spanned"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179277781217022-3dddf8ae54a0bc6d.json",
+    "sha256": "28ffec32e11e2498b77fa6a1ac30708e519f22e482f629daffe983d5883f0b85",
+    "package": "strsim",
+    "version": "0.11.1",
+    "exit": 0,
+    "crate": "strsim"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179277893658430-b70828e7cd49d5fe.json",
+    "sha256": "d8a5ff8d1f79dc5fd0710c0e7277d649d3c2e16a29dcf405858b9072abccac27",
+    "package": "base64",
+    "version": "0.22.1",
+    "exit": 0,
+    "crate": "base64"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179278139002190-1951b432de00dd0c.json",
+    "sha256": "5898007461c18005a71b1e967b9a1c341a92c4ea9dbe1c0b5098a6c1bd0c3a54",
+    "package": "clap_lex",
+    "version": "0.7.6",
+    "exit": 0,
+    "crate": "clap_lex"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179278165984709-081bd1f9e362e3ba.json",
+    "sha256": "d73c1398a2b6e446cf86ab11ac2906cc1764d4563ac61a6847b81a4b1e952abf",
+    "package": "clru",
+    "version": "0.6.2",
+    "exit": 0,
+    "crate": "clru"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179278331746983-cd72c9eb386784e7.json",
+    "sha256": "6f307d723dc90ef7781b257608420c6b8636679055aaf4346fa1c5b9934b1a53",
+    "package": "toml_writer",
+    "version": "1.0.6+spec-1.1.0",
+    "exit": 0,
+    "crate": "toml_writer"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179278339903578-e8897b90c4702e30.json",
+    "sha256": "10823733a09d95af519935d61a265ad900b0e84981c5509f118670676a6505c4",
+    "package": "lazy_static",
+    "version": "1.5.0",
+    "exit": 0,
+    "crate": "lazy_static"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179278407856275-0a07e5645839d5f4.json",
+    "sha256": "4f8d3ed5f3b48e63c0876d80b9649e59b7f170b7ca1f344fd1159df04720892b",
+    "package": "sharded-slab",
+    "version": "0.1.7",
+    "exit": 0,
+    "crate": "sharded_slab"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179278481734939-baa638f07a5762ea.json",
+    "sha256": "9fc215816de47c80efcb145587b78f5950cf33e4568541cd98df45c162be98aa",
+    "package": "gix-pack",
+    "version": "0.64.0",
+    "exit": 0,
+    "crate": "gix_pack"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179278765200044-82f51ed57cbd33b0.json",
+    "sha256": "28382ec6b3a3948a28132f2ea8ca955d9fb64ce4ee9a364f755ad3ba8bad23d2",
+    "package": "clap_builder",
+    "version": "4.5.53",
+    "exit": 0,
+    "crate": "clap_builder"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179279385476539-a06051e68c454cae.json",
+    "sha256": "a634aabf66a19d97882d1bb66518deb68ca16f1ab431a2989bf28faffd99fae5",
+    "package": "gix-transport",
+    "version": "0.52.1",
+    "exit": 0,
+    "crate": "gix_transport"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179280347669623-9a09a4f5d64be035.json",
+    "sha256": "1cce59dae5fb95a7847161cf5cfe57e387fd386dd653ae17855d8c430135bb6e",
+    "package": "crossbeam-deque",
+    "version": "0.8.6",
+    "exit": 0,
+    "crate": "crossbeam_deque"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179280596616662-2d237cb384d915c1.json",
+    "sha256": "ac06883788e719fd8116bf172b1dab99b183add0471f1c2e75ea1a9726e2e947",
+    "package": "ppv-lite86",
+    "version": "0.2.21",
+    "exit": 0,
+    "crate": "ppv_lite86"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179281283009262-083aecc185fe116b.json",
+    "sha256": "009561e810e5ea868476dbb05c151022b9f1783b92782fd36c213ba75b0391c6",
+    "package": "ecdsa",
+    "version": "0.16.9",
+    "exit": 0,
+    "crate": "ecdsa"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179281641047417-08f48ae5996e01eb.json",
+    "sha256": "2fcbf3c916e162c8f4f926cf935343e65979d8901232cc6fe4c9bbfad47714dd",
+    "package": "gix-dir",
+    "version": "0.19.0",
+    "exit": 0,
+    "crate": "gix_dir"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179281674446115-1e901a1346031655.json",
+    "sha256": "6ce389d517e3c437689c947dc9bd0c0c9c1f8ed42c3f4cae5367820e40d4ae1c",
+    "package": "gix-diff",
+    "version": "0.57.0",
+    "exit": 0,
+    "crate": "gix_diff"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179282661576474-b12a8609bbfd8124.json",
+    "sha256": "894bbcad9a0e9541f2be31c98a1244cd25696bc326e7328be2bb7bf20ac1df7a",
+    "package": "erased-serde",
+    "version": "0.4.9",
+    "exit": 0,
+    "crate": "erased_serde"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179282671204787-1e32ed6b3b96226e.json",
+    "sha256": "8538557c89533ca4d95de994d6cd8f10b77265d257cdb14c5f076ef08cf9fcce",
+    "package": "ordered-float",
+    "version": "2.10.1",
+    "exit": 0,
+    "crate": "ordered_float"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179283059355683-0006d867d499403d.json",
+    "sha256": "fd4191f2dd5e6f5304fc9eb7872f316265fed10fb5cdfadd3cd48aec6a4c4ece",
+    "package": "primeorder",
+    "version": "0.13.6",
+    "exit": 0,
+    "crate": "primeorder"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179283106892935-c7c172a359f83049.json",
+    "sha256": "5fec446cacf02583bd334747e2f746c70b8a563c1197f783886b2c89d4957ced",
+    "package": "tracing-log",
+    "version": "0.2.0",
+    "exit": 0,
+    "crate": "tracing_log"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179283238890306-cb59d36f53e8a256.json",
+    "sha256": "d94ab179719f3d9e1bb02310d6dc286400b2f9c9436ff8ffadea436603c30a8c",
+    "package": "gix-config",
+    "version": "0.50.0",
+    "exit": 0,
+    "crate": "gix_config"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179283294461210-6803f221cf2b6a51.json",
+    "sha256": "fd0f305b1ae7d866bc8945123ee9f3348deab2fd453d056272e8ef235ab110f3",
+    "package": "globset",
+    "version": "0.4.18",
+    "exit": 0,
+    "crate": "globset"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179284061903998-c9cc297f9060c12f.json",
+    "sha256": "e84e4e9c144da6cf23d6d153c1f383e77cd594ab76a4fdeae836481f48fee74c",
+    "package": "gix-shallow",
+    "version": "0.7.0",
+    "exit": 0,
+    "crate": "gix_shallow"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179284422127396-98147404c88c68e9.json",
+    "sha256": "135b256ccdc7a0bf36c563f44313717e3308c1d8a03092b0f4e8027d437436af",
+    "package": "gix-negotiate",
+    "version": "0.25.0",
+    "exit": 0,
+    "crate": "gix_negotiate"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179284779804263-ff41599a3e29ba2b.json",
+    "sha256": "c33d798e852e3b8452a8935145add15d0f5d3b14dcbddfd2bd2975e4ad4c378b",
+    "package": "rand_core",
+    "version": "0.9.3",
+    "exit": 0,
+    "crate": "rand_core"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179284962938989-fc8b2bc886e9d38e.json",
+    "sha256": "b632440e247c2fe789390f82ca6c778e783fed2132ca6f26ec160c47fd1d2e0f",
+    "package": "bitmaps",
+    "version": "2.1.0",
+    "exit": 0,
+    "crate": "bitmaps"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179285329611243-a081a6cc853ccecd.json",
+    "sha256": "ddb6835595b8581fa1485e2f180f9b4e6d39ee09b588bfc5b5c72ed6fb35bf94",
+    "package": "matchers",
+    "version": "0.2.0",
+    "exit": 0,
+    "crate": "matchers"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179285450407763-0d4624bf3532af3c.json",
+    "sha256": "240b226b5c0d255afce7817801a10e6a7b0682c12509928b903da03498593ea9",
+    "package": "thread_local",
+    "version": "1.1.9",
+    "exit": 0,
+    "crate": "thread_local"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179285543542672-82a6a5356893f03c.json",
+    "sha256": "80571a78921793abc41282492200dcb63855a7394522f8a7bde80df73f1ef774",
+    "package": "arc-swap",
+    "version": "1.7.1",
+    "exit": 0,
+    "crate": "arc_swap"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179285617049409-9bc875fe5cb158f3.json",
+    "sha256": "d8675b0ac7b104a9742c1f23eaab3d019ac1e8df4f2074839737044c08912522",
+    "package": "nu-ansi-term",
+    "version": "0.50.3",
+    "exit": 0,
+    "crate": "nu_ansi_term"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179285759010253-73147c19cb4fb10e.json",
+    "sha256": "0aa8a5b0ad2817e8f67c93bb993fd23eae64b644f4752e8636750f2da0b704f0",
+    "package": "fiat-crypto",
+    "version": "0.3.0",
+    "exit": 0,
+    "crate": "fiat_crypto"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179285877865325-b7787d24606f37ae.json",
+    "sha256": "5f80721523d16c4b335efc70645d1b4ac74471edd84a0cc9ea1e8b1da10c314d",
+    "package": "tracing-subscriber",
+    "version": "0.3.22",
+    "exit": 0,
+    "crate": "tracing_subscriber"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179287712652965-94c3ee03a7d00b26.json",
+    "sha256": "29af67ee45977e07a329dcca925fe827863f49ccd0f96be264bc2470311d45cd",
+    "package": "gix-odb",
+    "version": "0.74.0",
+    "exit": 0,
+    "crate": "gix_odb"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179289045868197-049bfc3e53a52fd5.json",
+    "sha256": "64e744a81043b814c7daff17fc5e97727fd0558fb18ee762665114c7651ce579",
+    "package": "gix-protocol",
+    "version": "0.55.0",
+    "exit": 0,
+    "crate": "gix_protocol"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179290076243561-c3941c4dda78678d.json",
+    "sha256": "29d927383bf713eb63db13c683fdcf219e6db43c1e443337ea45b79d438fa9a5",
+    "package": "sized-chunks",
+    "version": "0.6.5",
+    "exit": 0,
+    "crate": "sized_chunks"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179290709328425-101f3fa7868661cd.json",
+    "sha256": "f794c4030b30bac00f4dc06ad91fcf4e982c670e187abb354455c139b412f5e6",
+    "package": "orion",
+    "version": "0.17.11",
+    "exit": 0,
+    "crate": "orion"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179290777250306-da0372134baa1d52.json",
+    "sha256": "a1b7515f6a21e1c0df78cb8f578c00ec0c3dc81b1daca5fe207dda2548177366",
+    "package": "rand_chacha",
+    "version": "0.9.0",
+    "exit": 0,
+    "crate": "rand_chacha"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179291181586334-357295d68a35db17.json",
+    "sha256": "d02ae257815e516b674be5287a0c3dee5ffde135c7052a0f1cb7e8e6c61a58ac",
+    "package": "gix-submodule",
+    "version": "0.24.0",
+    "exit": 0,
+    "crate": "gix_submodule"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179291783603130-d49b017410c7f073.json",
+    "sha256": "86dc2fd8fd5e7e5ce1001ee8eabe3f579be7632abb6de4f3df769047405689f7",
+    "package": "ignore",
+    "version": "0.4.25",
+    "exit": 0,
+    "crate": "ignore"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179292502283078-a58e58727dc7a7f7.json",
+    "sha256": "4c98ceaf5d26e5e5ce6ac57bafd3725029f5ee63d9460bdc7b49c5ef564ceb21",
+    "package": "p384",
+    "version": "0.13.1",
+    "exit": 0,
+    "crate": "p384"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179293126700594-9ce442415865d06b.json",
+    "sha256": "4621c91d026c341dfe1637a04b8850eab3687b8c8eb5f9b6ea11ecde83cfa8d3",
+    "package": "nix",
+    "version": "0.30.1",
+    "exit": 0,
+    "crate": "nix"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179293362115071-e0303b738f4ef367.json",
+    "sha256": "743eb865074594c29fa33136181ebad2f2ffa137f50fd06fe76eb92894d77039",
+    "package": "serde-untagged",
+    "version": "0.1.9",
+    "exit": 0,
+    "crate": "serde_untagged"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179293362673936-c61f665dbcd37149.json",
+    "sha256": "2a5c7e581682574c83e4ff56f51fb5f200d96f4958ccbe27722ca2379502def4",
+    "package": "serde-value",
+    "version": "0.7.0",
+    "exit": 0,
+    "crate": "serde_value"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179293574404389-9dfe0d3f978c6020.json",
+    "sha256": "aacb9ed3a359fe70eceeed8f92c3e5911fe3b26e6a846768210b197ce479d9b8",
+    "package": "gix-status",
+    "version": "0.24.0",
+    "exit": 0,
+    "crate": "gix_status"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179293639919547-ebfe10cb03fbac63.json",
+    "sha256": "c5914775945b7b1a8ea3b3f2849270804af403c7c43d504d60091f74a8cf9903",
+    "package": "clap",
+    "version": "4.5.53",
+    "exit": 0,
+    "crate": "clap"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179294120732366-9e8e3a5cadc92384.json",
+    "sha256": "d2473b6992363004164cdc4691e49543eb178f210b0ec14760043ea29592f815",
+    "package": "toml",
+    "version": "0.9.10+spec-1.1.0",
+    "exit": 0,
+    "crate": "toml"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179294148335982-70bc00438cccc7b3.json",
+    "sha256": "3ff89e5d12ab373f9b6df14252fd4cae618a236954077079d2d075ad68356c9b",
+    "package": "cargo-credential",
+    "version": "0.4.9",
+    "exit": 0,
+    "crate": "cargo_credential"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179295294188796-dc4ee89951ec8165.json",
+    "sha256": "f8c765b4e1cd9b2f4819fde198c709561c56e917cda98731b942ba9f9e598e7a",
+    "package": "rand_xoshiro",
+    "version": "0.6.0",
+    "exit": 0,
+    "crate": "rand_xoshiro"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179295304198519-b9270015f41aa7ed.json",
+    "sha256": "6b96abfb294ab32c6cbf33c9fe4793e82040de74e203537b78620a654b43e862",
+    "package": "ed25519-compact",
+    "version": "2.2.0",
+    "exit": 0,
+    "crate": "ed25519_compact"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179295697525672-06ddf6df0d34ebde.json",
+    "sha256": "f2677c2e8635757546234f6d4992a35aeae55f035740fc5018b9f42ea60eebae",
+    "package": "hashlink",
+    "version": "0.11.0",
+    "exit": 0,
+    "crate": "hashlink"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179295887027402-e6e756fab8223d0f.json",
+    "sha256": "c7e3ad290a7fc54ee3e2f23c1c870e7b291e9df2314ffe6810e552a5d4b9abd5",
+    "package": "libz-rs-sys",
+    "version": "0.5.2",
+    "exit": 0,
+    "crate": "libz_rs_sys"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179296040021125-2bff232bc6a307e9.json",
+    "sha256": "a8e5c28681e23abec58d6699b82fadef46efb17f897d3828a36de63ac3c01ed4",
+    "package": "semver",
+    "version": "1.0.27",
+    "exit": 0,
+    "crate": "semver"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179296106019646-ec2426f0068d0f4e.json",
+    "sha256": "c3f74e32d2b9ae839624f35011b61fa24cf8f1cc733a7cb1121d86b0c5fc8e36",
+    "package": "regex",
+    "version": "1.12.2",
+    "exit": 0,
+    "crate": "regex"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179296328051356-ae9f068b08e3bcd8.json",
+    "sha256": "dd6b3be4606c5d569910f7c7801d6a8de49593fc9267bf9e2af2bf9b05eefc09",
+    "package": "jobserver",
+    "version": "0.1.34",
+    "exit": 0,
+    "crate": "jobserver"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179296537601104-c272cea25185660c.json",
+    "sha256": "2b73402c316aae7a6f651c5d718aa0ccafa753bc5dab755cab1fd40c2e630d44",
+    "package": "libloading",
+    "version": "0.9.0",
+    "exit": 0,
+    "crate": "libloading"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179296713136857-e9a738d3b2cecec5.json",
+    "sha256": "d3e539806588611f018ee7578bd4c456e560f221c17d33781457924144aa51c7",
+    "package": "either",
+    "version": "1.15.0",
+    "exit": 0,
+    "crate": "either"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179296722658340-c749b29ceaaa025a.json",
+    "sha256": "0d17844a6d779ad04c629849e92234e2cbf15965c1117cdb71f940ac962c77fa",
+    "package": "constant_time_eq",
+    "version": "0.3.1",
+    "exit": 0,
+    "crate": "constant_time_eq"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179296819873319-f86302b4d1ccb548.json",
+    "sha256": "9faf6358089a6e502eb58d5ceb7f37a4d679d096022488e71d59d2501d6d8eb1",
+    "package": "shlex",
+    "version": "1.3.0",
+    "exit": 0,
+    "crate": "shlex"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179296873655943-a704f4bd3d1bfb7c.json",
+    "sha256": "7bec164334c9c3e89b87e0985da930b2041718ca2603d598517a009a16c6b112",
+    "package": "unicode-ident",
+    "version": "1.0.22",
+    "exit": 0,
+    "crate": "unicode_ident"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179296987697610-fba3b9176c562eb6.json",
+    "sha256": "fbacbe40c9bee5efb9ef596df464ca4e8dfc2642c66165e0599025f2759b09e9",
+    "package": "unicode-width",
+    "version": "0.2.2",
+    "exit": 0,
+    "crate": "unicode_width"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179297040469186-7070c87ec532242b.json",
+    "sha256": "35d7fa8a20302a1c2709a70443071b176948d9cb1715a0d3924eb17d31a37443",
+    "package": "shell-escape",
+    "version": "0.1.5",
+    "exit": 0,
+    "crate": "shell_escape"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179297200027368-84a55149322c4a7e.json",
+    "sha256": "344e34ad7f24687f22f39ae84d039ecb9c7030a6f2c499f413005f3b9d0290b4",
+    "package": "ct-codecs",
+    "version": "1.1.6",
+    "exit": 0,
+    "crate": "ct_codecs"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179297203536496-d871a82e829784e6.json",
+    "sha256": "4be635fd53dc41117e0a705323e59366a79b5f29189c9497606be9656fa2bb99",
+    "package": "arrayref",
+    "version": "0.3.9",
+    "exit": 0,
+    "crate": "arrayref"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179297266415239-3f4d52a697092917.json",
+    "sha256": "34799b7f525887f2f199724d92f05cdbd3996772a563539936aa863c7a8daa65",
+    "package": "hex",
+    "version": "0.4.3",
+    "exit": 0,
+    "crate": "hex"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179297368360309-ca7d1958698db670.json",
+    "sha256": "3af01243871840d36ca06d4eed90818798fefe0cefa4fd1b454bea773f67db08",
+    "package": "fallible-iterator",
+    "version": "0.3.0",
+    "exit": 0,
+    "crate": "fallible_iterator"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179297444141553-c5fb09d4c6c78553.json",
+    "sha256": "5504738e47edab5d747c77c1eb00ac822482654f0a9c412ffc5979fb391bf6fe",
+    "package": "fallible-streaming-iterator",
+    "version": "0.1.9",
+    "exit": 0,
+    "crate": "fallible_streaming_iterator"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179297545758543-0e2adede75611054.json",
+    "sha256": "c78daa002acde72c578a42fea9a3d6e605a5ae2e38858b3100dfd20c0da6ab99",
+    "package": "arrayvec",
+    "version": "0.7.6",
+    "exit": 0,
+    "crate": "arrayvec"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179297590469505-d03f1664b911dff5.json",
+    "sha256": "69307b62a7d5e0caf7ff4692ff0a6ed15da9f25ae870117e3e167d9dbfddb97c",
+    "package": "is_executable",
+    "version": "1.0.5",
+    "exit": 0,
+    "crate": "is_executable"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179297668866644-fb9a503673aab791.json",
+    "sha256": "871671c8417fe31d26ac5ba3cb6f181b14f6e4eba0ca6965d31d4a26f324a768",
+    "package": "blake3",
+    "version": "1.8.2",
+    "exit": 0,
+    "crate": "blake3"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179297682171294-46b77e4c12c1e7ac.json",
+    "sha256": "5f34ecd5af43df0326a52be22014500a09d9876b0ec3bf1b4a54797277b043c3",
+    "package": "clap_complete",
+    "version": "4.5.64",
+    "exit": 0,
+    "crate": "clap_complete"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179298017026704-6f2cf1acec5a6121.json",
+    "sha256": "1f8cb08c6c706c412ca42aadf6ea822f9f05b12af5578dbf50c5c04b64d93194",
+    "package": "cargo-util",
+    "version": "0.2.27",
+    "exit": 0,
+    "crate": "cargo_util"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179298905769145-40f8bf592ab1fea5.json",
+    "sha256": "fec8625e23d620d7cc91beb35fe39665f50870f9d9953abe76110263e1056b29",
+    "package": "pasetors",
+    "version": "0.7.7",
+    "exit": 0,
+    "crate": "pasetors"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179298951054986-198773b63fbf0f1e.json",
+    "sha256": "a76de1c02c3c46fadf07da1051badc31791df754a1a4e91bfaf2e9396edd3c4c",
+    "package": "annotate-snippets",
+    "version": "0.12.10",
+    "exit": 0,
+    "crate": "annotate_snippets"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179300082947501-749d059024c9dbd6.json",
+    "sha256": "0fec1095db61429630c49119e3dc5ad76bf65cf05b004a526ad5405ae078803c",
+    "package": "cargo-util-schemas",
+    "version": "0.12.0",
+    "exit": 0,
+    "crate": "cargo_util_schemas"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179300793572124-b018bc273dd30fbb.json",
+    "sha256": "9c9542687cac8e7cc48f0b8d3a2a6bc05e867a6bc8349ce091ab92b2033d6f45",
+    "package": "itertools",
+    "version": "0.14.0",
+    "exit": 0,
+    "crate": "itertools"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179301425673611-7acd19a5aaf20d45.json",
+    "sha256": "75600556b15a29838f65c4412150d24860490855901399c1cb1e3c48d8c07256",
+    "package": "cargo-credential-libsecret",
+    "version": "0.5.5",
+    "exit": 0,
+    "crate": "cargo_credential_libsecret"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179301617072815-944f06da685aecdb.json",
+    "sha256": "a94c9710f9334dd077cfcc1411e523a97f3d55f3cd84ddeb18e4918bf84ce1ff",
+    "package": "flate2",
+    "version": "1.1.5",
+    "exit": 0,
+    "crate": "flate2"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179301840258247-3080e05899eadd6f.json",
+    "sha256": "569af6c8ae8ce606baa5e7c5e8fcab66a5a2fedb9a6b4c01fc6ebb789b7d9e81",
+    "package": "im-rc",
+    "version": "15.1.0",
+    "exit": 0,
+    "crate": "im_rc"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179301948578804-6be40c3474dda8b5.json",
+    "sha256": "a3ef6443feeb384ff63444593cffe0b095da7ec7cfa991f6457a83ad3dcb5702",
+    "package": "color-print",
+    "version": "0.3.7",
+    "exit": 0,
+    "crate": "color_print"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179302018364668-08b6481388efc966.json",
+    "sha256": "11a7785779f46fa489713843bc8f9c409b9a2739e7e4d869b59d301b7d9c97ac",
+    "package": "gix",
+    "version": "0.77.0",
+    "exit": 0,
+    "crate": "gix"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179302629839793-1bd36d04c469d653.json",
+    "sha256": "af63ae3e73066d566f53ec6483729d76dad7832c2805cd41639af10123208e63",
+    "package": "os_info",
+    "version": "3.14.0",
+    "exit": 0,
+    "crate": "os_info"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179302970257105-e685551d5c2c877d.json",
+    "sha256": "05204694eaf186e7c143754d04e028a034e3cac8d0a6eeca677cfef66215aff4",
+    "package": "rand",
+    "version": "0.9.2",
+    "exit": 0,
+    "crate": "rand"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179303379999353-34425c35518fa6c5.json",
+    "sha256": "fddc07c70eacd80e9d86d35f4440d5bb496341301f7a263dc302f5ed31fe806c",
+    "package": "tracing-chrome",
+    "version": "0.7.2",
+    "exit": 0,
+    "crate": "tracing_chrome"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179303663731968-89f054ed9364bd58.json",
+    "sha256": "a66f268aacac966da1304ce691432ef30128193049e477f84eef8e292d4b4157",
+    "package": "toml_edit",
+    "version": "0.24.0+spec-1.1.0",
+    "exit": 0,
+    "crate": "toml_edit"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179305039696044-d6ce7521dfc69ff0.json",
+    "sha256": "cc89a47c3c99efbe9cf7e7ac0d732ee386da8275dd5ea50a74fbfc17f7ccee74",
+    "package": "crates-io",
+    "version": "0.40.17",
+    "exit": 0,
+    "crate": "crates_io"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179306690982100-84bd69d3157d8728.json",
+    "sha256": "32ff444367232b74aebfef6fc4d0dbfc8bc6ae292b34fefb8f6f253be2c9ab8f",
+    "package": "rustfix",
+    "version": "0.9.4",
+    "exit": 0,
+    "crate": "rustfix"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179307209183451-e4c2e63ce35ced5a.json",
+    "sha256": "19ccc501a8f55aa59fb5518bd5a9ad64923670543e8b301f829f7b4028fbca91",
+    "package": "tar",
+    "version": "0.4.44",
+    "exit": 0,
+    "crate": "tar"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179308349319122-b82b7a0f6d9108ab.json",
+    "sha256": "db04848d38cbd23895ec2630d9f357372ac4b9457487b43451a087afdad3d651",
+    "package": "opener",
+    "version": "0.8.3",
+    "exit": 0,
+    "crate": "opener"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179309046426787-946531caf7abb55c.json",
+    "sha256": "6fd8e274d41bf4ce9a273db9cc94a4f90a90e5c4830a266186fcfe89802aacc5",
+    "package": "cargo-platform",
+    "version": "0.3.2",
+    "exit": 0,
+    "crate": "cargo_platform"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179309723317583-1161936d1ccf289c.json",
+    "sha256": "15ce85c5ffd980e3a08324aa77e3d9f4197c5c5289f0254a164272618ac18f54",
+    "package": "serde_ignored",
+    "version": "0.1.14",
+    "exit": 0,
+    "crate": "serde_ignored"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179309989487181-cf045a82e9035816.json",
+    "sha256": "a0f633972a773ef645abb4a59b996b7fadff38264236a6c3606b31d481606090",
+    "package": "http-auth",
+    "version": "0.1.10",
+    "exit": 0,
+    "crate": "http_auth"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179310198063877-fcf6520a1dfe9107.json",
+    "sha256": "608eb205cc1461e9e864a2facf4df4c7c4a5afc3af624a4b4fe686133520ed8a",
+    "package": "rustc-hash",
+    "version": "2.1.1",
+    "exit": 0,
+    "crate": "rustc_hash"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179310284010063-5776b3d474c2ab15.json",
+    "sha256": "98d550e339e70f0ba76fa26863a37f4cfea619de49bee3ac778203723dc245e2",
+    "package": "glob",
+    "version": "0.3.3",
+    "exit": 0,
+    "crate": "glob"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179310313767154-fc3b2b6090572b77.json",
+    "sha256": "46d494716f03b72b9f2c15ae9d3cb15fae225b630424a4e6262d126f18cf4d4f",
+    "package": "pathdiff",
+    "version": "0.2.3",
+    "exit": 0,
+    "crate": "pathdiff"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179310386850360-6ff870b942c267e8.json",
+    "sha256": "268897ca5119aa2a364ccb8793af27d3a72d3fbf8913eb7565569edb84e38753",
+    "package": "unicase",
+    "version": "2.8.1",
+    "exit": 0,
+    "crate": "unicase"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179310576958375-5e8683092804e8a5.json",
+    "sha256": "547250d8dc8ee54612fc71e6d893d7954a23d855f31a59a1d1cdc90c1d30601b",
+    "package": "home",
+    "version": "0.5.12",
+    "exit": 0,
+    "crate": "home"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179310653747734-8ac83cc5c110d300.json",
+    "sha256": "08123a5f45f05285c2362214b3b6cca99f07952ed45c80a4ea21cb13f3aa8fb7",
+    "package": "supports-hyperlinks",
+    "version": "3.2.0",
+    "exit": 0,
+    "crate": "supports_hyperlinks"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179310679847775-da8143d5df9545f5.json",
+    "sha256": "4d871c8b8cb1884c3d353ad0a077ff00cd695b5e6be7019c40acb901d434dcb2",
+    "package": "rustc-stable-hash",
+    "version": "0.1.2",
+    "exit": 0,
+    "crate": "rustc_stable_hash"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179310795125156-dd067c557aaf5b6f.json",
+    "sha256": "bba3e8ae1126025b5c15cc6820d2317de4de54326ae990ac5511ceb7894b992d",
+    "package": "supports-unicode",
+    "version": "3.0.0",
+    "exit": 0,
+    "crate": "supports_unicode"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179319121276702-ac68749fbb8eb7e0.json",
+    "sha256": "84b1aec11c9e3020bbf8cf0feea49f6d216caff11a448789b2527812f048de8e",
+    "package": "libgit2-sys",
+    "version": "0.18.3+1.9.2",
+    "exit": 0,
+    "crate": "libgit2_sys"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179319294531681-f92ab70e2717d6e4.json",
+    "sha256": "ec9ced6621469fbd08c93d1f3a40194730e8dc8da6e64f5eb6bb84a4cb80d927",
+    "package": "git2",
+    "version": "0.20.3",
+    "exit": 0,
+    "crate": "git2"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179321010418200-cde6c0e0d5a6e3b8.json",
+    "sha256": "50bdceda10817e9fa22242fd00d660a9d7f7f840dab109689a050a853249ddfe",
+    "package": "git2-curl",
+    "version": "0.21.0",
+    "exit": 0,
+    "crate": "git2_curl"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179321148584498-e51622d517071a9f.json",
+    "sha256": "e2ae5a607f87b1fe1d14c2b9d050bbaff8319f9abb731608c173a9db0cff123d",
+    "package": "libsqlite3-sys",
+    "version": "0.36.0",
+    "exit": 0,
+    "crate": "libsqlite3_sys"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179321338040541-2c6d1c13fd9f4b34.json",
+    "sha256": "c2e0b54db9cdc9cb041a4bcb2fe4d8425f68975fcd804e4607c5f829a82674dd",
+    "package": "rusqlite",
+    "version": "0.38.0",
+    "exit": 0,
+    "crate": "rusqlite"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179321963665640-9c7e1539aa9119db.json",
+    "sha256": "f7a5893e7ece2194004417cc1140aca3229515a7c1e074be831c7705c6dcad43",
+    "package": "cargo",
+    "version": "0.95.0",
+    "exit": 0,
+    "crate": "cargo"
+  },
+  {
+    "project": "cargo",
+    "capture": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/captures/cargo/1795179362472478224-a5779d6fa13aa50e.json",
+    "sha256": "80598cd3d706c250bb9752efbd9515169faccae384f4322c26bc07d332bda240",
+    "package": "cargo",
+    "version": "0.95.0",
+    "exit": 0,
+    "crate": "cargo"
+  }
+]

@@ -35,7 +35,11 @@ impl Builder<'_> {
                 continue;
             }
             if types.is_union(ty) || types.is_vector(ty) {
-                return self.unsupported("union and SIMD values are outside the semantic path");
+                return self.unsupported(format!(
+                    "{} value is outside the semantic path: {}",
+                    if types.is_union(ty) { "union" } else { "SIMD" },
+                    self.body.types.describe(ty)
+                ));
             }
             match types.shape(ty) {
                 TypeShape::Bool

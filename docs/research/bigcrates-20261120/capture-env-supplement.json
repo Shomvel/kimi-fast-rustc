@@ -1,0 +1,17 @@
+{
+  "/workspace/bigcrates/captures/cargo/1795179321963665640-9c7e1539aa9119db.json": {
+    "CARGO_COMMIT_HASH": "85eff7c80277b57f78b11e28d14154ab12fcf643",
+    "CARGO_COMMIT_SHORT_HASH": "85eff7c80",
+    "CARGO_COMMIT_DATE": "2026-01-15",
+    "RUST_HOST_TARGET": "x86_64-unknown-linux-gnu"
+  },
+  "/workspace/bigcrates/captures/cargo/1795179362472478224-a5779d6fa13aa50e.json": {
+    "CARGO_COMMIT_HASH": "85eff7c80277b57f78b11e28d14154ab12fcf643",
+    "CARGO_COMMIT_SHORT_HASH": "85eff7c80",
+    "CARGO_COMMIT_DATE": "2026-01-15",
+    "RUST_HOST_TARGET": "x86_64-unknown-linux-gnu"
+  },
+  "/workspace/bigcrates/captures/ripgrep/1795179181878105527-fff994d2644fff41.json": {
+    "RIPGREP_BUILD_GIT_HASH": "4649aa9700"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "full-workspace": {
+    "result_groups": 117,
+    "passed": 1455,
+    "failed": 0,
+    "ignored": 1,
+    "exit_code": 0
+  },
+  "backend": {
+    "result_groups": 2,
+    "passed": 30,
+    "failed": 0,
+    "ignored": 0,
+    "exit_code": 0
+  }
+}

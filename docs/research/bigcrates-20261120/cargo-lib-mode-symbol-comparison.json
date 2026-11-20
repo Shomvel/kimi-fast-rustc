@@ -1,0 +1,144 @@
+{
+  "speed_report": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/surveys/survey-baseline-env-corrected/cargo/cargo-9c7e1539aa9119db/reports/cargo-37523.jsonl",
+  "none_report": "/Users/shom/Downloads/kfrc-bigcrates-20261120/linux/logs/surveys/survey-baseline-env-corrected-none/cargo/cargo-9c7e1539aa9119db/reports/cargo-37764.jsonl",
+  "speed_rows": 165979,
+  "none_rows": 230707,
+  "speed_completed_symbols": 80013,
+  "none_completed_symbols": 110693,
+  "shared_completed_symbols": 80013,
+  "identical_outcomes": 80013,
+  "changed_outcomes": [],
+  "speed_only_completed_symbols": [],
+  "speed_panics": [
+    {
+      "kind": "function",
+      "crate": "cargo",
+      "symbol": "_RINvMNtNtCsikCF4YI7m35_3gix6status14index_worktreeNtNtB7_5types10Repository30index_worktree_status_pathspecNtB3_5ErrorNtNtCs88GVy9e8Chh_4bstr7bstring7BStringINtNtCsj0gLuUEfogP_5alloc3vec3VecB1S_EECsgS7KTo43CqW_5cargo",
+      "item": "gix::status::index_worktree::<impl gix::Repository>::index_worktree_status_pathspec::<gix::status::index_worktree::Error, gix::bstr::BString, std::vec::Vec<gix::bstr::BString>>",
+      "status": "error",
+      "message": "compiler panic in owned graph pipeline: inline nodes have at most two inputs"
+    },
+    {
+      "kind": "function",
+      "crate": "cargo",
+      "symbol": "_RINvMNtNtCsikCF4YI7m35_3gix6status14index_worktreeNtNtB7_5types10Repository30index_worktree_status_pathspecNtNtB5_9into_iter5ErrorRNtNtCs88GVy9e8Chh_4bstr7bstring7BStringRINtNtCsj0gLuUEfogP_5alloc3vec3VecB25_EECsgS7KTo43CqW_5cargo",
+      "item": "gix::status::index_worktree::<impl gix::Repository>::index_worktree_status_pathspec::<gix::status::into_iter::Error, &gix::bstr::BString, &std::vec::Vec<gix::bstr::BString>>",
+      "status": "error",
+      "message": "compiler panic in owned graph pipeline: inline nodes have at most two inputs"
+    },
+    {
+      "kind": "function",
+      "crate": "cargo",
+      "symbol": "_RINvMs5_NtNtCs15Ee3ecg1is_8gix_diff4blob8platformNtB8_8Platform18set_resource_innerINtNtCs1Oio7MCUZNY_7gix_odb6memory5ProxyINtB1o_5CacheINtNtNtB1o_11store_impls7dynamic6HandleINtNtCsj0gLuUEfogP_5alloc4sync3ArcNtB1o_5StoreEEEEECsgS7KTo43CqW_5cargo",
+      "item": "gix::diff::blob::platform::<impl gix::diff::blob::Platform>::set_resource_inner::<gix::gix_odb::memory::Proxy<gix::gix_odb::Cache<gix::gix_odb::store::Handle<std::sync::Arc<gix::gix_odb::Store>>>>>",
+      "status": "error",
+      "message": "compiler panic in owned graph pipeline: inline nodes have at most two inputs"
+    },
+    {
+      "kind": "function",
+      "crate": "cargo",
+      "symbol": "_RINvMs5_NtNtCs15Ee3ecg1is_8gix_diff4blob8platformNtB8_8Platform18set_resource_innerNtNtCsikCF4YI7m35_3gix5types10RepositoryECsgS7KTo43CqW_5cargo",
+      "item": "gix::diff::blob::platform::<impl gix::diff::blob::Platform>::set_resource_inner::<gix::Repository>",
+      "status": "error",
+      "message": "compiler panic in owned graph pipeline: inline nodes have at most two inputs"
+    },
+    {
+      "kind": "function",
+      "crate": "cargo",
+      "symbol": "_RINvNtNtCsgW4cqsBIPa1_12gix_protocol5fetch8function5fetchQQNtNtCsczLixelnXvy_7prodash4tree4ItemINtNtCsj0gLuUEfogP_5alloc5boxed3BoxDNtNtNtNtCshuuOwi4iMhc_13gix_transport6client11blocking_io6traits9TransportNtNtCs8nPosuWgJFh_4core6marker4SendEL_ENtNtNtNtCsk7LxOma5YMN_8gix_pack6bundle5write5error5ErrorNtNtNtNtNtCsikCF4YI7m35_3gix6remote10connection5fetch12receive_pack9NegotiateNCINvMB4Q_INtB4S_7PrepareB1v_E7receiveBT_Es0_0ECsgS7KTo43CqW_5cargo",
+      "item": "gix::gix_protocol::fetch::<&mut &mut gix::progress::tree::Item, std::boxed::Box<dyn gix::gix_protocol::gix_transport::client::blocking_io::Transport + std::marker::Send>, gix::gix_odb::gix_pack::bundle::write::Error, gix::remote::connection::fetch::receive_pack::Negotiate<'_, '_, '_>, {closure@gix::remote::connection::fetch::receive_pack::<impl gix::remote::fetch::Prepare<'_, '_, std::boxed::Box<dyn gix::gix_protocol::gix_transport::client::blocking_io::Transport + std::marker::Send>>>::receive<&mut &mut gix::progress::tree::Item>::{closure#2}}>",
+      "status": "error",
+      "message": "compiler panic in owned graph pipeline: inline nodes have at most two inputs"
+    },
+    {
+      "kind": "function",
+      "crate": "cargo",
+      "symbol": "_RNCINvMNtNtCsikCF4YI7m35_3gix6status4iterINtB7_8PlatformNtNtNtCsczLixelnXvy_7prodash8progress5utils7DiscardE9into_iterINtNtCs8nPosuWgJFh_4core6option6OptionNtNtCs88GVy9e8Chh_4bstr7bstring7BStringEE0CsgS7KTo43CqW_5cargo",
+      "item": "gix::status::iter::<impl gix::status::Platform<'_, gix::progress::Discard>>::into_iter::<std::option::Option<gix::bstr::BString>>::{closure#0}",
+      "status": "error",
+      "message": "compiler panic in owned graph pipeline: inline nodes have at most two inputs"
+    },
+    {
+      "kind": "function",
+      "crate": "cargo",
+      "symbol": "_RNCINvMNtNtCsikCF4YI7m35_3gix6status4iterINtB7_8PlatformNtNtNtCsczLixelnXvy_7prodash8progress5utils7DiscardE9into_iterINtNtNtNtCs8nPosuWgJFh_4core4iter8adapters3map3MapINtNtNtCsj0gLuUEfogP_5alloc3vec9into_iter8IntoIterNtNtCsicaZO8UCM9y_3std4path7PathBufENCNvNtNtNtCsgS7KTo43CqW_5cargo3ops13cargo_package3vcs28dirty_files_outside_pkg_roots5_0EE0B4e_",
+      "item": "gix::status::iter::<impl gix::status::Platform<'_, gix::progress::Discard>>::into_iter::<std::iter::Map<std::vec::IntoIter<std::path::PathBuf>, {closure@src/cargo/ops/cargo_package/vcs.rs:419:22: 419:25}>>::{closure#0}",
+      "status": "error",
+      "message": "compiler panic in owned graph pipeline: inline nodes have at most two inputs"
+    }
+  ],
+  "none_panics": [
+    {
+      "kind": "function",
+      "crate": "cargo",
+      "symbol": "_RINvMNtNtCsikCF4YI7m35_3gix6status14index_worktreeNtNtB7_5types10Repository30index_worktree_status_pathspecNtB3_5ErrorNtNtCs88GVy9e8Chh_4bstr7bstring7BStringINtNtCsj0gLuUEfogP_5alloc3vec3VecB1S_EECsgS7KTo43CqW_5cargo",
+      "item": "gix::status::index_worktree::<impl gix::Repository>::index_worktree_status_pathspec::<gix::status::index_worktree::Error, gix::bstr::BString, std::vec::Vec<gix::bstr::BString>>",
+      "status": "error",
+      "message": "compiler panic in owned graph pipeline: inline nodes have at most two inputs"
+    },
+    {
+      "kind": "function",
+      "crate": "cargo",
+      "symbol": "_RINvMNtNtCsikCF4YI7m35_3gix6status14index_worktreeNtNtB7_5types10Repository30index_worktree_status_pathspecNtNtB5_9into_iter5ErrorRNtNtCs88GVy9e8Chh_4bstr7bstring7BStringRINtNtCsj0gLuUEfogP_5alloc3vec3VecB25_EECsgS7KTo43CqW_5cargo",
+      "item": "gix::status::index_worktree::<impl gix::Repository>::index_worktree_status_pathspec::<gix::status::into_iter::Error, &gix::bstr::BString, &std::vec::Vec<gix::bstr::BString>>",
+      "status": "error",
+      "message": "compiler panic in owned graph pipeline: inline nodes have at most two inputs"
+    },
+    {
+      "kind": "function",
+      "crate": "cargo",
+      "symbol": "_RINvMs5_NtNtCs15Ee3ecg1is_8gix_diff4blob8platformNtB8_8Platform18set_resource_innerINtNtCs1Oio7MCUZNY_7gix_odb6memory5ProxyINtB1o_5CacheINtNtNtB1o_11store_impls7dynamic6HandleINtNtCsj0gLuUEfogP_5alloc4sync3ArcNtB1o_5StoreEEEEECsgS7KTo43CqW_5cargo",
+      "item": "gix::diff::blob::platform::<impl gix::diff::blob::Platform>::set_resource_inner::<gix::gix_odb::memory::Proxy<gix::gix_odb::Cache<gix::gix_odb::store::Handle<std::sync::Arc<gix::gix_odb::Store>>>>>",
+      "status": "error",
+      "message": "compiler panic in owned graph pipeline: inline nodes have at most two inputs"
+    },
+    {
+      "kind": "function",
+      "crate": "cargo",
+      "symbol": "_RINvMs5_NtNtCs15Ee3ecg1is_8gix_diff4blob8platformNtB8_8Platform18set_resource_innerNtNtCsikCF4YI7m35_3gix5types10RepositoryECsgS7KTo43CqW_5cargo",
+      "item": "gix::diff::blob::platform::<impl gix::diff::blob::Platform>::set_resource_inner::<gix::Repository>",
+      "status": "error",
+      "message": "compiler panic in owned graph pipeline: inline nodes have at most two inputs"
+    },
+    {
+      "kind": "function",
+      "crate": "cargo",
+      "symbol": "_RINvNtNtCsgW4cqsBIPa1_12gix_protocol5fetch8function5fetchQQNtNtCsczLixelnXvy_7prodash4tree4ItemINtNtCsj0gLuUEfogP_5alloc5boxed3BoxDNtNtNtNtCshuuOwi4iMhc_13gix_transport6client11blocking_io6traits9TransportNtNtCs8nPosuWgJFh_4core6marker4SendEL_ENtNtNtNtCsk7LxOma5YMN_8gix_pack6bundle5write5error5ErrorNtNtNtNtNtCsikCF4YI7m35_3gix6remote10connection5fetch12receive_pack9NegotiateNCINvMB4Q_INtB4S_7PrepareB1v_E7receiveBT_Es0_0ECsgS7KTo43CqW_5cargo",
+      "item": "gix::gix_protocol::fetch::<&mut &mut gix::progress::tree::Item, std::boxed::Box<dyn gix::gix_protocol::gix_transport::client::blocking_io::Transport + std::marker::Send>, gix::gix_odb::gix_pack::bundle::write::Error, gix::remote::connection::fetch::receive_pack::Negotiate<'_, '_, '_>, {closure@gix::remote::connection::fetch::receive_pack::<impl gix::remote::fetch::Prepare<'_, '_, std::boxed::Box<dyn gix::gix_protocol::gix_transport::client::blocking_io::Transport + std::marker::Send>>>::receive<&mut &mut gix::progress::tree::Item>::{closure#2}}>",
+      "status": "error",
+      "message": "compiler panic in owned graph pipeline: inline nodes have at most two inputs"
+    },
+    {
+      "kind": "function",
+      "crate": "cargo",
+      "symbol": "_RNCINvMNtNtCsikCF4YI7m35_3gix6status4iterINtB7_8PlatformNtNtNtCsczLixelnXvy_7prodash8progress5utils7DiscardE9into_iterINtNtCs8nPosuWgJFh_4core6option6OptionNtNtCs88GVy9e8Chh_4bstr7bstring7BStringEE0CsgS7KTo43CqW_5cargo",
+      "item": "gix::status::iter::<impl gix::status::Platform<'_, gix::progress::Discard>>::into_iter::<std::option::Option<gix::bstr::BString>>::{closure#0}",
+      "status": "error",
+      "message": "compiler panic in owned graph pipeline: inline nodes have at most two inputs"
+    },
+    {
+      "kind": "function",
+      "crate": "cargo",
+      "symbol": "_RNCINvMNtNtCsikCF4YI7m35_3gix6status4iterINtB7_8PlatformNtNtNtCsczLixelnXvy_7prodash8progress5utils7DiscardE9into_iterINtNtNtNtCs8nPosuWgJFh_4core4iter8adapters3map3MapINtNtNtCsj0gLuUEfogP_5alloc3vec9into_iter8IntoIterNtNtCsicaZO8UCM9y_3std4path7PathBufENCNvNtNtNtCsgS7KTo43CqW_5cargo3ops13cargo_package3vcs28dirty_files_outside_pkg_roots5_0EE0B4e_",
+      "item": "gix::status::iter::<impl gix::status::Platform<'_, gix::progress::Discard>>::into_iter::<std::iter::Map<std::vec::IntoIter<std::path::PathBuf>, {closure@src/cargo/ops/cargo_package/vcs.rs:419:22: 419:25}>>::{closure#0}",
+      "status": "error",
+      "message": "compiler panic in owned graph pipeline: inline nodes have at most two inputs"
+    }
+  ],
+  "default_last_function_begin": {
+    "kind": "function_begin",
+    "crate": "cargo",
+    "symbol": "_RNvNtNtNtCsgS7KTo43CqW_5cargo7sources3git5oxide26amend_authentication_hints",
+    "item": "sources::git::oxide::amend_authentication_hints",
+    "status": "started",
+    "message": ""
+  },
+  "default_last_function_none_outcome": {
+    "kind": "function",
+    "crate": "cargo",
+    "symbol": "_RNvNtNtNtCsgS7KTo43CqW_5cargo7sources3git5oxide26amend_authentication_hints",
+    "item": "sources::git::oxide::amend_authentication_hints",
+    "status": "ok",
+    "message": ""
+  }
+}

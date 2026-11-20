@@ -18,6 +18,7 @@
 //! general-dynamic sequence, which the linker relaxes to local-exec in an
 //! executable.
 
+mod atomic;
 mod emit;
 mod export;
 mod machine;
@@ -30,6 +31,7 @@ use kfrc_son::lower_layout::LayoutOptions;
 use kfrc_son::schedule::Schedule;
 use kfrc_son::{FunctionGraph, GraphLevel};
 
+pub use atomic::{AtomicOperation, lower_atomic_runtime};
 pub use export::LowerError;
 pub use machine::{Machine, MachineError, MachineOptions, Optimization};
 

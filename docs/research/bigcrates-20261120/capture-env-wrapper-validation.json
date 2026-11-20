@@ -1,0 +1,9 @@
+{
+  "result": "PASS",
+  "checks": [
+    "both Cargo directive prefixes",
+    "actual child environment values",
+    "undeclared variables excluded",
+    "source output hash retained"
+  ]
+}

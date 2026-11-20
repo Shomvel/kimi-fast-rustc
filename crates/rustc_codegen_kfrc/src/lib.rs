@@ -32,6 +32,7 @@ extern crate rustc_driver;
 
 mod abi;
 mod allocator;
+mod atomic;
 mod codegen;
 mod constants;
 mod convert;
@@ -45,6 +46,7 @@ mod permissions;
 mod profile;
 mod program_data;
 mod shell_entry;
+mod survey;
 mod type_identity;
 
 use std::any::Any;
@@ -113,6 +115,9 @@ impl CodegenBackend for KfrcCodegenBackend {
     }
 
     fn codegen_crate<'tcx>(&self, tcx: TyCtxt<'tcx>) -> Box<dyn Any> {
+        if let Some(directory) = std::env::var_os("KFRC_GAP_SURVEY") {
+            survey::run(tcx, std::path::Path::new(&directory));
+        }
         let threads = parallel::thread_limit().unwrap_or_else(|error| tcx.dcx().fatal(error));
         let measurement =
             profile::start_total(tcx.crate_name(rustc_hir::def_id::LOCAL_CRATE).as_str());
@@ -266,6 +271,10 @@ impl CodegenBackend for KfrcCodegenBackend {
                 data_objects,
             });
         }
+        atomic::register(tcx, &graphs, &mut jobs, &mut adapters).unwrap_or_else(|error| {
+            tcx.dcx()
+                .fatal(format!("kfrc: {}: {}", error.symbol, error.message))
+        });
         graphs
             .lift_data(&mut jobs, &mut adapters)
             .unwrap_or_else(|error| {
@@ -427,11 +436,26 @@ fn prepare_instance_input<'tcx>(
     definitions: &mut definitions::Definitions<'tcx>,
     permission_totals: &mut permissions::PermissionTotals,
 ) -> codegen::GraphJob {
+    try_prepare_instance_input(tcx, instance, definitions, permission_totals).unwrap_or_else(
+        |error| {
+            tcx.dcx().fatal(format!(
+                "kfrc: cannot compile `{instance}` ({}): {}",
+                error.symbol, error.message
+            ))
+        },
+    )
+}
+
+fn try_prepare_instance_input<'tcx>(
+    tcx: TyCtxt<'tcx>,
+    instance: Instance<'tcx>,
+    definitions: &mut definitions::Definitions<'tcx>,
+    permission_totals: &mut permissions::PermissionTotals,
+) -> Result<codegen::GraphJob, codegen::CompileError> {
     let symbol = tcx.symbol_name(instance).name.to_string();
-    let fail = |stage: &str, error: String| -> ! {
-        tcx.dcx().fatal(format!(
-            "kfrc: cannot compile `{instance}` ({symbol}): {stage}: {error}"
-        ))
+    let fail = |stage: &str, error: String| codegen::CompileError {
+        symbol: symbol.clone(),
+        message: format!("{stage}: {error}"),
     };
     let input = match definitions.specialize(tcx, instance) {
         Ok(Some(specialized)) => codegen::GraphInput::Specialized {
@@ -441,18 +465,18 @@ fn prepare_instance_input<'tcx>(
         },
         Ok(None) => {
             let body = convert::convert_instance(tcx, instance)
-                .unwrap_or_else(|error| fail("MIR conversion", error));
+                .map_err(|error| fail("MIR conversion", error))?;
             if std::env::var_os("KFRC_DUMP_BODY").is_some() {
                 eprintln!("{body}");
             }
             codegen::GraphInput::Body(body)
         }
-        Err(error) => fail("definition specialization", error),
+        Err(error) => return Err(fail("definition specialization", error)),
     };
     // RS5.1: R carries no permissions; the S instance receives them here,
     // before its first optimization, from the instance's own rustc types.
     let permissions =
-        if permissions::enabled().unwrap_or_else(|error| fail("argument permissions", error)) {
+        if permissions::enabled().map_err(|error| fail("argument permissions", error))? {
             let (arguments, calls) = profile::measure("permissions_s", &symbol, || {
                 (
                     permissions::definition_permissions(tcx, instance, permission_totals),
@@ -460,17 +484,17 @@ fn prepare_instance_input<'tcx>(
                 )
             });
             Some(codegen::Permissions {
-                arguments: arguments.unwrap_or_else(|error| fail("argument permissions", error)),
-                calls: calls.unwrap_or_else(|error| fail("call permissions", error)),
+                arguments: arguments.map_err(|error| fail("argument permissions", error))?,
+                calls: calls.map_err(|error| fail("call permissions", error))?,
             })
         } else {
             None
         };
-    codegen::GraphJob {
+    Ok(codegen::GraphJob {
         symbol,
         input,
         permissions,
-    }
+    })
 }
 
 /// Entry point looked up by rustc for `-Zcodegen-backend=<path>`.

@@ -10,6 +10,7 @@ use rustc_middle::mir;
 use rustc_middle::ty::layout::ValidityRequirement;
 use rustc_middle::ty::{self, Instance, Ty, TypingEnv};
 
+mod atomic;
 mod helpers;
 mod integer;
 mod saturating;
@@ -64,6 +65,20 @@ impl<'tcx> Converter<'tcx> {
     ) -> Result<Terminator, String> {
         let name = self.tcx.item_name(instance.def_id());
         let name = name.as_str();
+        if matches!(
+            name,
+            "atomic_load"
+                | "atomic_store"
+                | "atomic_xsub"
+                | "atomic_xadd"
+                | "atomic_xchg"
+                | "atomic_cxchg"
+                | "atomic_cxchgweak"
+                | "atomic_fence"
+                | "atomic_singlethreadfence"
+        ) {
+            return self.intrinsic_atomic(instance, name, args, destination, target, unwind);
+        }
         if name.starts_with("simd_") {
             self.intrinsic_simd(instance, name, &args, mir_args, destination)?;
             return target
