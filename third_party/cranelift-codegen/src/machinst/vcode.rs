@@ -726,6 +726,113 @@ impl<I: VCodeInst> VCode<I> {
         (clobbered_regs, function_calls)
     }
 
+    /// KFRC patch 9: place a loop's header after its single latch.
+    ///
+    /// The lowering order is a reverse postorder, so a loop header precedes
+    /// its body and every iteration ends with an unconditional jump back to
+    /// the header. When the header ends in a two-way branch whose in-loop
+    /// successor immediately follows it, and exactly one latch jumps to it
+    /// unconditionally, emitting the header after the latch lets the latch
+    /// fall through into the test and the test branch back into the body;
+    /// only loop entry pays a jump. This changes layout only: every branch
+    /// keeps explicit targets and `MachBuffer` resolves fallthroughs.
+    /// `KFRC_CLIF_LOOP_ROTATION=0` keeps the original order.
+    fn rotate_loops(&self, order: &mut SmallVec<[BlockIndex; 16]>) {
+        static ENABLED: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+        if !*ENABLED.get_or_init(|| {
+            std::env::var_os("KFRC_CLIF_LOOP_ROTATION").is_none_or(|value| value != "0")
+        }) {
+            return;
+        }
+        let succs = |block: BlockIndex| {
+            let range = self.block_succ_range.get(block.index());
+            &self.block_succs[range]
+        };
+        let preds = |block: BlockIndex| {
+            let range = self.block_pred_range.get(block.index());
+            &self.block_preds[range]
+        };
+        let mut position = vec![usize::MAX; self.num_blocks()];
+        let index = |order: &SmallVec<[BlockIndex; 16]>, position: &mut Vec<usize>| {
+            for (at, block) in order.iter().enumerate() {
+                position[block.index()] = at;
+            }
+        };
+        index(order, &mut position);
+        let headers: SmallVec<[BlockIndex; 16]> = order.iter().skip(1).copied().collect();
+        let mut in_loop = vec![false; self.num_blocks()];
+        let mut stack = Vec::new();
+        for header in headers {
+            let at = position[header.index()];
+            let &[first, second] = succs(header) else {
+                continue;
+            };
+            let mut latches = preds(header)
+                .iter()
+                .copied()
+                .filter(|&pred| position[pred.index()] != usize::MAX)
+                .filter(|&pred| position[pred.index()] >= at);
+            let (Some(latch), None) = (latches.next(), latches.next()) else {
+                continue;
+            };
+            if latch == header || succs(latch) != [header] {
+                continue;
+            }
+            // Natural loop of the back edge: everything that reaches the
+            // latch without passing through the header.
+            in_loop.iter_mut().for_each(|member| *member = false);
+            in_loop[header.index()] = true;
+            stack.clear();
+            stack.push(latch);
+            let mut members = 1usize;
+            let mut reducible = true;
+            while let Some(block) = stack.pop() {
+                if in_loop[block.index()] {
+                    continue;
+                }
+                in_loop[block.index()] = true;
+                members += 1;
+                if position[block.index()] == usize::MAX || position[block.index()] < at {
+                    reducible = false;
+                    break;
+                }
+                stack.extend(preds(block).iter().copied());
+            }
+            if !reducible || members > 4096 {
+                continue;
+            }
+            let (body, exit) = if in_loop[first.index()] {
+                (first, second)
+            } else {
+                (second, first)
+            };
+            if !in_loop[body.index()] || in_loop[exit.index()] {
+                continue;
+            }
+            // The header and any out-of-loop blocks laid out between it and
+            // the body (exit edge blocks) move together behind the latch.
+            let body_at = position[body.index()];
+            if body_at <= at
+                || order[at + 1..body_at]
+                    .iter()
+                    .any(|block| in_loop[block.index()])
+            {
+                continue;
+            }
+            let end = position[latch.index()];
+            if end < body_at {
+                continue;
+            }
+            let segment: SmallVec<[BlockIndex; 4]> = order[at..body_at].iter().copied().collect();
+            order.drain(at..body_at);
+            let insert = end + 1 - segment.len();
+            for (offset, block) in segment.into_iter().enumerate() {
+                order.insert(insert + offset, block);
+            }
+            index(order, &mut position);
+        }
+    }
+
     /// Emit the instructions to a `MachBuffer`, containing fixed-up
     /// code and external reloc/trap/etc. records ready for use. Takes
     /// the regalloc results as well.
@@ -767,6 +874,7 @@ impl<I: VCodeInst> VCode<I> {
                 final_order.push(block);
             }
         }
+        self.rotate_loops(&mut final_order);
         final_order.extend(cold_blocks.clone());
 
         // Compute/save info we need for the prologue: clobbers and
