@@ -1,6 +1,45 @@
 use semantic_values::range_fusion_probe::*;
 
 pub fn check() {
+    let mut characters = 0;
+    for bits in 0..=0x10ffff {
+        let Some(value) = char::from_u32(bits) else {
+            continue;
+        };
+        assert_eq!(character_digits(value), value.is_ascii_digit());
+        assert_eq!(character_letters(value), value.is_ascii_alphabetic());
+        assert_eq!(
+            character_scalar_edges(value),
+            matches!(bits, 0xd7ff | 0xe000 | 0x10fffe | 0x10ffff)
+        );
+        characters += 1;
+    }
+    assert_eq!(characters, 1_112_064);
+    let mut char_trace = 0u64;
+    let mut expected_char_trace = 0u64;
+    for value in [
+        '\0',
+        '\t',
+        '@',
+        'A',
+        'Z',
+        '[',
+        'a',
+        'z',
+        '\u{d7ff}',
+        '\u{e000}',
+        '\u{10ffff}',
+    ] {
+        if value >= 'A' {
+            expected_char_trace = expected_char_trace.wrapping_add(value as u64);
+        }
+        assert_eq!(
+            character_effect_between_bounds(value, &mut char_trace),
+            value.is_ascii_uppercase()
+        );
+        assert_eq!(char_trace, expected_char_trace);
+    }
+    println!("char-range scalar-values={characters} trace={char_trace}");
     let bytes: Vec<u8> = (0..=u8::MAX).collect();
     for &value in &bytes {
         let ascii = (b'A'..=b'Z').contains(&value);

@@ -62,3 +62,28 @@ pub fn loop_ranges(values: &[u8]) -> usize {
     }
     count
 }
+
+#[inline(never)]
+pub fn character_digits(value: char) -> bool {
+    value >= '0' && value <= '9'
+}
+
+#[inline(never)]
+pub fn character_letters(value: char) -> bool {
+    (value >= 'A' && value <= 'Z') || (value >= 'a' && value <= 'z')
+}
+
+#[inline(never)]
+pub fn character_scalar_edges(value: char) -> bool {
+    (value >= '\u{d7ff}' && value <= '\u{e000}') || (value >= '\u{10fffe}' && value <= '\u{10ffff}')
+}
+
+#[inline(never)]
+pub fn character_effect_between_bounds(value: char, trace: &mut u64) -> bool {
+    if value >= 'A' {
+        *trace = trace.wrapping_add(value as u64);
+        value <= 'Z'
+    } else {
+        false
+    }
+}

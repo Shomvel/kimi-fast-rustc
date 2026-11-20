@@ -33,6 +33,11 @@ struct Plan {
     clear: u64,
 }
 
+fn characters_enabled() -> bool {
+    static ENABLED: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+    *ENABLED.get_or_init(|| std::env::var("KFRC_CHAR_RANGE_TESTS").as_deref() == Ok("1"))
+}
+
 pub(super) fn run(graph: &mut FunctionGraph) -> usize {
     static ENABLED: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
     static UNION: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
@@ -69,16 +74,18 @@ pub(super) fn run(graph: &mut FunctionGraph) -> usize {
     let mut count = 0;
     for plan in plans {
         let source_ty = graph.rust_type(plan.value).unwrap();
-        let TypeShape::Int { width, signed } = *graph.oracle.shape(source_ty) else {
-            unreachable!()
+        let (width, signed, character) = match *graph.oracle.shape(source_ty) {
+            TypeShape::Int { width, signed } => (width, signed, false),
+            TypeShape::Char => (IntegerWidth::W32, false, true),
+            _ => unreachable!(),
         };
         let (mut value, mut ty, mut low) = (plan.value, source_ty, plan.low);
-        if width.bits(64) < 32 {
+        if character || width.bits(64) < 32 {
             // A modular narrow SUB needs a destructive byte/word ALU op and
             // usually a copy on x86. Extend to the comparison's signed order
             // first, then measure distance in u32, where negative distances
             // exceed every narrow interval and LEA can compute the offset.
-            if signed != plan.signed {
+            if !character && signed != plan.signed {
                 let narrow = graph.oracle.intern(
                     TypeShape::Int {
                         width,
@@ -117,6 +124,9 @@ pub(super) fn run(graph: &mut FunctionGraph) -> usize {
                 0,
                 ValueType::Rust(ty),
             );
+            // A char has the same unsigned bits in u32. Perform modular
+            // distance arithmetic in that unrestricted type: intermediate
+            // differences need not themselves be Unicode scalar values.
             if plan.signed && low & (1u64 << (width.bits(64) - 1)) != 0 {
                 low |= u64::MAX << width.bits(64);
             }
@@ -353,16 +363,16 @@ fn comparison(graph: &FunctionGraph, branch: NodeId, pass: usize) -> Option<Comp
         inclusive = !inclusive;
     }
     let ty = graph.rust_type(value)?;
-    if graph.rust_type(constant) != Some(ty)
-        || graph.op(constant) != Opcode::Const
-        || graph.oracle.scalar_validity(ty).is_some()
-    {
+    if graph.rust_type(constant) != Some(ty) || graph.op(constant) != Opcode::Const {
         return None;
     }
-    let TypeShape::Int { width, .. } = graph.oracle.shape(ty) else {
-        return None;
+    let bits = match graph.oracle.shape(ty) {
+        TypeShape::Int { width, .. } if graph.oracle.scalar_validity(ty).is_none() => {
+            width.bits(64)
+        }
+        TypeShape::Char if !signed && characters_enabled() => 32,
+        _ => return None,
     };
-    let bits = width.bits(64);
     if !matches!(bits, 8 | 16 | 32 | 64) {
         return None;
     }
