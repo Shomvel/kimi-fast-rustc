@@ -81,6 +81,34 @@ fn redundant_value(graph: &FunctionGraph, phi: NodeId) -> Option<NodeId> {
     same.filter(|value| !value.is_none() && graph.value_type(*value) == graph.value_type(phi))
 }
 
+/// Whether `node` is an `Assume` of literal `false`.
+///
+/// Reaching such an Assume is undefined behavior, so its continuation never
+/// executes. MIR produces one when a branch whose other target is unreachable
+/// tests a session constant, e.g. `assume(ub_checks())` guarding an unsafe
+/// precondition check once UB checks are off (the distributed standard
+/// library keeps that shape in its optimized MIR).
+fn false_assumption(graph: &FunctionGraph, node: NodeId) -> bool {
+    let predicate = graph.resolve(graph.input(node, 1));
+    graph.op(predicate) == Opcode::Const
+        && graph
+            .rust_type(predicate)
+            .is_some_and(|ty| matches!(graph.oracle.semantic().shape(ty), TypeShape::Bool))
+        && graph.constant_value(predicate) == 0
+}
+
+/// End the path through each false assumption with `Unreachable`. Its
+/// projections keep the removed source, so they and their users become
+/// unreachable from the new terminal and retire in the sweep of `run_impl`,
+/// which also trims the Region slots they fed.
+fn terminate_false_assumptions(graph: &mut FunctionGraph, assumptions: &[NodeId]) {
+    for &assumption in assumptions {
+        let predecessor = graph.resolve(graph.control(assumption));
+        graph.add_node(Opcode::Unreachable, predecessor, &[], 0, ValueType::Control);
+        graph.remove_node(assumption);
+    }
+}
+
 pub fn run(graph: &mut FunctionGraph) -> Result<ControlStats, CfgEditError> {
     run_impl(graph, true)
 }
@@ -101,10 +129,21 @@ fn run_impl(graph: &mut FunctionGraph, fold_diamonds: bool) -> Result<ControlSta
     // Decisions depend only on condition values; folding rewrites control
     // edges, so every decision can be taken before the first fold.
     let mut folds = Vec::new();
-    for branch in graph
-        .ids()
-        .filter(|node| matches!(graph.op(*node), Opcode::If | Opcode::VariantSwitch))
-    {
+    // The same scan collects false assumptions; terminating them only adds
+    // Unreachable terminals and removes nodes, so it cannot change a decision.
+    let mut false_assumptions = Vec::new();
+    for branch in graph.ids().filter(|node| {
+        matches!(
+            graph.op(*node),
+            Opcode::If | Opcode::VariantSwitch | Opcode::Assume
+        )
+    }) {
+        if graph.op(branch) == Opcode::Assume {
+            if fold_diamonds && false_assumption(graph, branch) {
+                false_assumptions.push(branch);
+            }
+            continue;
+        }
         let Some(&condition) = graph.inputs(branch).first() else {
             continue;
         };
@@ -134,6 +173,8 @@ fn run_impl(graph: &mut FunctionGraph, fold_diamonds: bool) -> Result<ControlSta
         };
         folds.push((branch, taken));
     }
+    stats.branches_folded += false_assumptions.len();
+    terminate_false_assumptions(graph, &false_assumptions);
     // Branch folding only forwards/removes existing nodes, so one immutable
     // projection index remains valid through this loop. Avoid rescanning the
     // entire graph for every selected edge.
